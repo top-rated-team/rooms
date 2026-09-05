@@ -1,0 +1,11 @@
+# ai.top-rated.team
+
+User-agent: *
+Allow: /
+
+# A workspace token is a bearer credential that lives in the URL. Crawling it
+# would publish it; /w/ pages also carry a noindex tag.
+Disallow: /w/
+Disallow: /api/
+
+Sitemap: https://ai.top-rated.team/sitemap.xml

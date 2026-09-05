@@ -1,0 +1,606 @@
+import { clearInterval, setInterval } from "node:timers";
+import type { Express, Request, RequestHandler, Response } from "express";
+import type { ZodError } from "zod";
+import {
+  askSchema,
+  createChannelSchema,
+  createTaskSchema,
+  createWorkspaceSchema,
+  insertLeadSchema,
+  inviteMemberSchema,
+  postMessageSchema,
+  updateTaskSchema,
+  type Channel,
+  type Citation,
+  type Message,
+  type MessageMeta,
+} from "@shared/schema";
+import type { AskEvent, CreateWorkspaceResponse, WorkspaceState } from "@shared/api";
+import { AGENTS, AGENT_BY_ID, BOOK_A_CALL_URL, DEFAULT_AGENT_ID, EXPERTS, EXPERT_BY_KEY } from "@shared/roster";
+import { storage } from "./storage";
+import { broadcast } from "./ws";
+import { notifyLead } from "./notify";
+import { rateLimit } from "./rateLimit";
+import { llmReady, streamAgentAnswer } from "./ai/agentRuntime";
+import { kbStatus } from "./ai/kb";
+
+type Turn = { role: "user" | "assistant"; content: string };
+
+/** How much of a channel's history an agent is given for context. */
+const MAX_HISTORY_TURNS = 10;
+const SSE_HEARTBEAT_MS = 15_000;
+
+const LLM_UNAVAILABLE_CHAT = `Live answers are not configured on this deployment: there is no \`OPENAI_API_KEY\` set, so I cannot read the ChatGPT Ads documentation, and I will not guess at an answer about a platform this new.
+
+Everything else here still works. The checklist beside this channel is the real conversion-tracking engagement, step by step, and you can pull a human from the team into this workspace to do it. There is no magic: just expertise, dedicated hours, and a systematic approach.`;
+
+const LLM_UNAVAILABLE_ASK =
+  "Live answers are not configured on this deployment — no OPENAI_API_KEY is set, so nothing here will be answered from guesswork. A human on the team can answer the same question today: book a call or ask for the conversion tracking setup.";
+
+const STREAM_INTERRUPTED = "The answer stopped part-way through. Ask again, or bring in a human.";
+
+/* ------------------------------- utilities -------------------------------- */
+
+/**
+ * Express 4 does not catch rejected promises from a handler, and an unhandled
+ * rejection here would leave the request hanging forever.
+ */
+function route(handler: (req: Request, res: Response) => Promise<void>): RequestHandler {
+  return (req, res, next) => {
+    handler(req, res).catch(next);
+  };
+}
+
+function describe(error: ZodError): string {
+  const issues = error.issues.slice(0, 3).map((issue) => {
+    const where = issue.path.length > 0 ? `${issue.path.join(".")}: ` : "";
+    return `${where}${issue.message}`;
+  });
+  return issues.length > 0 ? issues.join("; ") : "Invalid request body";
+}
+
+function badRequest(res: Response, message: string): void {
+  res.status(400).json({ error: message });
+}
+
+function notFound(res: Response, message: string): void {
+  res.status(404).json({ error: message });
+}
+
+function publicBaseUrl(req: Request): string {
+  const configured = process.env.PUBLIC_BASE_URL?.trim();
+  if (configured) return configured.replace(/\/+$/, "");
+  return `${req.protocol}://${req.get("host") ?? `localhost:${process.env.PORT ?? 5000}`}`;
+}
+
+async function requireWorkspace(req: Request, res: Response): Promise<WorkspaceState | null> {
+  // Express 5 types a route param as string | string[]; only the first is ours.
+  const raw = req.params.token;
+  const token = Array.isArray(raw) ? raw[0] : raw;
+  const state = token ? await storage.getWorkspaceByToken(token) : null;
+  if (!state) {
+    notFound(res, "Workspace not found");
+    return null;
+  }
+  return state;
+}
+
+/* -------------------------------- agents ---------------------------------- */
+
+/** Both `@tracking` (the handle) and `conversion-tracking` (the id) resolve. */
+const AGENT_KEYS: Record<string, string> = {};
+for (const agent of AGENTS) {
+  AGENT_KEYS[agent.handle.toLowerCase()] = agent.id;
+  AGENT_KEYS[agent.id.toLowerCase()] = agent.id;
+}
+
+const MENTION_PATTERN = /@([a-z0-9][a-z0-9-]*)/gi;
+
+function agentFromKey(value: string): string | null {
+  return AGENT_KEYS[value.replace(/^@/, "").replace(/^agent:/, "").toLowerCase()] ?? null;
+}
+
+/**
+ * Who, if anyone, answers this message. An explicit mention wins over the
+ * channel it was posted in, so `@google-ads` in the docs channel reaches the
+ * agent the visitor actually named.
+ */
+function resolveAgent(channel: Channel, body: string, mentions?: string[]): string | null {
+  for (const mention of mentions ?? []) {
+    const id = agentFromKey(mention);
+    if (id) return id;
+  }
+  for (const match of body.matchAll(MENTION_PATTERN)) {
+    const id = agentFromKey(match[1]);
+    if (id) return id;
+  }
+  if (channel.kind === "agent" && channel.counterpartKey) return agentFromKey(channel.counterpartKey);
+  return null;
+}
+
+function buildHistory(messages: Message[], channelId: string): Turn[] {
+  return messages
+    .filter((message) => message.channelId === channelId && message.authorKind !== "system" && message.body.trim().length > 0)
+    .slice(-MAX_HISTORY_TURNS)
+    .map((message) => ({
+      role: message.authorKind === "agent" ? ("assistant" as const) : ("user" as const),
+      content: message.body,
+    }));
+}
+
+interface AgentReply {
+  token: string;
+  workspaceId: string;
+  channelId: string;
+  agentId: string;
+  question: string;
+  history: Turn[];
+}
+
+/**
+ * Posts the agent's answer into the channel and streams it over the WebSocket.
+ * Runs after the visitor's HTTP request has already been answered, so nothing
+ * in here may throw into the request lifecycle.
+ */
+async function runAgentReply(reply: AgentReply): Promise<void> {
+  const authorKey = `agent:${reply.agentId}`;
+
+  if (!llmReady()) {
+    const honest = await storage.addMessage(reply.workspaceId, {
+      channelId: reply.channelId,
+      authorKey,
+      authorKind: "agent",
+      body: LLM_UNAVAILABLE_CHAT,
+      meta: { error: "llm_not_configured" },
+    });
+    broadcast(reply.token, { type: "message", message: honest });
+    return;
+  }
+
+  const placeholder = await storage.addMessage(reply.workspaceId, {
+    channelId: reply.channelId,
+    authorKey,
+    authorKind: "agent",
+    body: "",
+    meta: { streaming: true },
+  });
+  broadcast(reply.token, { type: "message", message: placeholder });
+
+  let body = "";
+  let citations: Citation[] | undefined;
+  let error: string | undefined;
+
+  try {
+    for await (const chunk of streamAgentAnswer({ agentId: reply.agentId, question: reply.question, history: reply.history })) {
+      if (chunk.error) {
+        error = chunk.error;
+        continue;
+      }
+      if (chunk.citations && chunk.citations.length > 0) citations = chunk.citations;
+      if (chunk.delta) {
+        body += chunk.delta;
+        broadcast(reply.token, { type: "message_delta", id: placeholder.id, channelId: reply.channelId, delta: chunk.delta });
+      }
+    }
+  } catch (streamError) {
+    console.error("[agent] stream failed:", streamError);
+    error = STREAM_INTERRUPTED;
+  }
+
+  const finalBody = body.trim().length > 0 ? body : error ?? STREAM_INTERRUPTED;
+  const meta: MessageMeta = { streaming: false };
+  if (citations && citations.length > 0) meta.citations = citations;
+  if (error) meta.error = error;
+
+  await storage.updateMessage(placeholder.id, { body: finalBody, meta });
+  broadcast(reply.token, {
+    type: "message_done",
+    id: placeholder.id,
+    channelId: reply.channelId,
+    body: finalBody,
+    citations,
+    error,
+  });
+}
+
+/** Fire-and-forget: one failed answer must never take the process down. */
+function kickOffAgentReply(reply: AgentReply): void {
+  void runAgentReply(reply).catch((error: unknown) => {
+    console.error("[agent] reply failed:", error);
+  });
+}
+
+async function ensureAgentSurface(state: WorkspaceState, agentId: string): Promise<Channel> {
+  const counterpartKey = `agent:${agentId}`;
+  const agent = AGENT_BY_ID[agentId];
+
+  if (!state.members.some((member) => member.memberKey === counterpartKey)) {
+    await storage.addMember(state.workspace.id, {
+      memberKey: counterpartKey,
+      kind: "agent",
+      displayName: agent.name,
+      role: agent.title,
+      initials: agent.initials,
+      presence: "online",
+    });
+  }
+
+  const existing = state.channels.find((channel) => channel.kind === "agent" && channel.counterpartKey === counterpartKey);
+  if (existing) return existing;
+
+  return storage.addChannel(state.workspace.id, {
+    name: agent.handle,
+    slug: agent.handle,
+    purpose: agent.title,
+    kind: "agent",
+    counterpartKey,
+    orderIndex: state.channels.length,
+  });
+}
+
+function homeChannel(state: WorkspaceState): Channel {
+  return state.channels.find((channel) => channel.slug === "conversion-tracking") ?? state.channels[0];
+}
+
+/* -------------------------------- routes ---------------------------------- */
+
+export function registerRoutes(app: Express): void {
+  const createWorkspaceLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many workspaces from this address. Try again later, or book a call." });
+  const leadLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many requests from this address. Try again later." });
+  // Inviting people also raises a lead, so it gets its own budget rather than
+  // eating the contact form's.
+  const inviteLimit = rateLimit({ windowMs: 60 * 60_000, max: 20, message: "Too many requests from this address. Try again later." });
+  const askLimit = rateLimit({ windowMs: 60_000, max: 20, message: "Too many questions at once. Wait a few seconds and ask again." });
+  const messageLimit = rateLimit({ windowMs: 60_000, max: 60, message: "Slow down a moment — too many messages." });
+
+  /* --------------------------- workspaces --------------------------- */
+
+  app.post(
+    "/api/workspaces",
+    createWorkspaceLimit,
+    route(async (req, res) => {
+      const parsed = createWorkspaceSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+
+      const input = parsed.data;
+      if (input.agentId && !AGENT_BY_ID[input.agentId]) return badRequest(res, `Unknown agent: ${input.agentId}`);
+      const agentId = input.agentId ?? DEFAULT_AGENT_ID;
+
+      const created = await storage.createWorkspace({
+        name: input.name,
+        visitorName: input.visitorName,
+        visitorEmail: input.visitorEmail,
+        visitorCompany: input.visitorCompany,
+        visitorWebsite: input.visitorWebsite,
+        source: input.source,
+      });
+
+      const firstMessage = input.firstMessage?.trim();
+      let state: WorkspaceState = created;
+      let reply: AgentReply | null = null;
+
+      if (firstMessage) {
+        // The opening question goes to the agent's own channel so it gets an
+        // answer; the project channel keeps the welcome and the checklist.
+        const channel = await ensureAgentSurface(created, agentId);
+        const history = buildHistory(created.messages, channel.id);
+        await storage.addMessage(created.workspace.id, {
+          channelId: channel.id,
+          authorKey: "visitor",
+          authorKind: "visitor",
+          body: firstMessage,
+        });
+        state = (await storage.getWorkspaceByToken(created.token)) ?? created;
+        reply = {
+          token: created.token,
+          workspaceId: created.workspace.id,
+          channelId: channel.id,
+          agentId,
+          question: firstMessage,
+          history,
+        };
+      }
+
+      const response: CreateWorkspaceResponse = { ...state, url: `${publicBaseUrl(req)}/w/${created.token}` };
+      res.status(201).json(response);
+
+      if (reply) kickOffAgentReply(reply);
+    }),
+  );
+
+  app.get(
+    "/api/workspaces/:token",
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      res.json(state);
+    }),
+  );
+
+  /* ---------------------------- messages ---------------------------- */
+
+  app.post(
+    "/api/workspaces/:token/messages",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+
+      const parsed = postMessageSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+
+      const { channelId, body, parentId, mentions } = parsed.data;
+      const channel = state.channels.find((candidate) => candidate.id === channelId);
+      if (!channel) return badRequest(res, "Unknown channel for this workspace");
+
+      const message = await storage.addMessage(state.workspace.id, {
+        channelId,
+        authorKey: "visitor",
+        authorKind: "visitor",
+        body,
+        parentId: parentId ?? null,
+      });
+
+      broadcast(state.workspace.token, { type: "message", message });
+      void storage.touchWorkspace(state.workspace.id).catch((error: unknown) => {
+        console.error("[workspace] touch failed:", error);
+      });
+
+      // The visitor's message is theirs the moment it lands; the agent's answer
+      // arrives over the WebSocket whenever it is ready.
+      res.status(201).json(message);
+
+      const agentId = resolveAgent(channel, body, mentions);
+      if (agentId) {
+        kickOffAgentReply({
+          token: state.workspace.token,
+          workspaceId: state.workspace.id,
+          channelId,
+          agentId,
+          question: body,
+          history: buildHistory(state.messages, channelId),
+        });
+      }
+    }),
+  );
+
+  /* ---------------------------- channels ---------------------------- */
+
+  app.post(
+    "/api/workspaces/:token/channels",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+
+      const parsed = createChannelSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+
+      const channel = await storage.addChannel(state.workspace.id, {
+        name: parsed.data.name,
+        purpose: parsed.data.purpose ?? null,
+        kind: parsed.data.kind,
+        counterpartKey: parsed.data.counterpartKey ?? null,
+        orderIndex: state.channels.length,
+      });
+
+      broadcast(state.workspace.token, { type: "channel", channel });
+      res.status(201).json(channel);
+    }),
+  );
+
+  /* ------------------------------ tasks ----------------------------- */
+
+  app.post(
+    "/api/workspaces/:token/tasks",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+
+      const parsed = createTaskSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+
+      const task = await storage.addTask(state.workspace.id, {
+        title: parsed.data.title,
+        detail: parsed.data.detail ?? null,
+        status: parsed.data.status,
+        assigneeKey: parsed.data.assigneeKey ?? null,
+        orderIndex: state.tasks.length,
+      });
+
+      broadcast(state.workspace.token, { type: "task", task });
+      res.status(201).json(task);
+    }),
+  );
+
+  app.patch(
+    "/api/workspaces/:token/tasks/:id",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+
+      const existing = state.tasks.find((task) => task.id === req.params.id);
+      if (!existing) return notFound(res, "Task not found");
+
+      const parsed = updateTaskSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+
+      const task = await storage.updateTask(existing.id, parsed.data);
+      if (!task) return notFound(res, "Task not found");
+
+      broadcast(state.workspace.token, { type: "task", task });
+      res.json(task);
+    }),
+  );
+
+  /* ----------------------------- invite ----------------------------- */
+
+  app.post(
+    "/api/workspaces/:token/invite",
+    inviteLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+
+      const parsed = inviteMemberSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+
+      const key = parsed.data.memberKey;
+      const expert = EXPERT_BY_KEY[key] ?? EXPERTS.find((candidate) => candidate.id === key);
+      if (!expert) return badRequest(res, `Unknown expert: ${key}`);
+
+      const alreadyHere = state.members.find((member) => member.memberKey === expert.memberKey);
+      const member =
+        alreadyHere ??
+        (await storage.addMember(state.workspace.id, {
+          memberKey: expert.memberKey,
+          kind: "expert",
+          displayName: expert.name,
+          role: expert.title,
+          initials: expert.initials,
+          presence: "online",
+        }));
+
+      const lead = await storage.createLead({
+        workspaceId: state.workspace.id,
+        name: parsed.data.name ?? state.workspace.visitorName,
+        email: parsed.data.email ?? state.workspace.visitorEmail,
+        company: state.workspace.visitorCompany,
+        website: state.workspace.visitorWebsite,
+        intent: expert.leadsConversionTracking ? "conversion-tracking" : "expert-request",
+        message: parsed.data.note ?? `Asked for ${expert.name} (${expert.title}) in the workspace.`,
+        source: { expert: expert.memberKey, workspace: state.workspace.name },
+      });
+
+      await notifyLead(lead, { workspaceName: state.workspace.name });
+
+      const systemMessage = await storage.addMessage(state.workspace.id, {
+        channelId: homeChannel(state).id,
+        authorKey: "system",
+        authorKind: "system",
+        body: `**${expert.name}** has been asked to join this workspace — ${expert.title}.\n\nThe team picks this up by email and replies here. If it is urgent, [book a call](${BOOK_A_CALL_URL}).`,
+        meta: { event: "expert_requested", memberKey: expert.memberKey },
+      });
+
+      broadcast(state.workspace.token, { type: "member", member });
+      broadcast(state.workspace.token, { type: "presence", memberKey: member.memberKey, presence: "online" });
+      broadcast(state.workspace.token, { type: "message", message: systemMessage });
+
+      res.status(201).json({ member, lead });
+    }),
+  );
+
+  /* ------------------------------ leads ----------------------------- */
+
+  app.post(
+    "/api/leads",
+    leadLimit,
+    route(async (req, res) => {
+      const parsed = insertLeadSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+
+      const lead = await storage.createLead({
+        workspaceId: parsed.data.workspaceId,
+        name: parsed.data.name,
+        email: parsed.data.email,
+        company: parsed.data.company,
+        website: parsed.data.website,
+        intent: parsed.data.intent,
+        message: parsed.data.message,
+        source: parsed.data.source,
+      });
+
+      await notifyLead(lead);
+      res.status(201).json({ ok: true });
+    }),
+  );
+
+  /* ------------------------------- ask ------------------------------ */
+
+  app.post(
+    "/api/ask",
+    askLimit,
+    route(async (req, res) => {
+      const parsed = askSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+
+      const agentId = parsed.data.agentId ?? DEFAULT_AGENT_ID;
+      if (!AGENT_BY_ID[agentId]) return badRequest(res, `Unknown agent: ${agentId}`);
+
+      res.status(200);
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("Connection", "keep-alive");
+      // Tells nginx not to buffer the response; without it the whole answer
+      // lands in one lump at the end instead of streaming.
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders();
+
+      let closed = false;
+      const heartbeat = setInterval(() => {
+        if (!closed) res.write(": keep-alive\n\n");
+      }, SSE_HEARTBEAT_MS);
+
+      const send = (event: AskEvent): void => {
+        if (closed) return;
+        res.write(`data: ${JSON.stringify(event)}\n\n`);
+      };
+
+      const finish = (): void => {
+        if (closed) return;
+        closed = true;
+        clearInterval(heartbeat);
+        res.end();
+      };
+
+      req.on("close", () => {
+        closed = true;
+        clearInterval(heartbeat);
+      });
+
+      if (!llmReady()) {
+        send({ type: "error", message: LLM_UNAVAILABLE_ASK });
+        finish();
+        return;
+      }
+
+      try {
+        let citations: Citation[] | undefined;
+        for await (const chunk of streamAgentAnswer({
+          agentId,
+          question: parsed.data.question,
+          history: parsed.data.history,
+        })) {
+          if (closed) break;
+          if (chunk.error) {
+            send({ type: "error", message: chunk.error });
+            continue;
+          }
+          if (chunk.citations && chunk.citations.length > 0) citations = chunk.citations;
+          if (chunk.delta) send({ type: "delta", delta: chunk.delta });
+        }
+        send({ type: "done", citations });
+      } catch (error) {
+        console.error("[ask] stream failed:", error);
+        send({ type: "error", message: STREAM_INTERRUPTED });
+        send({ type: "done" });
+      } finally {
+        finish();
+      }
+    }),
+  );
+
+  /* ---------------------------- kb status --------------------------- */
+
+  app.get("/api/kb/status", (_req, res) => {
+    res.json({ ...kbStatus(), llmReady: llmReady() });
+  });
+
+  // Anything else under /api is a missing endpoint, not a client route: without
+  // this it would fall through to the SPA and answer HTML to a fetch().
+  app.use("/api", (_req, res) => {
+    res.status(404).json({ error: "Not found" });
+  });
+}
