@@ -195,17 +195,26 @@ function accountabilityFor(
   // Who pays a contractor is the room's contract, never this file. In a room
   // opened through the partner's door, "Paid through Top-Rated Team" names a
   // company that is not in that chain at all.
-  if (badge === "Contractor") return company ? `Paid through ${company}.` : BADGE_LINE.Contractor;
+  if (badge === "Contractor") return company ? `Paid through ${endSentence(company)}` : BADGE_LINE.Contractor;
   // An agent of ours stays ours whichever door the room came through, so the
   // line names the company that runs it — and, in a room somebody else is
   // answerable for, says that it is not that company.
   if (badge === "Agent") {
-    if (!company) return `Run by ${OUR_LEGAL_NAME}. ${BADGE_LINE.Agent}`;
+    if (!company) return `Run by ${endSentence(OUR_LEGAL_NAME)} ${BADGE_LINE.Agent}`;
     return company === OUR_LEGAL_NAME
       ? `Ours. ${BADGE_LINE.Agent}`
-      : `Run by ${OUR_LEGAL_NAME}, not by ${company}. ${BADGE_LINE.Agent}`;
+      : `Run by ${OUR_LEGAL_NAME}, not by ${endSentence(company)} ${BADGE_LINE.Agent}`;
   }
   return BADGE_LINE[badge];
+}
+
+/**
+ * A legal name can end in its own full stop — "Top-Rated Team s.r.o." — and a
+ * second one after it reads as a typo, which is a bad look on the line that
+ * says who to complain to.
+ */
+function endSentence(text: string): string {
+  return /\.$/.test(text) ? text : `${text}.`;
 }
 
 function possessive(name: string): string {
