@@ -183,25 +183,29 @@ export const DOORS: DoorDef[] = [
     path: "/work/ad-grants",
     initials: "AG",
     tone: "bg-chart-2/10 text-chart-2",
-    headline: "Google Ad Grants, set up with AdGrant.AI",
+    headline: "Google Ad Grants, set up through the official Google Ads API",
     blurb:
-      "$10,000 a month of free Google search advertising for eligible nonprofits — applied for, structured, and kept inside the rules that get grant accounts suspended.",
+      "Campaigns, ad groups, keywords, ads and extensions are generated from your own website and written into your Google Ads account through the official Google Ads API — under a manager-account link you can remove, not a tool signed in as you. The setup is the automated half; the other half is a person, on the conversion tracking that lets the grant report donations and sign-ups instead of clicks, and on the month-to-month work that keeps the account inside the rules that suspend grants.",
     firstAgentId: "google-ads",
     agentLine:
-      "The Google Ads Agent answers first, on eligibility, the 5% click-through rule and what the grant may be spent on.",
+      "The Google Ads Agent answers first: eligibility, the 5% click-through rule, what the API upload writes into your account, and what conversion tracking needs from your website. It does not say whether Google will approve or reinstate an account — a person reads the account before anyone answers that.",
     starters: [
-      "Are we eligible for the Ad Grant, and what disqualifies a charity?",
-      "Our grant account was suspended over the 5% click-through rule. How do we get it back?",
-      "Can we run the grant and a paid account at the same time without bidding against ourselves?",
-      "What can the $10,000 actually be spent on, and what is off limits?",
+      "Google suspended our grant account over the 5% click-through rule. Can you rebuild it?",
+      "Do you build the campaigns inside our own Google Ads account, or do we import files by hand?",
+      "We report on donations and volunteer sign-ups, not clicks. Can you set that tracking up?",
+      "After the setup, who runs the account each month — your team or the software?",
     ],
     contract: {
       ...TOP_RATED_TEAM,
-      entity: "The company that runs top-rated.team. Ad Grants work runs on our own tooling at adgrant.ai.",
+      // Only the entity line moves: the tool is ours and so are the hours after
+      // it, so this door stays one contract and one invoice.
+      entity:
+        "The company that runs top-rated.team. Ad Grants setup runs on our own tool, adgrant.ai, which writes through the official Google Ads API under a manager-account link you can remove; the management and the conversion tracking after it are our own people, on the same contract.",
     },
     tier: "white",
     status: "coming",
-    comingLine: "This door has no panel yet. adgrant.ai is where the grant work happens in the meantime.",
+    comingLine:
+      "This door has no panel yet. adgrant.ai does the setup today; the management and the conversion tracking start with a call.",
     kbNamespace: "ad-grants",
   },
   {

@@ -1,0 +1,47 @@
+# Render blueprint — one always-on Node process serving the API, the WebSocket
+# and the built client.
+#
+# Why this shape and not a serverless one: the workspace at /w/:token is kept
+# live over a WebSocket at /ws. A platform that starts the process per request
+# (Vercel, Cloudflare Pages, Netlify) serves the landing page correctly and then
+# the room loads and never updates, with no error anywhere. That failure is
+# silent, which is why it is worth paying to avoid.
+#
+# To use it: render.com -> New -> Blueprint -> pick this repository. Render reads
+# this file, creates the service, and asks only for the values marked sync:false
+# below. Nothing here needs a terminal.
+services:
+  - type: web
+    name: top-rated-team
+    runtime: node
+    plan: starter          # $7/month. The free plan sleeps after 15 minutes of no
+                           # traffic; waking it drops every open WebSocket and makes
+                           # the next visitor wait. Use free only to look at it.
+    region: frankfurt      # closest to the audience and to the owner
+    branch: main
+    buildCommand: npm ci && npm run kb:build && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true       # a push to main deploys; turn this off in the dashboard
+                           # if you would rather press the button yourself
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # PORT is set by Render itself. Do not add it here — server/index.ts already
+      # reads process.env.PORT and binds 0.0.0.0.
+      - key: PUBLIC_BASE_URL
+        value: https://ai.top-rated.team
+      - key: OPENAI_API_KEY
+        sync: false        # paste it in the dashboard; never in this file
+      - key: OPENAI_CHAT_MODEL
+        value: gpt-5-mini
+      - key: OPENAI_EMBED_MODEL
+        value: text-embedding-3-small
+      - key: LEAD_NOTIFY_EMAIL
+        value: dan@being.marketing
+      - key: LEAD_WEBHOOK_URL
+        sync: false        # optional: where a request for a human is POSTed
+      - key: DATABASE_URL
+        sync: false        # optional. Leave empty and rooms live in memory and
+                           # vanish on every deploy — fine for a first look, not
+                           # for real clients. See docs/DEPLOY.md.
