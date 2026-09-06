@@ -1,0 +1,16 @@
+{
+  "name": "chatgpt-ads-team",
+  "install": "npm ci",
+  "terminals": [
+    {
+      "name": "dev-server",
+      "command": "npm run dev"
+    }
+  ],
+  "ports": [
+    {
+      "name": "app",
+      "port": 5000
+    }
+  ]
+}
