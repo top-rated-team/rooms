@@ -104,10 +104,17 @@ export interface DoorDef {
   /** Only for status "coming": why the panel is shut, in one sentence. */
   comingLine?: string;
   /**
-   * Which corpus the door's answers are retrieved from. Only "chatgpt-ads" is
-   * built today (data/kb/kb.json); a door pointing at a namespace with no corpus
-   * retrieves nothing and its agent says what it is missing — see server/ai/kb.ts.
-   * `null` where no agent of ours answers at all.
+   * Which corpus the door's answers are retrieved from. Three are built today —
+   * "chatgpt-ads" (data/kb/kb.json), "google-ads" (kb.google-ads.json) and
+   * "ad-grants" (kb.ad-grants.json), all written by scripts/build-kb.ts. A door
+   * pointing at a namespace with no corpus retrieves nothing and its agent says
+   * what it is missing — see server/ai/kb.ts. `null` where no agent of ours
+   * answers at all.
+   *
+   * Nothing reads this field at retrieval time yet: server/ai/kb.ts loads one
+   * corpus and searches all of it, so a second door set live today would be
+   * answered out of the ChatGPT Ads corpus. The agent, not the door, is where
+   * the namespace has to arrive — see docs/doors.md.
    */
   kbNamespace: string | null;
 }
@@ -163,7 +170,7 @@ export const DOORS: DoorDef[] = [
       "Search, Performance Max and Shopping, run by the people Google books to train other advertisers. Account structure, bidding and negatives — and the measurement underneath them, because bad data makes every bidding decision wrong.",
     firstAgentId: "google-ads",
     agentLine:
-      "The Google Ads Agent answers first: account structure, bidding, Performance Max and Shopping feeds.",
+      "The Google Ads Agent answers first, from Google's own Google Ads documentation, and cites the page it used: account structure, bidding, Performance Max, Shopping feeds and the conversion tracking underneath them. It does not audit an account it cannot see, and it does not say whether Google will approve an ad or lift a suspension.",
     starters: [
       "Should we split PMax from Search, or let PMax absorb everything?",
       "How do I structure a $3K/month B2B SaaS account?",
@@ -174,7 +181,7 @@ export const DOORS: DoorDef[] = [
     tier: "white",
     status: "coming",
     comingLine:
-      "The panel for this door is not wired up yet. The Google Ads work runs today, so a call is the shorter path.",
+      "The agent for this door reads Google's own documentation, and the panel opens once it can be held to that corpus alone rather than the one behind the ChatGPT Ads door. The Google Ads work runs today, so a call is the shorter path.",
     kbNamespace: "google-ads",
   },
   {
@@ -186,9 +193,12 @@ export const DOORS: DoorDef[] = [
     headline: "Google Ad Grants, set up through the official Google Ads API",
     blurb:
       "Campaigns, ad groups, keywords, ads and extensions are generated from your own website and written into your Google Ads account through the official Google Ads API — under a manager-account link you can remove, not a tool signed in as you. The setup is the automated half; the other half is a person, on the conversion tracking that lets the grant report donations and sign-ups instead of clicks, and on the month-to-month work that keeps the account inside the rules that suspend grants.",
-    firstAgentId: "google-ads",
+    // Its own agent, not the Google Ads one: this door's agent reads Google's
+    // Ad Grants policies rather than the general Google Ads corpus, and carries
+    // a refusal the Google Ads Agent has no reason to carry.
+    firstAgentId: "ad-grants",
     agentLine:
-      "The Google Ads Agent answers first: eligibility, the 5% click-through rule, what the API upload writes into your account, and what conversion tracking needs from your website. It does not say whether Google will approve or reinstate an account — a person reads the account before anyone answers that.",
+      "The Ad Grants Agent answers first, from Google's own Ad Grants policies, and cites the page it used: the 5% click-through rule, the website and account-management policies, what the API upload writes into your account, and what conversion tracking needs from your website. It does not say whether Google will approve or reinstate an account — a person reads the account before anyone answers that.",
     starters: [
       "Google suspended our grant account over the 5% click-through rule. Can you rebuild it?",
       "Do you build the campaigns inside our own Google Ads account, or do we import files by hand?",
@@ -205,7 +215,7 @@ export const DOORS: DoorDef[] = [
     tier: "white",
     status: "coming",
     comingLine:
-      "This door has no panel yet. adgrant.ai does the setup today; the management and the conversion tracking start with a call.",
+      "The agent for this door reads Google's own Ad Grants policies, and the panel opens once it can be held to those alone rather than the corpus behind the ChatGPT Ads door. adgrant.ai does the setup today; the management and the conversion tracking start with a call.",
     kbNamespace: "ad-grants",
   },
   {

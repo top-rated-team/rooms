@@ -28,8 +28,8 @@ one offer costs.
 | Door | Tier | Who invoices | State |
 |---|---|---|---|
 | Conversion tracking for ChatGPT Ads | Ours end to end | Top-Rated Team s.r.o. | live at `/` |
-| Google Ads management | Ours end to end | Top-Rated Team s.r.o. | coming |
-| Google Ad Grants, set up with AdGrant.AI | Ours end to end | Top-Rated Team s.r.o. | coming |
+| Google Ads management | Ours end to end | Top-Rated Team s.r.o. | coming — knowledge built, waiting on retrieval |
+| Google Ad Grants, set up through the official Google Ads API | Ours end to end | Top-Rated Team s.r.o. | coming — knowledge built, waiting on retrieval |
 | LinkedIn Ads | Ours end to end | Top-Rated Team s.r.o. | coming |
 | LinkedIn automation, with a written legal assessment | Lawyer first | Top-Rated Team s.r.o. for the build; the lawyer bills the assessment | coming |
 | LinkedIn growth | A different company | Maksymenko LinkedIn Growth | coming |
@@ -96,10 +96,16 @@ my CPA double?" gets clicked. "CPA analysis" does not.
 sentence saying so. A coming door with no `comingLine` is a dead end; write the
 sentence.
 
-**`kbNamespace`** — which body of knowledge the answers are retrieved from. Only
-`chatgpt-ads` has a corpus today (`data/kb/kb.json`). A door pointing at a namespace
-with nothing behind it does not invent an answer — the agent says what it is missing,
-which is honest and also a wasted visit. Build the corpus before you set the door live.
+**`kbNamespace`** — which body of knowledge the answers are retrieved from. Three
+corpora are built today: `chatgpt-ads` (`data/kb/kb.json`), `google-ads`
+(`kb.google-ads.json`) and `ad-grants` (`kb.ad-grants.json`), all written by
+`scripts/build-kb.ts`. A door pointing at a namespace with nothing behind it does not
+invent an answer — the agent says what it is missing, which is honest and also a
+wasted visit. Build the corpus before you set the door live.
+
+Read the next section before you rely on this field. **Nothing reads it at retrieval
+time yet**, so setting a second door live today does not give that door its own
+knowledge — it gives it the first door's.
 
 **`contract`** — five fields and an optional sixth, and they are the ones that cost
 money to get wrong.
@@ -146,6 +152,101 @@ This is design, not legal advice. When a door involves a company that is not
 Top-Rated Team s.r.o., have its terms and its invoicing checked by someone qualified
 before the door goes live, not after the first client.
 
+## What a live door actually needs
+
+Written after building the knowledge for doors 2 and 3, so the next one is a
+checklist rather than an archaeology exercise. `status: "live"` is the last thing you
+change, not the first. Four things have to be true before it is honest:
+
+**1. A row in `shared/doors.ts` with `status: "live"`.** The cheap part. Everything
+below is what makes the row true.
+
+**2. An agent in `shared/roster.ts` with its own persona.** Not a shared one. Door 3
+originally pointed at the Google Ads Agent; it now has its own, because it carries a
+refusal the Google Ads Agent has no reason to carry — the Ad Grants Agent must never
+say whether Google will approve or reinstate an account. A refusal that lives in one
+agent's prompt cannot be borrowed by another door, and an `agentLine` that promises a
+refusal the agent was never given is a sentence about nothing.
+
+Write down, in the prompt: what it knows, what it refuses, and where it stops. The
+ChatGPT Ads Agent stops where the visitor's codebase begins. These two stop where the
+visitor's ad account begins — same rule, same reason: no agent here can see an
+account, and an answer that implies otherwise turns a pre-sales question into a
+support ticket.
+
+**3. A corpus with real content in it, from sources you can name.** `scripts/build-kb.ts`
+holds one entry per corpus. Build one with:
+
+```bash
+npm run kb:fetch -- google-ads     # or ad-grants, or chatgpt-ads; omit for all three
+npm run kb:embed -- google-ads     # optional, needs a key; without it retrieval is BM25
+```
+
+Each corpus is written whole to its own file and carries its own `namespace`. A corpus
+that fetches nothing is left exactly as it was rather than emptied — the deploy runs
+this on every push, and blanking a corpus that is answering questions would be worse
+than serving one a few days old.
+
+What was learned building the Google ones, none of which was obvious:
+
+- **Google publishes no `.md` twin and no `llms.txt`.** OpenAI's docs do, which is why
+  door 1's fetcher is twenty lines. Google's pages are read as HTML: the article body
+  is pulled out by container (`article-content-container` on the help centre,
+  `devsite-article-body` on the developer docs) and converted. The chrome around a
+  Google help page is a product picker naming every product Google sells, and indexing
+  it would make every page match every query.
+- **Ask for English twice.** Google negotiates the language of a page from the caller
+  and will answer in Japanese or Thai. `hl=en` on every URL *and* an `accept-language`
+  header. The first build of the Google Ads corpus came back with four pages in three
+  languages and looked fine in the log.
+- **A retired help-centre article does not 404.** It redirects to a generic landing
+  page that returns 200. Every URL in the file was fetched and read before it was
+  written down; a page that comes back under the minimum length is dropped rather than
+  indexed as furniture.
+- **Some pages are rewritten per country.** The Ad Grants eligibility page is one, so
+  it is deliberately not in the corpus: whichever country the build host sits in would
+  become the rule the corpus states for everyone.
+- **The developer docs print every sample in six languages.** Only the first is kept,
+  and a sample over 3,000 characters is dropped whole rather than truncated — half a
+  program in a citation reads as a complete one.
+- **Only official sources.** Google's own help centre and developer documentation.
+  Nothing behind a login, and nobody's blog. The corpus is what the agent is allowed to
+  say; put an agency's opinion in it and the agent will cite the agency's opinion as
+  Google's rule.
+
+**4. Retrieval that can tell one corpus from another — and this is the part that is not
+finished.**
+
+`server/ai/kb.ts` loads exactly one file, `data/kb/kb.json`, into one index, and
+`retrieve(query, k)` searches all of it. It takes no namespace. `kbNamespace` on a door
+row is read in two places in `AskWidget.tsx`, both of them display, and nowhere on the
+path that fetches an answer. `server/ai/agentRuntime.ts` gates retrieval on
+`agent.useKb` alone.
+
+So a second door set live today would not answer out of its own corpus. It would answer
+out of the ChatGPT Ads corpus, and cite `developers.openai.com` for a question about
+Google Ad Grants — confidently, in the house voice, with a working link. **That is worse
+than a closed door**, which is why both rows are still `coming` and both new agents are
+`useKb: false` with the reason written beside them.
+
+What has to change, in two files nobody's door row can reach:
+
+- `server/ai/kb.ts` — load every corpus in `data/kb/` rather than only `kb.json`, tag
+  each chunk with its file's `namespace` (defaulting to `chatgpt-ads` where the field is
+  absent, so an older file still works), keep the vectors concatenated in the same order
+  as the chunks so the index alignment `kb:embed` depends on survives, and give
+  `retrieve()` a namespace argument that skips chunks belonging to any other one.
+- `server/ai/agentRuntime.ts` — pass `agent.kbNamespace` into `retrieve()`, and stop
+  naming ChatGPT Ads in the two prompt strings that describe the excerpts
+  (`contextBlock` and `NO_EXCERPTS_INSTRUCTION`), which currently tell every grounded
+  agent that its sources are OpenAI's and that its subject postdates the model's
+  training data.
+
+The namespace deliberately travels on the **agent**, not on the request: one agent reads
+one corpus, so nothing has to change in `/api/ask`, in the API contract, or in the
+client. When that lands, this door opens by flipping four values — `useKb` on the two
+agents, `status` on the two rows — and deleting two `comingLine`s.
+
 ## Adding the eighth door
 
 **Decide these six things in writing first.** None of them is a developer question, and
@@ -165,7 +266,9 @@ answering them badly is what makes a door useless:
 1. Add a row to `shared/doors.ts` with the fields above. Copy the nearest existing row
    and change it; do not start from an empty object.
 2. If the door needs a new agent, add it to `shared/roster.ts` and give it something to
-   cite.
+   cite — a corpus of its own in `scripts/build-kb.ts`, built and checked. "What a live
+   door actually needs" above is the long version, and it is worth reading before you
+   promise a date.
 3. If the company has no terms page yet, leave `termsUrl` empty rather than pointing at
    ours, and keep the door `coming` until it has one.
 4. Update the one sentence under the hero on `/`, which counts the doors in words —
@@ -177,6 +280,9 @@ answering them badly is what makes a door useless:
 1. Open `/work`. The new row reads plainly and the company under it is right.
 2. Open the door. Ask one of its four starters. The answer streams, cites something
    real, and the line "Nothing is saved yet. Close this tab and it is gone" is under it.
+   **Open the citation.** A door reading the wrong corpus still cites a working link to a
+   real page, and the only thing that gives it away is that the page is about somebody
+   else's product.
 3. Press Keep. The room opens with that conversation already in it.
 4. Scroll to the bottom of the room and **read the company name aloud**. If it is not
    the company that will send the invoice, stop and fix the row before anyone else sees

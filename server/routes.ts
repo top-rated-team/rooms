@@ -1,4 +1,4 @@
-import { clearInterval, setInterval } from "node:timers";
+import { clearInterval, clearTimeout, setInterval, setTimeout } from "node:timers";
 import type { Express, Request, RequestHandler, Response } from "express";
 import type { ZodError } from "zod";
 import {
@@ -40,7 +40,79 @@ type Turn = { role: "user" | "assistant"; content: string };
 
 /** How much of a channel's history an agent is given for context. */
 const MAX_HISTORY_TURNS = 10;
-const SSE_HEARTBEAT_MS = 15_000;
+
+/* ------------------------- /api/ask stream shape -------------------------- */
+/* Everything below belongs to the SSE stream at /api/ask. The numbers are the
+ * ones a person waiting on a blank panel actually feels, so each says what it
+ * is measured against rather than being a round number somebody liked. */
+
+/**
+ * Idle gap the stream never exceeds. Ten seconds sits under the shortest
+ * connection idle timeout anything in this path enforces, and the visitor is
+ * told something real at 8s anyway (ASK_SLOW_NOTICE_MS), so this only carries
+ * the quiet stretch between that notice and the first token.
+ */
+const SSE_HEARTBEAT_MS = 10_000;
+
+/**
+ * Padding written once, immediately after the headers, before any work starts.
+ *
+ * A proxy that waits for a full buffer before forwarding anything will hold a
+ * 17-byte comment indefinitely; 4 KiB is one memory page, which is nginx's
+ * default `proxy_buffer_size` and larger than any buffer we can name in this
+ * path. It is a comment frame, so every SSE client — ours and the browser's
+ * own EventSource — drops it without rendering anything.
+ *
+ * It works together with `no-transform`, not instead of it: 4 KiB of spaces
+ * gzips down to a few bytes, so an edge that compresses the stream would
+ * squeeze the padding back out of it. `Cache-Control: no-transform` is what
+ * stops that, and the header below is why this is 4 KiB rather than 40.
+ *
+ * Cost: 4 KiB per question, once, against an answer that runs to several KiB.
+ */
+const SSE_PREAMBLE_BYTES = 4096;
+const SSE_PREAMBLE =
+  ": padding, so a proxy that waits for a full buffer forwards this response now\n" +
+  `:${" ".repeat(SSE_PREAMBLE_BYTES)}\n\n`;
+
+/**
+ * When the visitor is told the answer is slow. A reasoning model spends its
+ * reasoning tokens before the first visible character, and on a 24k-character
+ * context that is routinely 3-8 seconds of nothing — so anything shorter than
+ * this cries wolf on a perfectly healthy answer. Past about ten seconds of
+ * silence a visitor stops reading the spinner and decides the page is broken.
+ */
+const ASK_SLOW_NOTICE_MS = 8_000;
+
+/**
+ * When we stop waiting for the first chunk and say so.
+ *
+ * This is a first-chunk deadline only: once tokens are arriving we never cut a
+ * good answer off mid-sentence, and `ANSWER_TIMEOUT_MS` in server/ai/agentRuntime.ts
+ * (60s) remains the guard against a stalled socket. Thirty seconds is well past
+ * any healthy first token and short enough that the visitor is handed a route to
+ * a person while they still want one.
+ */
+const ASK_FIRST_CHUNK_DEADLINE_MS = 30_000;
+
+/** First status event: true of what the agent is about to do, not a guess at progress. */
+const ASK_STATUS_RETRIEVING = "Looking through the documentation.";
+const ASK_STATUS_THINKING = "Putting the answer together.";
+const ASK_STATUS_SLOW =
+  "Still going. The model has not sent back any of the answer yet.";
+/** Reads the number off the constant, so raising the deadline cannot leave this sentence lying about it. */
+const ASK_DEADLINE_MESSAGE =
+  `Nothing came back from the model within ${Math.round(ASK_FIRST_CHUNK_DEADLINE_MS / 1000)} seconds, so this stopped ` +
+  "rather than leaving you watching a spinner. Ask again, or put the question to a person — that route does not queue.";
+
+/**
+ * What /api/ask writes on the wire. `status` is deliberately not in
+ * `AskEvent` yet: shared/api.ts is another agent's file this week, and a client
+ * that does not know the variant ignores the frame, so the server can lead. The
+ * handoff asks for it to be moved into the shared contract.
+ */
+type AskStatusStage = "retrieving" | "slow";
+type AskStreamEvent = AskEvent | { type: "status"; stage: AskStatusStage; message: string };
 
 const LLM_UNAVAILABLE_CHAT = `Live answers are not configured on this deployment: there is no \`OPENAI_API_KEY\` set, so I cannot read the ChatGPT Ads documentation, and I will not guess at an answer about a platform this new.
 
@@ -666,53 +738,142 @@ export function registerRoutes(app: Express): void {
       if (!parsed.success) return badRequest(res, describe(parsed.error));
 
       const agentId = parsed.data.agentId ?? DEFAULT_AGENT_ID;
-      if (!AGENT_BY_ID[agentId]) return badRequest(res, `Unknown agent: ${agentId}`);
+      const agent = AGENT_BY_ID[agentId];
+      if (!agent) return badRequest(res, `Unknown agent: ${agentId}`);
 
       res.status(200);
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
       res.setHeader("Connection", "keep-alive");
-      // Tells nginx not to buffer the response; without it the whole answer
-      // lands in one lump at the end instead of streaming.
+      // Asks nginx not to buffer. Cloudflare strips it before the browser sees
+      // it, so it is a request to whatever is directly in front of this process
+      // and never something to rely on — hence SSE_PREAMBLE below.
       res.setHeader("X-Accel-Buffering", "no");
       res.flushHeaders();
 
-      let closed = false;
-      const heartbeat = setInterval(() => {
-        if (!closed) res.write(": keep-alive\n\n");
-      }, SSE_HEARTBEAT_MS);
+      /**
+       * Two flags, not one, and the distinction is the whole bug this endpoint
+       * used to have: `ended` means we finished writing, `disconnected` means
+       * the visitor went away. A single flag set from a disconnect handler also
+       * suppressed `res.end()`, so the response was never terminated.
+       */
+      let ended = false;
+      let disconnected = false;
 
-      const send = (event: AskEvent): void => {
-        if (closed) return;
-        res.write(`data: ${JSON.stringify(event)}\n\n`);
+      let heartbeat: NodeJS.Timeout | undefined;
+      let slowNotice: NodeJS.Timeout | undefined;
+      let deadline: NodeJS.Timeout | undefined;
+
+      const stopTimers = (): void => {
+        if (heartbeat) clearInterval(heartbeat);
+        if (slowNotice) clearTimeout(slowNotice);
+        if (deadline) clearTimeout(deadline);
+      };
+
+      const write = (frame: string): void => {
+        if (ended || disconnected) return;
+        res.write(frame);
+      };
+
+      const send = (event: AskStreamEvent): void => {
+        write(`data: ${JSON.stringify(event)}\n\n`);
       };
 
       const finish = (): void => {
-        if (closed) return;
-        closed = true;
-        clearInterval(heartbeat);
-        res.end();
+        if (ended) return;
+        ended = true;
+        stopTimers();
+        if (!disconnected) res.end();
       };
 
-      req.on("close", () => {
-        closed = true;
-        clearInterval(heartbeat);
+      /*
+       * `res`, not `req`. Since Node 16 an IncomingMessage emits "close" as soon
+       * as the request is complete — which, behind express.json(), is a couple of
+       * milliseconds into the handler — so a disconnect handler on `req` fires on
+       * every healthy request and silences the stream it is supposed to be
+       * protecting. The response is the thing that closes when the visitor
+       * leaves. server/routes.ask.test.ts holds this down.
+       */
+      res.on("close", () => {
+        if (!ended) disconnected = true;
+        stopTimers();
       });
 
+      // Before anything expensive: fill whatever buffer is between this process
+      // and the browser. A comment nobody sees is not a sign of life to a
+      // visitor, but it is what makes the frames after it arrive.
+      write(SSE_PREAMBLE);
+
+      // Ahead of the status, not after it: a deployment with no key is not about
+      // to read anything, and saying it is would be the first lie of the session.
       if (!llmReady()) {
         send({ type: "error", message: LLM_UNAVAILABLE_ASK });
         finish();
         return;
       }
 
+      send({
+        type: "status",
+        stage: "retrieving",
+        message: agent.useKb ? ASK_STATUS_RETRIEVING : ASK_STATUS_THINKING,
+      });
+
+      heartbeat = setInterval(() => write(": keep-alive\n\n"), SSE_HEARTBEAT_MS);
+
+      // Retrieval and the model call both happen inside the generator's first
+      // step, so the first chunk is the first thing worth reporting and the only
+      // thing worth putting a deadline on. Once tokens are flowing, a slow
+      // answer is still an answer.
+      const answers = streamAgentAnswer({
+        agentId,
+        question: parsed.data.question,
+        history: parsed.data.history,
+      });
+
+      let expired = false;
+      const expiry = new Promise<"expired">((resolve) => {
+        deadline = setTimeout(() => {
+          expired = true;
+          resolve("expired");
+        }, ASK_FIRST_CHUNK_DEADLINE_MS);
+      });
+
+      slowNotice = setTimeout(() => {
+        send({ type: "status", stage: "slow", message: ASK_STATUS_SLOW });
+      }, ASK_SLOW_NOTICE_MS);
+
       try {
         let citations: Citation[] | undefined;
-        for await (const chunk of streamAgentAnswer({
-          agentId,
-          question: parsed.data.question,
-          history: parsed.data.history,
-        })) {
-          if (closed) break;
+        let waitingForFirst = true;
+
+        for (;;) {
+          const next = answers.next();
+          // The losing side of the race is still a live promise: give it a
+          // handler now so a later rejection is caught here rather than by the
+          // process-wide unhandledRejection hook.
+          next.catch(() => undefined);
+          const step = waitingForFirst ? await Promise.race([next, expiry]) : await next;
+
+          if (step === "expired") {
+            send({ type: "error", message: ASK_DEADLINE_MESSAGE });
+            send({ type: "done" });
+            // Best effort: a generator suspended mid-await resumes and stops at
+            // its next yield. Cancelling the OpenAI call itself needs an
+            // AbortSignal on streamAgentAnswer — see the handoff.
+            void answers.return(undefined).catch(() => undefined);
+            break;
+          }
+
+          if (waitingForFirst) {
+            waitingForFirst = false;
+            if (slowNotice) clearTimeout(slowNotice);
+            if (deadline) clearTimeout(deadline);
+          }
+
+          if (step.done) break;
+          if (disconnected) break;
+
+          const chunk = step.value;
           if (chunk.error) {
             send({ type: "error", message: chunk.error });
             continue;
@@ -720,7 +881,8 @@ export function registerRoutes(app: Express): void {
           if (chunk.citations && chunk.citations.length > 0) citations = chunk.citations;
           if (chunk.delta) send({ type: "delta", delta: chunk.delta });
         }
-        send({ type: "done", citations });
+
+        if (!expired) send({ type: "done", citations });
       } catch (error) {
         console.error("[ask] stream failed:", error);
         send({ type: "error", message: STREAM_INTERRUPTED });

@@ -1,0 +1,42 @@
+{
+  "//": "Who may touch what, written down BEFORE anyone starts. Two parcels claiming one file is the failure this file exists to prevent, and it costs one second to catch here instead of four hours in a merge. Read docs/parallel-dev.md first.",
+
+  "//seams": "Files everything needs. A parcel may ADD up to three lines to one of these and delete none, and must say which lines up front. Two one-line additions merge by keeping both; two thirty-line edits merge into something nobody can verify.",
+  "seams": ["client/src/App.tsx", "shared/doors.ts", "shared/roster.ts", "package.json"],
+
+  "//frozen": "Nobody edits these while a parallel run is going. They are the shape of the site, and a change here invalidates every parcel at once.",
+  "frozen": ["client/index.html", "server/index.ts", "render.yaml"],
+
+  "parcels": {
+    "door-linkedin-ads": {
+      "owns": ["data/kb/linkedin-ads/**", "client/src/components/site/doors/LinkedInAds*.tsx"],
+      "seams": { "shared/doors.ts": ["the linkedin-ads row"], "shared/roster.ts": ["one agent entry"] },
+      "done": "The door answers two real buyer questions with citations, and its row says live."
+    },
+    "door-linkedin-automation": {
+      "owns": ["data/kb/linkedin-automation/**"],
+      "seams": { "shared/doors.ts": ["the linkedin-automation row"], "shared/roster.ts": ["one agent entry"] },
+      "done": "Same, and the agent refuses to say whether any automation is permitted by a platform — it names the assessment instead."
+    },
+    "door-ai-builds": {
+      "owns": ["data/kb/ai-builds/**"],
+      "seams": { "shared/doors.ts": ["the ai-builds row"], "shared/roster.ts": ["one agent entry"] },
+      "done": "Same. Reads as one direction of this workspace, not as a separate brand."
+    },
+    "approval-card": {
+      "owns": ["client/src/components/workspace/ApprovalCard.tsx", "client/src/components/workspace/approval-*.ts", "server/approvals.ts", "server/approvals.test.ts"],
+      "seams": { "shared/api.ts": ["one card type"] },
+      "done": "A card in a thread showing what would change, a before and after, and two buttons; approving is recorded with who and when."
+    },
+    "outside-agent": {
+      "owns": ["server/guests.ts", "server/guests.test.ts", "client/src/components/workspace/AdmitAgentDialog.tsx"],
+      "seams": { "shared/api.ts": ["one guest type"] },
+      "done": "Somebody else's agent is admitted to ONE thread, watch-only by default, with a budget, an expiry and a visible revoke."
+    },
+    "payment-link": {
+      "owns": ["server/payments.ts", "server/payments.test.ts", "client/src/components/workspace/PriceCard.tsx"],
+      "seams": { "shared/api.ts": ["one price type"] },
+      "done": "A price can be put in a thread and paid, and the room records that it was. No pricing page, no plans."
+    }
+  }
+}

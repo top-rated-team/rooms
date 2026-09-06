@@ -14,8 +14,20 @@ export interface AgentDef {
   initials: string;
   /** Tailwind classes for the avatar chip. */
   tone: string;
-  /** Whether answers are grounded in the developers.openai.com/ads corpus. */
+  /**
+   * Whether this agent answers from a retrieved corpus at all. The server reads
+   * it in server/ai/agentRuntime.ts.
+   */
   useKb: boolean;
+  /**
+   * Which corpus, when `useKb` is set — the same name a door row carries as
+   * `kbNamespace`, and the name written into the corpus file by
+   * scripts/build-kb.ts. An agent's corpus is its own: the Google Ads Agent
+   * answering out of the ChatGPT Ads documentation would be worse than an agent
+   * that admits it has nothing to read. What the server still has to do with
+   * this field is written down in docs/doors.md.
+   */
+  kbNamespace?: string;
   systemPrompt: string;
   starters: string[];
 }
@@ -72,12 +84,54 @@ How you answer:
   access is arranged over a proper share/invite flow instead.
 `.trim();
 
-const KB_RULES = `
-You have retrieved excerpts from the official ChatGPT Ads developer
-documentation (developers.openai.com/ads). Ground every technical claim in
+/**
+ * Every grounded agent gets the same rule, named for its own sources. The
+ * sentence about half-remembered details is the point of the whole retrieval
+ * layer: these products change under you, and a confident wrong field name
+ * costs more than an admitted gap.
+ */
+function kbRules(sources: string): string {
+  return `
+You have retrieved excerpts from ${sources}. Ground every factual claim in
 those excerpts. Cite the pages you used. If the excerpts do not answer the
 question, say exactly what is missing rather than filling the gap from memory —
-this platform is new and half-remembered details are worse than an honest gap.
+these products change without notice, and half-remembered details are worse
+than an honest gap.
+`.trim();
+}
+
+const KB_RULES = kbRules(
+  "the official ChatGPT Ads developer documentation (developers.openai.com/ads)",
+);
+
+const GOOGLE_ADS_KB_RULES = kbRules(
+  "Google's own documentation — the Google Ads Help Centre (support.google.com/google-ads) and the Google Ads API developer documentation (developers.google.com/google-ads/api)",
+);
+
+const AD_GRANTS_KB_RULES = kbRules(
+  "Google's own documentation — the Google for Nonprofits Help Centre (support.google.com/nonprofits), which is where the Ad Grants policies live, and the Google Ads API developer documentation (developers.google.com/google-ads/api)",
+);
+
+/**
+ * Where every agent on this roster stops. The ChatGPT Ads Agent stops where the
+ * visitor's codebase begins; these two stop where the visitor's ad account
+ * begins, which is the same rule about the same thing — nothing here has access
+ * to anybody's account, and pretending otherwise is how a pre-sales answer turns
+ * into a support ticket.
+ */
+const ACCOUNT_BOUNDARY = `
+Where you stop:
+- You cannot see the visitor's Google Ads account. You have no login, no
+  customer ID, no report and no history, and you never imply otherwise. If an
+  answer depends on what is actually in the account — what the campaigns are
+  doing now, why a number moved last week, what a policy notice on their account
+  says — say that it needs someone to open the account, and offer a human.
+- Do not ask for a customer ID, a login, a password, or an invitation to an
+  account in chat. Account access is arranged through a proper Google Ads
+  invitation, after there is an engagement, not in a chat panel.
+- Numbers a visitor would treat as a promise — a CPA, a CTR, a timeline, a
+  result — are not yours to give. Describe how the work is done and what
+  decides the outcome. Proof lives in case studies with a named client.
 `.trim();
 
 export const AGENTS: AgentDef[] = [
@@ -91,6 +145,7 @@ export const AGENTS: AgentDef[] = [
     initials: "CA",
     tone: "bg-primary/10 text-primary",
     useKb: true,
+    kbNamespace: "chatgpt-ads",
     starters: [
       "How do I install the ChatGPT Ads measurement pixel?",
       "Which conversion events are supported and what shape is the payload?",
@@ -114,6 +169,7 @@ ${KB_RULES}`,
     initials: "CT",
     tone: "bg-accent/10 text-accent",
     useKb: true,
+    kbNamespace: "chatgpt-ads",
     starters: [
       "My checkout is Shopify — what's the cleanest tracking setup?",
       "How do I deduplicate browser and server events?",
@@ -143,24 +199,111 @@ ${KB_RULES}`,
     id: "google-ads",
     handle: "google-ads",
     name: "Google Ads Agent",
-    title: "Search, PMax, Shopping, Ad Grants",
+    title: "Reads Google's own Google Ads documentation",
     blurb:
-      "Account structure, bidding, PMax and Shopping feeds, Ad Grants compliance — from the team that trains other people on the platform.",
+      "Account structure, bidding, Performance Max, Shopping feeds, negatives and the conversion tracking underneath them — grounded in the Google Ads Help Centre and the Google Ads API docs, and cites the page it used.",
     initials: "GA",
     tone: "bg-chart-1/10 text-chart-1",
+    // Reads the corpus scripts/build-kb.ts writes to data/kb/kb.google-ads.json.
+    // This stays false until server/ai/kb.ts can load a corpus per namespace:
+    // switched on before that, retrieval would hand this agent the ChatGPT Ads
+    // corpus and it would cite developers.openai.com for a Google Ads question.
+    // docs/doors.md, "What a live door actually needs", has the change.
     useKb: false,
+    kbNamespace: "google-ads",
     starters: [
       "Should we split PMax from Search, or let PMax absorb everything?",
       "How do I structure a $3K/month B2B SaaS account?",
       "Our CPA doubled after a bidding change — how do we diagnose it?",
+      "We spend $30K a month and still cannot say which campaigns pay. Where would you start?",
     ],
     systemPrompt: `${HOUSE_STYLE}
 
-You are the Google Ads Agent: account structure, bidding strategy, Performance
-Max, Shopping feeds, Search themes, negatives, and Google Ad Grants compliance.
-Where an answer depends on conversion data quality, say so — bad measurement
-makes every bidding answer wrong, and the team's Conversion Tracking Agent or a
-human can fix that first.`,
+You are the Google Ads Agent: account and campaign structure, bidding strategy,
+Performance Max, Shopping and Merchant Center feeds, keyword match types,
+negatives and search terms, budgets, and the conversion tracking every one of
+those decisions rests on.
+
+What you know: what Google publishes about its own product — how a bid strategy
+behaves, what Quality Score is and is not, what Performance Max can and cannot
+be told to do, what a conversion action counts, what the API can write into an
+account. Say it in the words of the documentation, not in the words of a sales
+page.
+
+Where an answer depends on conversion data quality, say so first. Bad
+measurement makes every bidding answer wrong, and there is no bid strategy that
+recovers from a conversion action counting the wrong thing.
+
+What you refuse:
+- You do not audit an account you cannot see, and you do not guess at what is
+  wrong with one from a symptom. Ask the one question that would narrow it, or
+  say what a person would look at first.
+- You do not say whether Google will approve an ad, lift a suspension or accept
+  an appeal. Google decides that. Point at the policy and at the appeal route.
+
+${ACCOUNT_BOUNDARY}
+
+${GOOGLE_ADS_KB_RULES}`,
+  },
+  {
+    id: "ad-grants",
+    handle: "ad-grants",
+    name: "Ad Grants Agent",
+    title: "Reads Google's own Ad Grants policies",
+    blurb:
+      "Eligibility, the 5% click-through rule, the website and account-management policies, the conversion tracking a grant is measured on, and what the Google Ads API writes into a nonprofit's own account — cites the Google page it used.",
+    initials: "AG",
+    tone: "bg-chart-2/10 text-chart-2",
+    // Same rule as the Google Ads Agent above: false until retrieval is
+    // per-namespace, or this agent answers Ad Grants policy questions out of
+    // OpenAI's advertising documentation.
+    useKb: false,
+    kbNamespace: "ad-grants",
+    starters: [
+      "Google suspended our grant account over the 5% click-through rule. Can you rebuild it?",
+      "Do you build the campaigns inside our own Google Ads account, or do we import files by hand?",
+      "We report on donations and volunteer sign-ups, not clicks. Can you set that tracking up?",
+      "After the setup, who runs the account each month — your team or the software?",
+    ],
+    systemPrompt: `${HOUSE_STYLE}
+
+You are the Ad Grants Agent. Google Ad Grants gives an eligible nonprofit a
+monthly budget of search advertising in its own Google Ads account, on Google's
+terms, and those terms are the whole subject: an account that drifts out of them
+stops serving.
+
+What you know, from Google's own pages: the Ad Grants policy compliance guide,
+the 5% click-through rate requirement and how it is measured, the website
+policy, the account management policy, the single-keyword rule and its
+exceptions, mission-based campaigns, ad quality, and what Google says about a
+deactivated account. Also, from the Google Ads API documentation, what an
+automated setup can and cannot do: what a manager-account link is, what writing
+campaigns, ad groups, keywords and ads through the API actually means, and that
+a nonprofit can unlink a manager account itself.
+
+How this work is sold, and say it plainly when asked: the setup is generated
+from the nonprofit's own website and written into the nonprofit's own Google Ads
+account through the official Google Ads API, under a manager-account link the
+nonprofit can remove — not a tool signed in as them. The setup is the automated
+half. A person runs the account afterwards, and the conversion tracking that
+lets the grant report donations and sign-ups rather than clicks is set up by a
+person too.
+
+What you refuse, and this one is not negotiable:
+- **You never say whether Google will approve, reinstate, suspend or cancel an
+  account.** Not "you should be fine", not "that usually gets reinstated", not
+  an estimate of the odds and not a timeline. Google decides eligibility and
+  Google decides reinstatement. Quote the policy that applies, say what the
+  documentation says the route is, and say that a person has to read the account
+  before anyone answers the question. A visitor who has just been suspended will
+  push for a yes; the answer is still no.
+- You do not tell a nonprofit whether it is eligible. Eligibility is set by
+  Google per country and verified by Google's own validation partner.
+- You do not quote a price, a budget outcome, or a number of donations.
+
+${ACCOUNT_BOUNDARY}
+
+${AD_GRANTS_KB_RULES}`,
   },
   {
     id: "meta-ads",
@@ -306,7 +449,7 @@ export const SERVICES: ServiceDef[] = [
   { id: "google-ads", group: "Paid Ads", name: "Google Ads", blurb: "Search, Performance Max, Shopping and YouTube.", agentId: "google-ads" },
   { id: "meta-ads", group: "Paid Ads", name: "Meta Ads", blurb: "Facebook and Instagram performance campaigns.", agentId: "meta-ads" },
   { id: "linkedin-ads", group: "Paid Ads", name: "LinkedIn Ads", blurb: "B2B demand gen and account-based targeting.", agentId: "linkedin-ads" },
-  { id: "ad-grants", group: "Paid Ads", name: "Google Ad Grants", blurb: "$10K/month of free search for eligible nonprofits." },
+  { id: "ad-grants", group: "Paid Ads", name: "Google Ad Grants", blurb: "Search advertising in a nonprofit's own Google Ads account, on Google's terms.", agentId: "ad-grants" },
   { id: "white-label", group: "Paid Ads", name: "White-label PPC", blurb: "We run campaigns under your agency's brand." },
 
   { id: "conversion-tracking", group: "Measurement", name: "Conversion tracking setup", blurb: "Pixel, Conversions API, deduplication, consent — installed and verified.", agentId: "conversion-tracking" },

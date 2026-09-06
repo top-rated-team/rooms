@@ -25,6 +25,42 @@ const CARET =
 type AskStatus = "idle" | "streaming" | "done" | "error";
 type KbState = "loading" | "ready" | "unconfigured" | "unreachable";
 
+/**
+ * What /api/ask writes on the wire. `status` is not in `AskEvent` yet — see the
+ * handoff on shared/api.ts. Parsing it here rather than ignoring it is what
+ * turns the panel's spinner from decoration into a report.
+ */
+type AskStreamEvent = AskEvent | { type: "status"; stage: "retrieving" | "slow"; message: string };
+
+/**
+ * What the panel says before the server's first status frame arrives. The server
+ * writes one before it starts any work, so this is on screen for about as long
+ * as a round trip.
+ */
+const CONNECTING_LABEL = "Connecting to the agent.";
+
+/**
+ * How long the panel waits with nothing at all on the socket before saying so.
+ * The server writes padding and a status frame immediately, and another status
+ * once the wait gets long, so silence past this point is not a hard question —
+ * it is bytes not arriving, and a visitor deserves to be told the difference.
+ */
+const NO_SIGNAL_NOTICE_MS = 12_000;
+
+/**
+ * When the panel gives up on its own. Deliberately longer than the server's own
+ * 30-second first-chunk deadline: whenever the server can reach us, its message
+ * is the specific one and should win. This limit is reached only when nothing
+ * the server writes is getting through at all.
+ */
+const NO_SIGNAL_GIVE_UP_MS = 45_000;
+
+/** The number comes off the constant above, so changing one cannot leave the other lying. */
+const NO_SIGNAL_MESSAGE =
+  `Nothing arrived from the agent in ${Math.round(NO_SIGNAL_GIVE_UP_MS / 1000)} seconds — not even the progress it ` +
+  "reports before it starts reading. That is this deployment failing rather than a hard question, and waiting longer " +
+  "will not fix it. Put the question to a person instead.";
+
 
 function hostOf(url: string): string {
   try {
@@ -71,10 +107,24 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
   const [error, setError] = useState<string | null>(null);
   const [showAllStarters, setShowAllStarters] = useState(false);
   const [startingWorkspace, setStartingWorkspace] = useState(false);
+  /** The stage the server last reported, in its words. Never a stage we guessed. */
+  const [stage, setStage] = useState(CONNECTING_LABEL);
+  /** Nothing at all has come down the socket, and it has been long enough to say so. */
+  const [stalled, setStalled] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const noSignalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const giveUpRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** Armed when a question goes out, disarmed by the first byte that comes back. */
+  const clearWatchdogs = useCallback(() => {
+    if (noSignalRef.current !== null) clearTimeout(noSignalRef.current);
+    if (giveUpRef.current !== null) clearTimeout(giveUpRef.current);
+    noSignalRef.current = null;
+    giveUpRef.current = null;
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -92,7 +142,10 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
   }, []);
 
   // Any in-flight stream dies with the component; the server sees the disconnect.
-  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(() => () => {
+    abortRef.current?.abort();
+    clearWatchdogs();
+  }, [clearWatchdogs]);
 
   useEffect(() => {
     if (status !== "streaming") return;
@@ -119,6 +172,19 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
     setCitations([]);
     setError(null);
     setStatus("streaming");
+    setStage(CONNECTING_LABEL);
+    setStalled(false);
+
+    clearWatchdogs();
+    noSignalRef.current = setTimeout(() => setStalled(true), NO_SIGNAL_NOTICE_MS);
+    giveUpRef.current = setTimeout(() => {
+      // Aborting first means the catch below sees an aborted controller and
+      // leaves this message alone rather than overwriting it with a generic one.
+      controller.abort();
+      setStalled(false);
+      setError(NO_SIGNAL_MESSAGE);
+      setStatus("error");
+    }, NO_SIGNAL_GIVE_UP_MS);
 
     try {
       const res = await fetch("/api/ask", {
@@ -146,6 +212,9 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
       while (!finished) {
         const { done, value } = await reader.read();
         if (done) break;
+        // Bytes are arriving, so whatever is slow, it is not the connection.
+        clearWatchdogs();
+        setStalled(false);
         buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
 
         let boundary = buffer.indexOf("\n\n");
@@ -161,14 +230,16 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
             .join("\n");
           if (!payload || payload === "[DONE]") continue;
 
-          let event: AskEvent;
+          let event: AskStreamEvent;
           try {
-            event = JSON.parse(payload) as AskEvent;
+            event = JSON.parse(payload) as AskStreamEvent;
           } catch {
-            continue; // Keep-alives and comments are not our business.
+            continue; // Keep-alives, padding and comments are not our business.
           }
 
-          if (event.type === "delta") {
+          if (event.type === "status") {
+            setStage(event.message);
+          } else if (event.type === "delta") {
             setAnswer((prev) => prev + event.delta);
           } else if (event.type === "done") {
             setCitations(event.citations ?? []);
@@ -194,8 +265,13 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
       if (controller.signal.aborted) return;
       setError("Network error while streaming the answer. The human CTAs below still work.");
       setStatus("error");
+    } finally {
+      // Only if this is still the live request: a question asked while an older
+      // one is streaming aborts it, and the older one's unwind would otherwise
+      // disarm the watchdogs the new one just set.
+      if (abortRef.current === controller) clearWatchdogs();
     }
-  }, [agentId, onVisitorMessage]);
+  }, [agentId, onVisitorMessage, clearWatchdogs]);
 
   async function startWorkspace() {
     setStartingWorkspace(true);
@@ -334,17 +410,53 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
                 </Suspense>
               </div>
             ) : busy ? (
-              <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Reading the documentation.
-              </p>
+              <div>
+                {/* The server reports what it is doing; this prints that and
+                    nothing else. A spinner on its own cannot tell a slow first
+                    token apart from a deployment that is not streaming. */}
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {stage}
+                </p>
+                {stalled ? (
+                  <div className="mt-3 rounded-md border border-card-border bg-muted/40 p-3">
+                    <p className="text-sm font-medium">Nothing has come back yet.</p>
+                    <p className="mt-1.5 text-sm text-muted-foreground">
+                      The agent reports each stage as it reaches it, so this much silence means the answer is not
+                      reaching this page rather than that the question is hard. Wait a little longer if you like, or
+                      ask a person now — that route does not depend on any of this.
+                    </p>
+                    <a
+                      href={BOOK_A_CALL_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={onAskedForAPerson}
+                      className={`${BTN_SECONDARY_SM} mt-3`}
+                    >
+                      Book a call
+                    </a>
+                  </div>
+                ) : null}
+              </div>
             ) : null}
           </div>
 
           {error ? (
-            <p role="alert" className="mt-3 text-sm text-destructive">
-              {error}
-            </p>
+            <div role="alert" className="mt-3">
+              <p className="text-sm text-destructive">{error}</p>
+              {/* An answer that failed still has to leave the visitor somewhere
+                  to go, and the only route here that does not run through the
+                  model is a person. */}
+              <a
+                href={BOOK_A_CALL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onAskedForAPerson}
+                className={`${BTN_SECONDARY_SM} mt-3`}
+              >
+                Book a call
+              </a>
+            </div>
           ) : null}
 
           {citations.length > 0 ? (
@@ -446,6 +558,8 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
                   setCitations([]);
                   setError(null);
                   setStatus("idle");
+                  setStage(CONNECTING_LABEL);
+                  setStalled(false);
                   textareaRef.current?.focus();
                 }}
               >
