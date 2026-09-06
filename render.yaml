@@ -14,12 +14,22 @@ services:
   - type: web
     name: top-rated-team
     runtime: node
-    plan: starter          # $7/month. The free plan sleeps after 15 minutes of no
-                           # traffic; waking it drops every open WebSocket and makes
-                           # the next visitor wait. Use free only to look at it.
+    plan: starter          # $7/month, 512 MB. Render now shows this as 0.5c-512mb;
+                           # `starter` is its legacy name and still accepted. This is
+                           # the COMPUTE price, not a workspace plan — stay on the
+                           # free Hobby workspace, the $25 Pro tier buys nothing you
+                           # need. The free compute plan sleeps after 15 minutes of no
+                           # traffic — and Render counts messages on an already-open
+                           # WebSocket as no traffic at all, so a busy room does not
+                           # keep it awake. Use free only to look at it.
     region: frankfurt      # closest to the audience and to the owner
     branch: main
-    buildCommand: npm ci && npm run kb:build && npm run build
+    # The knowledge base is committed to the repository, so refreshing it is a
+    # nice-to-have and must never fail the deploy: build-kb throws if a page it
+    # fetches has moved, and a first deploy that dies on somebody else's website
+    # is a bad first hour. Without an OpenAI key it skips the embedding step on
+    # its own and retrieval falls back to keyword scoring.
+    buildCommand: npm ci && (npm run kb:build || echo "knowledge base not refreshed; using the committed copy") && npm run build
     startCommand: npm start
     healthCheckPath: /
     autoDeploy: true       # a push to main deploys; turn this off in the dashboard
@@ -42,6 +52,23 @@ services:
       - key: LEAD_WEBHOOK_URL
         sync: false        # optional: where a request for a human is POSTed
       - key: DATABASE_URL
-        sync: false        # optional. Leave empty and rooms live in memory and
-                           # vanish on every deploy — fine for a first look, not
-                           # for real clients. See docs/DEPLOY.md.
+        sync: false        # Leave empty and rooms live in memory and vanish on every
+                           # deploy, taking every room address you have handed out.
+                           # Use a free Neon database, not Render's: server/db.ts
+                           # imports drizzle-orm/neon-serverless and hands it the ws
+                           # module, so it speaks Neon's protocol specifically.
+                           # Render's own free Postgres also deletes itself after 30
+                           # days.
+      - key: LEAD_INBOX_KEY
+        generateValue: true # Render invents one. It is the password for the page that
+                            # lists every request for a person that has come in. Copy
+                            # it out of the dashboard the first time; without it that
+                            # page cannot be opened.
+      - key: RESEND_API_KEY
+        sync: false        # optional. Without it nothing sends email — requests still
+                           # arrive and are stored, but only the inbox page and the
+                           # webhook show them.
+      - key: LEAD_EMAIL_FROM
+        sync: false        # optional, and required if RESEND_API_KEY is set: the
+                           # address the notification is sent from, on a domain
+                           # verified with Resend.
