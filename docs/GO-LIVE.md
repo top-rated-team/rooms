@@ -7,10 +7,16 @@ Do these in order. Nothing here needs a command line.
 1. Sign in at **render.com** with GitHub.
 2. **New** → **Blueprint** → choose `Being-Marketing/chatgpt-ads-team`.
    Render reads `render.yaml` and shows one service, `top-rated-team`.
-3. It asks for three values it refuses to read from a file:
+3. It asks for the values it refuses to read from a file. Only the first one
+   matters today:
    - `OPENAI_API_KEY` — paste your key. Without it the panel cannot answer.
-   - `LEAD_WEBHOOK_URL` — optional. Leave empty for now.
-   - `DATABASE_URL` — optional, and see the warning below.
+   - `DATABASE_URL` — see the database note below. Leave empty to look at it.
+   - `LEAD_WEBHOOK_URL`, `RESEND_API_KEY`, `LEAD_EMAIL_FROM` — all optional.
+     Leave them empty for now; requests still arrive and are stored.
+
+   **Before you close the dashboard, copy `LEAD_INBOX_KEY`.** Render generates it
+   and it is the password for `/leads`, the page that lists every request for a
+   person that has come in. It is the only way to read that page.
 4. **Apply**. The first build takes five to eight minutes, because it downloads
    the ChatGPT Ads knowledge base and builds the client.
 5. When it goes green, open the address Render gives you
@@ -18,12 +24,19 @@ Do these in order. Nothing here needs a command line.
    loads, the panel answers a question, and pressing **Keep this** opens a room
    whose messages appear as you type.
 
-> **The database warning.** With `DATABASE_URL` empty, rooms live in the
-> process's memory and disappear on every deploy and every restart. That is fine
-> for looking at it today. It is not fine the moment a real client is in a room.
-> Render's own Postgres is a few clicks: **New → Postgres**, then copy its
-> *Internal Database URL* into `DATABASE_URL` on the web service, and the schema
-> is created on the next deploy.
+> **The database note, and it is not Render's database.** With `DATABASE_URL`
+> empty, rooms live in the process's memory and disappear on every deploy —
+> taking every room address you have already given someone. That is fine for the
+> first look and not fine once a client is in a room.
+>
+> Use **Neon's free tier**, not Render's Postgres. Two reasons. The code speaks
+> Neon specifically: `server/db.ts` imports `drizzle-orm/neon-serverless` and
+> hands it the `ws` module, which is Neon's own driver, so another Postgres is
+> not a drop-in swap. And Render's free database deletes itself thirty days after
+> it is created.
+>
+> neon.tech → new project → copy the connection string → paste it into
+> `DATABASE_URL` on the Render service. The schema is created on the next deploy.
 
 ## 2. The domain (about five minutes)
 
@@ -56,4 +69,6 @@ Do these in order. Nothing here needs a command line.
 | Landing page fine, room never updates | The WebSocket is blocked. Almost always the orange cloud in Cloudflare. |
 | Panel says it cannot answer | `OPENAI_API_KEY` is missing or wrong. |
 | Rooms vanish after a deploy | Expected without `DATABASE_URL`. See the warning above. |
-| First visitor waits thirty seconds | The free plan went to sleep. Move to Starter. |
+| First visitor waits thirty seconds | The free compute plan went to sleep. Move it to the $7 one. Note that messages on an already-open room do **not** count as traffic that keeps it awake. |
+| `/leads` will not open | `LEAD_INBOX_KEY` was not copied out of the dashboard. Render → Environment shows it. |
+| A request arrives but no email | Expected until `RESEND_API_KEY` and `LEAD_EMAIL_FROM` are set. The request is stored either way — read it at `/leads`. |
