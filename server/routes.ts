@@ -12,6 +12,7 @@ import {
   updateTaskSchema,
   type Channel,
   type Citation,
+  type Lead,
   type Message,
   type MessageMeta,
 } from "@shared/schema";
@@ -19,7 +20,18 @@ import type { AskEvent, CreateWorkspaceResponse, WorkspaceState } from "@shared/
 import { AGENTS, AGENT_BY_ID, BOOK_A_CALL_URL, DEFAULT_AGENT_ID, EXPERTS, EXPERT_BY_KEY } from "@shared/roster";
 import { storage } from "./storage";
 import { broadcast } from "./ws";
-import { notifyLead } from "./notify";
+import {
+  deliverLeadRequest,
+  inboxHealth,
+  inboxKeyConfigured,
+  inboxKeyMatches,
+  leadInbox,
+  recordLeadAttempt,
+  recordLeadRequest,
+  renderLeadInbox,
+  type LeadRequest,
+  type LeadRequestInput,
+} from "./notify";
 import { rateLimit } from "./rateLimit";
 import { llmReady, streamAgentAnswer } from "./ai/agentRuntime";
 import { kbStatus } from "./ai/kb";
@@ -238,6 +250,83 @@ async function ensureAgentSurface(state: WorkspaceState, agentId: string): Promi
   });
 }
 
+/* -------------------------- asking for a human ---------------------------- */
+
+/**
+ * THE ONE PATH every request for a human takes — the form on the landing page,
+ * the "email me the link" strip and the room's hire sheet alike — so the owner
+ * reads one inbox and not three.
+ *
+ * The order is the whole point:
+ *
+ *   1. the ledger, synchronously, before anything else can fail;
+ *   2. the database copy, whose failure costs the second copy and nothing more;
+ *   3. delivery, in the background, because a webhook that hangs for six
+ *      seconds must not hold the visitor's request open.
+ *
+ * By the time this function returns, the request cannot be lost. Everything
+ * after step one is a copy of something already safe.
+ */
+async function captureLead(input: LeadRequestInput): Promise<{ request: LeadRequest; lead: Lead }> {
+  const request = recordLeadRequest(input);
+
+  let lead: Lead;
+  try {
+    lead = await storage.createLead({
+      workspaceId: request.workspaceId,
+      name: request.name,
+      email: request.email,
+      company: request.company,
+      website: request.website,
+      intent: request.intent,
+      message: request.message,
+      source: request.source,
+    });
+    recordLeadAttempt(request.id, {
+      at: new Date().toISOString(),
+      channel: "database",
+      ok: true,
+      detail: `stored as ${lead.id}`,
+    });
+  } catch (error) {
+    // Already on disk, so a database outage must not become a 500 for a
+    // visitor whose request we have in fact got.
+    console.error("[lead] the database copy failed:", error);
+    recordLeadAttempt(request.id, {
+      at: new Date().toISOString(),
+      channel: "database",
+      ok: false,
+      detail: error instanceof Error ? error.message : String(error),
+    });
+    lead = {
+      id: request.id,
+      workspaceId: request.workspaceId,
+      name: request.name,
+      email: request.email,
+      company: request.company,
+      website: request.website,
+      intent: request.intent,
+      message: request.message,
+      source: request.source,
+      createdAt: new Date(request.receivedAt),
+      notifiedAt: null,
+    };
+  }
+
+  void deliverLeadRequest(request).catch((error: unknown) => {
+    console.error("[lead] delivery raised after the request was kept:", error);
+  });
+
+  return { request, lead };
+}
+
+/** The inbox key may also arrive as `Authorization: Bearer <key>`. */
+function bearerKey(req: Request): string | undefined {
+  const header = req.get("authorization");
+  if (!header) return undefined;
+  return /^Bearer\s+(.+)$/i.exec(header.trim())?.[1];
+}
+
 function homeChannel(state: WorkspaceState): Channel {
   return state.channels.find((channel) => channel.slug === "conversion-tracking") ?? state.channels[0];
 }
@@ -250,6 +339,9 @@ export function registerRoutes(app: Express): void {
   // Inviting people also raises a lead, so it gets its own budget rather than
   // eating the contact form's.
   const inviteLimit = rateLimit({ windowMs: 60 * 60_000, max: 20, message: "Too many requests from this address. Try again later." });
+  // Slows a guess at LEAD_INBOX_KEY to something not worth attempting, while
+  // leaving the owner enough refreshes to work from.
+  const inboxLimit = rateLimit({ windowMs: 60_000, max: 30, message: "Too many requests. Wait a moment." });
   const askLimit = rateLimit({ windowMs: 60_000, max: 20, message: "Too many questions at once. Wait a few seconds and ask again." });
   const messageLimit = rateLimit({ windowMs: 60_000, max: 60, message: "Slow down a moment — too many messages." });
 
@@ -463,24 +555,30 @@ export function registerRoutes(app: Express): void {
           presence: "online",
         }));
 
-      const lead = await storage.createLead({
+      // The hire sheet goes through captureLead, exactly like the landing
+      // form, so there is one inbox. The room's own address travels with it:
+      // a request raised inside a room is unanswerable without it, and the
+      // token is not in the webhook payload — see server/notify.ts.
+      const { lead } = await captureLead({
         workspaceId: state.workspace.id,
+        workspaceName: state.workspace.name,
+        roomUrl: `${publicBaseUrl(req)}/w/${state.workspace.token}`,
         name: parsed.data.name ?? state.workspace.visitorName,
         email: parsed.data.email ?? state.workspace.visitorEmail,
         company: state.workspace.visitorCompany,
         website: state.workspace.visitorWebsite,
         intent: expert.leadsConversionTracking ? "conversion-tracking" : "expert-request",
         message: parsed.data.note ?? `Asked for ${expert.name} (${expert.title}) in the workspace.`,
-        source: { expert: expert.memberKey, workspace: state.workspace.name },
+        // The door came in with the visitor and is already on the workspace;
+        // it decides which company the request belongs to.
+        source: { ...(state.workspace.source ?? {}), expert: expert.memberKey, workspace: state.workspace.name },
       });
-
-      await notifyLead(lead, { workspaceName: state.workspace.name });
 
       const systemMessage = await storage.addMessage(state.workspace.id, {
         channelId: homeChannel(state).id,
         authorKey: "system",
         authorKind: "system",
-        body: `**${expert.name}** has been asked to join this workspace — ${expert.title}.\n\nThe team picks this up by email and replies here. If it is urgent, [book a call](${BOOK_A_CALL_URL}).`,
+        body: `**${expert.name}** has been asked to join this workspace — ${expert.title}.\n\nThe request is written down and ${expert.name} answers in this channel, usually within one working day. This page is the address: keep the link and come back to it. If it cannot wait, [book a call](${BOOK_A_CALL_URL}).`,
         meta: { event: "expert_requested", memberKey: expert.memberKey },
       });
 
@@ -501,7 +599,7 @@ export function registerRoutes(app: Express): void {
       const parsed = insertLeadSchema.safeParse(req.body);
       if (!parsed.success) return badRequest(res, describe(parsed.error));
 
-      const lead = await storage.createLead({
+      const { request } = await captureLead({
         workspaceId: parsed.data.workspaceId,
         name: parsed.data.name,
         email: parsed.data.email,
@@ -512,9 +610,50 @@ export function registerRoutes(app: Express): void {
         source: parsed.data.source,
       });
 
-      await notifyLead(lead);
-      res.status(201).json({ ok: true });
+      // The reference is the visitor's proof that this exists on our side, and
+      // the string the owner searches the inbox for.
+      res.status(201).json({ ok: true, reference: request.id });
     }),
+  );
+
+  /* --------------------------- the owner's inbox --------------------------- */
+
+  /**
+   * Everything that ever came in, newest first, behind LEAD_INBOX_KEY. Plain
+   * server-rendered HTML rather than a page in the client bundle: the owner
+   * opens it on his phone, and this site has no login to put a page behind.
+   *
+   * Open it as /api/leads/inbox?key=<LEAD_INBOX_KEY>, or send the same value
+   * as `Authorization: Bearer <key>`.
+   */
+  app.get(
+    "/api/leads/inbox",
+    inboxLimit,
+    (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+      // The page links to room addresses, and a room address is a credential.
+      res.setHeader("Referrer-Policy", "no-referrer");
+
+      if (!inboxKeyConfigured()) {
+        res
+          .status(503)
+          .type("text/plain; charset=utf-8")
+          .send(
+            "The lead inbox is closed: LEAD_INBOX_KEY is not set on this deployment.\nSet it to a long random string, restart, and open this page with ?key=<that string>.\nNothing has been lost in the meantime — requests are kept either way.",
+          );
+        return;
+      }
+
+      const supplied = typeof req.query.key === "string" ? req.query.key : bearerKey(req);
+      if (!inboxKeyMatches(supplied)) {
+        // Says nothing about whether the route exists.
+        res.status(404).type("text/plain; charset=utf-8").send("Not found");
+        return;
+      }
+
+      res.status(200).type("text/html; charset=utf-8").send(renderLeadInbox(leadInbox(), inboxHealth()));
+    },
   );
 
   /* ------------------------------- ask ------------------------------ */

@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowRight, Check, Loader2, X } from "lucide-react";
-import { DEFAULT_DOOR_ID, DOORS } from "@shared/doors";
-import { BOOK_A_CALL_URL, SERVICES, SERVICE_GROUPS } from "@shared/roster";
+import { DEFAULT_DOOR_ID, DOOR_BY_ID, DOORS, type DoorDef } from "@shared/doors";
+import { BOOK_A_CALL_URL, EXPERTS, SERVICES, SERVICE_GROUPS, type ExpertDef } from "@shared/roster";
 import type { CreateWorkspaceResponse } from "@shared/api";
 
 const BTN_BASE =
@@ -45,6 +45,33 @@ export function collectSource(): Record<string, string> {
   out.door = DOORS.find((door) => door.path === window.location.pathname)?.id ?? DEFAULT_DOOR_ID;
   if (document.referrer) out.referrer = document.referrer.slice(0, 300);
   return out;
+}
+
+/**
+ * The door this form is sitting on, so the "if it cannot wait" line offers that
+ * company's own address. Never a default: a visitor who came through a door
+ * that is not ours must not be handed our contact page — see docs/doors.md.
+ */
+function currentDoor(): DoorDef {
+  const fallback = DOOR_BY_ID[DEFAULT_DOOR_ID];
+  if (typeof window === "undefined") return fallback;
+  return DOORS.find((door) => door.path === window.location.pathname) ?? fallback;
+}
+
+const CONVERSION_TRACKING_LEAD = EXPERTS.find((expert) => expert.leadsConversionTracking);
+const OWNER = EXPERTS.find((expert) => expert.badge === "Owner");
+
+/**
+ * Who actually reads this one. Named rather than implied: "we will be in touch"
+ * with nobody behind it is the sentence this replaces.
+ */
+function answeredBy(intent: string): ExpertDef | undefined {
+  if (intent === "conversion-tracking" && CONVERSION_TRACKING_LEAD) return CONVERSION_TRACKING_LEAD;
+  return OWNER ?? CONVERSION_TRACKING_LEAD;
+}
+
+function contactHref(contact: string): string {
+  return contact.includes("@") && !contact.startsWith("http") ? `mailto:${contact}` : contact;
 }
 
 export interface LeadPrefill {
@@ -98,6 +125,8 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
   const [formError, setFormError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  /** The server's own id for this request. The visitor's proof it exists. */
+  const [reference, setReference] = useState<string | null>(null);
   const [continuing, setContinuing] = useState(false);
 
   const groups = useMemo(
@@ -117,6 +146,7 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
     setFormError(null);
     setSending(false);
     setSent(false);
+    setReference(null);
     setContinuing(false);
   }, [open, prefill]);
 
@@ -152,12 +182,21 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
         }),
       });
       if (!res.ok) {
-        setFormError(await readError(res, "We could not send that. Email us directly and we will pick it up."));
+        setFormError(
+          await readError(
+            res,
+            door.contract.contact
+              ? `That did not arrive, so nothing was recorded. Write to ${door.contract.contact} instead and it reaches the same people.`
+              : "That did not arrive, so nothing was recorded. Book a call instead and it reaches the same people.",
+          ),
+        );
         return;
       }
+      const body = (await res.json().catch(() => null)) as { reference?: string } | null;
+      setReference(typeof body?.reference === "string" ? body.reference : null);
       setSent(true);
     } catch {
-      setFormError("Network error. Check your connection, or book a call instead.");
+      setFormError("Network error, so nothing was recorded on our side. Try again, or book a call.");
     } finally {
       setSending(false);
     }
@@ -194,6 +233,9 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
     }
   }
 
+  const door = useMemo(currentDoor, []);
+  const answerer = answeredBy(form.intent);
+  const sentTo = form.email.trim();
   const title = prefill?.expertName ? `Message ${prefill.expertName}` : "Tell us what you are running";
 
   return (
@@ -217,15 +259,51 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent">
                 <Check className="h-5 w-5" />
               </div>
-              <Dialog.Title className="text-xl font-semibold tracking-tight">Message received</Dialog.Title>
+              <Dialog.Title className="text-xl font-semibold tracking-tight">Received and written down</Dialog.Title>
               <Dialog.Description className="mt-2 text-sm text-muted-foreground">
-                A person reads this, usually the same working day. If it is a conversion-tracking job it goes straight to
-                Ihor, who leads that work.
+                {answerer ? (
+                  <>
+                    <span className="font-medium text-foreground">{answerer.name}</span> reads this — {answerer.title} —
+                    and replies from a real inbox within one working day.
+                  </>
+                ) : (
+                  <>A person on the team reads this and replies from a real inbox within one working day.</>
+                )}
+                {sentTo ? (
+                  <>
+                    {" "}
+                    The answer goes to <span className="font-medium text-foreground">{sentTo}</span>.
+                  </>
+                ) : null}
               </Dialog.Description>
+              {reference ? (
+                <p className="mt-3 text-xs text-muted-foreground" data-testid="text-lead-reference">
+                  Your reference is{" "}
+                  <code className="rounded border border-card-border bg-muted px-1 py-0.5 font-mono text-[11px] text-foreground">
+                    {reference}
+                  </code>
+                  . Quote it and we find this in one search.
+                </p>
+              ) : null}
               <p className="mt-4 text-sm text-muted-foreground">
-                You can keep going now instead of waiting. A workspace is a shared space with the agents and our team in
-                it — no signup, the link is the whole account.
+                This form has no address of its own — the answer arrives in your inbox and nowhere else. A workspace
+                does have one: a shared space with the agents and our team in it, no signup, and the link is the whole
+                account. Open one and you can come back to the same conversation whenever you like.
               </p>
+              {door.contract.contact ? (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  If it cannot wait a day, write to{" "}
+                  <a
+                    href={contactHref(door.contract.contact)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2"
+                  >
+                    {door.contract.contactLabel ?? door.contract.contact}
+                  </a>{" "}
+                  or book a call below.
+                </p>
+              ) : null}
               {formError ? (
                 <p role="alert" className="mt-4 text-sm text-destructive">
                   {formError}

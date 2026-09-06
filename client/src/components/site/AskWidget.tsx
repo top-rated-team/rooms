@@ -221,6 +221,14 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
   const hasThread = asked !== null;
   const starters = door.starters;
   const visibleStarters = showAllStarters ? starters : starters.slice(0, 4);
+  /* What the composer asks for is the door's subject, not this component's. The
+     ChatGPT Ads door keeps the line it has always had — it names the things
+     that corpus actually covers — and every other door asks about its own
+     headline rather than about a pixel it has nothing to do with. */
+  const prompt =
+    door.kbNamespace === "chatgpt-ads"
+      ? "Ask about the pixel, the Conversions API, events, deduplication, consent…"
+      : `Ask about ${door.headline}…`;
 
   return (
     <div
@@ -364,8 +372,11 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
 
           {status === "done" ? (
             <div className="mt-4 rounded-md border border-card-border bg-muted/40 p-3">
+              {/* Every door reaches this block, so the sentence cannot be about
+                  a codebase: on the Google Ads door the visitor's own system is
+                  an ad account, and on the partner's it is not ours at all. */}
               <p className="text-sm">
-                Want this implemented on your stack? The agent stops where your codebase starts.
+                Want it done rather than explained? The agent stops where your own systems start.
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button
@@ -413,11 +424,7 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
           // Warm the markdown chunk while they type, so the first streamed token
           // never waits on a network round trip for the renderer.
           onFocus={() => void importAnswerMarkdown()}
-          placeholder={
-            disabled
-              ? "Live answers are unavailable on this deployment."
-              : "Ask about the pixel, the Conversions API, events, deduplication, consent…"
-          }
+          placeholder={disabled ? "Live answers are unavailable on this deployment." : prompt}
           className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
         />
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
