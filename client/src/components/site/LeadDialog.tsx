@@ -264,15 +264,15 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
                 {answerer ? (
                   <>
                     <span className="font-medium text-foreground">{answerer.name}</span> reads this — {answerer.title} —
-                    and replies from a real inbox within one working day.
+                    and replies from a real inbox, usually within a working day.
                   </>
                 ) : (
-                  <>A person on the team reads this and replies from a real inbox within one working day.</>
+                  <>A person on the team reads this and replies from a real inbox, usually within a working day.</>
                 )}
                 {sentTo ? (
                   <>
                     {" "}
-                    The answer goes to <span className="font-medium text-foreground">{sentTo}</span>.
+                    The reply comes back to <span className="font-medium text-foreground">{sentTo}</span>.
                   </>
                 ) : null}
               </Dialog.Description>
@@ -286,13 +286,14 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
                 </p>
               ) : null}
               <p className="mt-4 text-sm text-muted-foreground">
-                This form has no address of its own — the answer arrives in your inbox and nowhere else. A workspace
-                does have one: a shared space with the agents and our team in it, no signup, and the link is the whole
-                account. Open one and you can come back to the same conversation whenever you like.
+                Nothing else is sent to you — no confirmation, no sequence — so a person's reply is the only thing that
+                comes back, and this form has no address of its own. A workspace does: a shared space with the agents
+                and our team in it, no signup, and the link is the whole account. Open one and you can come back to the
+                same conversation whenever you like.
               </p>
               {door.contract.contact ? (
                 <p className="mt-3 text-xs text-muted-foreground">
-                  If it cannot wait a day, write to{" "}
+                  If it cannot wait a day, or a day goes by with nothing, write to{" "}
                   <a
                     href={contactHref(door.contract.contact)}
                     target="_blank"

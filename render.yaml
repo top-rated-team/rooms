@@ -24,19 +24,28 @@ services:
                            # keep it awake. Use free only to look at it.
     region: frankfurt      # closest to the audience and to the owner
     branch: main
+    # --include=dev is not optional: vite, esbuild and typescript are all
+    # devDependencies, and npm skips those whenever NODE_ENV is production. A
+    # build host that sets it — or a render.yaml that used to set it, as this one
+    # did — gets `vite: not found` at the last step, after five minutes of work.
+    #
     # The knowledge base is committed to the repository, so refreshing it is a
     # nice-to-have and must never fail the deploy: build-kb throws if a page it
     # fetches has moved, and a first deploy that dies on somebody else's website
     # is a bad first hour. Without an OpenAI key it skips the embedding step on
     # its own and retrieval falls back to keyword scoring.
-    buildCommand: npm ci && (npm run kb:build || echo "knowledge base not refreshed; using the committed copy") && npm run build
+    buildCommand: npm ci --include=dev && (npm run kb:build || echo "knowledge base not refreshed; using the committed copy") && npm run build
     startCommand: npm start
     healthCheckPath: /
     autoDeploy: true       # a push to main deploys; turn this off in the dashboard
                            # if you would rather press the button yourself
     envVars:
-      - key: NODE_ENV
-        value: production
+      # NODE_ENV is deliberately NOT set here. Render applies these variables to
+      # the BUILD as well as the run, and npm omits devDependencies when
+      # NODE_ENV is production — which removes vite and esbuild, the two things
+      # the build needs. The start script sets it for the process itself
+      # (`NODE_ENV=production node dist/index.js`), which is where it belongs.
+      #
       # PORT is set by Render itself. Do not add it here — server/index.ts already
       # reads process.env.PORT and binds 0.0.0.0.
       - key: PUBLIC_BASE_URL

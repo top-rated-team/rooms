@@ -1,7 +1,59 @@
-import { Link } from "wouter";
+import { Link, useRoute } from "wouter";
 import { Award, Mail, MapPin, Star } from "lucide-react";
 
+import { DEFAULT_DOOR_ID, DOOR_BY_ID, DOOR_BY_SLUG, type DoorContract, type DoorDef } from "@shared/doors";
 import { MAIN_SITE_URL } from "@shared/roster";
+
+/* ---------------------------------------------------------------------------
+ * THE FOOTER ON A PAGE THAT IS NOT OURS
+ *
+ * This footer is one company's chrome — its name, its menu, its services, its
+ * address, its awards, its copyright — and it is printed at the bottom of every
+ * door page, including the one whose work belongs to another company. That put
+ * a page in the position of saying, in its contract block, that the other
+ * company has published no terms, while the footer underneath handed the reader
+ * our name and our address as if they were the ones on offer.
+ *
+ * There were two honest ways out. The first is a neutral footer on a page that
+ * is not ours. It was rejected: a footer is where a person looks to find out
+ * who they are dealing with, and stripping this one would answer that question
+ * with nobody, on a page that somebody does run and is answerable for. Somebody
+ * publishes this website, and hiding that is its own kind of dishonesty.
+ *
+ * So it names both and says which is which. On a door page whose contract is
+ * another company's, the footer opens by saying that the work above is theirs
+ * and everything below is the website's operator — with their terms and their
+ * address where they exist, and a plain statement that ours are not a stand-in
+ * where they do not.
+ *
+ * Which pages those are is not written down here. The footer reads the door out
+ * of the address it is standing on and compares the contract on it with the
+ * contract on the door that pays for the site. Hand a door to another company
+ * in shared/doors.ts and this band appears on it; take it back and the band
+ * goes. No door is named in this file.
+ * ------------------------------------------------------------------------- */
+
+/** The contract on the door that runs this site, read off the row rather than typed again. */
+const OURS: DoorContract = DOOR_BY_ID[DEFAULT_DOOR_ID].contract;
+
+/** `contact` is either an email address or the address of a page, and a link has to know which. */
+function contactHref(contact: string): string {
+  return /^(https?:\/\/|mailto:|\/)/i.test(contact) ? contact : `mailto:${contact}`;
+}
+
+/**
+ * The contract of the door this page is, when that door belongs to somebody
+ * else. `null` on our own doors and on every page that is not a door — /work,
+ * the landing page and 404 are all ours, and each row on /work names its own
+ * company on the row itself.
+ */
+function useSomebodyElsesDoor(): DoorContract | null {
+  const [onDoorPage, params] = useRoute<{ slug: string }>("/work/:slug");
+  if (!onDoorPage || !params) return null;
+  const door: DoorDef | undefined = DOOR_BY_SLUG[params.slug];
+  if (!door) return null;
+  return door.contract.legalName === OURS.legalName ? null : door.contract;
+}
 
 interface FooterLink {
   label: string;
@@ -65,9 +117,66 @@ const SOCIALS: SocialLink[] = [
 ];
 
 export function Footer() {
+  const theirs = useSomebodyElsesDoor();
+
   return (
     <footer className="bg-card border-t border-card-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        {theirs ? (
+          <div
+            data-testid="block-footer-not-ours"
+            className="mb-10 rounded-lg border border-card-border bg-background p-5 sm:p-6"
+          >
+            <h4 className="font-semibold">Two companies on this page</h4>
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed" data-testid="text-footer-their-work">
+              The work described above is {theirs.legalName}&rsquo;s. {theirs.invoiceLine}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              Everything below this box is {OURS.legalName}, which runs this website: the links, the services list, the
+              address, the awards and the copyright are ours and cover this site. None of them is an offer to do the
+              work above, and {OURS.legalName} does not sign it, invoice it or answer for it.
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              {theirs.termsUrl ? (
+                <>
+                  <a
+                    href={theirs.termsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="link-footer-their-terms"
+                    className="text-foreground hover:underline"
+                  >
+                    {theirs.legalName}&rsquo;s terms
+                  </a>{" "}
+                  are the ones that cover that work.
+                </>
+              ) : (
+                <>
+                  {theirs.legalName} has not published terms for this work yet, and this site will not show anybody
+                  else&rsquo;s in their place.
+                </>
+              )}{" "}
+              {theirs.contact ? (
+                <>
+                  Write to them at{" "}
+                  <a
+                    href={contactHref(theirs.contact)}
+                    rel="noopener noreferrer"
+                    data-testid="link-footer-their-contact"
+                    className="text-foreground hover:underline"
+                  >
+                    {theirs.contactLabel ?? theirs.contact}
+                  </a>
+                  .
+                </>
+              ) : (
+                <>{theirs.legalName} has not given an address for this work yet.</>
+              )}{" "}
+              The email address in the Contact column below is ours, and it is not a way to reach them.
+            </p>
+          </div>
+        ) : null}
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4" data-testid="link-footer-logo">

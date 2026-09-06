@@ -4,12 +4,40 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>ChatGPT Ads Conversion Tracking Setup | Top-Rated Team</title>
+    <!--
+      ONE HEAD, EVERY ROUTE.
+
+      The server hands this same file to /, /work, /work/<slug> and /w/<token>,
+      so everything below is inherited by all of them and nothing below may be
+      true of only one. That rules out three things this head used to carry:
+
+      - a title and a description written for the ChatGPT Ads door, which the
+        other six doors then wore, including the one that belongs to another
+        company;
+      - a canonical link pointing at the site root, which told every crawler
+        that each door page was a duplicate of the home page and quietly
+        cancelled the rows in sitemap.xml;
+      - an og:url pointing at the same place, which sent every share card, from
+        whatever page it was made on, to the home page.
+
+      What is left is the site, not a door: the name of the company that runs
+      this website, and one sentence that is true on every page of it. A page
+      that wants its own title and description sets them for itself, the way
+      client/src/pages/{landing,doors,door}.tsx already do, and the way a room
+      does in client/src/pages/workspace.tsx. No canonical is a crawler reading
+      each URL as its own; a wrong canonical is a crawler throwing six of them
+      away.
+
+      A per-route title, description, canonical and og:url for clients that do
+      not run JavaScript — social scrapers, mainly — has to be injected into
+      this shell as it is served. That is server work, and it is written up in
+      the handoff rather than faked here.
+    -->
+    <title>Top-Rated Team</title>
     <meta
       name="description"
-      content="Conversion tracking for ChatGPT Ads, set up and verified by a human: pixel, Conversions API, deduplication and consent. Ask our docs-grounded agent first."
+      content="Paid ads, measurement and custom AI builds, one offer per page, and one workspace behind all of them. Each page names the company that signs the contract and sends the invoice for the work on it."
     />
-    <link rel="canonical" href="https://ai.top-rated.team/" />
     <link rel="icon" type="image/png" href="/assets/top-rated-logo.png" />
     <link rel="apple-touch-icon" href="/assets/top-rated-logo.png" />
 
@@ -20,23 +48,25 @@
     <meta name="color-scheme" content="light dark" />
     <meta name="author" content="Top-Rated Team" />
 
+    <!-- og:site_name is the site, which is ours on every route and stays. The
+         card's URL is left to the scraper: it already has the address it
+         fetched, and that address is always the right one. -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Top-Rated Team" />
-    <meta property="og:url" content="https://ai.top-rated.team/" />
-    <meta property="og:title" content="ChatGPT Ads Conversion Tracking Setup | Top-Rated Team" />
+    <meta property="og:title" content="Top-Rated Team" />
     <meta
       property="og:description"
-      content="Conversion tracking for ChatGPT Ads, set up and verified by a human: pixel, Conversions API, deduplication and consent. Ask our docs-grounded agent first."
+      content="Paid ads, measurement and custom AI builds, one offer per page, and one workspace behind all of them. Each page names the company that signs the contract and sends the invoice for the work on it."
     />
     <meta property="og:image" content="https://ai.top-rated.team/assets/top-rated-logo.png" />
     <meta property="og:image:alt" content="Top-Rated Team" />
     <meta property="og:locale" content="en_US" />
 
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="ChatGPT Ads Conversion Tracking Setup | Top-Rated Team" />
+    <meta name="twitter:title" content="Top-Rated Team" />
     <meta
       name="twitter:description"
-      content="Conversion tracking for ChatGPT Ads, set up and verified by a human: pixel, Conversions API, deduplication and consent. Ask our docs-grounded agent first."
+      content="Paid ads, measurement and custom AI builds, one offer per page, and one workspace behind all of them. Each page names the company that signs the contract and sends the invoice for the work on it."
     />
     <meta name="twitter:image" content="https://ai.top-rated.team/assets/top-rated-logo.png" />
 
@@ -72,11 +102,20 @@
   <body>
     <div id="root"></div>
     <noscript>
+      <!-- Shared by every route, so it says nothing about which offer is on the
+           page and it says whose the address below is. On a page about another
+           company's work, that address reaches this website's operator and not
+           them. -->
       <div style="font-family: system-ui, sans-serif; margin: 48px auto; max-width: 640px; padding: 0 24px">
         <h1 style="font-size: 20px; margin: 0 0 12px">This page needs JavaScript</h1>
         <p style="line-height: 1.6; margin: 0 0 12px">
-          The conversion tracking workspace runs in the browser. Turn JavaScript on, or reach the
-          team directly.
+          The panels and the workspace on this site run in the browser. Turn JavaScript on to read
+          the page.
+        </p>
+        <p style="line-height: 1.6; margin: 0 0 12px">
+          Top-Rated Team s.r.o. runs this website. Whichever page you were opening, the two
+          addresses below reach Top-Rated Team &mdash; and, on a page about work another company
+          signs and invoices for, they are not a way to reach that company.
         </p>
         <p style="line-height: 1.6; margin: 0">
           <a href="https://top-rated.team">top-rated.team</a> &middot;

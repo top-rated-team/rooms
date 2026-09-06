@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, Plus, UserPlus } from "lucide-react";
+import { DEFAULT_DOOR_ID, DOOR_BY_ID, type DoorContract } from "@shared/doors";
 import { AGENT_BY_ID, EXPERTS, type AgentDef } from "@shared/roster";
 import type { Member, MemberKind } from "@shared/schema";
 import { Avatar, toneFor } from "@/components/workspace/Avatar";
@@ -12,7 +13,7 @@ import { cn } from "@/lib/utils";
  * what they are made of. Six words, and a seventh needs an argument:
  *
  *   Owner         it is their room and their bill
- *   Contractor    a specialist we engage and invoice for
+ *   Contractor    a specialist engaged and paid by the company answerable here
  *   Client        someone on the buying side of this work
  *   Partner team  a person from another company — the company is named
  *   Guest         holds a link, limited, revocable
@@ -23,6 +24,21 @@ import { cn } from "@/lib/utils";
  * turns this column into a ladder where "AI" quietly means cheap. The two
  * questions people do ask are "can this one do the thing" and "who do I
  * complain to", and only a job answers those.
+ *
+ * WHICH COMPANY A LINE MAY NAME
+ *
+ * Two of those lines answer "who do I complain to" with a company: a
+ * contractor is paid by somebody, and an agent is run by somebody. Neither
+ * company is this file's to know. The room was opened through a door, the door
+ * carries the contract — `DoorDef.contract` in shared/doors.ts — and the rail
+ * is handed the same one the room footer prints. A room opened through the
+ * partner's door therefore reads the partner's name here, and never ours.
+ *
+ * Where the room has not said which door it came through, the line says that
+ * it has not. It never fills the gap with the company that happens to run the
+ * site, because a wrong company in an accountability line is worse than a
+ * missing one: it is an answer to "who do I complain to" that sends the person
+ * to a company with no part in the work.
  * ------------------------------------------------------------------------- */
 
 export type RoomBadge = "Owner" | "Contractor" | "Client" | "Partner team" | "Guest" | "Agent";
@@ -30,17 +46,31 @@ export type RoomBadge = "Owner" | "Contractor" | "Client" | "Partner team" | "Gu
 /** The whole vocabulary, in the order it is explained to people. */
 export const ROOM_BADGES: RoomBadge[] = ["Owner", "Contractor", "Client", "Partner team", "Guest", "Agent"];
 
-/** One accountability line per badge — who answers for this row. */
+/**
+ * One accountability line per badge, for a room that has not said which company
+ * is answerable for it. The two lines that would otherwise name a company —
+ * Contractor and Agent — name none here and say so; `accountabilityFor` puts
+ * the room's own company into them when the room carries one.
+ */
 export const BADGE_LINE: Record<RoomBadge, string> = {
   Owner: "Signs the contract.",
-  Contractor: "Paid through Top-Rated Team.",
+  Contractor: "Paid by whichever company is answerable for this room. This room has not said which.",
   Client: "Pays the invoice.",
   "Partner team": "A different company — separate contract, separate bill.",
   Guest: "Holds a link. Can read this thread and nothing else.",
-  Agent: "Ours. Reads this thread, writes drafts, posts nothing anywhere.",
+  Agent: "Reads this thread, writes drafts, posts nothing anywhere.",
 };
 
 export const BADGE_RULE = "A badge says what someone does here and who answers for them. It never says what they are made of.";
+
+/**
+ * The company that runs this site and the agents in the roster, read off the
+ * door that pays for it rather than typed in again — the same lookup
+ * client/src/pages/door.tsx makes, for the same reason. It is only ever used to
+ * say whose software an agent is, including where that is not the company
+ * answerable for the room it is sitting in.
+ */
+const OUR_LEGAL_NAME = DOOR_BY_ID[DEFAULT_DOOR_ID].contract.legalName;
 
 /* ---------------------------------------------------------------------------
  * ADMITTING SOMEBODY ELSE'S AGENT — the design this rail renders the state of.
@@ -145,7 +175,16 @@ export function badgeFor(member: Member, detail?: MemberDetail): RoomBadge {
   return detail?.badge ?? badgeForKey(member.memberKey, member.kind);
 }
 
-function accountabilityFor(member: Member, badge: RoomBadge, detail?: MemberDetail): string {
+/**
+ * `company` is the legal name on the room's door contract, or null where the
+ * room has not said which door it came through. Nothing in here defaults it.
+ */
+function accountabilityFor(
+  member: Member,
+  badge: RoomBadge,
+  detail: MemberDetail | undefined,
+  company: string | null,
+): string {
   if (detail?.accountability) return detail.accountability;
   if (detail?.outside) {
     return `${possessive(detail.outside.company)}. Joined ${dayLabel(detail.outside.joinedOn)}. May read #${detail.outside.thread} and nothing else.`;
@@ -153,6 +192,19 @@ function accountabilityFor(member: Member, badge: RoomBadge, detail?: MemberDeta
   if (badge === "Partner team" && detail?.company) return `${detail.company} — separate contract, separate bill.`;
   // The visitor named themselves, so the name proves nothing and we say so.
   if (badge === "Guest" && member.kind === "visitor") return "You typed this name yourself.";
+  // Who pays a contractor is the room's contract, never this file. In a room
+  // opened through the partner's door, "Paid through Top-Rated Team" names a
+  // company that is not in that chain at all.
+  if (badge === "Contractor") return company ? `Paid through ${company}.` : BADGE_LINE.Contractor;
+  // An agent of ours stays ours whichever door the room came through, so the
+  // line names the company that runs it — and, in a room somebody else is
+  // answerable for, says that it is not that company.
+  if (badge === "Agent") {
+    if (!company) return `Run by ${OUR_LEGAL_NAME}. ${BADGE_LINE.Agent}`;
+    return company === OUR_LEGAL_NAME
+      ? `Ours. ${BADGE_LINE.Agent}`
+      : `Run by ${OUR_LEGAL_NAME}, not by ${company}. ${BADGE_LINE.Agent}`;
+  }
   return BADGE_LINE[badge];
 }
 
@@ -202,14 +254,16 @@ interface MemberRowProps {
   member: Member;
   detail?: MemberDetail;
   viewer: RailViewer;
+  /** The room's company, or null where the room has not said. Never defaulted. */
+  company: string | null;
   onOpenDm: (memberKey: string) => void;
   onRevoke?: (memberKey: string) => void;
 }
 
-function MemberRow({ member, detail, viewer, onOpenDm, onRevoke }: MemberRowProps) {
+function MemberRow({ member, detail, viewer, company, onOpenDm, onRevoke }: MemberRowProps) {
   const [limitsOpen, setLimitsOpen] = useState(false);
   const badge = badgeFor(member, detail);
-  const line = accountabilityFor(member, badge, detail);
+  const line = accountabilityFor(member, badge, detail, company);
   const role = roleFor(member);
   const outside = detail?.outside;
   const revoked = detail?.revoked;
@@ -331,6 +385,14 @@ function MemberRow({ member, detail, viewer, onOpenDm, onRevoke }: MemberRowProp
 
 export interface MemberRailProps {
   members: Member[];
+  /**
+   * The room's legal identity: the door contract the room footer prints, put
+   * there by the door the room was opened through. It decides which company an
+   * accountability line is allowed to name. Left out — or carrying an empty
+   * `legalName`, which is what an unstamped room hands down — the lines say the
+   * room has not named one instead of borrowing the site's own.
+   */
+  contract?: DoorContract;
   /** Keyed by memberKey. Anything the members table does not carry yet. */
   detail?: Record<string, MemberDetail>;
   /** Default "owner": today the person holding the link owns the room. */
@@ -346,6 +408,7 @@ export interface MemberRailProps {
 
 export function MemberRail({
   members,
+  contract,
   detail,
   viewer = "owner",
   onInvite,
@@ -355,6 +418,9 @@ export function MemberRail({
   className,
 }: MemberRailProps) {
   const detailFor = useCallback((memberKey: string) => detail?.[memberKey], [detail]);
+
+  /* An empty name is the unstamped room, not a company called "". */
+  const company = contract?.legalName?.trim() || null;
 
   const { people, agents } = useMemo(() => {
     const visible = members.filter((m) => m.kind !== "system");
@@ -391,6 +457,7 @@ export function MemberRail({
                 member={member}
                 detail={detailFor(member.memberKey)}
                 viewer={viewer}
+                company={company}
                 onOpenDm={onOpenDm}
                 onRevoke={onRevoke}
               />
@@ -409,6 +476,7 @@ export function MemberRail({
                 member={member}
                 detail={detailFor(member.memberKey)}
                 viewer={viewer}
+                company={company}
                 onOpenDm={onOpenDm}
                 onRevoke={onRevoke}
               />
