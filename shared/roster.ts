@@ -28,6 +28,13 @@ export interface ExpertDef {
   initials: string;
   specialties: string[];
   badges: string[];
+  /**
+   * What this person does in a room and who answers for them — the word the
+   * member rail prints beside their name. The vocabulary, and the rule that a
+   * badge never says what somebody is made of, live in MemberRail.tsx. Left
+   * out means Contractor, which is what most of this roster is.
+   */
+  badge?: "Owner" | "Contractor" | "Client" | "Partner team" | "Guest";
   /** Set for the person who owns conversion-tracking engagements. */
   leadsConversionTracking?: boolean;
 }
@@ -268,6 +275,9 @@ export const EXPERTS: ExpertDef[] = [
     initials: "DB",
     specialties: ["Google Ads Strategy", "B2B SaaS", "Lead Generation", "Account Audits"],
     badges: ["Top Rated Plus", "100% Job Success"],
+    // Stated rather than inferred: who signs the contract is not something to
+    // read out of a job title.
+    badge: "Owner",
   },
   {
     id: "julia",

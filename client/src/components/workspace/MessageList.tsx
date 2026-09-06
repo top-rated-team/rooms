@@ -69,9 +69,11 @@ export interface MessageListProps {
   /** null while /api/kb/status is still in flight. */
   llmReady: boolean | null;
   onStarter: (question: string, agentId: string) => void;
+  /** Click one of the two-click hire. Offered under the newest agent turn only. */
+  onGetPerson?: (message: Message) => void;
 }
 
-export function MessageList({ channel, messages, members, typing, llmReady, onStarter }: MessageListProps) {
+export function MessageList({ channel, messages, members, typing, llmReady, onStarter, onGetPerson }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const pinnedRef = useRef(true);
   const channelId = channel?.id ?? null;
@@ -197,6 +199,10 @@ export function MessageList({ channel, messages, members, typing, llmReady, onSt
                 message={message}
                 member={memberByKey.get(message.authorKey)}
                 showAuthor={!withinRun}
+                // Only the last message carries it. The need appears at the
+                // live edge of the thread, and a button under every answer is
+                // a nag rather than an offer.
+                onGetPerson={index === ordered.length - 1 ? onGetPerson : undefined}
               />
             </div>
           );

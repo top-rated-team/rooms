@@ -1,22 +1,34 @@
-# ai.top-rated.team — ChatGPT Ads conversion tracking
+# One workspace, seven doors
 
-A section of [top-rated.team](https://top-rated.team) that lands traffic from our own
-ChatGPT Ads campaigns and converts it to the one piece of paid-ads work that still
-needs a human: **conversion tracking setup**.
+Seven offers aimed at seven kinds of traffic, and one room behind all of them. A
+visitor arrives on the door that matches their problem and asks a question in a panel:
+the answer streams, it cites what it used, it costs nothing, and nothing is saved. When
+the conversation turns out to be worth keeping — they ask for a person, they paste
+something of their own, they press Keep, or they write a third message — the page asks
+once, and the conversation becomes a room with an address of its own.
 
-Two surfaces:
+The doors are ChatGPT Ads conversion tracking, Google Ads, Google Ad Grants, LinkedIn
+Ads, LinkedIn automation with a written legal assessment, LinkedIn growth (delivered by
+a separate partner company, under its own name and its own invoice), and custom AI
+builds. They are rows in `shared/doors.ts` against one template — what each field does,
+and what happens when the legal name on one of them is wrong, is in `docs/doors.md`.
 
-- **`/`** — a deliberately minimal landing page. One primary action (get the tracking
-  set up by a person), one secondary (book a call), and an AI agent in the hero that
-  answers ChatGPT Ads questions on the spot, grounded in
+Three surfaces:
+
+- **`/`** — the ChatGPT Ads door, and the one that has run longest. Two buttons and no
+  third, and an AI agent in the hero, at the same weight as the headline, answering
+  ChatGPT Ads questions grounded in
   [developers.openai.com/ads](https://developers.openai.com/ads/) and citing the page
   it used.
-- **`/w/:token`** — a no-signup collaborative workspace. Slack's rails, ChatGPT's
+- **`/work`** — the seven doors on one page, each one a row of data rather than a page
+  of its own, each carrying the name of the company that will send the invoice.
+- **`/w/:token`** — the no-signup collaborative workspace. Slack's rails, ChatGPT's
   message column, ClickUp's task panel. A visitor chats with subject-matter AI agents
   and real experts in the same channels, and the URL is the entire credential.
 
-The workspace is the seed of a standalone product: a shared space for freelancers,
-experts, clients, teams, agencies and AI agents. The landing page is what pays for it.
+The workspace is the product: a shared space for freelancers, experts, clients, teams,
+agencies and AI agents. It is also a separate chunk the doors never download — the
+doors are what pays for it.
 
 ## Stack
 
@@ -64,14 +76,14 @@ that lies is worse than one that admits what it cannot do.
 ## Layout
 
 ```
-client/src/components/site/       landing page sections + the exact top-rated.team chrome
+client/src/components/site/       door sections + the exact top-rated.team chrome
 client/src/components/workspace/  the Slack/ChatGPT/ClickUp workspace
 client/src/components/ui/         shadcn primitives, retuned to the main site's button recipes
 server/                           express, routes, websocket, storage, notifications
 server/ai/                        OpenAI client, retrieval, streaming agent runtime
-shared/                           schema, API contract, agent & expert roster, seed playbook
+shared/                           the doors table, schema, API contract, agent & expert roster, seed playbook
 scripts/build-kb.ts               fetch → chunk → embed the ChatGPT Ads docs
-docs/                             build spec, brand reference, docs brief, SDK notes
+docs/                             doors, deployment, build spec, brand reference, docs brief, SDK notes
 ```
 
 ## Brand

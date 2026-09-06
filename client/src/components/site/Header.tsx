@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,17 @@ function isInternal(href: string): boolean {
   return href.startsWith("/");
 }
 
+/**
+ * "You are here" is a fact about the page, not about the row. There is more than
+ * one internal page now — `/` and `/work` — so the flag on the row is only a
+ * default for the entries that live on the other origin and can never be here.
+ */
+function isCurrent(item: NavItem, location: string): boolean {
+  return isInternal(item.href) ? location === item.href : Boolean(item.current);
+}
+
 export function Header() {
+  const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -61,7 +71,7 @@ export function Header() {
             {NAV_ITEMS.map((item) => {
               const button = (
                 <Button
-                  variant={item.current ? "secondary" : "ghost"}
+                  variant={isCurrent(item, location) ? "secondary" : "ghost"}
                   size="sm"
                   data-testid={item.testid}
                 >
@@ -110,7 +120,7 @@ export function Header() {
               {NAV_ITEMS.map((item) => {
                 const button = (
                   <Button
-                    variant={item.current ? "secondary" : "ghost"}
+                    variant={isCurrent(item, location) ? "secondary" : "ghost"}
                     size="sm"
                     className="w-full justify-start"
                     data-testid={`${item.testid}-mobile`}

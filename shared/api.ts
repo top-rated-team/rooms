@@ -2,7 +2,13 @@ import type { Channel, Citation, Member, Message, Task, Workspace } from "./sche
 
 /** Everything the workspace UI needs in one payload. */
 export interface WorkspaceState {
-  workspace: Pick<Workspace, "id" | "token" | "name" | "visitorName" | "visitorEmail" | "visitorCompany" | "visitorWebsite" | "createdAt">;
+  /**
+   * `source` is the visitor's own attribution row — utm parameters, referrer,
+   * and the door they came through. The room reads `source.door` to know whose
+   * name, terms and invoice line to print in its footer, so it has to travel
+   * with the state rather than staying on the server.
+   */
+  workspace: Pick<Workspace, "id" | "token" | "name" | "visitorName" | "visitorEmail" | "visitorCompany" | "visitorWebsite" | "source" | "createdAt">;
   channels: Channel[];
   members: Member[];
   messages: Message[];

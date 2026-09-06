@@ -27,11 +27,15 @@ const PRESENCE_TONE: Record<Presence, string> = {
 /**
  * Agents carry the tone declared in the roster so an avatar always means the
  * same thing across the sidebar, the transcript and the task panel.
+ *
+ * An agent we do not run — somebody's ClickUp, Slack or HubSpot agent admitted
+ * to one thread — has no roster entry, and must not be dressed in our colour.
+ * It gets the neutral tone, so "whose is this" is answerable at a glance.
  */
 export function toneFor(memberKey: string, kind: MemberKind): string {
   if (kind === "agent") {
     const agent = AGENTS.find((a) => `agent:${a.id}` === memberKey);
-    return agent?.tone ?? "bg-primary/10 text-primary";
+    return agent?.tone ?? "bg-muted text-muted-foreground";
   }
   if (kind === "expert") return "bg-accent/10 text-accent";
   if (kind === "system") return "bg-muted text-muted-foreground";
@@ -52,12 +56,14 @@ export interface AvatarProps {
   size?: AvatarSize;
   presence?: Presence | null;
   title?: string;
+  /** Access that has ended: the row stays readable, and stops looking live. */
+  dimmed?: boolean;
   className?: string;
 }
 
-export function Avatar({ initials, tone, size = "md", presence, title, className }: AvatarProps) {
+export function Avatar({ initials, tone, size = "md", presence, title, dimmed, className }: AvatarProps) {
   return (
-    <span className={cn("relative inline-flex shrink-0", className)} title={title}>
+    <span className={cn("relative inline-flex shrink-0", dimmed && "opacity-60", className)} title={title}>
       <span
         className={cn(
           "inline-flex items-center justify-center font-semibold uppercase leading-none",
