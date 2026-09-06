@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowRight, Check, Loader2, X } from "lucide-react";
+import { DEFAULT_DOOR_ID, DOORS } from "@shared/doors";
 import { BOOK_A_CALL_URL, SERVICES, SERVICE_GROUPS } from "@shared/roster";
 import type { CreateWorkspaceResponse } from "@shared/api";
 
@@ -19,7 +20,19 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 const SOURCE_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "oppref"];
 
-/** Campaign attribution for the lead record. Read-only — nothing personal is put back into a URL. */
+/**
+ * Campaign attribution for the lead record. Read-only — nothing personal is put
+ * back into a URL.
+ *
+ * `door` is the one key here that is not attribution. It is which offer the
+ * visitor came in through, and the room reads it back to decide whose legal
+ * name, terms and invoice line to print in its footer. It is written once, at
+ * the moment the room is created, so nothing downstream has to remember it: a
+ * visitor who arrived through the partner door can never be shown a Top-Rated
+ * Team invoice, because a Top-Rated Team name was never handed to that room.
+ * The door is read off the path, so a door page carries its own id the day it
+ * exists; anything else is the door that pays for the site.
+ */
 export function collectSource(): Record<string, string> {
   if (typeof window === "undefined") return {};
   const out: Record<string, string> = {};
@@ -29,6 +42,7 @@ export function collectSource(): Record<string, string> {
     if (value) out[key] = value.slice(0, 200);
   }
   out.landing = window.location.pathname;
+  out.door = DOORS.find((door) => door.path === window.location.pathname)?.id ?? DEFAULT_DOOR_ID;
   if (document.referrer) out.referrer = document.referrer.slice(0, 300);
   return out;
 }

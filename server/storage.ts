@@ -258,6 +258,10 @@ function publicWorkspace(workspace: Workspace): WorkspaceState["workspace"] {
     visitorEmail: workspace.visitorEmail,
     visitorCompany: workspace.visitorCompany,
     visitorWebsite: workspace.visitorWebsite,
+    // The door the room came through lives in here; the footer cannot name a
+    // company without it. Everything in `source` was put there by the visitor's
+    // own arrival, so it is theirs to read back.
+    source: workspace.source ?? {},
     createdAt: workspace.createdAt,
   };
 }

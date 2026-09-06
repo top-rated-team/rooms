@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import Hero from "@/components/site/Hero";
@@ -51,6 +51,29 @@ export function Landing() {
     setLeadOpen(true);
   }, []);
 
+  /**
+   * The hero keeps exactly two buttons, and the first one is now the panel
+   * rather than a form: the fastest free answer on this page is already on
+   * screen, so the button puts the cursor in it. Asking for a person is
+   * something you do inside the conversation, not in a box beside it — the
+   * panel's own escalation block and every section below still open the form.
+   * If the panel is not in the DOM, fall back to the form rather than to
+   * nothing.
+   */
+  const askInPanel = useCallback(
+    (prefill?: LeadPrefill) => {
+      const field = document.getElementById("ask-question");
+      if (!(field instanceof HTMLTextAreaElement)) {
+        openLead(prefill);
+        return;
+      }
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      field.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+      field.focus({ preventScroll: true });
+    },
+    [openLead],
+  );
+
   /** Resolves to an error message the caller renders in place, or null when it navigated. */
   const startWorkspace = useCallback(
     async (opts?: { agentId?: string; firstMessage?: string }): Promise<string | null> => {
@@ -83,7 +106,27 @@ export function Landing() {
     <div className="min-h-screen bg-background">
       <Header />
       <main>
-        <Hero onTalkToHuman={openLead} onStartWorkspace={startWorkspace} />
+        {/* The hero mints its own room, because "Kept. This conversation now
+            has an address" is only true if the address is on screen before the
+            page moves. startWorkspace navigates the moment the room exists, so
+            it stays with the sections below, which want exactly that. */}
+        <Hero onTalkToHuman={askInPanel} />
+
+        {/* The other doors, said once and quietly. A visitor who came for
+            conversion tracking should meet the panel first; this is only the
+            note that the same workspace has six other ways into it. */}
+        <section id="doors" className="border-y border-border bg-muted/30">
+          <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <p className="text-sm text-muted-foreground">
+              Conversion tracking is one of seven ways in. Google Ads, Google Ad Grants, LinkedIn ads, LinkedIn
+              automation, LinkedIn growth and custom AI builds each start with a question and open the same workspace.{" "}
+              <Link href="/work" data-testid="link-doors" className="text-primary underline underline-offset-2">
+                See all seven
+              </Link>
+            </p>
+          </div>
+        </section>
+
         <WhyHuman />
         <HowItWorks />
         <ProofBand />

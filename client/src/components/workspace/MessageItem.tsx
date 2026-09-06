@@ -1,9 +1,13 @@
-import { ExternalLink, TriangleAlert } from "lucide-react";
+import { ExternalLink, TriangleAlert, UserPlus } from "lucide-react";
 import { AGENT_BY_ID, EXPERT_BY_KEY, type AgentDef, type ExpertDef } from "@shared/roster";
 import type { Citation, Member, Message } from "@shared/schema";
 import { Avatar, initialsFor, toneFor } from "@/components/workspace/Avatar";
+import { badgeForKey } from "@/components/workspace/MemberRail";
 import { Markdown } from "@/components/workspace/Markdown";
 import { cn } from "@/lib/utils";
+
+const GET_PERSON_BUTTON =
+  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring [&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0 hover-elevate active-elevate-2 border border-card-border bg-card min-h-7 px-2 text-muted-foreground";
 
 function relativeTime(value: Date | string): string {
   const then = new Date(value).getTime();
@@ -59,6 +63,13 @@ export interface MessageItemProps {
   member: Member | undefined;
   /** False when this message continues a run from the same author. */
   showAuthor: boolean;
+  /**
+   * Click one of the two-click hire. Rendered under an agent's turn, because
+   * that is where the need appears — the agent has just said what it cannot
+   * finish. Absent on every other message, and on older agent turns: one button
+   * at the live edge of the thread, not one per answer.
+   */
+  onGetPerson?: (message: Message) => void;
 }
 
 /**
@@ -79,7 +90,7 @@ function errorNoticeFor(code: string | undefined): string | null {
   return code in ERROR_COPY ? ERROR_COPY[code] : code;
 }
 
-export function MessageItem({ message, member, showAuthor }: MessageItemProps) {
+export function MessageItem({ message, member, showAuthor, onGetPerson }: MessageItemProps) {
   const meta = message.meta ?? {};
   const errorNotice = errorNoticeFor(meta.error);
 
@@ -140,9 +151,15 @@ export function MessageItem({ message, member, showAuthor }: MessageItemProps) {
         {showAuthor ? (
           <div className="mb-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <span className="text-sm font-semibold">{name}</span>
+            {/* The badge rule holds in the transcript too: a badge says what
+                someone does here, never what they are made of. "AI" is not a
+                job — see MemberRail.tsx, where the vocabulary lives. */}
             {isAgent ? (
-              <span className="rounded border border-primary-border bg-primary/10 px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-primary">
-                AI
+              <span
+                className="rounded border border-card-border bg-muted px-1 py-px text-[10px] font-medium text-muted-foreground"
+                data-testid={`badge-message-${message.id}`}
+              >
+                {badgeForKey(message.authorKey, "agent")}
               </span>
             ) : null}
             {role ? <span className="text-xs text-muted-foreground">{role}</span> : null}
@@ -167,6 +184,20 @@ export function MessageItem({ message, member, showAuthor }: MessageItemProps) {
         ) : null}
 
         {citations.length > 0 ? <CitationChips citations={citations} /> : null}
+
+        {isAgent && onGetPerson && !meta.streaming ? (
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={() => onGetPerson(message)}
+              className={GET_PERSON_BUTTON}
+              data-testid="button-get-person"
+            >
+              <UserPlus />
+              Get a person on this
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

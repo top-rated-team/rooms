@@ -2,18 +2,31 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useLocation, useRoute } from "wouter";
 import { ArrowLeft, Calendar, LoaderCircle, Moon, Sun } from "lucide-react";
 import { AGENT_BY_ID, BOOK_A_CALL_URL, EXPERTS, MAIN_SITE_URL, type AgentDef, type ExpertDef } from "@shared/roster";
-import type { Channel, TaskStatus } from "@shared/schema";
+import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
+import type { Channel, Message, TaskStatus } from "@shared/schema";
 import { listStoredWorkspaces, useWorkspace } from "@/hooks/use-workspace";
 import { ChannelHeader, type MobileView } from "@/components/workspace/ChannelHeader";
 import { Composer } from "@/components/workspace/Composer";
-import { InviteExpertDialog } from "@/components/workspace/InviteExpertDialog";
+import { InviteExpertDialog, type HireOffer } from "@/components/workspace/InviteExpertDialog";
 import { MemberRail } from "@/components/workspace/MemberRail";
 import { MessageList } from "@/components/workspace/MessageList";
 import { NewChannelDialog } from "@/components/workspace/NewChannelDialog";
+import { RoomFooter } from "@/components/workspace/RoomFooter";
 import { ShareLinkBar } from "@/components/workspace/ShareLinkBar";
 import { TaskPanel } from "@/components/workspace/TaskPanel";
 import { WorkspaceSidebar } from "@/components/workspace/WorkspaceSidebar";
 import { cn } from "@/lib/utils";
+
+/** How much of an agent's answer goes into a brief before it stops being read. */
+const BRIEF_LIMIT = 400;
+
+/** Cuts prose to a readable length without slicing a word in half. */
+function trimTo(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  const space = cut.lastIndexOf(" ");
+  return `${(space > max * 0.6 ? cut.slice(0, space) : cut).trimEnd()}…`;
+}
 
 const ICON_BUTTON =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2 border border-transparent h-9 w-9";
@@ -106,6 +119,7 @@ export default function WorkspacePage() {
   const [railOpen, setRailOpen] = useState(true);
   const [mobileView, setMobileView] = useState<MobileView>("chat");
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [hireOffer, setHireOffer] = useState<HireOffer | undefined>(undefined);
   const [channelDialogOpen, setChannelDialogOpen] = useState(false);
   const [unread, setUnread] = useState<Record<string, number>>({});
   const messageCountsRef = useRef<Record<string, number> | null>(null);
@@ -266,6 +280,36 @@ export default function WorkspacePage() {
     [updateTask],
   );
 
+  /**
+   * The sheet opens either cold — "Invite an expert" from the rail, the sidebar
+   * or the composer — or carrying what the thread already said. Going through
+   * one function is what stops a cold invite arriving pre-filled with the brief
+   * from a conversation somebody had ten minutes ago.
+   */
+  const openInvite = useCallback((offer?: HireOffer) => {
+    setHireOffer(offer);
+    setInviteOpen(true);
+  }, []);
+
+  /**
+   * Click one of the two-click hire. The brief is lifted from the thread: what
+   * the visitor asked, and where the agent stopped. Nobody retypes it, and it
+   * stays editable in the sheet because a lifted brief is sometimes wrong.
+   */
+  const onGetPerson = useCallback(
+    (message: Message) => {
+      const index = channelMessages.findIndex((candidate) => candidate.id === message.id);
+      const asked = [...(index === -1 ? channelMessages : channelMessages.slice(0, index))]
+        .reverse()
+        .find((candidate) => candidate.authorKind === "visitor");
+      const stopped = trimTo(message.body.trim(), BRIEF_LIMIT);
+      openInvite({
+        brief: asked ? `${asked.body.trim()}\n\nWhere the agent stopped: ${stopped}` : stopped,
+      });
+    },
+    [channelMessages, openInvite],
+  );
+
   const onInvite = useCallback(
     async (input: { memberKey: string; note?: string; email?: string; name?: string }) => {
       const member = await inviteExpert(input);
@@ -378,6 +422,14 @@ export default function WorkspacePage() {
   const shareUrl = `${window.location.origin}/w/${state.workspace.token}`;
   const doneCount = tasks.filter((t) => t.status === "done").length;
 
+  /* Which door this room came through, stamped into `source` when it was
+   * created and never worked out again. It decides one thing: whose legal name,
+   * terms and invoice line the footer prints. A room whose door is unknown —
+   * created before the stamp existed, or with a row that has since been
+   * renamed — falls back to the door that pays for the site rather than
+   * rendering a room with nobody behind it. */
+  const door = DOOR_BY_ID[state.workspace.source?.door ?? DEFAULT_DOOR_ID] ?? DOOR_BY_ID[DEFAULT_DOOR_ID];
+
   const sidebar = (onClose?: () => void) => (
     <WorkspaceSidebar
       workspaceName={state.workspace.name}
@@ -394,7 +446,7 @@ export default function WorkspacePage() {
         setSidebarOpen(false);
       }}
       onInvite={() => {
-        setInviteOpen(true);
+        openInvite();
         setSidebarOpen(false);
       }}
       onClose={onClose}
@@ -451,6 +503,7 @@ export default function WorkspacePage() {
                 typing={typing}
                 llmReady={kb ? kb.llmReady : null}
                 onStarter={onStarter}
+                onGetPerson={onGetPerson}
               />
               <Composer
                 channel={activeChannel}
@@ -460,7 +513,7 @@ export default function WorkspacePage() {
                 onSend={onSend}
                 onTyping={onTyping}
                 onCreateTask={onCreateTask}
-                onInvite={() => setInviteOpen(true)}
+                onInvite={() => openInvite()}
               />
             </section>
 
@@ -474,7 +527,7 @@ export default function WorkspacePage() {
             >
               <MemberRail
                 members={members}
-                onInvite={() => setInviteOpen(true)}
+                onInvite={() => openInvite()}
                 onOpenDm={(memberKey) => void openDm(memberKey)}
                 className="scrollbar-thin max-h-[38vh] overflow-y-auto border-b border-card-border"
               />
@@ -485,6 +538,10 @@ export default function WorkspacePage() {
                 onUpdate={onUpdateTask}
                 className="flex-1"
               />
+              {/* A room must not be able to render without saying which company
+                  is answerable for it and whose terms apply. This is the only
+                  place that is said. */}
+              <RoomFooter contract={door.contract} className="shrink-0" />
             </aside>
           </div>
         </main>
@@ -496,6 +553,7 @@ export default function WorkspacePage() {
         onInvite={onInvite}
         defaultEmail={state.workspace.visitorEmail}
         defaultName={state.workspace.visitorName}
+        offer={hireOffer}
       />
       <NewChannelDialog open={channelDialogOpen} onOpenChange={setChannelDialogOpen} onCreate={onCreateChannel} />
     </Shell>

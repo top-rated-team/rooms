@@ -3,24 +3,14 @@ import { ArrowRight, CornerDownLeft, ExternalLink, Loader2, Send } from "lucide-
 
 import type { AskEvent, KbStatus } from "@shared/api";
 import type { Citation } from "@shared/schema";
-import { AGENT_BY_ID, BOOK_A_CALL_URL } from "@shared/roster";
+import { DEFAULT_DOOR_ID, DOOR_BY_ID, doorAgent, type DoorDef } from "@shared/doors";
+import { BOOK_A_CALL_URL } from "@shared/roster";
 
 const importAnswerMarkdown = () => import("@/components/site/AnswerMarkdown");
 const AnswerMarkdown = lazy(importAnswerMarkdown);
 
-const AGENT = AGENT_BY_ID["chatgpt-ads"];
-
-/** From docs/ADS-DOCS-BRIEF.md — the questions people actually arrive with. */
-const STARTERS = [
-  "How do I install the ChatGPT Ads pixel on Shopify without breaking checkout?",
-  "Which event should I optimise on if our sales cycle is 60 days and nothing is bought online?",
-  "What is the difference between oppref and obref, and do I need both?",
-  "Our purchases are being counted twice. How does deduplication actually work?",
-  "Can I send a conversion from HubSpot when a deal moves to closed-won?",
-  "What do I need to add to our Content Security Policy for the pixel?",
-  "We're in the EU. How do I gate the pixel behind consent without losing every conversion?",
-  "How do I confirm real events are arriving, not just getting a 200 back?",
-];
+/** The door that pays for the site. The panel is the same component on all of them. */
+const DEFAULT_DOOR = DOOR_BY_ID[DEFAULT_DOOR_ID];
 
 const BTN_BASE =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2";
@@ -47,9 +37,30 @@ function hostOf(url: string): string {
 export interface AskWidgetProps {
   /** Creates a workspace seeded with this conversation. Resolves to an error message, or null on success. */
   onStartWorkspace: (opts?: { agentId?: string; firstMessage?: string }) => Promise<string | null>;
+  /**
+   * Which offer this panel is answering for: the agent that speaks first, the
+   * four questions it opens with, and the row a kept conversation is stamped
+   * with. Defaults to the ChatGPT Ads door, whose starters this component used
+   * to carry as a local constant.
+   */
+  door?: DoorDef;
+  /**
+   * Every message the visitor sends. The rule about what that means lives in
+   * use-panel-state.ts, not here.
+   */
+  onVisitorMessage?: (text: string) => void;
+  /** Pressed "Book a call" from inside the conversation: they asked for a person. */
+  onAskedForAPerson?: () => void;
 }
 
-export function AskWidget({ onStartWorkspace }: AskWidgetProps) {
+export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMessage, onAskedForAPerson }: AskWidgetProps) {
+  // Which agent speaks first is the door's decision, not this component's.
+  // Door 6 names none — nobody of ours answers in the partner's door — so the
+  // chip falls back to the door's own initials rather than wearing an agent
+  // who is not there.
+  const agent = doorAgent(door);
+  const agentId = door.firstAgentId;
+
   const [kbState, setKbState] = useState<KbState>("loading");
   const [kbMode, setKbMode] = useState<KbStatus["mode"]>("empty");
   const [question, setQuestion] = useState("");
@@ -92,6 +103,11 @@ export function AskWidget({ onStartWorkspace }: AskWidgetProps) {
   const ask = useCallback(async (raw: string) => {
     const text = raw.trim();
     if (!text) return;
+    // Reported before the request goes out: whether this conversation is worth
+    // keeping is decided in use-panel-state.ts, and it is decided on what the
+    // visitor said, not on what came back.
+    onVisitorMessage?.(text);
+    if (!agentId) return;
 
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -108,7 +124,7 @@ export function AskWidget({ onStartWorkspace }: AskWidgetProps) {
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text, agentId: "chatgpt-ads" }),
+        body: JSON.stringify({ question: text, agentId }),
         signal: controller.signal,
       });
 
@@ -179,12 +195,12 @@ export function AskWidget({ onStartWorkspace }: AskWidgetProps) {
       setError("Network error while streaming the answer. The human CTAs below still work.");
       setStatus("error");
     }
-  }, []);
+  }, [agentId, onVisitorMessage]);
 
   async function startWorkspace() {
     setStartingWorkspace(true);
     const failure = await onStartWorkspace({
-      agentId: "chatgpt-ads",
+      agentId: agentId ?? undefined,
       firstMessage: asked ?? undefined,
     });
     setStartingWorkspace(false);
@@ -198,10 +214,13 @@ export function AskWidget({ onStartWorkspace }: AskWidgetProps) {
     }
   }
 
-  const disabled = kbState === "unconfigured" || kbState === "unreachable";
+  // A door that names no agent of ours has no panel to offer, and the composer
+  // says so instead of accepting a question nobody is going to answer.
+  const disabled = !agentId || kbState === "unconfigured" || kbState === "unreachable";
   const busy = status === "streaming";
   const hasThread = asked !== null;
-  const visibleStarters = showAllStarters ? STARTERS : STARTERS.slice(0, 4);
+  const starters = door.starters;
+  const visibleStarters = showAllStarters ? starters : starters.slice(0, 4);
 
   return (
     <div
@@ -210,39 +229,56 @@ export function AskWidget({ onStartWorkspace }: AskWidgetProps) {
     >
       <div className="flex items-start gap-3 border-b border-card-border pb-4">
         <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-sm font-semibold ${AGENT.tone}`}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-sm font-semibold ${agent?.tone ?? door.tone}`}
           aria-hidden="true"
         >
-          {AGENT.initials}
+          {agent?.initials ?? door.initials}
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-semibold">{AGENT.name}</p>
+          <p className="text-sm font-semibold">{agent?.name ?? door.headline}</p>
           <p className="text-xs text-muted-foreground">
-            Answers from{" "}
-            <a
-              href="https://developers.openai.com/ads/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-2 hover:text-foreground"
-            >
-              developers.openai.com/ads
-            </a>{" "}
-            and cites the page it used.
+            {/* One corpus is built, so only the door pointed at it can promise
+                where its answers come from. Every other door says what its
+                agent does instead — see kbNamespace in shared/doors.ts. */}
+            {door.kbNamespace === "chatgpt-ads" ? (
+              <>
+                Answers from{" "}
+                <a
+                  href="https://developers.openai.com/ads/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-foreground"
+                >
+                  developers.openai.com/ads
+                </a>{" "}
+                and cites the page it used.
+              </>
+            ) : (
+              door.agentLine
+            )}
           </p>
         </div>
       </div>
 
       {disabled ? (
         <div className="mt-4 rounded-md border border-card-border bg-muted/40 p-4">
-          <p className="text-sm font-medium">
-            {kbState === "unconfigured"
-              ? "Live answers aren't configured on this deployment yet."
-              : "Live answers aren't reachable right now."}
-          </p>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            We would rather say that than generate something that looks like an answer. The people are the real product
-            anyway — ask them directly.
-          </p>
+          {agentId ? (
+            <>
+              <p className="text-sm font-medium">
+                {kbState === "unconfigured"
+                  ? "Live answers aren't configured on this deployment yet."
+                  : "Live answers aren't reachable right now."}
+              </p>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                We would rather say that than generate something that looks like an answer. The people are the real
+                product anyway — ask them directly.
+              </p>
+            </>
+          ) : (
+            // The partner's door is this case: whose room it is, said in the
+            // door's own words, rather than one of our agents standing in it.
+            <p className="text-sm text-muted-foreground">{door.agentLine}</p>
+          )}
         </div>
       ) : null}
 
@@ -261,9 +297,9 @@ export function AskWidget({ onStartWorkspace }: AskWidgetProps) {
                 {starter}
               </button>
             ))}
-            {STARTERS.length > 4 ? (
+            {starters.length > 4 ? (
               <button type="button" className={BTN_GHOST_SM} onClick={() => setShowAllStarters((v) => !v)}>
-                {showAllStarters ? "Fewer" : `${STARTERS.length - 4} more`}
+                {showAllStarters ? "Fewer" : `${starters.length - 4} more`}
               </button>
             ) : null}
           </div>
@@ -343,7 +379,16 @@ export function AskWidget({ onStartWorkspace }: AskWidgetProps) {
                   Start a workspace
                   {startingWorkspace ? null : <ArrowRight />}
                 </button>
-                <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={BTN_GHOST_SM}>
+                {/* Asking for a person from inside the answer is the trigger the
+                    design cares about most: they read what the agent could do
+                    and decided it was not enough. */}
+                <a
+                  href={BOOK_A_CALL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={onAskedForAPerson}
+                  className={BTN_GHOST_SM}
+                >
                   Book a call
                 </a>
               </div>
@@ -354,7 +399,7 @@ export function AskWidget({ onStartWorkspace }: AskWidgetProps) {
 
       <div className="mt-4">
         <label htmlFor="ask-question" className="sr-only">
-          Ask the ChatGPT Ads agent a question
+          {agent ? `Ask ${agent.name} a question` : "Ask a question"}
         </label>
         <textarea
           id="ask-question"
