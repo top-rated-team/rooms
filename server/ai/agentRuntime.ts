@@ -1,12 +1,17 @@
 /**
  * One agent turn, streamed.
  *
- * The promise this file has to keep: an answer about ChatGPT Ads is grounded in
- * the retrieved documentation and cites the page it used, or it says plainly that
- * it cannot answer. The platform's conversion features shipped in mid-2026, well
- * after any model's training data, so retrieval is not an optimisation here — it
- * is the only reason an answer can be trusted. With no key, or no knowledge base,
- * the honest message is the product.
+ * The promise this file has to keep: a grounded answer comes out of the
+ * documentation this agent was given and cites the page it used, or it says
+ * plainly that it cannot answer. These platforms change without notice — the
+ * ChatGPT Ads conversion features shipped in mid-2026, after any model's
+ * training data — so retrieval is not an optimisation here, it is the only
+ * reason an answer can be trusted.
+ *
+ * Each agent reads one corpus, named by its own `kbNamespace`, and there is no
+ * path from here to another agent's corpus: `retrieve()` takes the namespace
+ * first and never falls back. With no key, no corpus, or nothing matching, the
+ * honest message is the product.
  */
 
 import type OpenAI from "openai";
@@ -74,11 +79,14 @@ export async function* streamAgentAnswer(opts: AgentTurn): AsyncGenerator<AgentS
   }
 
   let excerpts: RetrievedChunk[] = [];
-  if (agent.useKb) {
+  // An agent reads its own corpus and nothing else. `kbNamespace` names it, and
+  // an agent marked `useKb` without one retrieves nothing rather than falling
+  // back to whichever corpus happens to be loaded — see server/ai/kb.ts.
+  if (agent.useKb && agent.kbNamespace) {
     try {
       // A retrieval failure must degrade the answer, never take it down: with no
       // excerpts the prompt tells the model to say what it cannot confirm.
-      excerpts = fitToBudget(await retrieve(question, RETRIEVE_K));
+      excerpts = fitToBudget(await retrieve(agent.kbNamespace, question, RETRIEVE_K));
     } catch {
       excerpts = [];
     }
@@ -231,7 +239,8 @@ function contextBlock(excerpts: RetrievedChunk[]): string {
     .join("\n\n---\n\n");
 
   return [
-    "Excerpts retrieved from the official ChatGPT Ads developer documentation, best match first.",
+    "Excerpts retrieved from the documentation you are grounded in — the sources named in your",
+    "own instructions above, and no others. Best match first.",
     "",
     "Cite them inline with the bracketed numbers below — [1], [3] — placed where you use them.",
     "The visitor sees a source list assembled from the markers you write, so a marker with no",
@@ -239,19 +248,22 @@ function contextBlock(excerpts: RetrievedChunk[]): string {
     "and never cite a page for a claim it does not make.",
     "",
     "If these excerpts do not answer the question, say which part is missing and offer a human.",
-    "Do not fill the gap from memory: this platform postdates your training data.",
+    "Do not fill the gap from memory, and do not reach for another platform's documentation:",
+    "these products change without notice, and what you remember of them may already be wrong.",
     "",
     sources,
   ].join("\n");
 }
 
 const NO_EXCERPTS_INSTRUCTION = [
-  "No documentation excerpts were retrieved for this question — the knowledge base is either",
-  "unbuilt or has nothing matching.",
+  "No documentation excerpts were retrieved for this question — your corpus is either unbuilt",
+  "or has nothing matching. You were given no other corpus to fall back on, and that is",
+  "deliberate: answering out of a neighbouring product's documentation would be confident and",
+  "wrong.",
   "",
-  "Do not answer ChatGPT Ads specifics from memory. The platform's conversion features shipped",
-  "in mid-2026, after your training data, and half-remembered field names are worse than an",
-  "honest gap. Say plainly what you cannot confirm, answer only the part that is genuinely",
+  "Do not answer product specifics from memory. These platforms change without notice, and",
+  "half-remembered field names, policy thresholds and setting names are worse than an honest",
+  "gap. Say plainly what you cannot confirm, answer only the part that is genuinely",
   "stack-independent, and offer to bring in a human.",
 ].join("\n");
 

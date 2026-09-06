@@ -1,6 +1,6 @@
 {
  "namespace": "google-ads",
- "builtAt": "2026-09-06T18:14:45.847Z",
+ "builtAt": "2026-09-06T22:30:41.189Z",
  "documents": 62,
  "chunks": [
   {
@@ -88,13 +88,6 @@
    "text": "Tying it all together, your overall account structure might look like this:\n\nAccount\n\n- Unique email and password\n\n- Billing information\n\nCampaign\n\nCampaign\n\n- Televisions\n\n- Cameras\n\nAd Group\n\nAd Group\n\nAd Group\n\nAd Group\n\nFlat Screen TVs\n\nPlasma TVs\n\nDigital Cameras\n\nCompact Cameras"
   },
   {
-   "id": "google-ads/answer/6372655#7",
-   "title": "Organize your account with ad groups",
-   "url": "https://support.google.com/google-ads/answer/6372655?hl=en",
-   "heading": "Organize your account with ad groups > Organize your ad groups > Related links",
-   "text": "- About your account organization\n\n- Create a new ad group\n\n- About your Google Ads account limits"
-  },
-  {
    "id": "google-ads/answer/2375404#0",
    "title": "How ad groups work",
    "url": "https://support.google.com/google-ads/answer/2375404?hl=en",
@@ -107,13 +100,6 @@
    "url": "https://support.google.com/google-ads/answer/2375404?hl=en",
    "heading": "How ad groups work > Group ad groups by similar themes",
    "text": "Many advertisers find it helpful to base their ad groups on the sections or categories that appear on their website. For example, let's say you sell desserts, beverages, and snacks on your website.\n\nFor example, in the table below, each ad group contains a keyword list focusing on a product you'd sell. The keyword list in each ad group tells our system to show ads for these products only on websites related to them.\n\nAd group: desserts\n Ad group: beverages\n Ad group: snacks\n\ncupcakes\n soda\n potato chips\n\npumpkin pies\n coffee\n pita chips\n\napple pie\n iced coffee\n beef jerky\n\nchocolate cake\n iced tea\n salted peanuts\n\nice cream\n sparkling water\n mixed nuts\n\ncookies\n orange juice\n rice crackers"
-  },
-  {
-   "id": "google-ads/answer/2375404#2",
-   "title": "How ad groups work",
-   "url": "https://support.google.com/google-ads/answer/2375404?hl=en",
-   "heading": "How ad groups work > Group ad groups by similar themes > Related links",
-   "text": "- Manage ad groups for existing campaigns\n\n- Set your ad group default bid\n\n- About your account organization"
   },
   {
    "id": "google-ads/answer/2979071#0",
@@ -198,13 +184,6 @@
    "url": "https://support.google.com/google-ads/answer/2979071?hl=en",
    "heading": "About automated bidding > Types of automated bid strategies > The power of Smart Bidding",
    "text": "Smart Bidding is a set of conversion-based bid strategies that use advanced AI to help you tailor the right bid to each and every auction. It factors in a wide range of auction-time signals including device, location, time of day, remarketing list, language, and operating system to capture the unique context of every search.\n\nFor more information on how Smart Bidding works, refer to About Smart Bidding or download our Display Smart Bidding Guide."
-  },
-  {
-   "id": "google-ads/answer/2979071#12",
-   "title": "About automated bidding",
-   "url": "https://support.google.com/google-ads/answer/2979071?hl=en",
-   "heading": "About automated bidding > Types of automated bid strategies > Related links",
-   "text": "- Your guide to Smart Bidding\n\n- About Smart Bidding\n\n- Set up Smart Bidding\n\n- Create a portfolio bid strategy\n\n- About bid strategy statuses"
   },
   {
    "id": "google-ads/answer/7065882#0",
@@ -361,13 +340,6 @@
    "text": "Yes, you can use Smart Bidding strategies for other campaign types like Shopping and Video action campaigns.\n\nSmart Bidding is applied across various campaign types by utilizing signals unique to each environment. For example:\n\n- Shopping campaigns leverage product attributes (like price, brand, and condition), price competitiveness against other advertisers, and seasonal performance trends for optimization.\n\n- Video action campaigns and other video-containing campaign types like Demand Gen and Performance Max use conversion data to predict conversion likelihood based on ad engagement, such as a click or at least 10 seconds of viewing."
   },
   {
-   "id": "google-ads/answer/7065882#22",
-   "title": "About Smart Bidding",
-   "url": "https://support.google.com/google-ads/answer/7065882?hl=en",
-   "heading": "About Smart Bidding > Smart Bidding FAQs > Related links",
-   "text": "- Your guide to Smart Bidding\n\n- Setting Smarter Search Bids\n\n- About automated bidding\n\n- About keyword matching options\n\n- Your guide to AI-powered Search ads\n\n- How to steer AI-powered Search ads\n\n- Understanding bidding basics"
-  },
-  {
    "id": "google-ads/answer/2459326#0",
    "title": "Understanding bidding basics",
    "url": "https://support.google.com/google-ads/answer/2459326?hl=en",
@@ -408,13 +380,6 @@
    "url": "https://support.google.com/google-ads/answer/2459326?hl=en",
    "heading": "Understanding bidding basics > Focus on views (for video ads only)",
    "text": "If your main goal is to evaluate how engaged viewers are with your video content, where they choose to watch your videos, and when they drop off from watching your content, you'll use cost-per-view (CPV) bidding. With CPV bidding, you'll pay for video views and other video interactions, such as clicks on the calls-to-action overlay (CTAs), cards, and companion banners.\n\nTo set a target CPV bid, you enter the average price you want to pay for a view while setting up your Video views campaign. Your bid is called your target CPV bid, or tCPV. This bid applies at the campaign level."
-  },
-  {
-   "id": "google-ads/answer/2459326#6",
-   "title": "Understanding bidding basics",
-   "url": "https://support.google.com/google-ads/answer/2459326?hl=en",
-   "heading": "Understanding bidding basics > Focus on views (for video ads only) > Related links",
-   "text": "- About Target CPA bidding\n\n- Determine a bid strategy based on your goals"
   },
   {
    "id": "google-ads/answer/2472725#0",
@@ -515,13 +480,6 @@
    "text": "If you run video ads, you can use CPV bidding. With CPV bidding, you'll pay for video views and other video interactions, such as clicks on the calls-to-action (CTA) overlay, cards, and companion banners. Through target CPV bidding, you can set an average amount that you're willing to pay for a view while setting up your Video views campaign. Learn more About cost-per-view (CPV) bidding."
   },
   {
-   "id": "google-ads/answer/2472725#14",
-   "title": "Determine a bid strategy based on your goals",
-   "url": "https://support.google.com/google-ads/answer/2472725?hl=en",
-   "heading": "Determine a bid strategy based on your goals > Focus on views or interactions (for video ads only) > Related links",
-   "text": "- About automated bidding\n\n- About Smart Bidding\n\n- Change how you bid"
-  },
-  {
    "id": "google-ads/answer/6268637#0",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
@@ -546,148 +504,134 @@
    "id": "google-ads/answer/6268637#3",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
-   "heading": "About Target ROAS bidding > What is Target ROAS bidding > On this page",
-   "text": "- Before you begin\n\n- How it works\n\n- Implementation\n\n- Troubleshooting"
+   "heading": "About Target ROAS bidding > What is Target ROAS bidding > Before you begin",
+   "text": "- Before you can apply a Target ROAS bid strategy to your campaigns, you’ll need to set values for the conversions you're tracking.\n\n- You can apply conversion value rules to better express the value of conversions as they relate to your business, and optimize towards conversions from the types of users who are more valuable to you. Use conversion value rules to apply a multiplication factor to conversion values for higher value types of customers, devices, or locations.\n\n- To use Target ROAS bidding, the following requirements apply for different campaign types:\n\n- Search and Shopping campaigns: At least 15 conversions in the past 30 days at the conversion tracking level.\n\n- Display campaigns: At least 15 conversions (with valid conversion values) in the past 30 days across all of your campaigns combined. New Display campaigns no longer require you to have a history of conversions to use Target ROAS bidding.\n\n- App campaigns: At least 10 conversions every day (or 300 conversions in 30 days)."
   },
   {
    "id": "google-ads/answer/6268637#4",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > What is Target ROAS bidding > Before you begin",
-   "text": "- Before you can apply a Target ROAS bid strategy to your campaigns, you’ll need to set values for the conversions you're tracking.\n\n- You can apply conversion value rules to better express the value of conversions as they relate to your business, and optimize towards conversions from the types of users who are more valuable to you. Use conversion value rules to apply a multiplication factor to conversion values for higher value types of customers, devices, or locations.\n\n- To use Target ROAS bidding, the following requirements apply for different campaign types:\n\n- Search and Shopping campaigns: At least 15 conversions in the past 30 days at the conversion tracking level.\n\n- Display campaigns: At least 15 conversions (with valid conversion values) in the past 30 days across all of your campaigns combined. New Display campaigns no longer require you to have a history of conversions to use Target ROAS bidding.\n\n- App campaigns: At least 10 conversions every day (or 300 conversions in 30 days)."
+   "text": "- App campaigns: At least 10 conversions every day (or 300 conversions in 30 days).\n\n- Demand Gen campaigns: At least 50 conversions in the past 35 days (10 of these conversions must have occurred in the past 7 days) in the campaign, or 100 conversions in the past 35 days (across all Demand Gen campaigns in the customer account).\n\n- Note: Conversions must have a value greater than 0 to be counted as eligible. Campaigns that are eligible for Target ROAS will be automatically allowlisted.\n\n- Video Action Campaigns: At least 30 conversions in the past 30 days.\n\n- Hotel campaigns: At least 50 conversions per week at a campaign level.\n\n- Travel campaigns: At least 50 conversions in the past 7 days at a campaign level.\n\n- For Search campaigns, if you recently started reporting conversion value or changed the way conversion value is reported, we recommend you include the new values in the \"Conversions\" column and wait 1-2 conversion cycles for your campaign to receive conversion values at a similar rate before adopting."
   },
   {
    "id": "google-ads/answer/6268637#5",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > What is Target ROAS bidding > Before you begin",
-   "text": "- App campaigns: At least 10 conversions every day (or 300 conversions in 30 days).\n\n- Demand Gen campaigns: At least 50 conversions in the past 35 days (10 of these conversions must have occurred in the past 7 days) in the campaign, or 100 conversions in the past 35 days (across all Demand Gen campaigns in the customer account).\n\n- Note: Conversions must have a value greater than 0 to be counted as eligible. Campaigns that are eligible for Target ROAS will be automatically allowlisted.\n\n- Video Action Campaigns: At least 30 conversions in the past 30 days.\n\n- Hotel campaigns: At least 50 conversions per week at a campaign level.\n\n- Travel campaigns: At least 50 conversions in the past 7 days at a campaign level.\n\n- For Search campaigns, if you recently started reporting conversion value or changed the way conversion value is reported, we recommend you include the new values in the \"Conversions\" column and wait 1-2 conversion cycles for your campaign to receive conversion values at a similar rate before adopting."
-  },
-  {
-   "id": "google-ads/answer/6268637#6",
-   "title": "About Target ROAS bidding",
-   "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
-   "heading": "About Target ROAS bidding > What is Target ROAS bidding > Before you begin",
    "text": "- We also recommend reviewing your budget settings to make sure you feel comfortable spending up to 2 times your average daily budget. Over a month-long billing cycle, you won't be charged more than your average daily budget would've allowed for over 30.4 days. For App campaigns, it's also recommended to run a Target Cost Per Action campaign type before running a Target ROAS campaign type to understand a baseline ROAS as you set your initial ROAS target. Failure to set a proper initial target ROAS can cause poor performance or low scale.\n\nNote:\n\n- For App campaigns, you'll also have to install the Google Analytics for Firebase SDK in your app. The conversion events that you're bidding on (and sending values with) should come from the Firebase SDK.\n\n- Performance will generally improve if you run fewer, larger campaigns that get more conversions."
   },
   {
-   "id": "google-ads/answer/6268637#7",
+   "id": "google-ads/answer/6268637#6",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > How it works",
    "text": "Important: Starting August 17, 2026, Google is updating its bidding systems to deliver more consistent and predictable performance for campaigns that are limited by budget. If your campaigns use Target CPA or Target ROAS, these changes may cause temporary performance and traffic fluctuations. To learn how to prepare, review your settings, and use the new Bid Target Adjustment Tool (available starting on July 6, 2026), visit Changes to target based bid strategies.\n\nGoogle Ads predicts future conversions and associated values using your reported conversion values, which you report through conversion tracking. Then, Google Ads will set maximum cost-per-interaction (max. CPC) bids to maximize your conversion value, while trying to achieve an average return on ad spend (ROAS) equal to your target.\n\nNote: Hotel campaigns are only compatible with Manual CPC, CPC%, and Target ROAS bidding. Conversion tracking and conversion value setup are required for hotel campaigns using Target ROAS bidding. Both purchase and non-purchase conversions are supported for hotel campaigns with Target ROAS bidding."
   },
   {
-   "id": "google-ads/answer/6268637#8",
+   "id": "google-ads/answer/6268637#7",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > How it works",
    "text": "Some conversions may return a higher ROAS and some may return a lower ROAS, but altogether Google Ads will try to keep your conversion value per cost equal to the target ROAS you set. For example, if you set a target ROAS of 500%, Google Ads will adjust your bids to try to maximize your conversion value, while reaching this target ROAS (find details of the example below). To help improve your performance in the ad auction, this strategy adjusts bids using real-time signals such as device, browser, location, and time of day. It also uses AI to adjust bids based on whether or not someone is on one of your remarketing lists.\n\nGoogle Ads will recommend a Target ROAS value after you’ve created a new bid strategy or selected an optimization score recommendation, and selected which campaigns to apply it to. This recommendation is calculated based on your actual ROAS over the last few weeks. We’ll exclude performance from the last few days to account for conversions that may take more than a day to complete following an ad click or interaction (such as an engaged view). You can choose whether to use this recommended target ROAS value or to set your own."
   },
   {
-   "id": "google-ads/answer/6268637#9",
+   "id": "google-ads/answer/6268637#8",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > How it works > Example",
    "text": "Let's say you're measuring sales for your online women's shoe store and you want to optimize your bids based on the value of a shopping cart total. Your goal is $5 USD worth of sales (this is your conversion value) for each $1 USD you spend on ads. You'd set a target ROAS of 500% - for every $1 USD you spend on ads, you'd like to get 5 times that in revenue.\n\nHere's the math:\n\n$5 USD in sales ÷ $1 USD in ad spend x 100% = 500% target ROAS\n\nThen, Google Ads will set your max. CPC bids to maximize your conversion value, while trying to reach your target ROAS of 500%."
   },
   {
-   "id": "google-ads/answer/6268637#10",
+   "id": "google-ads/answer/6268637#9",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > When to use value bidding",
    "text": "Value based bidding is most helpful if various conversions have different value for your business or if you have a specific Return On Ads Spend (ROAS) target that you're trying to achieve.\n\nThe table below can help you find out which bidding strategy is best for your campaign.\n\nMax conversions\n\nTarget CPA\n\nMax conversion value\n\nTarget ROAS\n\nGoal\n\nMaximize conversions for budget\n\nMaximize conversions at Target CPA\n\nMaximize conversion values for budget\n\nMaximize conversion values at Target ROAS\n\nWhen\n\n- Priority is to spend the entire budget for the most conversions possible.\n\n- No specific ROI target.\n\n- All conversions treated equally.\n\n- Priority is getting conversions at a specific ROI target.\n\n- All conversions treated equally.\n\n- Priority is to spend the entire budget for the most conversion value possible.\n\n- No specific ROI target.\n\n- Conversions have different values for your business.\n\n- Priority is getting conversion value at a specific ROI target.\n\n- Conversions have different values for your business."
   },
   {
-   "id": "google-ads/answer/6268637#11",
+   "id": "google-ads/answer/6268637#10",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > When to use value bidding > Bid adjustments and Target ROAS",
    "text": "Bid adjustments allow you to show your ads more or less frequently based on where, when, and how people search. Because Target ROAS helps optimize your bids based on real-time data, your existing bid adjustments aren't used. There is one exception: You can still set device bid adjustments of -100%.\n\nNote: You don’t need to remove bid adjustments. They just won’t be used."
   },
   {
-   "id": "google-ads/answer/6268637#12",
+   "id": "google-ads/answer/6268637#11",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > Implementation > Create a new bid strategy",
    "text": "You can create a Target ROAS bid strategy for a single campaign (standard strategy) or multiple campaigns (portfolio bid strategy) in the following ways:\n\n- Create in a new campaign.\n\n- Create or change from campaign settings.\n\n- Create from the Shared library “Bid strategies” page.\n\nTo create a bid strategy, review Set up Smart Bidding."
   },
   {
-   "id": "google-ads/answer/6268637#13",
+   "id": "google-ads/answer/6268637#12",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > Implementation > Settings > Target ROAS",
    "text": "Your target ROAS is the average conversion value (for example, revenue) you'd like to get for each dollar you spend on ads. Keep in mind that the target ROAS you set may influence the total conversion value you get. For example, setting a target that's too high may limit the amount of traffic your ads may get.\n\nHere are a few tips to help you set a target ROAS that’s right for you:\n\n- Before transitioning to value-based bidding, ideally you will already be bidding to the desired conversion goal using a Target CPA bid strategy. Be sure you report values across all relevant campaigns for 4 weeks or 1-2 conversion cycles (whichever is longer) before determining their Target ROAS and activating value-based bidding. Learn more about Changing conversion goals and actions used for Smart Bidding.\n\n- Your Target ROAS should be set based on your business goals as well as your historical ROAS performance as a reference.\n\n- To find this, select Modify Columns from the “Columns” drop-down and add the Conv. value/cost column from the list of \"Conversions\" columns. Then, multiply conversion value per cost metric by 100 to get your Target ROAS percent."
   },
   {
-   "id": "google-ads/answer/6268637#14",
+   "id": "google-ads/answer/6268637#13",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > Implementation > Settings > Target ROAS",
    "text": "- Ensure the time frame of ROAS evaluation excludes the most recent conversion delay period to get an accurate view of campaign performance.\n\n- Target recommendations can also be found in the Recommendations tab, during campaign construction, within the bid simulator or while creating a strategy at the campaign or portfolio levels.\n\nNot sure how this change will impact your campaign's performance? Instead of selecting Save and changing your campaign immediately, you can now select Save as experiment. This option allows you to run an experiment comparing your new settings against your original campaign to ensure the change delivers better results."
   },
   {
-   "id": "google-ads/answer/6268637#15",
+   "id": "google-ads/answer/6268637#14",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > Implementation > Settings > Bid limits",
    "text": "Setting bid limits for Target ROAS isn't recommended because it restricts Google Ads from optimizing your bid using AI. It can also prevent Google Ads from adjusting your bids to the amount that best meets your Target ROAS. Bid limits are available for Search and Shopping portfolio bid strategies. If you do set bid limits, they’ll be used in Search Network auctions only, and are only available for portfolio bid strategies.\n\n- Max. bid limit: The highest CPC bid you want Google Ads to set when using Target ROAS.\n\n- Min. bid limit: The minimum max. CPC bid you want Google Ads to set when using Target ROAS. Note that Google Ads might set a max. CPC bid that's below your minimum bid limit, generally due to smart pricing. This means that the bid limit you set here isn't the absolute lowest bid that could be set."
   },
   {
-   "id": "google-ads/answer/6268637#16",
+   "id": "google-ads/answer/6268637#15",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > Implementation > Settings > Tip: Choose which conversions to bid for",
    "text": "The Include in \"Conversions\" setting lets you decide whether or not to include individual conversion actions in your \"Conversions\" and \"Conversion value\" reporting columns. The data in these columns are used by bid strategies like Target CPA, Target ROAS, and ECPC, so your bid strategy will only optimize based on the conversions that you've chosen to include. Learn more About account-default conversion goals.\n\nSmart Bidding will learn across all conversion actions reported in the “Conversions” column, even if they're configured for different goals and/or use different bidding strategy types. Cross-device conversions from Display Network, Video, Search, and Shopping campaigns are included by default. This isn't applicable for Hotel campaigns."
   },
   {
-   "id": "google-ads/answer/6268637#17",
+   "id": "google-ads/answer/6268637#16",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > Implementation > Ad group targets",
    "text": "You can apply ad group targets for both standard and portfolio bidding strategies. With a portfolio strategy, your campaigns, ad groups, and keywords are optimized collectively for a single target. Alternatively, you can set individual targets for each ad group but this isn't recommended as it can restrict Smart Bidding.\n\nKeep in mind, if you don’t need to set targets for individual ad groups, a portfolio strategy may be able to offer better performance.\n\nNote: Portfolio bid strategy isn't applicable with Target ROAS for App campaigns for installs, Shopping, Demand Gen, Hotel, or Travel campaigns."
   },
   {
-   "id": "google-ads/answer/6268637#18",
+   "id": "google-ads/answer/6268637#17",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > Implementation > Average target ROAS",
    "text": "Note: While Hotel campaigns support Target ROAS bidding, the specific Average target ROAS reporting column in the campaign table is only supported for Performance Max, Search, and Shopping campaigns. Average target ROAS is only supported for Performance Max, Search, and Shopping campaigns. While Hotel campaigns support Target ROAS bidding, the specific Average target ROAS reporting column isn’t available for Hotel campaigns.\n\nYour average target ROAS is the traffic-weighted average ROAS that your bid strategy optimized for. It averages the changes you’ve made to your Target ROAS for any given time period. For this reason, your average target ROAS may be different from the target ROAS that you set.\n\nThis metric lets you measure the ROAS that your bid strategy targeted for specific time periods. By changing the date range, you can learn what your strategy actually optimized for over that period. Keep in mind, you won’t have an average target ROAS for time periods without traffic."
   },
   {
-   "id": "google-ads/answer/6268637#19",
+   "id": "google-ads/answer/6268637#18",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > Implementation > Average target ROAS",
    "text": "You’ll find the average target ROAS metric in the performance table at the top of your “Campaigns” page, so that you can evaluate actual performance against target performance. Select “Avg. Target ROAS” from the “Performance” category when adding a new column, or by adding it to the performance chart.\n\nIt's recommended to monitor your campaign performance and average target over time."
   },
   {
-   "id": "google-ads/answer/6268637#20",
+   "id": "google-ads/answer/6268637#19",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > Implementation > Where you’ll find these metrics",
    "text": "The average target ROAS metric lets you measure the ROAS that your bid strategy targeted for specific time periods. By changing the date range, you can learn what your strategy is actually optimized for over that period. Keep in mind, you won’t have an average target ROAS for time periods without traffic.\n\nYou can add a column to view your average Target ROAS metric in the performance table so that you can evaluate actual performance against target performance. At the top of your “Campaigns” table, select the column icon under the “Performance” category, or by adding it to the performance chart. Select “Avg. target ROAS”, “Avg. target cost per install”, or “Avg. target cost per in-app action” from the “Performance” category when adding a new column.\n\nYou can also find this metric in your bid strategy report beside your “Actual ROAS”, which represents the actual ROAS that this strategy was able to achieve. Learn How to find your bid strategy reports.\n\nAverage target ROAS is available for both standard and portfolio bid strategies."
   },
   {
-   "id": "google-ads/answer/6268637#21",
+   "id": "google-ads/answer/6268637#20",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > Troubleshooting",
    "text": "Adjusting bids and budgets is the best way to control performance.\n\nWhen using value-based bidding with a target ROAS, if you want to increase conversion volume, consider gradually reducing the target ROAS. This allows the bid strategy to enter more auctions and generate more volume. Alternatively, if you want to increase conversion value, you may raise the target ROAS. When you change targets, the bidder will react immediately but will need some time to hit the new target (give it 1-2 conversion cycles). Account for bid changes when assessing performance by assessing ROAS performance over time versus average target within the bid simulator. Learn How to make target adjustments with Search Smart Bidding.\n\nFollow these troubleshooting tips to set a target ROAS that’s right for you:\n\n- Before transitioning to value-based bidding, ideally you will be already bidding to the desired conversion goal using a Target CPA bid strategy. Be sure to report values across all relevant campaigns for 4 weeks or 1-2 conversion cycles (whichever is longer) before determining your ROAS target and activating value-based bidding."
   },
   {
-   "id": "google-ads/answer/6268637#22",
+   "id": "google-ads/answer/6268637#21",
    "title": "About Target ROAS bidding",
    "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
    "heading": "About Target ROAS bidding > Troubleshooting",
    "text": "- Your Target ROAS should be set based on your business goals as well as your historical ROAS performance as a reference.\n\n- To find this, select Modify columns from the “Columns” drop-down and add the Conv. value/cost column from the list of \"Conversions\" columns. Then, multiply your conversion value per cost metric by 100 to get your target ROAS percent.\n\n- Ensure the time frame of your ROAS evaluation excludes the most recent conversion delay period to get an accurate view of campaign performance.\n\n- Target recommendations can also be found in the Recommendations tab, during campaign construction, within the bid simulator or while creating a strategy at the campaign or portfolio levels."
-  },
-  {
-   "id": "google-ads/answer/6268637#23",
-   "title": "About Target ROAS bidding",
-   "url": "https://support.google.com/google-ads/answer/6268637?hl=en",
-   "heading": "About Target ROAS bidding > Troubleshooting > Related links",
-   "text": "- About Smart Bidding\n\n- Set up Target ROAS bidding for Shopping campaigns\n\n- About bidding in App campaigns\n\n- About automated bidding\n\n- About conversion value rules\n\n- Value based bidding for video action campaigns\n\n- Tips on measuring Target ROAS performance\n\n- How to set up Target ROAS for Hotel Ads\n\n- Changes to Target-based bid strategies"
   },
   {
    "id": "google-ads/answer/6268632#0",
@@ -809,13 +753,6 @@
    "text": "Average target CPA is available for both standard and portfolio bid strategies.\n\nNote: To view the average target cost per install and the average target cost per in-app action metrics, select a date range from June 5, 2020, and beyond. The setting is applicable only for App campaigns."
   },
   {
-   "id": "google-ads/answer/6268632#17",
-   "title": "About Target CPA bidding",
-   "url": "https://support.google.com/google-ads/answer/6268632?hl=en",
-   "heading": "About Target CPA bidding > Where you’ll find these metrics > Related links",
-   "text": "- Create a portfolio bid strategy\n\n- About automated bidding\n\n- Changes to Target-based bid strategies"
-  },
-  {
    "id": "google-ads/answer/7684216#0",
    "title": "About Maximize conversion value bidding",
    "url": "https://support.google.com/google-ads/answer/7684216?hl=en",
@@ -870,13 +807,6 @@
    "url": "https://support.google.com/google-ads/answer/7684216?hl=en",
    "heading": "About Maximize conversion value bidding > Bid adjustments and Maximize conversion value",
    "text": "Bid adjustments allow you to show your ads more or less frequently based on where, when, and how people search. Because Maximize conversion value helps optimize your bids based on real-time data, the strategy doesn't use your existing bid adjustments. There's one exception: You can still set device bid adjustments of -100%.\n\nNote: If you switch to Maximize conversion value bidding, you don’t need to remove your existing bid adjustments, because the automated system bypasses active bid adjustments."
-  },
-  {
-   "id": "google-ads/answer/7684216#8",
-   "title": "About Maximize conversion value bidding",
-   "url": "https://support.google.com/google-ads/answer/7684216?hl=en",
-   "heading": "About Maximize conversion value bidding > Bid adjustments and Maximize conversion value > Related links",
-   "text": "- About Smart Bidding\n\n- About Target CPA bidding\n\n- About conversion value\n\n- About conversion value rules\n\n- Set up Target ROAS bidding for Hotel Ads\n\n- Changes to how Smart Bidding strategies are organized for Search campaigns\n\n- Troubleshoot performance fluctuations and changes in Search campaigns\n\n- Troubleshoot performance fluctuations and changes in Shopping campaigns\n\n- Troubleshooting performance fluctuations and changes in Display campaigns\n\n- Troubleshooting performance fluctuations and changes in Demand Gen campaigns"
   },
   {
    "id": "google-ads/answer/2464960#0",
@@ -949,13 +879,6 @@
    "text": "You can apply your max. CPC bid several ways. Let's say you have a bakery, and you've set up a \"breakfast\" ad group with keywords like donuts, crullers, and apple fritters. Here's how you might set your bids:\n\n- If you want all the keywords in an ad group to have the same bid: Set an ad group default bid. If you choose a $1 USD CPC, then that's your max. CPC when someone searches for donuts, crullers, or apple fritters - any of your keywords. The same bid applies to placements if you're running your ad on the Display Network. This is the easiest way to manage your CPCs.\n\n- If you want the keywords in an ad group to have different bids: Set keyword bids. For instance, if you know that people who search for apple fritters tend to buy more than people searching for donuts, then you might bid $1.25 USD for each click on apple fritters and $1 USD for each click on donuts.\n\n- If you want your Display Network targeting methods to have different bids: You can set a max. CPC for placements, topics, or other targeting methods. For instance, you can try to help your ad show on a donut recipes website by setting a custom bid for that particular placement on the Display Network."
   },
   {
-   "id": "google-ads/answer/2464960#10",
-   "title": "About Manual CPC bidding",
-   "url": "https://support.google.com/google-ads/answer/2464960?hl=en",
-   "heading": "About Manual CPC bidding > Max. CPC bidding options > Related links",
-   "text": "- Choose your bid and budget\n\n- Actual cost-per-click (CPC): Definition\n\n- About bid adjustments"
-  },
-  {
    "id": "google-ads/answer/6268626#0",
    "title": "About Maximize clicks bidding",
    "url": "https://support.google.com/google-ads/answer/6268626?hl=en",
@@ -1005,13 +928,6 @@
    "text": "Once you apply the Maximize Clicks bid strategy to your campaign, you can start to monitor the bid strategy's performance. Here are some tips for monitoring performance:\n\n- Look at the number of clicks to verify you’re getting more clicks for your budget than before. Note, however, that a before-and-after comparison isn’t the most accurate since clicks can naturally fluctuate over time.\n\n- Make sure that you have enough data to evaluate the strategy’s performance. Ideally, you'd give the strategy a few days or weeks to start performing.\n\n- Consider that a number of factors may affect your results over a period of time. For example, the number of clicks you can get with your budget can be affected by holidays, weekends, special events, changes to your product data, and your competitors in the auction.\n\n- Consider your click share. If your click share is very high, you may be getting all the possible traffic and the Maximize Clicks bid strategy might not bring you significantly more traffic."
   },
   {
-   "id": "google-ads/answer/6268626#7",
-   "title": "About Maximize clicks bidding",
-   "url": "https://support.google.com/google-ads/answer/6268626?hl=en",
-   "heading": "About Maximize clicks bidding > Monitor performance > Related link",
-   "text": "- Create a portfolio bid strategy"
-  },
-  {
    "id": "google-ads/answer/9121108#0",
    "title": "About Target impression share bidding",
    "url": "https://support.google.com/google-ads/answer/9121108?hl=en",
@@ -1054,13 +970,6 @@
    "text": "Bid adjustments allow you to show your ads more or less frequently based on where, when, and how people search. As Target impression share helps optimize your bids based on real-time data, your existing bid adjustments won’t be used. You can still set device bid adjustments of -100% to prevent your ad from showing on devices. You don’t need to remove any existing bid adjustments—they just won’t be used."
   },
   {
-   "id": "google-ads/answer/9121108#6",
-   "title": "About Target impression share bidding",
-   "url": "https://support.google.com/google-ads/answer/9121108?hl=en",
-   "heading": "About Target impression share bidding > Settings > Related links",
-   "text": "- Understanding bidding basics\n\n- Create a portfolio bid strategy\n\n- About the Google Search Network\n\n- About automated bidding"
-  },
-  {
    "id": "google-ads/answer/10893605#0",
    "title": "Set up Smart Bidding",
    "url": "https://support.google.com/google-ads/answer/10893605?hl=en",
@@ -1094,13 +1003,6 @@
    "url": "https://support.google.com/google-ads/answer/10893605?hl=en",
    "heading": "Set up Smart Bidding > Instructions > Create or change a portfolio bid strategy with existing campaigns",
    "text": "- In your Google Ads account, click the Campaigns icon .\n\n- Click the Campaigns drop down in the section menu.\n\n- Click Campaigns.\n\n- Click the checkbox next to the campaigns you’d like to include.\n\n- Click Edit on the blue bar at the top.\n\n- Click Change bid strategy from the dropdown menu.\n\n- You can choose to Create new portfolio strategy, or Use existing portfolio strategy.\n\n- If you choose “Use existing portfolio bid strategy”, select a strategy from the list provided.\n\n- If you choose “Create new portfolio bid strategy”, enter the settings for your new strategy, and give it a name.\n\n- Click Apply."
-  },
-  {
-   "id": "google-ads/answer/10893605#5",
-   "title": "Set up Smart Bidding",
-   "url": "https://support.google.com/google-ads/answer/10893605?hl=en",
-   "heading": "Set up Smart Bidding > Instructions > Related links",
-   "text": "- About automated bid strategies\n\n- Your guide to Smart Bidding\n\n- Your guide to AI-powered Search ads\n\n- How to steer AI-powered Search ads\n\n- Smart Bidding technical guide"
   },
   {
    "id": "google-ads/answer/10486536#0",
@@ -1180,13 +1082,6 @@
    "text": "Let's say you want to spend $304 per month on advertising. To figure out your average daily budget, you'd divide $ 304 USD by 30.4 (the average number of days in a month - 365/12) to get an average daily budget of $ 10 USD.\n\nUsing this example, here's how you'd figure out your average daily budget:\n\n304/30.4 = $ 10 USD per day (Monthly budget / Average number of days per month = average daily budget)\n\nYou can also create shared budgets, which let you set a budget across multiple campaigns."
   },
   {
-   "id": "google-ads/answer/6385083#4",
-   "title": "About average daily budgets",
-   "url": "https://support.google.com/google-ads/answer/6385083?hl=en",
-   "heading": "About average daily budgets > How to decide on an average daily budget > Related links",
-   "text": "- Budgets overview\n\n- About your budget report\n\n- How budget changes take effect\n\n- Set up an average daily budget for your campaign\n\n- About spending limits\n\n- Why daily costs might exceed your average daily budget\n\n- Tips for optimizing your average daily budget"
-  },
-  {
    "id": "google-ads/answer/1704443#0",
    "title": "About overdelivery and your average daily budget",
    "url": "https://support.google.com/google-ads/answer/1704443?hl=en",
@@ -1199,13 +1094,6 @@
    "url": "https://support.google.com/google-ads/answer/1704443?hl=en",
    "heading": "About overdelivery and your average daily budget > Overdelivery",
    "text": "In some circumstances, your \"served costs\" (the cost of all the clicks or impressions that the campaign received) may exceed your daily or monthly spending limits. When this happens, you’ll never actually pay more than your spending limits.\n\nTo check your account for overdelivery, follow these steps:\n\n- In your Google Ads account, select the Campaigns icon .\n\n- Select the Insights and reports drop down in the section menu.\n\n- Select Report editor.\n\n- In the \"Billing\" section of the \"Template gallery\" card, select the Billed cost report.\n\nYou’ll notice a report that lists served and billed costs for each campaign. To calculate overdelivery, subtract “Billed cost” from “Served cost.” To perform these calculations in bulk, select the download icon in the top right of the report and save as a .csv file.\n\nBy default, the data is displayed daily and sorted by served cost. If you wish to view for a certain date range, set a date range in the upper right section above the table."
-  },
-  {
-   "id": "google-ads/answer/1704443#2",
-   "title": "About overdelivery and your average daily budget",
-   "url": "https://support.google.com/google-ads/answer/1704443?hl=en",
-   "heading": "About overdelivery and your average daily budget > Overdelivery > Related links",
-   "text": "- Understanding why you've been charged\n\n- Change how often you're charged\n\n- Set and change an average daily budget for your campaign"
   },
   {
    "id": "google-ads/answer/10724817#0",
@@ -1306,13 +1194,6 @@
    "text": "Create a campaign\n Setup & management\n Retail & omnichannel\n Reporting & optimization\n\nCreatives & assets\n Best practices\n Troubleshooting\n Key policies"
   },
   {
-   "id": "google-ads/answer/10724817#14",
-   "title": "About Performance Max campaigns",
-   "url": "https://support.google.com/google-ads/answer/10724817?hl=en",
-   "heading": "About Performance Max campaigns > Next steps > Related links",
-   "text": "- About Smart Bidding and Smart Creative solutions with Google Ads\n\n- Google Network"
-  },
-  {
    "id": "google-ads/answer/11385582#0",
    "title": "Optimization tips for Performance Max campaign for all business types",
    "url": "https://support.google.com/google-ads/answer/11385582?hl=en",
@@ -1339,13 +1220,6 @@
    "url": "https://support.google.com/google-ads/answer/11385582?hl=en",
    "heading": "Optimization tips for Performance Max campaign for all business types > Best practices for all business types",
    "text": "- Assets: Provide a diverse range of high-quality assets to maximize strength. Aim for “Excellent” or “Good” ad strength rating. Include at least 20 text assets (15 headlines, 5 descriptions), at least 7 image assets (3 landscape, 3 square, and 1 portrait), and at least 1 video asset. You can upload your own video or use the video creation tool. The use of your own video asset is particularly important if you want to minimize spend on auto-generated videos on YouTube. Stronger and more diverse assets help improve performance and can address issues like low conversions or high CPA. Learn more about how to Build an asset group.\n\nNote: Brand representation and controls, including business logos and business information, have been consolidated at the campaign level. To get the most out of your Google Ads experience, make sure that you aren’t running campaigns with logos and business information split across different asset groups. Learn more about business logo specifications and business information."
-  },
-  {
-   "id": "google-ads/answer/11385582#4",
-   "title": "Optimization tips for Performance Max campaign for all business types",
-   "url": "https://support.google.com/google-ads/answer/11385582?hl=en",
-   "heading": "Optimization tips for Performance Max campaign for all business types > Related links",
-   "text": "- About Performance Max campaigns\n\n- Create a Performance Max campaign\n\n- Create a Performance Max campaign using a Merchant Center feed\n\n- Performance Max campaign setup issues"
   },
   {
    "id": "google-ads/answer/13775965#0",
@@ -1421,141 +1295,127 @@
    "id": "google-ads/answer/13776350#1",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
-   "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > On this page",
-   "text": "- Lay the foundation for your Performance Max campaign\n\n- Plan budgets early, but be ready for additional sales\n\n- Set up your campaigns for success\n\n- Provide Google AI with key information for better results\n\n- Use reporting and insights to evaluate your results"
+   "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Lay the foundation for your Performance Max campaign",
+   "text": "Set up your campaign\n\n- Campaign duration: Run your campaigns for at least 6 weeks. This gives Google's AI enough time to get started and gather data so it can compare how things are going.\n\n- Audience signal: Google's AI powers Performance Max campaigns. Use relevant audience lists as signals to help Google's AI learn faster and enhance your campaign results. You can use remarketing lists, custom intent lists, Customer Match (your own customer lists), and similar groups as signals.\n\nEnhance your product data feed better to help your ads stand out\n\n- Upload rich product descriptions and images, and update product prices and availability if they change often.\n\n- Note: Add images with 500 x 500 pixels or greater resolution to your Google Merchant Center catalog to serve product feeds on Connected TV (CTV) for YouTube Shopping ads.\n\n- Ensure listed products are approved and use the Product issues column to identify missing product data attributes or spot underperforming offers.\n\n- Add a local product data feed to automatically enable local inventory ads in your campaigns to promote products and promotions available in stores."
   },
   {
    "id": "google-ads/answer/13776350#2",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Lay the foundation for your Performance Max campaign",
-   "text": "Set up your campaign\n\n- Campaign duration: Run your campaigns for at least 6 weeks. This gives Google's AI enough time to get started and gather data so it can compare how things are going.\n\n- Audience signal: Google's AI powers Performance Max campaigns. Use relevant audience lists as signals to help Google's AI learn faster and enhance your campaign results. You can use remarketing lists, custom intent lists, Customer Match (your own customer lists), and similar groups as signals.\n\nEnhance your product data feed better to help your ads stand out\n\n- Upload rich product descriptions and images, and update product prices and availability if they change often.\n\n- Note: Add images with 500 x 500 pixels or greater resolution to your Google Merchant Center catalog to serve product feeds on Connected TV (CTV) for YouTube Shopping ads.\n\n- Ensure listed products are approved and use the Product issues column to identify missing product data attributes or spot underperforming offers.\n\n- Add a local product data feed to automatically enable local inventory ads in your campaigns to promote products and promotions available in stores."
+   "text": "- Add a local product data feed to automatically enable local inventory ads in your campaigns to promote products and promotions available in stores.\n\n- You can also use your product data feed to attract consumer attention to your ads with deals by creating promotions or price drop annotations. Set up free and fast shipping annotations to show you can ship quickly, and use return annotations to highlight return windows like “Free 90-day returns”.\n\n- Consider including custom labels in your product data feed to signal that a product is high-priority. For example, “bestseller,” “trending,” or “holiday product”. You can then use the labels to segment these products into separate campaigns or asset groups if needed.\n\nUnlock business growth with better measurement\n\n- Set up a strong Google tag across your whole website. This helps you collect the most important information for your business.\n\n- Set up enhanced conversions. This makes your conversion tracking more exact and lets you use stronger bidding strategies."
   },
   {
    "id": "google-ads/answer/13776350#3",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Lay the foundation for your Performance Max campaign",
-   "text": "- Add a local product data feed to automatically enable local inventory ads in your campaigns to promote products and promotions available in stores.\n\n- You can also use your product data feed to attract consumer attention to your ads with deals by creating promotions or price drop annotations. Set up free and fast shipping annotations to show you can ship quickly, and use return annotations to highlight return windows like “Free 90-day returns”.\n\n- Consider including custom labels in your product data feed to signal that a product is high-priority. For example, “bestseller,” “trending,” or “holiday product”. You can then use the labels to segment these products into separate campaigns or asset groups if needed.\n\nUnlock business growth with better measurement\n\n- Set up a strong Google tag across your whole website. This helps you collect the most important information for your business.\n\n- Set up enhanced conversions. This makes your conversion tracking more exact and lets you use stronger bidding strategies."
+   "text": "- Set up enhanced conversions. This makes your conversion tracking more exact and lets you use stronger bidding strategies.\n\n- Assign a store visit value or use store sales values. This helps you measure the full buying journey and improve your campaign to get more in-store purchases. You can also create custom variables for store sales. This lets you view more detailed reports based on customer segments or product categories.\n\n- If you have an app, you can make it easier for users to go from your website to your app by using App Connect. You can also set up deep links to send users right to the correct page in your app when they tap your ads on their mobile web. You'll also be able to measure what happens in your app, such as purchases and sign-ups. This helps you improve your campaign's performance.\n\nShare conversion values for better optimization and reporting"
   },
   {
    "id": "google-ads/answer/13776350#4",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Lay the foundation for your Performance Max campaign",
-   "text": "- Set up enhanced conversions. This makes your conversion tracking more exact and lets you use stronger bidding strategies.\n\n- Assign a store visit value or use store sales values. This helps you measure the full buying journey and improve your campaign to get more in-store purchases. You can also create custom variables for store sales. This lets you view more detailed reports based on customer segments or product categories.\n\n- If you have an app, you can make it easier for users to go from your website to your app by using App Connect. You can also set up deep links to send users right to the correct page in your app when they tap your ads on their mobile web. You'll also be able to measure what happens in your app, such as purchases and sign-ups. This helps you improve your campaign's performance.\n\nShare conversion values for better optimization and reporting"
-  },
-  {
-   "id": "google-ads/answer/13776350#5",
-   "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
-   "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
-   "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Lay the foundation for your Performance Max campaign",
    "text": "Share conversion values for better optimization and reporting\n\n- When you use conversion tracking, you can assign the same value to all conversions or let each conversion have different values. For retailers, we strongly recommend providing transaction-specific values for each conversion if your customers are purchasing items with different prices and you want to maximize total revenue.\n\n- Use conversion value rules to add more value information to your account (for example, different margins for different types of customers, or lifetime value considerations). This information allows you to optimize for more specific goals. Set higher or lower values for different types of customers, devices, locations, store visits, or store sales."
   },
   {
-   "id": "google-ads/answer/13776350#6",
+   "id": "google-ads/answer/13776350#5",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Plan budgets early, but be ready for additional sales",
    "text": "Use Performance Planner to identify budget and bid strategies that will maximize conversion value\n\n- Use Performance Planner to view how your campaigns might do each month and quarter. Performance Planner helps you with ideas to make your ads perform better with the same spend. It shows you how changing your budget or bid targets affects your results.\n\n- Performance Planner also considers seasonal events such as holidays, so you can find chances for more conversion opportunities during those times.\n\nExplore demand forecasts to take advantage of increased demand\n\n- Demand forecasts can help you understand predicted upcoming trends for your business, so you can plan budgeting and bidding strategies accordingly.\n\n- Review when demand is likely to start increasing: You may already know events that are important to your business, such as Black Friday. Find out how demand is forecasted to increase for the products and services related to these major seasonal events.\n\n- Identify new events related to your business: There may be less well-known events that increase the demand for your products and services. Review these and consider adjusting your campaigns to capture that demand."
   },
   {
-   "id": "google-ads/answer/13776350#7",
+   "id": "google-ads/answer/13776350#6",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Plan budgets early, but be ready for additional sales",
    "text": "Check recommendations for tips on budgeting, bidding, and more\n\n- Check your optimization score to understand how much more your campaigns can grow. A higher score means your ads are working better. Also, look at your recommendations for ideas on how to make your ads better.\n\n- For example, you may view a recommendation to raise or re-distribute your budgets for upcoming traffic increases when our simulations show that you could miss out on potential customers or that your ads may even stop running on your busiest days.\n\n- You can also find and use other recommendations to improve your campaigns, such as optimizing for new customer acquisition.\n\nUse seasonality adjustments for short promotional or other events\n\n- If you expect your conversion rates to change a lot for a short time, you can use seasonality adjustments to get ready. Seasonality adjustments are great for short, non-frequent events, where you expect a significant change (like more than 30%) in conversion rates over a short time (less than 7 days). For example, a 3-day mega sale or Black Friday weekend."
   },
   {
-   "id": "google-ads/answer/13776350#8",
+   "id": "google-ads/answer/13776350#7",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Plan budgets early, but be ready for additional sales",
    "text": "- You can only use seasonality adjustments on campaigns that have been running for a while because they need past conversion history.\n\n- If you are running a longer promotion or expect a smaller conversion rate change, we suggest manually adjusting ROAS or CPA targets to help Smart Bidding handle the seasonal changes."
   },
   {
-   "id": "google-ads/answer/13776350#9",
+   "id": "google-ads/answer/13776350#8",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Set up your campaigns for success",
    "text": "Make your campaign setup simpler so Google AI learns faster\n\n- When you start a new Performance Max campaign, you should make its structure as simple as possible. Google AI works best when it can make your ads better across all places using a unified budget.\n\nWhen to create multiple campaigns\n\n- Sometimes, you might need separate Performance Max ad campaigns. For example, you might have different campaigns for different countries or languages, budgets, or ROAS targets for new products, best-selling products, seasonal moments, or different store locations.\n\n- During the holidays, you might want to focus on certain types of products. You could create separate Performance Max campaigns for those products.\n\n- You might want one campaign for holiday products, one for high-margin products, and one for everything else. In these cases, setting a lower ROAS target can also help more customers view these products in the weeks before peak periods when many customers are browsing.\n\nWhen to use multiple asset groups in a single campaign"
   },
   {
-   "id": "google-ads/answer/13776350#10",
+   "id": "google-ads/answer/13776350#9",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Set up your campaigns for success",
    "text": "When to use multiple asset groups in a single campaign\n\n- Create multiple \"asset groups\" inside the same campaign to put together assets that should serve in ads in sets or themes. For example, different asset groups for dinner plates versus bowls.\n\n- You may also want to create more asset groups if certain assets are more relevant for specific groups of customers. For example, you might want different assets for a customer match list of people who bought bikes, because you now want to sell bike helmets to him.\n\n- Target different products with each asset group. For example, Products A-L in Asset Group 1 and Products M-Z in Asset Group 2.\n\n- For holidays, we suggest making new holiday-specific asset groups inside your existing campaigns. This safeguards your regular products sales and helps your holiday sales do well. You should upload new holiday ads and asset groups at least 2 weeks in advance to make sure they get approved in time.\n\n- Use asset group scheduling to activate the holiday or seasonal asset groups at a specific time. For example, you could plan a new set of holiday-themed assets ahead of a special sitewide sale or promotion."
   },
   {
-   "id": "google-ads/answer/13776350#11",
+   "id": "google-ads/answer/13776350#10",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Provide Google AI with key information for better results",
    "text": "Use a value-based bidding strategy to drive more performance for your budget\n\n- After you set values for your conversions, apply a value-based bidding strategy that matches your business goals. Use Maximize conversion value bidding to help Google AI maximize the total conversion value of your campaign within your daily budget.\n\n- For better results, set a ROAS target that will bring you the most profit. Think about how much your products cost and a customer’s lifetime value.\n\nReach new customers with the new customer acquisition goal\n\n- Use the new customer acquisition goal to maximize revenue while driving more new customers to your business.\n\n- Choose the New Customer Value mode to optimize your campaign to focus on and bid higher for new customers, while still maximizing sales from existing customers.\n\n- There's also a beta version called \"New Customer Acquisition with High Value optimization\". It helps you focus on new customers who are expected to spend a lot of money over time, while also still focusing on getting regular new customers and keeping existing ones. Reach out to your Google account team for more information."
   },
   {
-   "id": "google-ads/answer/13776350#12",
+   "id": "google-ads/answer/13776350#11",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Provide Google AI with key information for better results",
    "text": "- Choose \"New Customer Only\" mode if you only want to get new customers. However, with this mode, you might miss out on sales from customers who already bought from you before, and might not buy again without viewing your ad. New Customer Only mode only makes sense in some situations, like when you have a specific budget just for getting new customers.\n\n- Provide as many data sources as possible to accurately detect whether someone is a new or repeat customer. Share your own definition of a new customer with website tagging (Global Site Tag and new customer parameters), provide a first-party customer list of existing customers via Customer Match, and opt in to conversion-based customer lists.\n\nReach the right audiences by using first-party data\n\n- Add audience signals that help Google AI find relevant customers and drive more conversions.\n\n- Your consented first-party data from previous purchasers shared via Customer Match is the most valuable type of audience signal. Custom segments are another useful audience signal to provide insight into the search terms, website URLs, and apps your customers typically engage with."
   },
   {
-   "id": "google-ads/answer/13776350#13",
+   "id": "google-ads/answer/13776350#12",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Provide Google AI with key information for better results",
    "text": "- Update these lists regularly to make sure your campaigns are making the best choices based on up-to-date information.\n\nMake your ads diverse and maximize your creative assets to connect with more customers\n\n- If you have online sales goals, your product feed will be used as a starting point to create and show your ads. We strongly suggest that you also add a variety of text, image and video assets and refresh them regularly. This allows your Performance Max campaign to serve across more eligible inventory so you can achieve the best results possible.\n\n- If you’re focusing to store goals, you must include all types of creative assets: text headlines, descriptions, images, logos, video, calls-to-action, business name, and a final URL.\n\n- To make it easier to provide high-quality video ads, video creation tools are now integrated directly into Performance Max campaign setup and editing workflows.\n\n- Note: If you don’t provide your own video creative, then one or more videos may be auto-generated to help you drive more conversions from this inventory. These videos draw from your existing text assets, images, and product feed to maximize video quality and relevance."
   },
   {
-   "id": "google-ads/answer/13776350#14",
+   "id": "google-ads/answer/13776350#13",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Provide Google AI with key information for better results",
    "text": "Note: Text customization was formerly known as Automatically created assets.\n\nTurn on text customization and final URL expansion to drive more sales from Search\n\n- First, keep text customization turned on. This helps Google make more relevant headlines and descriptions that are better matched to what a user is searching for.\n\n- Then, keep final URL expansion turned on. This helps you find new search words that lead to sales. It also replaces your main website link with another page on your website that better matches what a user wants. Final URL expansion also gives text customization more landing page options to use, which helps you create more diverse and relevant ads.\n\n- If you need to apply exclusions to final URL expansion, you can use URL exclusions or URL parameter rules, account-level negative keywords, and campaign-level brand exclusions.\n\n- Note: Final URL expansion is isn’t available to campaigns that only optimize to store goals."
   },
   {
-   "id": "google-ads/answer/13776350#15",
+   "id": "google-ads/answer/13776350#14",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Use reporting and insights to evaluate your results",
    "text": "Understand changes in performance\n\n- With better asset group reporting, you can view conversions, conversion value, cost, and a variety of other metrics at the asset group level. Find out how different asset groups affect performance and where you should make improvements like adding creative assets or making existing assets better.\n\n- Use explanations to understand why your ad performance changed. Explanations tell you why big changes happened and suggest what to do to fix problems and improve performance.\n\n- Top signals in your bid strategy report also help you find out what things affect how your ads perform. Top signals can include things like the type of device used, location, day of week, time of day, search terms, and Customer Match lists.\n\n- Check performance shifts insights to find out which assets groups, products, and product types are driving performance changes.\n\nFind out which creative assets are working well"
   },
   {
-   "id": "google-ads/answer/13776350#16",
+   "id": "google-ads/answer/13776350#15",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Use reporting and insights to evaluate your results",
    "text": "Find out which creative assets are working well\n\n- Use Ad Strength to understand if your asset quality is \"low,\" \"good,\" or \"best\". It also tells you if you need to add new assets for Google AI to use. If you already have the maximum number of allowed assets, you can swap out your lower-quality ones for new, higher-quality assets..\n\n- Understand your best-performing asset combinations for each asset group with the Combinations report. This report also helps you understand how your different text, image, and video ads are used in various ad styles.\n\n- Explore asset audience insights to view which ads work best with different audience segments. Use this to help you create new ads that attract the best-performing audiences.\n\nUnderstand your top customers and find new ones\n\n- Check out audience insights to understand top interests and behaviors of the customers who convert from your Performance Max campaigns and to find out which audiences convert at higher rates."
   },
   {
-   "id": "google-ads/answer/13776350#17",
+   "id": "google-ads/answer/13776350#16",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Use reporting and insights to evaluate your results",
    "text": "- Understand conversion data for segments you entered as audience signals by looking at segments with a “Signals” label. Focus on segments marked “Optimized” to learn the new audience segments Google AI helped discover that you may not have known about previously.\n\nExplore how your customers are searching\n\n- Use search terms insights to understand what your customers search for. Now, you can even pick custom dates to view past insights.\n\n- You can view search trends to understand if you're keeping up with increased demand in categories important to your business. Use these insights to plan your budgets, inventory, promotions, and landing pages based on what customers are searching for.\n\nView reports for retail businesses\n\n- View reports made for retail businesses. Use product insights on the Products page in Google Ads. These help you find ways to make individual products better based on how much they could sell. You can also make changes more easily with actionable recommendations. With the diagnostics tab, you can also find and fix issues that might be impacting how well individual products are performing."
   },
   {
-   "id": "google-ads/answer/13776350#18",
+   "id": "google-ads/answer/13776350#17",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Use reporting and insights to evaluate your results",
    "text": "- With category insights on the Products page in Google Ads, you can view which product categories are trending. You can also change how detailed you view these categories and subcategories.\n\n- View your best selling products in the Popular products report in Google Merchant Center. You can use this report to understand what brands and products customers want. Then, you can decide which products to show most in your ads.\n\n- Use the price competitiveness report in Google Merchant Center. This helps you see how competitors are pricing similar products by type, country, and brand. Use this info to make your pricing and bidding plans better for your best products."
   },
   {
-   "id": "google-ads/answer/13776350#19",
+   "id": "google-ads/answer/13776350#18",
    "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
    "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
    "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Best practices",
    "text": "For additional best practices, you can review the following articles:\n\n- Best practices for all business types\n\n- Best practices for online sales (non-shopping)\n\n- Best practices for lead generation\n\n- Best practices for store goals"
-  },
-  {
-   "id": "google-ads/answer/13776350#20",
-   "title": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed",
-   "url": "https://support.google.com/google-ads/answer/13776350?hl=en",
-   "heading": "Optimization tips for Performance Max campaigns with a Google Merchant Center feed > Best practices > Related links",
-   "text": "- About Performance Max campaigns\n\n- Create a Performance Max campaign\n\n- Performance Max campaign setup issues\n\n- Create a Performance Max campaign with products from Merchant Center\n\n- Retailer best practices for AI-powered Performance Max campaigns"
   },
   {
    "id": "google-ads/answer/14505308#0",
@@ -1612,13 +1472,6 @@
    "url": "https://support.google.com/google-ads/answer/14505308?hl=en",
    "heading": "Apply brand exclusions to Performance Max or Search campaigns > Instructions > Add brand exclusions to existing campaigns in bulk",
    "text": "- Select Don’t allow Shopping ads if you don’t want your selected campaigns to show Shopping ads on searches that mention excluded brands.\n\n- If you want to view the summary of changes, click Preview.\n\n- Click Apply.\n\nNote: Exclusions for Search will only be available to select users during the rollout period. Wide availability is expected later in 2024."
-  },
-  {
-   "id": "google-ads/answer/14505308#8",
-   "title": "Apply brand exclusions to Performance Max or Search campaigns",
-   "url": "https://support.google.com/google-ads/answer/14505308?hl=en",
-   "heading": "Apply brand exclusions to Performance Max or Search campaigns > Instructions > Related links",
-   "text": "- Create a Performance Max campaign\n\n- Create a Search campaign\n\n- How to use brand suitability features in Performance Max\n\n- Apply brand inclusions to Search campaigns"
   },
   {
    "id": "google-ads/answer/13721847#0",
@@ -1696,13 +1549,6 @@
    "url": "https://support.google.com/google-ads/answer/13721847?hl=en",
    "heading": "About brand settings for Search and Performance Max > Brand settings FAQs",
    "text": "If a campaign has both exclusions and inclusions, which takes priority?\n\nBrand exclusions will be prioritized over brand inclusions.\n\nNote: Domain names for parent brands with geographic-specific URLs don't require separate brand submissions. For example, the domain name for Adidas India is www.adidas.co.in, but Adidas India isn't an independent brand. Adidas is the parent brand and their domain name is www.adidas.com. It’s not necessary to submit both brands to the brand list."
-  },
-  {
-   "id": "google-ads/answer/13721847#11",
-   "title": "About brand settings for Search and Performance Max",
-   "url": "https://support.google.com/google-ads/answer/13721847?hl=en",
-   "heading": "About brand settings for Search and Performance Max > Brand settings FAQs > Related links",
-   "text": "- About Performance Max campaigns\n\n- Create a Performance Max campaign\n\n- Create a Search campaign"
   },
   {
    "id": "google-ads/answer/12200334#0",
@@ -1796,13 +1642,6 @@
    "text": "Performance fluctuations, like budget overspend or underspend, sometimes result from external market shifts rather than major campaign settings. You can utilize Google Trends to analyze if specific search terms or products have experienced a sudden surge or decline in user interest and traffic.\n\nHere's how to address overspending or underspending due to market shifts:\n\n- To correct overspending driven by a demand spike:\n\n- Implement negative keywords to block inefficient traffic.\n\n- Adjust bid targets.\n\n- Tighten budget caps.\n\n- To correct underspending if interest drops:\n\n- Broaden keyword targeting.\n\n- Expand audiences.\n\n- Shift budget toward other trending terms or products capturing active market demand."
   },
   {
-   "id": "google-ads/answer/12200334#13",
-   "title": "Troubleshoot performance fluctuations and changes in Performance Max campaigns",
-   "url": "https://support.google.com/google-ads/answer/12200334?hl=en",
-   "heading": "Troubleshoot performance fluctuations and changes in Performance Max campaigns > 10 common reasons why your performance is fluctuating > Related links",
-   "text": "- About Performance Max campaigns\n\n- Create a Performance Max campaign using a Merchant Center feed"
-  },
-  {
    "id": "google-ads/answer/3455481#0",
    "title": "Create a Shopping campaign",
    "url": "https://support.google.com/google-ads/answer/3455481?hl=en",
@@ -1859,13 +1698,6 @@
    "text": "- Ad group bid: When you choose a Manual CPC (cost-per-click) bid strategy, you can set the bid for the ad group.\n\n- Product groups: You only need to adjust this setting if you want to limit the number of products used in your campaign. To do so, choose the criteria a product must meet in order to be advertised. Only products that match all the requirements you select will be added to your campaign. You can change this setting after the campaign has been created.\n\n- Select Next. You’ll be taken to a summary page where you can review all your settings to ensure that everything is set up correctly.\n\n- Select Publish campaign.\n\nAfter publishing, remember to monitor your campaign's status in Google Ads and use the Ad Preview and Diagnosis tool to check if your ads are running and to identify potential issues."
   },
   {
-   "id": "google-ads/answer/3455481#8",
-   "title": "Create a Shopping campaign",
-   "url": "https://support.google.com/google-ads/answer/3455481?hl=en",
-   "heading": "Create a Shopping campaign > Instructions > Related links",
-   "text": "- Requirements for Shopping campaigns\n\n- Manage your Shopping campaign with ad groups\n\n- Manage your Shopping campaign with product groups\n\n- Use feed labels to advertise products from specific feeds\n\n- Create a Performance Max campaign using a Merchant Center feed\n\n- Troubleshooting performance fluctuations and changes in Shopping campaigns"
-  },
-  {
    "id": "google-ads/answer/6275313#0",
    "title": "Use negative keywords for a Shopping campaign",
    "url": "https://support.google.com/google-ads/answer/6275313?hl=en",
@@ -1892,13 +1724,6 @@
    "url": "https://support.google.com/google-ads/answer/6275313?hl=en",
    "heading": "Use negative keywords for a Shopping campaign > Instructions > Tip > Manage Shopping campaigns in Google Ads Editor",
    "text": "AdWords Editor is a free, downloadable application for managing your Google Ads campaigns offline. You can use Google Ads Editor to change bids on your product groups and landing page URLs. Learn more"
-  },
-  {
-   "id": "google-ads/answer/6275313#4",
-   "title": "Use negative keywords for a Shopping campaign",
-   "url": "https://support.google.com/google-ads/answer/6275313?hl=en",
-   "heading": "Use negative keywords for a Shopping campaign > Instructions > Related links",
-   "text": "- Create a Shopping campaign\n\n- Manage your Shopping campaign with ad groups\n\n- Manage your Shopping campaign with product groups"
   },
   {
    "id": "google-ads/answer/3455573#0",
@@ -1976,13 +1801,6 @@
    "url": "https://support.google.com/google-ads/answer/3455573?hl=en",
    "heading": "Monitor and optimize your Shopping campaigns > Use the Product groups page > Tip",
    "text": "You can also segment your performance data at the campaign or ad group level to compare traffic from the Google Search Network and Google search partners. Just go to the Campaigns or Ad groups page, click the Segment drop-down menu , and select Network (with search partners).\n\nUse the Auction insights report\n\nThe Auction insights report lets you compare your performance with other advertisers who are participating in the same auctions that you are. This information can help you make strategic decisions about bidding and budgeting choices by showing you where you are succeeding and where you may be missing opportunities for improved performance. This data is available from October 2014 to present.\n\nLearn more about Auction insights for Shopping campaigns.\n\nUse the bid simulator\n\nWant to increase or decrease your bids, but not sure how it would affect your performance? The Bid Simulator can help bring clarity to how different product group bids might affect your traffic and conversions by estimating what your advertising results might have been over the previous seven days, if you’d set different bids.\n\nLearn more about using the bid simulator with Shopping campaigns."
-  },
-  {
-   "id": "google-ads/answer/3455573#11",
-   "title": "Monitor and optimize your Shopping campaigns",
-   "url": "https://support.google.com/google-ads/answer/3455573?hl=en",
-   "heading": "Monitor and optimize your Shopping campaigns > Use the Product groups page > Related links",
-   "text": "- Use the bid simulator for Shopping campaigns\n\n- Fix issues with a Shopping campaign\n\n- Best practices for Shopping campaigns"
   },
   {
    "id": "google-ads/answer/12499498#0",
@@ -2167,13 +1985,6 @@
    "text": "If products are marked as \"Excluded or \"Not eligible and you want them to show, you'll need to change their status to 'Included'. Keep in mind that changes to product inclusion or eligibility can take 24-48 hours to sync between Merchant Center and Google Ads and reflect in your campaign.\n\nSet and revise bids for each product group as often as you need, or exclude a product group from your campaign.\n\nFor Performance Max campaigns, reporting metrics can be different for the Product Groups tab when compared to the Campaign, Ad Group, or Ads tabs. This is because the Product Groups tab can only report on product level data.\n\n- For example, when a Shopping ad shows many products in an individual ad slot, each product collects an impression. However, the campaign, ad group, and ad recognize that only a single ad was showing and will count it as one impression.\n\n- Differences in impression counts between Performance Max item-level reports and campaign-level reports are expected. This is because item-level reporting focuses specifically on Shopping inventory and doesn't represent all the channels where a Performance Max campaign can serve."
   },
   {
-   "id": "google-ads/answer/3517331#3",
-   "title": "Product and listing groups",
-   "url": "https://support.google.com/google-ads/answer/3517331?hl=en",
-   "heading": "Product and listing groups > Related links",
-   "text": "- Manage a Shopping campaign with product groups\n\n- Create a Shopping campaign\n\n- Google Merchant Center Help"
-  },
-  {
    "id": "google-ads/answer/105671#0",
    "title": "Negative keyword: Definition",
    "url": "https://support.google.com/google-ads/answer/105671?hl=en",
@@ -2186,13 +1997,6 @@
    "url": "https://support.google.com/google-ads/answer/7302703?hl=en",
    "heading": "Negative broad match: Definition",
    "text": "A keyword setting that allows you to exclude your ad for searches where every word of your keyword phrase, in any order, appears in the search. Your ad may still show for situations where some of the keywords appear.\n\nExample\n\nNegative broad match keyword: running shoes\n\nSearch\n Could an ad show?\n\nblue tennis shoes\n\nrunning shoe\n\nblue running shoes\n\nshoes running\n\nrunning shoes"
-  },
-  {
-   "id": "google-ads/answer/7302703#1",
-   "title": "Negative broad match: Definition",
-   "url": "https://support.google.com/google-ads/answer/7302703?hl=en",
-   "heading": "Negative broad match: Definition > Related links",
-   "text": "- About negative keywords\n\n- Add negative keywords to campaigns"
   },
   {
    "id": "google-ads/answer/6324#0",
@@ -2214,13 +2018,6 @@
    "url": "https://support.google.com/google-ads/answer/2684537?hl=en",
    "heading": "Search terms report: Definition",
    "text": "A list of search terms that a significant number of people have used before seeing your ad. Use this report to refine your keywords so that only the right searches cause your ad to show.\n\n- This report shows every search query that resulted in your ad being shown.\n\n- Depending on your keyword matching options, the search terms listed can be different than your keyword list. Use the report to find successful phrases that you can add to your keyword list. If your ad was triggered by less relevant searches, add those phrases as negative keywords."
-  },
-  {
-   "id": "google-ads/answer/2684537#1",
-   "title": "Search terms report: Definition",
-   "url": "https://support.google.com/google-ads/answer/2684537?hl=en",
-   "heading": "Search terms report: Definition > Related links",
-   "text": "- Understanding the search terms report"
   },
   {
    "id": "google-ads/answer/7337243#0",
@@ -2384,13 +2181,6 @@
    "text": "We want to hear about what's working for you in Google Ads and what could be improved. To share your thoughts, select the help icon in the upper right-hand side of your account, then select Leave feedback."
   },
   {
-   "id": "google-ads/answer/7337243#23",
-   "title": "Use Keyword Planner",
-   "url": "https://support.google.com/google-ads/answer/7337243?hl=en",
-   "heading": "Use Keyword Planner > Keyword Planner FAQs > Related links",
-   "text": "- Refine your new keywords in Keyword Planner\n\n- About Keyword Planner forecasts\n\n- Best practices for finding new keywords\n\n- Use Keyword Planner for keyword ideas and traffic estimates"
-  },
-  {
    "id": "google-ads/answer/6167118#0",
    "title": "About Quality Score for Search campaigns",
    "url": "https://support.google.com/google-ads/answer/6167118?hl=en",
@@ -2417,13 +2207,6 @@
    "url": "https://support.google.com/google-ads/answer/6167118?hl=en",
    "heading": "About Quality Score for Search campaigns > How to check your Quality Score",
    "text": "- Go to Keywords within the Campaigns menu .\n\n- In the upper right corner of the table, select the columns icon .\n\n- Under “Modify columns for keywords”, select the drop-down arrow beside “All columns” and open the Quality score section.\n\n- To add the current Quality Score and its component statuses as new columns in the keyword reporting table, select any of the following:\n\n- Quality Score\n\n- Landing Page Exp.\n\n- Exp. CTR\n\n- Ad Relevance\n\n- To view past Quality Score stats for the reporting period you’re looking at, choose any of the following metrics. To add past Quality Score data and its component statuses as new columns in the keyword reporting table, select the following:\n\n- Quality Score (hist.)\n\n- Landing Page Exper. (hist.)\n\n- Ad Relevance (hist.)\n\n- Exp. CTR. (hist.)\n\nYou can view the change in daily scores by segmenting your table by day.\n\n- Select Apply."
-  },
-  {
-   "id": "google-ads/answer/6167118#4",
-   "title": "About Quality Score for Search campaigns",
-   "url": "https://support.google.com/google-ads/answer/6167118?hl=en",
-   "heading": "About Quality Score for Search campaigns > How to check your Quality Score > Related links",
-   "text": "- 5 ways to use Quality Score to improve your performance\n\n- About ad quality"
   },
   {
    "id": "google-ads/answer/142918#0",
@@ -2466,13 +2249,6 @@
    "url": "https://support.google.com/google-ads/answer/1722054?hl=en",
    "heading": "Different ways to track conversions > Choose the type of conversion you want to track > Track multiple kinds of conversions",
    "text": "Track multiple types of conversions from the list above by creating a separate conversion action for each type. For example, set up one conversion action to track purchases on your website and another to track calls from your ads.\n\nYou can also set up multiple conversion actions for each conversion source. For example, if you want to track both purchases and newsletter sign-ups on your website, create one conversion action for purchases and another for sign-ups.\n\nWhen tracking multiple conversion actions, use the “Account default” setting to choose which conversions to include in your “Conversions” reporting column. Learn more About account-default conversion goals."
-  },
-  {
-   "id": "google-ads/answer/1722054#4",
-   "title": "Different ways to track conversions",
-   "url": "https://support.google.com/google-ads/answer/1722054?hl=en",
-   "heading": "Different ways to track conversions > Choose the type of conversion you want to track > Related links",
-   "text": "- About updated conversion categories\n\n- About conversion measurement\n\n- Understand your conversion tracking data\n\n- Import Google Analytics conversions into Google Ads"
   },
   {
    "id": "google-ads/answer/6270625#0",
@@ -2601,25 +2377,11 @@
    "text": "For web campaigns using App Connect, you can track VTC for in-app conversions following an ad view, even if the user didn’t directly click or engage with the ad. This capability is focused on \"Active Views\" across YouTube, Display, and Gmail. On the Google Display Network, for instance, an Active View is counted only when at least 50% of the ad is displayed for at least one continuous second.\n\nBy default, VTC for App Connect utilizes a 24-hour lookback window. While these conversions are strictly for reporting and remain non-biddable on Display channels, the system is designed to prioritize app campaigns and Google TV Masthead campaigns over web campaigns. This ensures accurate attribution and prevents duplicate conversion counting across your campaigns."
   },
   {
-   "id": "google-ads/answer/6270625#18",
-   "title": "Understand your conversion tracking data",
-   "url": "https://support.google.com/google-ads/answer/6270625?hl=en",
-   "heading": "Understand your conversion tracking data > About view-through conversions > Related links",
-   "text": "- About account-default conversion goals\n\n- About \"All conversions\"\n\n- About attribution reports\n\n- About conversion value rules"
-  },
-  {
    "id": "google-ads/answer/6032150#0",
    "title": "Conversion action: Definition",
    "url": "https://support.google.com/google-ads/answer/6032150?hl=en",
    "heading": "Conversion action: Definition",
    "text": "Conversion action: A specific customer action that you've defined as valuable to your business, such as an online purchase or phone call. Tracking conversion actions lets you see how your ads lead to those valuable actions.\n\n- Conversion actions are available for several conversion sources, including website actions, calls, app downloads, and in-app actions (such as in-app purchases).\n\n- If you want to track more than one of the same kind of conversion action, such as a newsletter signup and a lead form submission on your website, you can create multiple conversion actions.\n\n- Occurrences of conversion actions are reported as conversions."
-  },
-  {
-   "id": "google-ads/answer/6032150#1",
-   "title": "Conversion action: Definition",
-   "url": "https://support.google.com/google-ads/answer/6032150?hl=en",
-   "heading": "Conversion action: Definition > Related links",
-   "text": "- About conversion tracking\n\n- Set up conversion tracking"
   },
   {
    "id": "google-ads/answer/9888656#0",
@@ -2653,92 +2415,78 @@
    "id": "google-ads/answer/14664077#1",
    "title": "About enhanced conversions at the account level in Google Ads",
    "url": "https://support.google.com/google-ads/answer/14664077?hl=en",
-   "heading": "About enhanced conversions at the account level in Google Ads > On this page",
-   "text": "- Before you begin\n\n- How this change impacts your conversion actions\n\n- How this change impacts your Google tag settings\n\n- Select your implementation method at the account level\n\n- Opt in or out of enhance conversions at the account level"
-  },
-  {
-   "id": "google-ads/answer/14664077#2",
-   "title": "About enhanced conversions at the account level in Google Ads",
-   "url": "https://support.google.com/google-ads/answer/14664077?hl=en",
    "heading": "About enhanced conversions at the account level in Google Ads > Before you begin",
    "text": "Enhanced conversions is available as an account level setting. You’ll have enhanced conversions enabled in your account if:\n\n- You had already set up enhanced conversions at the conversion action level previously.\n\n- You only have one implementation method (across your existing conversion actions) that has enhanced conversions enabled. For example, if you only use the Google tag or the Google Ads API as the implementation method.\n\n- You have both tag implementation methods (across your existing conversion actions) that have enhanced conversions enabled. Specifically, if you use the Google tag and Google Tag Manager implementation methods.\n\nIf you haven’t set up enhanced conversions, review About enhanced conversions to learn more about how to set up enhanced conversions for web or for leads."
   },
   {
-   "id": "google-ads/answer/14664077#3",
+   "id": "google-ads/answer/14664077#2",
    "title": "About enhanced conversions at the account level in Google Ads",
    "url": "https://support.google.com/google-ads/answer/14664077?hl=en",
    "heading": "About enhanced conversions at the account level in Google Ads > How this change impacts your conversion actions",
    "text": "With account-level enhanced conversions, your conversion actions may exhibit different behaviors based on the way they have been set up in Google Ads. Review the details below to learn more about how enhanced conversions at the account level will impact you."
   },
   {
-   "id": "google-ads/answer/14664077#4",
+   "id": "google-ads/answer/14664077#3",
    "title": "About enhanced conversions at the account level in Google Ads",
    "url": "https://support.google.com/google-ads/answer/14664077?hl=en",
    "heading": "About enhanced conversions at the account level in Google Ads > How this change impacts your conversion actions > Existing conversion actions",
    "text": "Existing conversion actions that already had enhanced conversions turned on will continue to benefit from enhanced conversions at the account-level.\n\nExisting conversion actions that didn’t have enhanced conversions turned on will get it enabled with account-level enhanced conversions, unless the conversion action was previously explicitly opted out of enhanced conversions.\n\nNote that you can also take additional steps to ensure enhanced conversions data is being provided appropriately through tag setup or the API setup. Depending on the implementation, you can review these instructions for Google tag, Google Tag Manager or Google Ads API.\n\nImportant: If you're migrating from action-level to account-level enhanced conversions, ensure that your action-level configurations are removed. Google Ads prioritizes action-level settings. Therefore, residual configurations can conflict with your new account-level setup. This conflict may result in dropped enhanced conversion pings."
   },
   {
-   "id": "google-ads/answer/14664077#5",
+   "id": "google-ads/answer/14664077#4",
    "title": "About enhanced conversions at the account level in Google Ads",
    "url": "https://support.google.com/google-ads/answer/14664077?hl=en",
    "heading": "About enhanced conversions at the account level in Google Ads > How this change impacts your conversion actions > New conversion actions",
    "text": "New conversion actions inherit the account-level settings for enhanced conversions. For example, if enhanced conversions is turned on at the account-level and automatic collection is being used, new conversion actions also have enhanced conversions turned on with automatic collection by default."
   },
   {
-   "id": "google-ads/answer/14664077#6",
+   "id": "google-ads/answer/14664077#5",
    "title": "About enhanced conversions at the account level in Google Ads",
    "url": "https://support.google.com/google-ads/answer/14664077?hl=en",
    "heading": "About enhanced conversions at the account level in Google Ads > How this change impacts your Google tag settings",
    "text": "With enhanced conversions at the account level, Google tag settings for enhanced conversions are available globally across all conversion actions, rather than individually for each conversion action. This means that enhanced conversions share the same tag-wide settings as all other Google Ads features and tag destinations, such as enhanced conversions for leads and Google Analytics."
   },
   {
-   "id": "google-ads/answer/14664077#7",
+   "id": "google-ads/answer/14664077#6",
    "title": "About enhanced conversions at the account level in Google Ads",
    "url": "https://support.google.com/google-ads/answer/14664077?hl=en",
    "heading": "About enhanced conversions at the account level in Google Ads > How this change impacts your Google tag settings > New Google tag settings",
    "text": "If you haven’t yet configured any Google tag settings for products or features outside of enhanced conversions, new global settings will automatically be created for your tag by combining your existing conversion action level enhanced conversion tag settings. These Google tag settings will be applied to all conversion actions using enhanced conversions, and will also be shared across any Google products or features that use your tag in the future."
   },
   {
-   "id": "google-ads/answer/14664077#8",
+   "id": "google-ads/answer/14664077#7",
    "title": "About enhanced conversions at the account level in Google Ads",
    "url": "https://support.google.com/google-ads/answer/14664077?hl=en",
    "heading": "About enhanced conversions at the account level in Google Ads > How this change impacts your Google tag settings > Existing Google tag settings",
    "text": "If you’ve already configured Google tag settings for other products or features, such as enhanced conversions for leads or Google Analytics, your Google tag settings from enhanced conversions at the conversion action level will automatically be combined and merged into your existing tag-level settings:\n\n- Allow user-provided data capabilities: The existing tag-level setting will be respected. It's recommended to keep these settings enabled for Google Ads to receive data from enhanced conversions. Review these instructions to ensure enhanced conversions data is being provided appropriately through your tag setup.\n\n- Automatically detect user-provided data: The existing tag-level setting will be respected.\n\n- Exclusion CSS selectors for automatic collection: All CSS selectors will be combined into one list.\n\n- Specify CSS selectors and JavaScript variables: All CSS Selectors and JavaScript variables for “Email”, “Phone number”, and “Name and address” will be combined into one list."
   },
   {
-   "id": "google-ads/answer/14664077#9",
+   "id": "google-ads/answer/14664077#8",
    "title": "About enhanced conversions at the account level in Google Ads",
    "url": "https://support.google.com/google-ads/answer/14664077?hl=en",
    "heading": "About enhanced conversions at the account level in Google Ads > How this change impacts your Google tag settings > Manage your Google tag settings",
    "text": "You can manage all of your Google tag settings and destinations at any time from the Google Ads Data Manager. You can also access your Google tag settings from the enhanced conversions account level settings."
   },
   {
-   "id": "google-ads/answer/14664077#10",
+   "id": "google-ads/answer/14664077#9",
    "title": "About enhanced conversions at the account level in Google Ads",
    "url": "https://support.google.com/google-ads/answer/14664077?hl=en",
    "heading": "About enhanced conversions at the account level in Google Ads > Select your implementation method at the account level",
    "text": "Some existing enhanced conversions customers need to select a method for collecting user-provided data in order to upgrade their account to enhanced conversions at the account-level. The method you select for account-level enhanced conversions will be applied to all new and existing conversion actions. As a result, all other methods will no longer collect user-provided data for enhanced conversions, so we recommend choosing the method you are using the most today for enhanced conversions to avoid any changes in your enhanced conversions performance.\n\nThere are 3 available methods to choose from: Google tag, Google Tag Manager, or Google Ads API. If your account currently uses both Google tag and Google Tag Manager for enhanced conversions across your conversion actions, try following these instructions to set up your Google tag in Google Tag Manager. Then, you can use Google Tag Manager to collect user-provided data for all of your conversion actions.\n\nFollow the steps below to upgrade your account to account-level enhanced conversions in Google Ads:\n\n- Go to Settings within the Goals menu .\n\n- Expand the “Enhanced conversions” section."
   },
   {
-   "id": "google-ads/answer/14664077#11",
+   "id": "google-ads/answer/14664077#10",
    "title": "About enhanced conversions at the account level in Google Ads",
    "url": "https://support.google.com/google-ads/answer/14664077?hl=en",
    "heading": "About enhanced conversions at the account level in Google Ads > Select your implementation method at the account level",
    "text": "- Go to Settings within the Goals menu .\n\n- Expand the “Enhanced conversions” section.\n\n- Choose a method for setting up and managing user-provided data.\n\nIf no action is taken by October 2025, Google will automatically select a method based on your current enhanced conversions setup and upgrade your account to use enhanced conversions at the account level."
   },
   {
-   "id": "google-ads/answer/14664077#12",
+   "id": "google-ads/answer/14664077#11",
    "title": "About enhanced conversions at the account level in Google Ads",
    "url": "https://support.google.com/google-ads/answer/14664077?hl=en",
    "heading": "About enhanced conversions at the account level in Google Ads > Opt in or out of enhanced conversions at the account level",
    "text": "If you have conversion actions that aren’t switched to account-level enhanced conversions, you can opt them in from your Google Ads account. Learn more about how to Opt into enhanced conversions at the account level in Google Ads.\n\nIf you decide that enhanced conversions at the account-level doesn’t work for you, you can opt out of specific conversion actions. Learn more about how to Opt out of enhanced conversions at the account level in Google Ads."
-  },
-  {
-   "id": "google-ads/answer/14664077#13",
-   "title": "About enhanced conversions at the account level in Google Ads",
-   "url": "https://support.google.com/google-ads/answer/14664077?hl=en",
-   "heading": "About enhanced conversions at the account level in Google Ads > Opt in or out of enhanced conversions at the account level > Related links",
-   "text": "- About enhanced conversions\n\n- Set up enhanced conversions for web using the Google tag\n\n- Set up enhanced conversions for leads with the Google tag"
   },
   {
    "id": "google-ads/answer/6259715#0",
@@ -2853,13 +2601,6 @@
    "text": "Keep in mind that these columns include data that isn't affected by your attribution model selection, such as data from Display Network campaigns using pay for conversions billing."
   },
   {
-   "id": "google-ads/answer/6259715#16",
-   "title": "About attribution models",
-   "url": "https://support.google.com/google-ads/answer/6259715?hl=en",
-   "heading": "About attribution models > How to find and set an attribution model for your conversions > Related links",
-   "text": "- About data-driven attribution\n\n- About attribution reports\n\n- Set up conversion tracking"
-  },
-  {
    "id": "google-ads/answer/11461796#0",
    "title": "About primary and secondary conversion actions",
    "url": "https://support.google.com/google-ads/answer/11461796?hl=en",
@@ -2949,13 +2690,6 @@
    "url": "https://support.google.com/google-ads/answer/3030657?hl=en",
    "heading": "About cross-account conversion tracking > Structuring your accounts",
    "text": "If you use more than one manager account, you’ll also want to be extra thoughtful about which one you use to manage conversions for your business. Here’s are some possible structures you might want to consider:\n\n- If you have multiple product lines leading to the same conversion: You typically want to set up conversion tracking in a manager account that manages the accounts for all the product lines.\n\n- If you have multiple product lines or business divisions that lead to completely different conversions events: You may want to consider configuring conversion tracking separately for each product line or business division, if you don’t want Smart Bidding to learn across these products/businesses."
-  },
-  {
-   "id": "google-ads/answer/3030657#8",
-   "title": "About cross-account conversion tracking",
-   "url": "https://support.google.com/google-ads/answer/3030657?hl=en",
-   "heading": "About cross-account conversion tracking > Structuring your accounts > Related link",
-   "text": "- Set up your Google tag across your Google accounts\n\n- Manager Accounts (MCC): Set up cross-account conversion tracking"
   },
   {
    "id": "google-ads/answer/6190135#0",
@@ -3061,13 +2795,6 @@
    "url": "https://support.google.com/google-ads/answer/3095550?hl=en",
    "heading": "About auto-tagging > Turn auto-tagging on or off > App Connect",
    "text": "If you have both a website and a mobile app, you can set up app conversion tracking using App Connect. Once you’ve used the App Connect interface to set up conversion tracking and deep linking (which allows you to link from your ads directly into your business app), you can provide a seamless web-to-app experience for your customers and drive on average two times higher conversion rates for ad clicks landing in your app compared to your mobile website.\n\nWith App Connect, customers can easily complete their intended action, whether purchasing, signing up, or adding items to their cart. Plus, from within the App Connect interface, you can track these in-app conversion actions and get recommendations on how to improve your campaign.\n\nTo get started with App Connect, follow the 3 steps below:\n\n- Go to App advertising hub within the Tools menu. This will take you to the App Connect interface.\n\nLearn more about converting better with the App Connect interface.\n\nNote: App campaigns don’t respect auto-tagging features."
-  },
-  {
-   "id": "google-ads/answer/3095550#7",
-   "title": "About auto-tagging",
-   "url": "https://support.google.com/google-ads/answer/3095550?hl=en",
-   "heading": "About auto-tagging > Turn auto-tagging on or off > Related link",
-   "text": "- Check if Google Ads auto-tagging works"
   },
   {
    "id": "google-ads/answer/7519537#0",
@@ -3518,13 +3245,6 @@
    "text": "- Go to Troubleshooting within the Tools menu .\n\n- Select Policy manager.\n\n- On the \"Policy issues\" tab, select Appeal on the affected ad.\n\n- Under \"Reason for appealing,\" select Dispute decision or Made changes to comply with policy.\n\n- Select Submit."
   },
   {
-   "id": "google-ads/answer/9338593#26",
-   "title": "Fix a disapproved ad or appeal a policy decision",
-   "url": "https://support.google.com/google-ads/answer/9338593?hl=en",
-   "heading": "Fix a disapproved ad or appeal a policy decision > About policy labels > Related links",
-   "text": "- About Google Ads policies\n\n- Eligible (limited): Definition"
-  },
-  {
    "id": "google-ads/answer/6139186#0",
    "title": "Manager Accounts (MCC): About Google Ads manager accounts",
    "url": "https://support.google.com/google-ads/answer/6139186?hl=en",
@@ -3586,13 +3306,6 @@
    "url": "https://support.google.com/google-ads/answer/6139186?hl=en",
    "heading": "Manager Accounts (MCC): About Google Ads manager accounts > Manage your Google Ads account from a manager account > Create a new Google Ads account from a manager account",
    "text": "To create a new Google Ads account from a manager account, follow these steps:\n\n- In your Google Ads manager account, click the Accounts icon .\n\n- Click the Sub-account settings drop down in the section menu.\n\n- Click the plus button .\n\n- Click Create new account.\n\n- Follow the steps through the account creation process."
-  },
-  {
-   "id": "google-ads/answer/6139186#9",
-   "title": "Manager Accounts (MCC): About Google Ads manager accounts",
-   "url": "https://support.google.com/google-ads/answer/6139186?hl=en",
-   "heading": "Manager Accounts (MCC): About Google Ads manager accounts > Manage your Google Ads account from a manager account > Related links",
-   "text": "Topic Page Manager Accounts (MCC)\n\n- Manager Accounts (MCC): Table of Content\n\nAn Introduction to Manager Accounts\n\n- About Google Ads manager accounts\n\n- Create a Google Ads manager account\n\n- Manager Accounts (MCC): Navigate your manager account\n\n- Budgets, currency conversion and billing with manager accounts\n\n- About your Google Ads account limits\n\n- About account limits for manager accounts"
   },
   {
    "id": "google-ads/answer/7459601#0",
@@ -3684,13 +3397,6 @@
    "url": "https://support.google.com/google-ads/answer/7459601?hl=en",
    "heading": "Manager Accounts: Link accounts to your manager accounts > Frequently asked questions > What happens after an invite is accepted?",
    "text": "You'll receive a confirmation email when the invite gets accepted. The account will then appear in your manager account automatically."
-  },
-  {
-   "id": "google-ads/answer/7459601#13",
-   "title": "Manager Accounts: Link accounts to your manager accounts",
-   "url": "https://support.google.com/google-ads/answer/7459601?hl=en",
-   "heading": "Manager Accounts: Link accounts to your manager accounts > Frequently asked questions > Related links",
-   "text": "- Manager Accounts\n\n- About linking accounts to your manager account\n\n- Unlink accounts from your manager account"
   },
   {
    "id": "google-ads/answer/7456531#0",

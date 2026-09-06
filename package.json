@@ -14,7 +14,7 @@
     "kb:fetch": "tsx scripts/build-kb.ts fetch",
     "kb:embed": "tsx scripts/build-kb.ts embed",
     "kb:build": "tsx scripts/build-kb.ts all",
-    "test": "tsx --test server/*.test.ts",
+    "test": "tsx --test \"server/**/*.test.ts\"",
     "verify": "npm run check && npm test && npm run build"
   },
   "dependencies": {

@@ -111,10 +111,11 @@ export interface DoorDef {
    * what it is missing — see server/ai/kb.ts. `null` where no agent of ours
    * answers at all.
    *
-   * Nothing reads this field at retrieval time yet: server/ai/kb.ts loads one
-   * corpus and searches all of it, so a second door set live today would be
-   * answered out of the ChatGPT Ads corpus. The agent, not the door, is where
-   * the namespace has to arrive — see docs/doors.md.
+   * The name that decides an answer is the one on the AGENT, in shared/roster.ts:
+   * retrieval happens per agent, and server/ai/kb.ts answers only from that
+   * agent's namespace with no fallback. This field is the door's copy of it, and
+   * the two must agree — a door whose agent reads a different corpus is a door
+   * citing somebody else's documentation.
    */
   kbNamespace: string | null;
 }
@@ -179,9 +180,7 @@ export const DOORS: DoorDef[] = [
     ],
     contract: TOP_RATED_TEAM,
     tier: "white",
-    status: "coming",
-    comingLine:
-      "The agent for this door reads Google's own documentation, and the panel opens once it can be held to that corpus alone rather than the one behind the ChatGPT Ads door. The Google Ads work runs today, so a call is the shorter path.",
+    status: "live",
     kbNamespace: "google-ads",
   },
   {
@@ -213,9 +212,7 @@ export const DOORS: DoorDef[] = [
         "The company that runs top-rated.team. Ad Grants setup runs on our own tool, adgrant.ai, which writes through the official Google Ads API under a manager-account link you can remove; the management and the conversion tracking after it are our own people, on the same contract.",
     },
     tier: "white",
-    status: "coming",
-    comingLine:
-      "The agent for this door reads Google's own Ad Grants policies, and the panel opens once it can be held to those alone rather than the corpus behind the ChatGPT Ads door. adgrant.ai does the setup today; the management and the conversion tracking start with a call.",
+    status: "live",
     kbNamespace: "ad-grants",
   },
   {

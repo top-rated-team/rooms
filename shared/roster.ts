@@ -24,8 +24,9 @@ export interface AgentDef {
    * `kbNamespace`, and the name written into the corpus file by
    * scripts/build-kb.ts. An agent's corpus is its own: the Google Ads Agent
    * answering out of the ChatGPT Ads documentation would be worse than an agent
-   * that admits it has nothing to read. What the server still has to do with
-   * this field is written down in docs/doors.md.
+   * that admits it has nothing to read. server/ai/kb.ts enforces that — it
+   * retrieves from this namespace only, with no fallback — and an agent with
+   * `useKb` set but no namespace here retrieves nothing at all.
    */
   kbNamespace?: string;
   systemPrompt: string;
@@ -204,12 +205,9 @@ ${KB_RULES}`,
       "Account structure, bidding, Performance Max, Shopping feeds, negatives and the conversion tracking underneath them — grounded in the Google Ads Help Centre and the Google Ads API docs, and cites the page it used.",
     initials: "GA",
     tone: "bg-chart-1/10 text-chart-1",
-    // Reads the corpus scripts/build-kb.ts writes to data/kb/kb.google-ads.json.
-    // This stays false until server/ai/kb.ts can load a corpus per namespace:
-    // switched on before that, retrieval would hand this agent the ChatGPT Ads
-    // corpus and it would cite developers.openai.com for a Google Ads question.
-    // docs/doors.md, "What a live door actually needs", has the change.
-    useKb: false,
+    // Reads data/kb/kb.google-ads.json and nothing else: server/ai/kb.ts keys
+    // its indexes by namespace and never falls back to another corpus.
+    useKb: true,
     kbNamespace: "google-ads",
     starters: [
       "Should we split PMax from Search, or let PMax absorb everything?",
@@ -254,10 +252,9 @@ ${GOOGLE_ADS_KB_RULES}`,
       "Eligibility, the 5% click-through rule, the website and account-management policies, the conversion tracking a grant is measured on, and what the Google Ads API writes into a nonprofit's own account — cites the Google page it used.",
     initials: "AG",
     tone: "bg-chart-2/10 text-chart-2",
-    // Same rule as the Google Ads Agent above: false until retrieval is
-    // per-namespace, or this agent answers Ad Grants policy questions out of
-    // OpenAI's advertising documentation.
-    useKb: false,
+    // Reads data/kb/kb.ad-grants.json and nothing else — the Ad Grants policies,
+    // not the general Google Ads corpus and not OpenAI's.
+    useKb: true,
     kbNamespace: "ad-grants",
     starters: [
       "Google suspended our grant account over the 5% click-through rule. Can you rebuild it?",
