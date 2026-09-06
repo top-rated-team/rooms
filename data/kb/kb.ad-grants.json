@@ -1,6 +1,6 @@
 {
  "namespace": "ad-grants",
- "builtAt": "2026-09-06T18:22:23.617Z",
+ "builtAt": "2026-09-06T22:31:29.474Z",
  "documents": 33,
  "chunks": [
   {
@@ -422,13 +422,6 @@
    "url": "https://support.google.com/nonprofits/answer/7404558?hl=en",
    "heading": "Ad quality > How this affects your ads",
    "text": "The Ad Grants quality filter is based in part on the general ad quality level of the standard ads in the country where you're showing your ads. If your ads are of relatively low quality, the quality filter will prevent your ads from participating in the auction, no matter how high you raise your bid.\n\nLearn more about what your ad quality can affect\n\nThe same auction-time measurements of ad quality used in Ad Rank (expected clickthrough rate (CTR), ad relevance, and landing page experience) are used to see if your ad passes the quality filter. Having below average quality with one factor doesn't necessarily mean your ad will be restricted from the auction."
-  },
-  {
-   "id": "nonprofits/answer/7404558#3",
-   "title": "Ad quality",
-   "url": "https://support.google.com/nonprofits/answer/7404558?hl=en",
-   "heading": "Ad quality > Related links",
-   "text": "- About Quality Score for Search campaigns\n\n- 5 ways to use Quality Score to improve your performance"
   },
   {
    "id": "nonprofits/answer/46103#0",
@@ -1752,13 +1745,6 @@
    "url": "https://support.google.com/google-ads/answer/6139186?hl=en",
    "heading": "Manager Accounts (MCC): About Google Ads manager accounts > Manage your Google Ads account from a manager account > Create a new Google Ads account from a manager account",
    "text": "To create a new Google Ads account from a manager account, follow these steps:\n\n- In your Google Ads manager account, click the Accounts icon .\n\n- Click the Sub-account settings drop down in the section menu.\n\n- Click the plus button .\n\n- Click Create new account.\n\n- Follow the steps through the account creation process."
-  },
-  {
-   "id": "google-ads/answer/6139186#9",
-   "title": "Manager Accounts (MCC): About Google Ads manager accounts",
-   "url": "https://support.google.com/google-ads/answer/6139186?hl=en",
-   "heading": "Manager Accounts (MCC): About Google Ads manager accounts > Manage your Google Ads account from a manager account > Related links",
-   "text": "Topic Page Manager Accounts (MCC)\n\n- Manager Accounts (MCC): Table of Content\n\nAn Introduction to Manager Accounts\n\n- About Google Ads manager accounts\n\n- Create a Google Ads manager account\n\n- Manager Accounts (MCC): Navigate your manager account\n\n- Budgets, currency conversion and billing with manager accounts\n\n- About your Google Ads account limits\n\n- About account limits for manager accounts"
   },
   {
    "id": "google-ads/answer/7456531#0",

@@ -10,9 +10,10 @@
  *   npm run kb:fetch -- google-ads
  *
  * One corpus per door, because a door's agent must not answer out of another
- * door's documentation. The namespace is written into each file; how the server
- * uses it, and what still has to change there before a second door can be set
- * live, is in docs/doors.md under "What a live door actually needs".
+ * door's documentation. The namespace is written into each file, and
+ * server/ai/kb.ts loads every corpus in data/kb/ into its own index and answers
+ * only from the one the asking agent belongs to — no fallback to another. Add a
+ * corpus here and a door can read it; nothing else has to change.
  *
  * Every file is rewritten whole, so every mode is safe to re-run, and a corpus
  * that fetches nothing is left exactly as it was rather than being emptied —
@@ -306,15 +307,6 @@ async function main(): Promise<void> {
 
 /* --------------------------------- fetch ---------------------------------- */
 
-/**
- * A corpus file carries its own namespace so nothing downstream has to guess it
- * from a filename. `KbFile` itself is the server's type and does not know about
- * namespaces yet — see docs/doors.md for what still has to change there.
- */
-interface NamespacedKbFile extends KbFile {
-  namespace: string;
-}
-
 async function runFetch(dir: string, corpus: Corpus): Promise<void> {
   console.log("");
   console.log(`[${corpus.namespace}] ${corpus.label}`);
@@ -382,7 +374,10 @@ async function runFetch(dir: string, corpus: Corpus): Promise<void> {
     return;
   }
 
-  const file: NamespacedKbFile = {
+  // `namespace` is written first and read back by server/ai/kb.ts, which loads
+  // every corpus in data/kb/ and keeps each one under the name it declares here.
+  // Nothing downstream infers a corpus from its filename.
+  const file: KbFile = {
     namespace: corpus.namespace,
     builtAt: new Date().toISOString(),
     documents: new Set(chunks.map((chunk) => chunk.url)).size,
@@ -713,11 +708,31 @@ function safeCodePoint(value: number): string {
 
 /* -------------------------- markdown -> chunks ---------------------------- */
 
+/**
+ * Section headings that are navigation rather than content. A Google help page
+ * ends with a "Related links" list of other article titles; indexed, that is a
+ * short chunk made almost entirely of product words, which BM25 scores like a
+ * dense match and ranks above the paragraph that answers the question. Asking
+ * the Google Ads corpus about Performance Max and Search returned four of these
+ * link lists in the top eight, and a citation has to open a page that says
+ * something rather than a list of links to other pages.
+ *
+ * Deliberately short. "Next steps" is not in it: in the OpenAI documentation
+ * that heading carries real instructions.
+ */
+const NAVIGATION_HEADINGS = new Set(["related links", "related link", "on this page"]);
+
+function isNavigation(trail: string): boolean {
+  const last = trail.split(">").pop()?.trim().toLowerCase() ?? "";
+  return NAVIGATION_HEADINGS.has(last.replace(/[?:.!]+$/, ""));
+}
+
 function chunkDocument(markdown: string, title: string, url: string, into: KbChunk[]): number {
   const slug = slugFor(url);
   let added = 0;
 
   for (const section of splitSections(markdown)) {
+    if (isNavigation(headingTrail(title, section.heading))) continue;
     for (const text of chunkBlocks(section.blocks)) {
       into.push({
         id: `${slug}#${added}`,
