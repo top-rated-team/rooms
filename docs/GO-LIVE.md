@@ -69,6 +69,8 @@ Do these in order. Nothing here needs a command line.
 | Landing page fine, room never updates | The WebSocket is blocked. Almost always the orange cloud in Cloudflare. |
 | Panel says it cannot answer | `OPENAI_API_KEY` is missing or wrong. |
 | Rooms vanish after a deploy | Expected without `DATABASE_URL`. See the warning above. |
+| Build ends with `vite: not found` | `npm ci` ran without devDependencies, which is where vite and esbuild live. Fixed in render.yaml (`--include=dev`, and NODE_ENV no longer set as a service variable). If you hit it on an older service, **Manual Deploy → Clear build cache & deploy**. |
+| Blueprint never asked for the API key | It sometimes creates the service with the blanks empty instead of prompting. **Environment → Add Environment Variable → `OPENAI_API_KEY`**, then **Manual Deploy**. The build log says `OPENAI_API_KEY is not set` when this has happened — the site still works, the panel just answers from keyword search instead of semantic search. |
 | First visitor waits thirty seconds | The free compute plan went to sleep. Move it to the $7 one. Note that messages on an already-open room do **not** count as traffic that keeps it awake. |
 | `/leads` will not open | `LEAD_INBOX_KEY` was not copied out of the dashboard. Render → Environment shows it. |
 | A request arrives but no email | Expected until `RESEND_API_KEY` and `LEAD_EMAIL_FROM` are set. The request is stored either way — read it at `/leads`. |

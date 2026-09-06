@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useLocation, useRoute } from "wouter";
 import { ArrowLeft, Calendar, LoaderCircle, Moon, Sun } from "lucide-react";
 import { AGENT_BY_ID, BOOK_A_CALL_URL, EXPERTS, MAIN_SITE_URL, type AgentDef, type ExpertDef } from "@shared/roster";
-import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
+import { DEFAULT_DOOR_ID, DOOR_BY_ID, type DoorContract, type DoorDef } from "@shared/doors";
 import type { Channel, Message, TaskStatus } from "@shared/schema";
 import { listStoredWorkspaces, useWorkspace } from "@/hooks/use-workspace";
 import { ChannelHeader, type MobileView } from "@/components/workspace/ChannelHeader";
@@ -19,6 +19,45 @@ import { cn } from "@/lib/utils";
 
 /** How much of an agent's answer goes into a brief before it stops being read. */
 const BRIEF_LIMIT = 400;
+
+/* ---------------------------------------------------------------------------
+ * WHICH COMPANY THIS ROOM BELONGS TO
+ *
+ * The door the room was opened through stamped its id into `source.door`, and
+ * that stamp is the only thing that says whose legal name, terms, invoice line
+ * and contact this room prints. A room can be missing it: it was created before
+ * the stamp existed, or it carries a door id no row answers to any more.
+ *
+ * It used to fall back to the door that pays for the site, which made every
+ * such room look like ours — including a room opened through the partner's
+ * door, which would then have shown a stranger our name, our terms and our
+ * invoice line for work we are not in and take no share of. A wrong company
+ * name is worse than no company name, because it is not read as a gap to be
+ * chased: it is read, believed, and acted on.
+ *
+ * So an unstamped room now says it is incomplete. It hands the footer a
+ * contract with no name in it, and RoomFooter already has the right words for
+ * that case — "This room is not saying which company is answerable for it. That
+ * is a fault in the room. Until it is fixed, nothing here is an offer." The
+ * same empty contract reaches the member rail, where the lines that would name
+ * a company say the room has not named one. Nothing here invents a seller, and
+ * the room is visibly broken rather than quietly wrong.
+ *
+ * server/notify.ts resolves the same stamp the same way — `doorId ?
+ * DOOR_BY_ID[doorId] : undefined`, and a null legal name where there is none —
+ * so a lead written on disk and a room on screen now agree about which rooms
+ * have a company behind them.
+ * ------------------------------------------------------------------------- */
+const UNSTAMPED_ROOM: DoorContract = {
+  legalName: "",
+  entity: "",
+  termsUrl: null,
+  invoiceLine: "",
+  contact: null,
+};
+
+/** The company that runs this site, read off its own door rather than typed again. */
+const OUR_LEGAL_NAME = DOOR_BY_ID[DEFAULT_DOOR_ID].contract.legalName;
 
 /** Cuts prose to a readable length without slicing a word in half. */
 function trimTo(text: string, max: number): string {
@@ -56,7 +95,18 @@ function ThemeToggle() {
   );
 }
 
-function TopBar({ workspaceName }: { workspaceName: string | null }) {
+/**
+ * The calendar behind this button is ours in every room, so in a room another
+ * company is answerable for the button has to say whose it is: a bare "Book A
+ * Call" there reads as that company's calendar, which is our contact standing
+ * in for theirs. door.tsx says the same thing in a sentence under its own
+ * booking button.
+ *
+ * `ours` is `null` until the room has loaded and said which door it came
+ * through. Nothing on screen claims a company yet at that point, so the button
+ * keeps its plain label rather than changing under the reader a moment later.
+ */
+function TopBar({ workspaceName, ours }: { workspaceName: string | null; ours: boolean | null }) {
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-background px-3 sm:px-4">
       <a href={MAIN_SITE_URL} className="flex items-center gap-2" data-testid="link-logo">
@@ -75,7 +125,7 @@ function TopBar({ workspaceName }: { workspaceName: string | null }) {
         <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className="hidden sm:block">
           <button type="button" className={PRIMARY_BUTTON} data-testid="button-book-call">
             <Calendar />
-            Book A Call
+            {ours === false ? `Book a call with ${OUR_LEGAL_NAME}` : "Book A Call"}
           </button>
         </a>
         <ThemeToggle />
@@ -84,10 +134,19 @@ function TopBar({ workspaceName }: { workspaceName: string | null }) {
   );
 }
 
-function Shell({ workspaceName, children }: { workspaceName: string | null; children: ReactNode }) {
+function Shell({
+  workspaceName,
+  ours = null,
+  children,
+}: {
+  workspaceName: string | null;
+  /* Left out on the states that have no room yet: not known, rather than false. */
+  ours?: boolean | null;
+  children: ReactNode;
+}) {
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
-      <TopBar workspaceName={workspaceName} />
+      <TopBar workspaceName={workspaceName} ours={ours} />
       {children}
     </div>
   );
@@ -124,6 +183,17 @@ export default function WorkspacePage() {
   const [unread, setUnread] = useState<Record<string, number>>({});
   const messageCountsRef = useRef<Record<string, number> | null>(null);
 
+  /* The stamp, resolved once and never guessed at — see the note at the top of
+   * this file. `undefined` is a room that did not say which door it came
+   * through, or one that named a door no row answers to. */
+  const door = useMemo<DoorDef | undefined>(() => {
+    const stamp = state?.workspace.source?.door?.trim();
+    return stamp ? DOOR_BY_ID[stamp] : undefined;
+  }, [state]);
+
+  /* Whether this room is one of ours. A room with no door is not ours to claim. */
+  const ours = door?.contract.legalName === OUR_LEGAL_NAME;
+
   /* Workspace URLs are bearer credentials: they must never be indexed. */
   useEffect(() => {
     const meta = document.createElement("meta");
@@ -135,13 +205,19 @@ export default function WorkspacePage() {
     };
   }, []);
 
+  /* Our name goes on our own rooms. A room opened through a door another
+   * company signs and invoices for is that room's name and nothing else, so a
+   * tab, a history entry and a bookmark stop filing another company's work
+   * under ours — the same rule door.tsx applies to a door page's title. A room
+   * that has not said which door it came through is filed under nobody. */
   useEffect(() => {
     const previous = document.title;
-    document.title = state ? `${state.workspace.name} — Top-Rated Team` : "Workspace — Top-Rated Team";
+    const name = state?.workspace.name;
+    document.title = name ? (ours ? `${name} — Top-Rated Team` : name) : "Workspace";
     return () => {
       document.title = previous;
     };
-  }, [state]);
+  }, [ours, state]);
 
   const messages = useMemo(() => state?.messages ?? [], [state]);
   const channels = useMemo(() => state?.channels ?? [], [state]);
@@ -422,14 +498,6 @@ export default function WorkspacePage() {
   const shareUrl = `${window.location.origin}/w/${state.workspace.token}`;
   const doneCount = tasks.filter((t) => t.status === "done").length;
 
-  /* Which door this room came through, stamped into `source` when it was
-   * created and never worked out again. It decides one thing: whose legal name,
-   * terms and invoice line the footer prints. A room whose door is unknown —
-   * created before the stamp existed, or with a row that has since been
-   * renamed — falls back to the door that pays for the site rather than
-   * rendering a room with nobody behind it. */
-  const door = DOOR_BY_ID[state.workspace.source?.door ?? DEFAULT_DOOR_ID] ?? DOOR_BY_ID[DEFAULT_DOOR_ID];
-
   const sidebar = (onClose?: () => void) => (
     <WorkspaceSidebar
       workspaceName={state.workspace.name}
@@ -455,7 +523,7 @@ export default function WorkspacePage() {
   );
 
   return (
-    <Shell workspaceName={state.workspace.name}>
+    <Shell workspaceName={state.workspace.name} ours={ours}>
       <div className="flex min-h-0 flex-1">
         {sidebar()}
 
@@ -527,6 +595,9 @@ export default function WorkspacePage() {
             >
               <MemberRail
                 members={members}
+                /* The same contract the footer prints: a line under a badge
+                   that names a company must name this room's, not the site's. */
+                contract={door?.contract ?? UNSTAMPED_ROOM}
                 onInvite={() => openInvite()}
                 onOpenDm={(memberKey) => void openDm(memberKey)}
                 className="scrollbar-thin max-h-[38vh] overflow-y-auto border-b border-card-border"
@@ -540,8 +611,9 @@ export default function WorkspacePage() {
               />
               {/* A room must not be able to render without saying which company
                   is answerable for it and whose terms apply. This is the only
-                  place that is said. */}
-              <RoomFooter contract={door.contract} className="shrink-0" />
+                  place that is said — and where the room cannot say it, this is
+                  where it says that, rather than borrowing a name. */}
+              <RoomFooter contract={door?.contract ?? UNSTAMPED_ROOM} className="shrink-0" />
             </aside>
           </div>
         </main>
