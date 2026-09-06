@@ -15,6 +15,9 @@ import {
 import { BOOK_A_CALL_URL } from "@shared/roster";
 import AskWidget from "@/components/site/AskWidget";
 import Footer from "@/components/site/Footer";
+/* Which tiers a stranger reads is decided in one place; this page reads that
+ * decision rather than making a second one. */
+import { isPublicDoor } from "@/components/site/GatedOffers";
 import Header from "@/components/site/Header";
 import KeepStrip from "@/components/site/KeepStrip";
 import { collectSource } from "@/components/site/LeadDialog";
@@ -74,7 +77,10 @@ function DoorPage({ door }: { door: DoorDef }) {
   // previous title and description are put back on the way out.
   useEffect(() => {
     const previousTitle = document.title;
-    document.title = `${door.headline} | Top-Rated Team`;
+    // Our name goes on our own doors. On a door whose contract names somebody
+    // else, the tab, the history entry and the bookmark say the offer and stop
+    // there rather than filing another company's work under ours.
+    document.title = oursToAnswer ? `${door.headline} | Top-Rated Team` : door.headline;
 
     let created = false;
     let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
@@ -92,6 +98,25 @@ function DoorPage({ door }: { door: DoorDef }) {
       document.title = previousTitle;
       if (created) element.remove();
       else element.content = previousDescription;
+    };
+  }, [door]);
+
+  /* A door that /work only names after the email step must not arrive from a
+   * search result instead. sitemap.xml leaves those rows out for the same
+   * reason and says so; this is the other half of it, because a URL that is
+   * merely unlisted is still indexable. The page keeps answering for anyone who
+   * has the address — the gate was never a lock, and this does not make it one.
+   * Which rows this covers is the tier rule in GatedOffers.tsx, so a door that
+   * moves between the two lists takes its indexing with it and no branch here
+   * names a door. */
+  useEffect(() => {
+    if (isPublicDoor(door)) return;
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow";
+    document.head.appendChild(meta);
+    return () => {
+      meta.remove();
     };
   }, [door]);
 

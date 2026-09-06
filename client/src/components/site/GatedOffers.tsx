@@ -163,6 +163,16 @@ function forgetAccess(): void {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /**
+ * `contact` on a door is either an email address or the address of a page, and
+ * a link has to know which — the same rule door.tsx and the room footer apply.
+ * Without it a row that switches to a bare address renders a relative link that
+ * goes nowhere, on the one line whose whole job is reaching a person.
+ */
+function contactHref(contact: string): string {
+  return /^(https?:\/\/|mailto:|\/)/i.test(contact) ? contact : `mailto:${contact}`;
+}
+
+/**
  * Not a SERVICES id: there is no service row for this work yet, and inventing
  * one in the lead would make the inbox lie about which catalogue it came from.
  * The source block carries the rest of the story.
@@ -292,9 +302,14 @@ export function GatedOffers({ className }: GatedOffersProps) {
           </form>
 
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-            This sends us your address and nothing else. It is not an account, there is no password, and the only thing
-            that happens next is that a person may write back. This browser remembers it, so you are not asked again.
-            The offers above stay open to everyone whether you fill this in or not.
+            {/* Whatever this sentence says is sent has to be what the request
+                above actually carries: collectSource() puts the page, the
+                referrer and any campaign parameters in the URL into it, and a
+                line promising an address and nothing else was describing a
+                smaller request than the one being made. */}
+            This sends us your address, the page you are on and where you came from. It is not an account, there is no
+            password, and the only thing that happens next is that a person may write back. This browser remembers it,
+            so you are not asked again. The offers above stay open to everyone whether you fill this in or not.
           </p>
 
           {sendError ? (
@@ -351,7 +366,7 @@ export function GatedOffers({ className }: GatedOffersProps) {
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground" data-testid="text-offers-not-delivered">
           Your address never reached us, so nobody on our side has it. If you want an answer,{" "}
           {OURS.contact ? (
-            <a href={OURS.contact} rel="noopener noreferrer" className="text-foreground hover:underline">
+            <a href={contactHref(OURS.contact)} rel="noopener noreferrer" className="text-foreground hover:underline">
               {OURS.contactLabel ?? "write to us"}
             </a>
           ) : (

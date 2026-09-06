@@ -11,11 +11,67 @@ import ServicesUpsell from "@/components/site/ServicesUpsell";
 import Faq from "@/components/site/Faq";
 import FinalCta from "@/components/site/FinalCta";
 import LeadDialog, { collectSource, type LeadPrefill } from "@/components/site/LeadDialog";
+/* The split between the doors a stranger reads and the ones behind the email
+ * step is decided in GatedOffers.tsx and nowhere else. This page reads that
+ * decision rather than making a second one. */
+import { PUBLIC_DOORS, countWord } from "@/components/site/GatedOffers";
 import type { CreateWorkspaceResponse } from "@shared/api";
+import { DOORS } from "@shared/doors";
 
 const PAGE_TITLE = "ChatGPT Ads Conversion Tracking Setup | Top-Rated Team";
+/* The head says what this door does and names no other door, which is why it
+ * needs nothing from the list below: a row that moves behind the email step
+ * cannot leave a name in a title or a description that never held one. */
 const PAGE_DESCRIPTION =
   "The ChatGPT Ads pixel, Conversions API, deduplication and consent — installed on your real site, verified against real conversions and documented. Ask our docs agent, or talk to a human.";
+
+/* ------------------------- the note about the doors -----------------------
+ *
+ * The number and the names under the hero are read off PUBLIC_DOORS — the white
+ * and light-grey rows, the same list /work prints — so this page and the
+ * overview cannot disagree about how many doors there are or which ones may be
+ * named. Move a row to the grey tier in shared/doors.ts and it leaves this
+ * sentence with it: nothing here is typed out, so nothing here can be left
+ * behind, and a gated offer is never counted or named on an open page.
+ */
+
+/** The door this page is: the row whose `path` is the home page. */
+const THIS_DOOR = DOORS.find((door) => door.path === "/");
+
+/** The public doors other than the one the visitor is already standing in. */
+const OTHER_DOORS = PUBLIC_DOORS.filter((door) => door.id !== THIS_DOOR?.id);
+
+/**
+ * The name inside a headline: everything before the first comma or dash.
+ * "LinkedIn automation — with a written legal assessment" is a heading, and
+ * "LinkedIn automation" is what you call it in a list. It only ever cuts, so a
+ * renamed row renames itself here and no second copy of a name exists.
+ */
+function shortName(headline: string): string {
+  return headline.split(/\s+[—–-]\s+|,\s+/)[0];
+}
+
+function sentenceList(names: string[]): string {
+  if (names.length < 2) return names.join("");
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
+const WAYS_IN = `${countWord(PUBLIC_DOORS.length)} ways in`;
+
+/* If this page's own door is ever moved behind the step, it is no longer one of
+ * the ways in and the sentence stops claiming it is. */
+const DOORS_LINE =
+  THIS_DOOR && PUBLIC_DOORS.includes(THIS_DOOR)
+    ? `${shortName(THIS_DOOR.headline)} is one of ${WAYS_IN}.`
+    : `There are ${WAYS_IN}.`;
+
+const OTHER_NAMES = sentenceList(OTHER_DOORS.map((door) => shortName(door.headline)));
+const OTHER_DOORS_LINE =
+  OTHER_DOORS.length === 0
+    ? null
+    : OTHER_DOORS.length === 1
+      ? `${OTHER_NAMES} starts with a question and opens the same workspace.`
+      : `${OTHER_NAMES} each start with a question and open the same workspace.`;
 
 export function Landing() {
   const [, navigate] = useLocation();
@@ -114,18 +170,23 @@ export function Landing() {
 
         {/* The other doors, said once and quietly. A visitor who came for
             conversion tracking should meet the panel first; this is only the
-            note that the same workspace has six other ways into it. */}
-        <section id="doors" className="border-y border-border bg-muted/30">
-          <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-            <p className="text-sm text-muted-foreground">
-              Conversion tracking is one of seven ways in. Google Ads, Google Ad Grants, LinkedIn ads, LinkedIn
-              automation, LinkedIn growth and custom AI builds each start with a question and open the same workspace.{" "}
-              <Link href="/work" data-testid="link-doors" className="text-primary underline underline-offset-2">
-                See all seven
-              </Link>
-            </p>
-          </div>
-        </section>
+            note that the same workspace has other ways into it. Which ones, and
+            how many, come from the list above rather than from this sentence.
+            With nothing public to point at there is nothing to say, and the
+            band is not rendered at all. */}
+        {PUBLIC_DOORS.length > 0 ? (
+          <section id="doors" className="border-y border-border bg-muted/30">
+            <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+              <p className="text-sm text-muted-foreground">
+                {DOORS_LINE}
+                {OTHER_DOORS_LINE ? ` ${OTHER_DOORS_LINE}` : ""}{" "}
+                <Link href="/work" data-testid="link-doors" className="text-primary underline underline-offset-2">
+                  See all {countWord(PUBLIC_DOORS.length)}
+                </Link>
+              </p>
+            </div>
+          </section>
+        ) : null}
 
         <WhyHuman />
         <HowItWorks />

@@ -22,9 +22,11 @@ const TIER_VARIANT: Record<DoorTier, "default" | "secondary" | "outline"> = {
 export interface DoorCardProps {
   door: DoorDef;
   /**
-   * Opens this door's panel in place. Without it the card links to the door's
+   * Opens this door's panel in place. Without it the button links to the door's
    * own page, which is what the overview does; the landing page can pass a
-   * handler instead and keep the visitor where they are.
+   * handler instead and keep the visitor where they are. Either way the
+   * headline stays a link to the door's page — that is the row's way in, and it
+   * does not depend on who is rendering the card.
    */
   onAsk?: (door: DoorDef) => void;
   className?: string;
@@ -74,8 +76,24 @@ export function DoorCard({ door, onAsk, className }: DoorCardProps) {
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
+            {/* The headline is the row's way in, on every row, whatever its
+                status. One link and no branch: a door that is not open yet
+                still has a page, and that page opens with the same chip, the
+                same two sentences and the same line about why it is shut that
+                this card is showing — so the click lands on what the card just
+                said, and the visitor reads the company that would invoice them
+                as well. It is the headline rather than a second button because
+                a card should keep one action, and the action below is the
+                thing that works today: the panel where there is one, a person
+                where there is not. */}
             <h3 className="text-base font-semibold sm:text-lg" data-testid="text-door-headline">
-              {door.headline}
+              <Link
+                href={door.path}
+                data-testid="link-door-page"
+                className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                {door.headline}
+              </Link>
             </h3>
             <Badge variant={TIER_VARIANT[door.tier]} data-testid="badge-door-tier">
               {tier.label}
