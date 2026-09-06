@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Check, LoaderCircle, X } from "lucide-react";
-import { EXPERTS, type ExpertDef } from "@shared/roster";
+import { BOOK_A_CALL_URL, EXPERTS, type ExpertDef } from "@shared/roster";
 import { Avatar, toneFor } from "@/components/workspace/Avatar";
 import { badgeForKey } from "@/components/workspace/MemberRail";
 import { cn } from "@/lib/utils";
@@ -53,6 +53,16 @@ const QUIET_BUTTON =
 
 function firstNameOf(expert: ExpertDef): string {
   return expert.name.split(/\s+/)[0] ?? expert.name;
+}
+
+/**
+ * The room's own address, read off the page it is already on. It is the answer
+ * to "how do I get back to this conversation" and there is no other one: the
+ * link is the whole account.
+ */
+function roomAddress(): string | null {
+  if (typeof window === "undefined") return null;
+  return `${window.location.origin}${window.location.pathname}`;
 }
 
 function moneyLine(offer: HireOffer | undefined): string | null {
@@ -124,10 +134,14 @@ export function InviteExpertDialog({
     });
     setBusy(false);
     if (ok) setSent(true);
-    else setFailed("That did not go through. Try again, or book a call instead.");
+    // Deliberately not "nothing was sent": a reply that got lost on the way
+    // back looks identical from here. Asking twice is cheap; assuming it
+    // arrived is not.
+    else setFailed("That did not come back. Send it again — a duplicate is easy for us to sort out, a request that never arrived is not.");
   }, [brief, defaultEmail, defaultName, memberKey, onInvite]);
 
   const first = firstNameOf(expert);
+  const address = roomAddress();
   const estimate = estimateOf(offer);
   const rateLine = moneyLine(offer);
   const reason =
@@ -164,11 +178,31 @@ export function InviteExpertDialog({
             <div className="px-4 py-6" data-testid="state-invite-sent">
               <p className="flex items-center gap-2 text-sm font-medium">
                 <Check className="h-4 w-4 text-accent" />
-                Quote asked of {expert.name}. Waiting on the answer.
+                Asked of {expert.name}, and written down.
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
-                It lands in this thread as a card, with the brief attached. Typical answer time is within one working
-                day. Nothing has been agreed and nobody has been charged.
+                {expert.name} — {expert.title} — answers in this room, with the brief attached, within one working day.
+                Nothing has been agreed and nobody has been charged.
+              </p>
+              {address ? (
+                <p className="mt-3 text-xs text-muted-foreground" data-testid="text-invite-room-address">
+                  This room is the address, and the only way back into it. Keep it:{" "}
+                  <code className="break-all rounded border border-card-border bg-muted px-1 py-0.5 font-mono text-[11px] text-foreground">
+                    {address}
+                  </code>
+                </p>
+              ) : null}
+              <p className="mt-3 text-xs text-muted-foreground">
+                If it cannot wait a day,{" "}
+                <a
+                  href={BOOK_A_CALL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2"
+                >
+                  book a call
+                </a>{" "}
+                — it reaches the same people.
               </p>
               <button
                 type="button"
@@ -267,7 +301,23 @@ export function InviteExpertDialog({
                 />
               </div>
 
-              {failed ? <p className="mt-3 text-xs text-destructive">{failed}</p> : null}
+              {failed ? (
+                <div className="mt-3 text-xs text-destructive" role="alert">
+                  <p>{failed}</p>
+                  <p className="mt-1 text-muted-foreground">
+                    Or{" "}
+                    <a
+                      href={BOOK_A_CALL_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline underline-offset-2"
+                    >
+                      book a call
+                    </a>{" "}
+                    and bring this room's link with you.
+                  </p>
+                </div>
+              ) : null}
 
               <div className="mt-4">
                 <button
