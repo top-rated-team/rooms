@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
@@ -79,6 +79,24 @@ const NOT_A_PRICE: Record<string, string> = {
 /** The trees a visitor's eyes can reach: the client, and the data the client reads. */
 const SWEPT = ["../client/src", "../shared"];
 
+/**
+ * One file is exempt, and the exemption is tied to the property that makes it
+ * safe rather than to a promise.
+ *
+ * shared/cases.ts is every case study published on top-rated.team, as data. It
+ * is full of currency figures — a client's daily ad budget, a cost per
+ * conversion — and not one of them is a price of ours. Listing them in
+ * NOT_A_PRICE below would be twenty lines of noise that a twenty-third case
+ * would break.
+ *
+ * What makes exempting a whole file defensible is that nobody writes in it:
+ * scripts/build-cases.ts generates it from data/cases-source.json, so a price
+ * of ours cannot be typed in by hand. The test below asserts that generated
+ * banner is still there — if somebody ever edits the file directly and drops
+ * it, the exemption stops applying and the sweep covers it again.
+ */
+const GENERATED_EXEMPT = "shared/cases.ts";
+
 function sourceFiles(dir: URL): URL[] {
   return readdirSync(dir).flatMap((entry) => {
     const child = new URL(`${dir.pathname.endsWith("/") ? dir.pathname : `${dir.pathname}/`}${entry}`, dir);
@@ -99,6 +117,7 @@ describe("every price the site renders traces to a row in shared/pricing.ts", ()
     const unexplained: string[] = [];
 
     for (const file of files) {
+      if (file.pathname.endsWith(GENERATED_EXEMPT)) continue;
       const lines = readFileSync(file, "utf8").split("\n");
       lines.forEach((line, index) => {
         /* A "$1" on a replace() line is a capture-group backreference, not
@@ -117,6 +136,25 @@ describe("every price the site renders traces to a row in shared/pricing.ts", ()
       `A currency figure appears in the tree that shared/pricing.ts does not publish. Either it is a ` +
         `price and belongs in PRICES, or it is not one and belongs in NOT_A_PRICE above with the reason:\n  ` +
         unexplained.join("\n  "),
+    );
+  });
+
+  it("only exempts a file that is generated, so a price cannot be hand-written into it", () => {
+    /*
+     * The exemption above skips a whole file. It is only defensible while
+     * nothing writes in that file by hand, so this asserts the two things that
+     * make that true: the banner that says so, and the generator that puts it
+     * there. Edit shared/cases.ts directly and drop the banner, and this fails
+     * rather than letting an unpublished price of ours ride in on a case study.
+     */
+    const exempt = files.find((file) => file.pathname.endsWith(GENERATED_EXEMPT));
+    assert.ok(exempt, `${GENERATED_EXEMPT} is exempt from the sweep and does not exist`);
+    const text = readFileSync(exempt, "utf8");
+    assert.match(text, /GENERATED — do not edit/, `${GENERATED_EXEMPT} is exempt but is not marked generated`);
+    assert.match(text, /scripts\/build-cases\.ts/, `${GENERATED_EXEMPT} does not name the script that writes it`);
+    assert.ok(
+      existsSync(new URL("../scripts/build-cases.ts", import.meta.url)),
+      "the generator named by the exempt file is missing, so the file is now hand-maintained",
     );
   });
 

@@ -1,0 +1,838 @@
+[
+  {
+    "client": "Live Proxies",
+    "industry": "Commercial Proxies",
+    "badges": [
+      "US",
+      "$470/day"
+    ],
+    "challenge": "Highly competitive market, new unknown brand with no paid ads previously, can only track paid subscriptions via offline conversions upload.",
+    "objective": "Maximize subscriptions within the current budget",
+    "work": [
+      "Semantic core creation: target search queries, close ones and interest-intent keywords to form the funnel",
+      "Campaigns split based on market intent level and devices",
+      "DSAs, Pmax, video campaign for broader brand awareness",
+      "Brand and competitors campaigns",
+      "Budgets selected according to device demand and CPC",
+      "Bid strategies and budgets adjusted after first month of data",
+      "Unique ad copies for every ad group with dynamic insertions"
+    ],
+    "metrics": [
+      {
+        "label": "Conversions",
+        "value": "5,477.86",
+        "change": "+180.26%"
+      },
+      {
+        "label": "CTR",
+        "value": "7.22%",
+        "change": "+94.60%"
+      },
+      {
+        "label": "Cost/conv.",
+        "value": "$8.98",
+        "change": "-31.17%"
+      },
+      {
+        "label": "Clicks",
+        "value": "74,482",
+        "change": "+60.00%"
+      },
+      {
+        "label": "Conv. value/cost",
+        "value": "4.12",
+        "change": "+101.48%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "KRW Lawyers — Personal Injury",
+    "industry": "Legal Services",
+    "badges": [
+      "Texas, US",
+      "$1,350/day"
+    ],
+    "challenge": "Personal injury law in Texas is one of the most expensive niches in Google Ads; account previously managed by another specialist required a full audit and rebuild; dual conversion tracking needed for calls and form submissions.",
+    "objective": "Maximize calls and form submissions (leads) while decreasing cost per conversion",
+    "work": [
+      "Full account audit and rebuild from scratch",
+      "Competitors research and website audit",
+      "Semantic core development: category- and product-based search for Texas",
+      "Performance Max campaign launch with dedicated audience signals",
+      "Bidding overhaul: Maximize Conversions with Target CPA",
+      "Conversion tracking for both calls and form submissions",
+      "Negative keyword lists, bid adjustments by location, device and schedule"
+    ],
+    "metrics": [
+      {
+        "label": "Conversions",
+        "value": "837.98",
+        "change": "+329.70%"
+      },
+      {
+        "label": "Cost/conv.",
+        "value": "$104.84",
+        "change": "-66.91%"
+      },
+      {
+        "label": "Conv. rate",
+        "value": "5.75%",
+        "change": "+38.37%"
+      },
+      {
+        "label": "Clicks",
+        "value": "14,571",
+        "change": "+291.85%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "JuridConsult — Legal Translations",
+    "industry": "Legal Services",
+    "badges": [
+      "Netherlands",
+      "€30/day"
+    ],
+    "challenge": "Account previously managed with incorrectly configured conversions; poor campaign structure not aligned with website services; limited budget requiring maximum efficiency across multiple service categories and countries.",
+    "objective": "Maximize leads (calls, form submissions and chat enquiries) while decreasing cost per conversion within a limited budget",
+    "work": [
+      "Full account and conversion tracking audit",
+      "Conversion tracking rebuild: calls, form submissions and chat enquiries",
+      "Complete account rebuild with structure aligned to website services",
+      "Semantic core built from website content across all service categories and countries",
+      "Bid adjustments by location, device and schedule; negative keyword lists"
+    ],
+    "metrics": [
+      {
+        "label": "Conversions",
+        "value": "76.85",
+        "change": "+476.70%"
+      },
+      {
+        "label": "Cost/conv.",
+        "value": "€10.62",
+        "change": "-81.09%"
+      },
+      {
+        "label": "CTR",
+        "value": "10.35%",
+        "change": "+10.53%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "Fundamental — Enterprise AI Platform",
+    "industry": "AI / Predictive Analytics",
+    "badges": [
+      "USA, UK, EU",
+      "$110/day"
+    ],
+    "challenge": "New brand with no prior Google Ads history; highly competitive and expensive enterprise AI/ML niche in tier-1 markets; long B2B sales cycle where conversion is a website signup, not a purchase.",
+    "objective": "Drive website signups from enterprise decision-makers in tier-1 markets within a limited budget",
+    "work": [
+      "Full account setup from scratch: GA4, GTM, conversion tracking for signups",
+      "Competitor and market research for the enterprise AI/ML niche",
+      "Performance Max campaign for broad reach and lead generation",
+      "Search split by product and brand for USA and UK+EU separately",
+      "YouTube Shorts campaigns for brand awareness testing",
+      "Maximize Conversions with Target CPA; bids, budgets and audience signals"
+    ],
+    "metrics": [
+      {
+        "label": "Signups",
+        "value": "19",
+        "change": "+171.43%"
+      },
+      {
+        "label": "Interactions",
+        "value": "117,996",
+        "change": "+171.43%"
+      },
+      {
+        "label": "Interaction rate",
+        "value": "39.16%",
+        "change": "+62.22%"
+      },
+      {
+        "label": "Avg. cost",
+        "value": "$0.05",
+        "change": "-82.57%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "VinDocs — Vehicle History Reports",
+    "industry": "Automotive Data",
+    "badges": [
+      "South Africa, Romania, NZ, Australia",
+      "$325/day"
+    ],
+    "challenge": "Account previously managed by another specialist required a full rebuild; multi-country campaigns across 4 markets with different demand and CPCs; dual B2C and B2B audiences.",
+    "objective": "Maximize purchases across all markets while improving ROAS and reducing cost per conversion",
+    "work": [
+      "Full account audit and complete rebuild from scratch",
+      "Separate Search campaigns per country with dedicated copies, keywords and budgets",
+      "Separate B2B landing-page campaigns targeting dealerships and fleet businesses",
+      "Competitors campaigns per market",
+      "Target ROAS for high-volume markets, TCPA for developing ones",
+      "Ongoing bid, budget and keyword optimization across all markets"
+    ],
+    "metrics": [
+      {
+        "label": "Purchases",
+        "value": "511.86",
+        "change": "+25.77%"
+      },
+      {
+        "label": "Cost/conv.",
+        "value": "€14.09",
+        "change": "-10.24%"
+      },
+      {
+        "label": "Conv. value/cost",
+        "value": "1.24",
+        "change": "+11.05%"
+      },
+      {
+        "label": "CTR",
+        "value": "9.58%",
+        "change": "+15.13%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "Pfotenpiloten / DogMap (Google Ad Grant)",
+    "industry": "Nonprofit App",
+    "badges": [
+      "International (23 languages)",
+      "Google Grants ~$9,900/mo"
+    ],
+    "challenge": "Account previously managed required a full rebuild; international audience across 23 languages; maximizing the full $10,000/mo grant spend while maintaining quality score and CTR.",
+    "objective": "Maximize app registrations and DogMap downloads while fully utilizing the Ad Grants budget",
+    "work": [
+      "Full account audit and complete rebuild of all campaigns",
+      "New Performance Max campaigns alongside rebuilt Search campaigns",
+      "All ad copies rewritten to meet Google Grants quality and CTR requirements",
+      "Campaigns for bookings, app downloads and brand & niche keyword assistance",
+      "Ongoing monitoring to keep CTR above 5% and stay policy-compliant"
+    ],
+    "metrics": [
+      {
+        "label": "Conversions",
+        "value": "116",
+        "change": "+33.33%"
+      },
+      {
+        "label": "Cost/conv.",
+        "value": "$256.41",
+        "change": "-25.21%"
+      },
+      {
+        "label": "CTR",
+        "value": "10.04%",
+        "change": "+11.49%"
+      },
+      {
+        "label": "Conv. rate",
+        "value": "3.68%",
+        "change": "+36.38%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "Solv Wellness — Nutraceuticals",
+    "industry": "Health & Nutraceuticals",
+    "badges": [
+      "US",
+      "$16,000/mo"
+    ],
+    "challenge": "High competition and brand semantics under active attack by competitors.",
+    "objective": "Grow sales, increase ROAS and decrease CPA",
+    "work": [
+      "Account settings and campaign setup audit",
+      "Previous performance review and improvement areas",
+      "Keyword review, semantic core restructuring and expansion",
+      "Ad copies reviewed and customized to every ad group",
+      "Sales audit to optimize and regroup the Shopping campaign",
+      "Ad assets expansion and improvement"
+    ],
+    "metrics": [
+      {
+        "label": "Transactions",
+        "value": "+45.23%",
+        "change": "+45.23%"
+      },
+      {
+        "label": "ROAS",
+        "value": "+49%",
+        "change": "+49%"
+      },
+      {
+        "label": "CPA",
+        "value": "-31.7%",
+        "change": "-31.7%"
+      },
+      {
+        "label": "Conv. rate",
+        "value": "+2.86%",
+        "change": "+2.86%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "Matcha Outlet — Tea Wholesale",
+    "industry": "Food & Beverage",
+    "badges": [
+      "US"
+    ],
+    "challenge": "Initially too broad semantics wasting budget; Smart campaign spending on non-convertible products.",
+    "objective": "Grow sales and decrease CPA",
+    "work": [
+      "Campaigns performance audit and new campaign plan",
+      "Detailed, expanded semantics; campaigns split by category with brand ad groups",
+      "DSA campaigns with all possible dynamic targets",
+      "Smart campaign optimization: paused low performers, improved CTAs",
+      "Bidding shifted from Max Conversions to Max ROAS 250%",
+      "Bid adjustments by location, demographics and devices"
+    ],
+    "metrics": [
+      {
+        "label": "Transactions",
+        "value": "+60.26%",
+        "change": "+60.26%"
+      },
+      {
+        "label": "Revenue",
+        "value": "+88.09%",
+        "change": "+88.09%"
+      },
+      {
+        "label": "Clicks",
+        "value": "+101.36%",
+        "change": "+101.36%"
+      },
+      {
+        "label": "New users",
+        "value": "+54.86%",
+        "change": "+54.86%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "Ace Vestiti — Apparel (8x ROAS)",
+    "industry": "Fashion & Apparel",
+    "badges": [
+      "Italy"
+    ],
+    "challenge": "Grow sales from brand campaigns and market-intent audiences in a competitive apparel market.",
+    "objective": "Grow sales from brand campaigns and market intent audiences",
+    "work": [
+      "Detailed semantics for search campaigns",
+      "Quality score improvement",
+      "Smart Shopping campaign setup and optimization",
+      "Bids, keywords, negative and cross-negative keyword adjustment"
+    ],
+    "metrics": [
+      {
+        "label": "Transactions",
+        "value": "60",
+        "change": "+185.71%"
+      },
+      {
+        "label": "Revenue",
+        "value": "+203.6%",
+        "change": "+203.6%"
+      },
+      {
+        "label": "Transaction rate",
+        "value": "4.03%",
+        "change": "+73.31%"
+      },
+      {
+        "label": "Direct traffic transactions",
+        "value": "65",
+        "change": "+58.54%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "LeBoutique — Giant eCom (300+ Categories)",
+    "industry": "Apparel & Housewares",
+    "badges": [
+      "International"
+    ],
+    "challenge": "Four legacy accounts built with the K50 automation tool with crucial campaigns underdeveloped; transactions set as secondary (not primary) conversions; remarketing audiences not properly tracked; aggressive 1-month target KPIs.",
+    "objective": "Grow customers and decrease CPA",
+    "work": [
+      "Reviewed every campaign by spend, revenue, ROAS and KPIs; rebuilt from scratch (up to 3,000 ad groups per search campaign)",
+      "Paused underperforming, high-spend campaigns using direct + assisted data",
+      "Improved ad copies and assets, created new asset types and split tests",
+      "Adjusted bidding strategies, bids and redistributed budgets",
+      "Split campaigns by seasonality, demographics, product category and language",
+      "Dedicated Shopping campaign for housewares (not previously advertised)"
+    ],
+    "metrics": [
+      {
+        "label": "Transactions (main account)",
+        "value": "+62.76%",
+        "change": "+62.76%"
+      },
+      {
+        "label": "CPA (main account)",
+        "value": "-32.94%",
+        "change": "-32.94%"
+      },
+      {
+        "label": "CPA (second account)",
+        "value": "-76.78%",
+        "change": "-76.78%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "Laterem — Luxury Tile & Plumbing",
+    "industry": "Home & Building Supplies",
+    "badges": [
+      "International"
+    ],
+    "challenge": "95% of orders are placed via phone call, not online purchase; maintaining optimal ROAS while developing the account from scratch.",
+    "objective": "Drive purchases (calls to orders) while maintaining optimal ROAS",
+    "work": [
+      "Separate campaigns per brand, product category and language (Search, DSA, Shopping, Display remarketing, PMax)",
+      "Analyzed competitor strategies and ad copies",
+      "Semantics built from every product, content piece and competitor data",
+      "Bid adjustments for locations, demographics and devices",
+      "Call tracking and GA4 eCommerce setup"
+    ],
+    "metrics": [
+      {
+        "label": "Revenue",
+        "value": "+871%",
+        "change": "+871%"
+      },
+      {
+        "label": "Calls",
+        "value": "+136%",
+        "change": "+136%"
+      },
+      {
+        "label": "Orders",
+        "value": "+100%",
+        "change": "+100%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "Translation Agency — Lead Gen",
+    "industry": "Translation Services",
+    "badges": [
+      "International"
+    ],
+    "challenge": "Highly competitive market with CPC up to $2 per click.",
+    "objective": "Grow number of leads and decrease cost per lead",
+    "work": [
+      "Detailed semantics development",
+      "Dynamic keyword insertion ads and extensions",
+      "Local-language search queries",
+      "Bid adjustments",
+      "Negative and cross-negative keywords",
+      "Search remarketing"
+    ],
+    "metrics": [
+      {
+        "label": "Conversions",
+        "value": "+266%",
+        "change": "+266%"
+      },
+      {
+        "label": "Cost/conv.",
+        "value": "-23.6%",
+        "change": "-23.6%"
+      },
+      {
+        "label": "Conv. rate",
+        "value": "+23.5%",
+        "change": "+23.5%"
+      },
+      {
+        "label": "CPC",
+        "value": "-5.8%",
+        "change": "-5.8%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "Yoga Accessories & Apparel",
+    "industry": "Fitness & Apparel",
+    "badges": [
+      "International"
+    ],
+    "challenge": "Client previously spent budget with almost no return — only 4 conversions and no real PPC revenue.",
+    "objective": "Grow online sales",
+    "work": [
+      "Detailed search campaign semantics, quality score improvement, RSAs",
+      "DSA launch for categories",
+      "Search and dynamic remarketing launch",
+      "Bid and bidding strategy adjustment"
+    ],
+    "metrics": [
+      {
+        "label": "Transactions",
+        "value": "30",
+        "change": "vs 4 previously"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "Tech Mock Interview",
+    "industry": "Mentorship & Recruiting",
+    "badges": [
+      "Canada",
+      "CA$1,500/mo"
+    ],
+    "challenge": "Significant competition, unknown brand - new startup, limited budget, only paid signup conversions.",
+    "objective": "Minimal CPA with purchases within the limited budget",
+    "work": [
+      "Competitors research in Canada",
+      "Website audit and recommendations",
+      "Semantic core creation with interest intent funnel",
+      "Campaigns split based on market intent and devices",
+      "Pmax and competitors campaigns",
+      "Custom ad copies with callouts and dynamic keywords",
+      "Micro and macro goals setup"
+    ],
+    "metrics": [
+      {
+        "label": "Conversions (Aug-Nov vs Apr-Jul)",
+        "value": "+94.62%",
+        "change": "+94.62%"
+      },
+      {
+        "label": "YoY Conversions",
+        "value": "+53.15%",
+        "change": "+53.15%"
+      },
+      {
+        "label": "Conversion Rate YoY",
+        "value": "+297.43%",
+        "change": "+297.43%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "Divorce & Family Law",
+    "industry": "Legal Services",
+    "badges": [
+      "Colorado, US"
+    ],
+    "challenge": "Established account since 2017 with suboptimal performance, COVID-19 impact on divorce rates, broad targeting wasting budget.",
+    "objective": "Generate more leads and calls from the website",
+    "work": [
+      "Account analysis led to rebuilding from scratch",
+      "Broader and more detailed semantics",
+      "28 separate URLs for every location + service",
+      "Separate budgets according to semantics and demand",
+      "Bid adjustments for age, gender, and household income",
+      "Interest audience observations for every campaign"
+    ],
+    "metrics": [
+      {
+        "label": "CTR",
+        "value": "4.25%",
+        "change": "+995.25%"
+      },
+      {
+        "label": "Conversions",
+        "value": "44 calls",
+        "change": "+76%"
+      },
+      {
+        "label": "Bounce Rate",
+        "value": "70.27%",
+        "change": "-21.24%"
+      },
+      {
+        "label": "Session Duration",
+        "value": "01:01",
+        "change": "+104%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "Pest Control NY",
+    "industry": "Home Services",
+    "badges": [
+      "NY (Nassau & Suffolk)"
+    ],
+    "challenge": "Limited budgets for both Google Ads and Bing Ads, high competition, seasonal demand fluctuations.",
+    "objective": "Receive calls and form submissions at minimum CPA",
+    "work": [
+      "Competitors activity review",
+      "Website audit and recommendations",
+      "Detailed semantics for all website offers",
+      "Proper keyword split between campaigns",
+      "Custom ads and CTAs for every ad group",
+      "Location-specific campaigns based on demand"
+    ],
+    "metrics": [
+      {
+        "label": "Bing Conversions (Aug-Nov vs Apr-Jul)",
+        "value": "+82.74%",
+        "change": "+82.74%"
+      },
+      {
+        "label": "Google Conversions YoY",
+        "value": "+403.83%",
+        "change": "+403.83%"
+      },
+      {
+        "label": "Conversion Rate YoY",
+        "value": "+342.76%",
+        "change": "+342.76%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "HR Training for IT",
+    "industry": "IT Training",
+    "badges": [
+      "International"
+    ],
+    "challenge": "Competitive B2B market, complex decision-making cycle, need to reach HR decision-makers.",
+    "objective": "Grow sales via more B2B leads for less cost",
+    "work": [
+      "Detailed semantics for Search Ad campaigns",
+      "Target audience profile analysis",
+      "GDN campaigns launch for cold audiences",
+      "Remarketing campaigns development",
+      "Custom creatives for cold audiences"
+    ],
+    "metrics": [
+      {
+        "label": "Conversions",
+        "value": "+30%",
+        "change": "+30%"
+      },
+      {
+        "label": "CPC",
+        "value": "-57.53%",
+        "change": "-57.53%"
+      },
+      {
+        "label": "Avg Position",
+        "value": "+49%",
+        "change": "+49%"
+      },
+      {
+        "label": "Clicks",
+        "value": "+651%",
+        "change": "+651%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "MyOpportunity App",
+    "industry": "Business Networking",
+    "badges": [
+      "US",
+      "$25,000/mo"
+    ],
+    "challenge": "Emerging highly competitive niche, competing against LinkedIn and Bumble, previous SEO team used bot traffic.",
+    "objective": "Acquire new user registrations and app installs",
+    "work": [
+      "US competitors research",
+      "Website audit and recommendations",
+      "Semantic core with only targeted queries",
+      "Campaigns split by queries and devices",
+      "DSA, Pmax, video campaigns for reach",
+      "Custom ad copies with callouts for every ad group"
+    ],
+    "metrics": [
+      {
+        "label": "Signups",
+        "value": "235 → 702",
+        "change": "+42.68%"
+      },
+      {
+        "label": "CPA Signups",
+        "value": "$106.38",
+        "change": "Optimized"
+      },
+      {
+        "label": "Installs",
+        "value": "3,163 → 5,167",
+        "change": "+63.31%"
+      },
+      {
+        "label": "CPI",
+        "value": "$16.52",
+        "change": "Optimized"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "Orphanage (Google Ad Grant)",
+    "industry": "Child Welfare",
+    "badges": [
+      "International"
+    ],
+    "challenge": "Very high competition in nonprofit space, Grant accounts limited to $2 max CPC, need to target high-income countries.",
+    "objective": "Receive adoption applications and donations",
+    "work": [
+      "Market analysis for high-income country targeting",
+      "Semantic gathering for the niche",
+      "Search campaigns by country targeting",
+      "Responsive Search Ads creation",
+      "DSA campaign creation",
+      "GA4 audiences and conversion goals setup"
+    ],
+    "metrics": [
+      {
+        "label": "Conversions",
+        "value": "9 → 847",
+        "change": "+9,300%"
+      },
+      {
+        "label": "Clicks",
+        "value": "404 → 1,120",
+        "change": "+177%"
+      },
+      {
+        "label": "Sessions",
+        "value": "358 → 1,234",
+        "change": "+244%"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "Scorpion War Robot",
+    "industry": "Gaming",
+    "badges": [
+      "US, UK, AUS, NZ, CA, APAC"
+    ],
+    "challenge": "Initially only organic with 50-80 daily installs, limited budget across multiple countries.",
+    "objective": "Get more installs of iPhone app",
+    "work": [
+      "Competition review per each country",
+      "Campaign split by location (US, UK/NZ/CA/AUS, Asia)",
+      "Budget optimization based on CPI targets",
+      "Creative optimization for each market"
+    ],
+    "metrics": [
+      {
+        "label": "US Campaign CPI",
+        "value": "$0.31 vs $0.41 target",
+        "change": "-24%"
+      },
+      {
+        "label": "UK/NZ/CA/AUS CPI",
+        "value": "$0.19 vs $0.26 target",
+        "change": "-27%"
+      },
+      {
+        "label": "Asia Campaign CPI",
+        "value": "$0.06 vs $0.08 target",
+        "change": "-25%"
+      },
+      {
+        "label": "Total Installs",
+        "value": "10,611 ads / 29,000+ total",
+        "change": "2.7x organic boost"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "AppHud SaaS",
+    "industry": "App Analytics",
+    "badges": [
+      "US"
+    ],
+    "challenge": "Highly competitive market, need to reach app developers and product managers.",
+    "objective": "More registrations for less CAC",
+    "work": [
+      "Competitors ads review",
+      "Semantics from website content",
+      "Campaigns developed by product categories",
+      "Competitor campaign",
+      "DSA campaign with all dynamic targets",
+      "Bids adjustment by locations, demographics, devices"
+    ],
+    "metrics": [
+      {
+        "label": "User Accounts Created",
+        "value": "18",
+        "change": "First month"
+      },
+      {
+        "label": "Cost",
+        "value": "$247.60",
+        "change": "Initial spend"
+      },
+      {
+        "label": "CPA",
+        "value": "$13.76",
+        "change": "Optimized"
+      }
+    ],
+    "keyResult": null
+  },
+  {
+    "client": "Pest Control #1",
+    "industry": "Home Services",
+    "badges": [
+      "US"
+    ],
+    "challenge": "Large number of aggressive competitors with limited daily budget.",
+    "objective": "Growth in calls and orders",
+    "work": [
+      "Current campaigns analysis",
+      "Priority channels: Search, Remarketing, Video",
+      "Semantics collected from website and previous campaigns",
+      "Campaigns redistributed by brand, insect types, services",
+      "Bids adjusted by demographics, income, devices, geo, season"
+    ],
+    "metrics": [
+      {
+        "label": "Clicks (2 months)",
+        "value": "+125%",
+        "change": "+125%"
+      },
+      {
+        "label": "Impressions",
+        "value": "+1,060%",
+        "change": "+1,060%"
+      },
+      {
+        "label": "CTR",
+        "value": "6.22%",
+        "change": "+20%"
+      },
+      {
+        "label": "Call Conversions",
+        "value": "+300%",
+        "change": "+300%"
+      }
+    ],
+    "keyResult": null
+  }
+]
