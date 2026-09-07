@@ -1,42 +1,210 @@
 {
-  "//": "Who may touch what, written down BEFORE anyone starts. Two parcels claiming one file is the failure this file exists to prevent, and it costs one second to catch here instead of four hours in a merge. Read docs/parallel-dev.md first.",
-
-  "//seams": "Files everything needs. A parcel may ADD up to three lines to one of these and delete none, and must say which lines up front. Two one-line additions merge by keeping both; two thirty-line edits merge into something nobody can verify.",
-  "seams": ["client/src/App.tsx", "shared/doors.ts", "shared/roster.ts", "package.json"],
-
-  "//frozen": "Nobody edits these while a parallel run is going. They are the shape of the site, and a change here invalidates every parcel at once.",
-  "frozen": ["client/index.html", "server/index.ts", "render.yaml"],
-
+  "//": "Who may touch what, written down BEFORE anyone starts. Two parcels claiming one file is the failure this file exists to prevent, and it costs one second to catch here instead of four hours in a merge. Read docs/parallel-dev.md first — it carries the brief to paste and the rule about not committing while agents are still typing.",
+  "//seams": "Files everything needs. A parcel may ADD up to three lines to one of these and delete none, and must declare which lines up front. Two one-line additions merge by keeping both; two thirty-line edits merge into something nobody can verify.",
+  "seams": [
+    "client/src/App.tsx",
+    "shared/doors.ts",
+    "shared/roster.ts",
+    "shared/api.ts",
+    "package.json"
+  ],
+  "//frozen": "Nobody edits these during a parallel run. A change here invalidates every parcel at once.",
+  "frozen": [
+    "client/index.html",
+    "server/index.ts",
+    "render.yaml",
+    "client/src/index.css"
+  ],
+  "//alone": "Parcels marked runAlone touch the room, the panel or the shell — everything reads those, and two agents in them at once produce a merge nobody can check. One agent, let it finish, then start the others.",
+  "//order": "Three at a time. Suggested first wave: spend-limits, door-linkedin-ads, favicon-and-social. Then the two remaining doors together. Then the runAlone ones, one after another.",
   "parcels": {
+    "room": {
+      "owns": [
+        "client/src/pages/workspace.tsx",
+        "client/src/components/workspace/**"
+      ],
+      "seams": {
+        "client/src/App.tsx": [
+          "a route"
+        ],
+        "shared/api.ts": [
+          "types the room reads"
+        ]
+      },
+      "runAlone": true,
+      "why": "Everything reads the room. Two agents in it at once produce a merge nobody can check. It was missing from this manifest, which is the one place that is meant to prevent exactly that.",
+      "done": "Whatever the parcel says — but alone, and never at the same time as approval-card, outside-agent or recurring-and-digest, which all write into it."
+    },
+    "spend-limits": {
+      "owns": [
+        "server/spend.ts",
+        "server/spend.test.ts",
+        "server/ai/usage.ts"
+      ],
+      "seams": {
+        "server/routes.ts": [
+          "one guard call before the model call"
+        ]
+      },
+      "runAlone": false,
+      "why": "An agent reply costs about a quarter of a cent and a human conversation about three. Two agents answering each other cost about $4 an hour on this model — which is not frightening, and that is the danger: left running it is $104 a day and nobody notices, because nothing alarming happens at $4.",
+      "done": "Three independent bounds, because each fails differently: a count of turns per room, a clock that stops an agent after N minutes of activity, and a budget in money per room per month, warned at 80% and paused at 100%. One cost event logged per turn — room, agent, model, tokens in, tokens out, dollars — and nothing more. The count is taken atomically BEFORE the model call, so two messages arriving together cannot both pass. A test asserts an agent-authored message never triggers a reply, which is the invariant this product already has for free and which somebody will eventually remove by accident."
+    },
     "door-linkedin-ads": {
-      "owns": ["data/kb/linkedin-ads/**", "client/src/components/site/doors/LinkedInAds*.tsx"],
-      "seams": { "shared/doors.ts": ["the linkedin-ads row"], "shared/roster.ts": ["one agent entry"] },
-      "done": "The door answers two real buyer questions with citations, and its row says live."
+      "owns": [
+        "data/kb/kb.linkedin-ads.json",
+        "scripts/kb-sources/linkedin-ads.ts"
+      ],
+      "seams": {
+        "shared/doors.ts": [
+          "the linkedin-ads row: status and any copy fix"
+        ],
+        "shared/roster.ts": [
+          "one agent entry"
+        ]
+      },
+      "runAlone": false,
+      "why": "The row exists and the page renders honestly as not open. Opening it is a corpus, an agent and one word — the machinery landed with the namespace change.",
+      "done": "A corpus from LinkedIn's own advertising documentation only — nothing behind a login, no third-party blog. An agent with a persona, what it knows, what it refuses, and where it stops. Two real buyer questions asked through /api/ask with the answers and citations pasted into the report. FIRST, ANSWER THE QUESTION THE OWNER HAS NOT: nobody has confirmed LinkedIn Ads is actually sold. If it is not, say so and stop — do not build a door for a service that does not exist."
     },
     "door-linkedin-automation": {
-      "owns": ["data/kb/linkedin-automation/**"],
-      "seams": { "shared/doors.ts": ["the linkedin-automation row"], "shared/roster.ts": ["one agent entry"] },
-      "done": "Same, and the agent refuses to say whether any automation is permitted by a platform — it names the assessment instead."
+      "owns": [
+        "data/kb/kb.linkedin-automation.json",
+        "scripts/kb-sources/linkedin-automation.ts"
+      ],
+      "seams": {
+        "shared/doors.ts": [
+          "the linkedin-automation row"
+        ],
+        "shared/roster.ts": [
+          "one agent entry"
+        ]
+      },
+      "runAlone": false,
+      "why": "This is the owner's own service — building automation for a client who then operates it, with a written legal assessment in front of it.",
+      "done": "Same shape as the other doors. The agent must NEVER say whether any particular automation is permitted by a platform: it names the assessment and stops. The door's current blurb claims the work is built 'against documented interfaces', which contradicts what the product it describes actually does — fix the copy or hand the contradiction back."
     },
     "door-ai-builds": {
-      "owns": ["data/kb/ai-builds/**"],
-      "seams": { "shared/doors.ts": ["the ai-builds row"], "shared/roster.ts": ["one agent entry"] },
-      "done": "Same. Reads as one direction of this workspace, not as a separate brand."
+      "owns": [
+        "data/kb/kb.ai-builds.json",
+        "scripts/kb-sources/ai-builds.ts"
+      ],
+      "seams": {
+        "shared/doors.ts": [
+          "the ai-builds row"
+        ],
+        "shared/roster.ts": [
+          "one agent entry"
+        ]
+      },
+      "runAlone": false,
+      "why": "The owner already sells custom AI builds at being.marketing. This door is that direction of the workspace, not a separate brand a client has to learn.",
+      "done": "Same shape. Read what is actually sold at being.marketing before writing a word of it."
     },
-    "approval-card": {
-      "owns": ["client/src/components/workspace/ApprovalCard.tsx", "client/src/components/workspace/approval-*.ts", "server/approvals.ts", "server/approvals.test.ts"],
-      "seams": { "shared/api.ts": ["one card type"] },
-      "done": "A card in a thread showing what would change, a before and after, and two buttons; approving is recorded with who and when."
+    "favicon-and-social": {
+      "owns": [
+        "client/public/assets/**"
+      ],
+      "seams": {
+        "client/index.html": [
+          "the icon and image lines"
+        ]
+      },
+      "runAlone": false,
+      "why": "The browser tab, the bookmark and every link pasted into a chat all currently load one 1238x1238, 74 KB square. A square logo shared in a messenger reads as somebody's avatar rather than as a site.",
+      "done": "A small favicon set from the existing mark, and a proper wide social image — the mark plus the name on the site's own ground, sized for a link preview. The logo itself is not redrawn: it is the one place colour lives on an otherwise colourless page, and that is deliberate."
     },
     "outside-agent": {
-      "owns": ["server/guests.ts", "server/guests.test.ts", "client/src/components/workspace/AdmitAgentDialog.tsx"],
-      "seams": { "shared/api.ts": ["one guest type"] },
-      "done": "Somebody else's agent is admitted to ONE thread, watch-only by default, with a budget, an expiry and a visible revoke."
+      "owns": [
+        "server/seats.ts",
+        "server/seats.test.ts",
+        "client/src/components/workspace/AdmitAgentDialog.tsx"
+      ],
+      "seams": {
+        "shared/api.ts": [
+          "one seat type"
+        ]
+      },
+      "runAlone": true,
+      "why": "The member rail already renders the whole picture — mode, company, joined, expiry, calls-per-day, revoke with a reason, and four sentences about what an admitted agent can never do. Its own comment says the server half does not exist. This parcel is that half.",
+      "done": "Somebody else's agent is admitted to ONE thread, watch-only by default, with a call budget, an expiry and a visible revoke. Its own credential, bound to a named party on our side — never the room link, which is a state handle and must not be treated as authentication. Its own counter, because the existing rate limits key on a visitor's IP address and a server-initiated agent turn has none. And the rule as code, not as a policy page: an agent replies to an agent only when a person named both in one message."
+    },
+    "approval-card": {
+      "owns": [
+        "client/src/components/workspace/ApprovalCard.tsx",
+        "server/approvals.ts",
+        "server/approvals.test.ts"
+      ],
+      "seams": {
+        "shared/api.ts": [
+          "one card type"
+        ]
+      },
+      "runAlone": true,
+      "why": "The product's whole compliance posture is that a person approves anything that leaves the room. There is no card to approve with.",
+      "done": "A card in a thread showing what would change, a before and after, and two buttons. Approving is recorded with who and when, and the record is what the client sees later. Port the shape from the Top-Voice project's proposal cards rather than inventing one."
+    },
+    "recurring-and-digest": {
+      "owns": [
+        "server/digest.ts",
+        "server/digest.test.ts",
+        "client/src/components/workspace/TaskPanel.tsx"
+      ],
+      "seams": {
+        "shared/schema.ts": [
+          "a repeat field on the task"
+        ]
+      },
+      "runAlone": true,
+      "why": "Rooms are working chats for one-off, ongoing and recurring work. Four of the seven doors are retainers. The method has to live in the room without adding a screen.",
+      "done": "Three primitives and no new screens: a repeat setting on a task card so checking it off brings it back next week; one weekly message saying what moved and what is waiting on the client; and one line at the top of the channel saying what the room is doing now and who it is waiting on — the channel header already prints a line in that spot. Agents write the digest and chase what is late. Only a person changes or promises anything."
     },
     "payment-link": {
-      "owns": ["server/payments.ts", "server/payments.test.ts", "client/src/components/workspace/PriceCard.tsx"],
-      "seams": { "shared/api.ts": ["one price type"] },
-      "done": "A price can be put in a thread and paid, and the room records that it was. No pricing page, no plans."
+      "owns": [
+        "server/payments.ts",
+        "server/payments.test.ts",
+        "client/src/components/workspace/PriceCard.tsx"
+      ],
+      "seams": {
+        "shared/api.ts": [
+          "one price type"
+        ]
+      },
+      "runAlone": false,
+      "why": "A client can be talked to, briefed and matched with a person, and then has to be invoiced by hand outside the site.",
+      "done": "A price can be put in a thread and paid, and the room records that it was. No pricing page, no plans, no subscription machinery. The money flow is the owner's: the expert invoices the client for the work, and Top-Rated Team invoices its own fee separately — so a price card must be able to say whose price it is."
+    },
+    "legal-name-display": {
+      "owns": [
+        "client/src/components/site/LegalName.tsx",
+        "docs/doors.md"
+      ],
+      "seams": {
+        "shared/doors.ts": [
+          "a displayName beside legalName"
+        ],
+        "client/index.html": [
+          "the s.r.o. line in the offline page"
+        ]
+      },
+      "runAlone": false,
+      "why": "The owner does not want his personal name set in every page's chrome. It is a trading-name question, and the answer differs by surface rather than being one setting.",
+      "done": "Two fields instead of one: displayName 'Top-Rated Team' for chrome and body copy, legalName 'Top-Rated Team (Danylo Burykin SZČO)' for the places where a person is deciding who they are dealing with — the footer's identification line, the Terms, the room footer, and any invoice. Plain selectable text in those places, NOT an image and NOT behind a hover: a hover does not exist on a phone, and somebody copying the name into their own accounting needs to be able to select it. A hover or a quiet small line is fine as presentation on top of that, never instead of it. Fix the four remaining 'Top-Rated Team s.r.o.' strings in docs/doors.md and client/index.html while you are here — shared/doors.ts is already done."
+    },
+    "llms-txt": {
+      "owns": [
+        "client/public/llms.txt",
+        "client/public/llms-full.txt",
+        "scripts/build-llms.ts"
+      ],
+      "seams": {
+        "package.json": [
+          "one build script line"
+        ]
+      },
+      "runAlone": false,
+      "why": "The whole product is agent-facing, so an agent arriving at the site and being able to read what is sold is worth more here than on an ordinary marketing site.",
+      "done": "Two files, generated from shared/doors.ts and the door pages rather than hand-written, so they cannot drift. /llms.txt is a SHORT index — what the site is, the seven doors, one line each, links to the pages — a few kilobytes. /llms-full.txt is the expanded content. Look at connectsafely.ai's pair first and do NOT copy it: theirs are 227 KB and 235 KB and nearly identical, which throws away the point of having an index. Exclude /w/ from both for the same reason robots.txt does — a room token is a bearer credential in a URL. Nothing in either file may claim something the door pages do not."
     }
   }
 }

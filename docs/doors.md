@@ -27,13 +27,13 @@ one offer costs.
 
 | Door | Tier | Who invoices | State |
 |---|---|---|---|
-| Conversion tracking for ChatGPT Ads | Ours end to end | Top-Rated Team s.r.o. | live at `/` |
-| Google Ads management | Ours end to end | Top-Rated Team s.r.o. | coming — knowledge built, waiting on retrieval |
-| Google Ad Grants, set up through the official Google Ads API | Ours end to end | Top-Rated Team s.r.o. | coming — knowledge built, waiting on retrieval |
-| LinkedIn Ads | Ours end to end | Top-Rated Team s.r.o. | coming |
-| LinkedIn automation, with a written legal assessment | Lawyer first | Top-Rated Team s.r.o. for the build; the lawyer bills the assessment | coming |
+| Conversion tracking for ChatGPT Ads | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | live at `/work/chatgpt-ads` |
+| Google Ads management | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | coming — knowledge built, waiting on retrieval |
+| Google Ad Grants, set up through the official Google Ads API | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | coming — knowledge built, waiting on retrieval |
+| LinkedIn Ads | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | coming |
+| LinkedIn automation, with a written legal assessment | Lawyer first | Top-Rated Team (Danylo Burykin SZČO) for the build; the lawyer bills the assessment | coming |
 | LinkedIn growth | A different company | Maksymenko LinkedIn Growth | coming |
-| Custom AI builds | Ours end to end | Top-Rated Team s.r.o. | coming |
+| Custom AI builds | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | coming |
 
 "Coming" is not a placeholder or a lie. A coming door appears on `/work` with its own
 one-line explanation of why its panel is shut, because an offer that is real and a page
@@ -113,7 +113,10 @@ money to get wrong.
 ## The block that matters: `contract`
 
 - **`legalName`** — the company the client is buying from, in full, including the legal
-  form: `Top-Rated Team s.r.o.`, not `Top-Rated Team`.
+  form: `Top-Rated Team (Danylo Burykin SZČO)`. The plain `Top-Rated Team` is the
+  trading name and belongs in chrome and body copy; the full form belongs where
+  somebody is deciding who they are dealing with — the footer's identification
+  line, the Terms, the room footer, and every invoice.
 - **`entity`** — what kind of body that is, in a client's words.
 - **`termsUrl`** — the terms *that company* publishes. It may be empty, and where it is
   empty the room says so out loud. It must never quietly fall back to ours: borrowing
@@ -149,7 +152,7 @@ client plainly why a second document is arriving. Fixing the row alone leaves th
 document in their files.
 
 This is design, not legal advice. When a door involves a company that is not
-Top-Rated Team s.r.o., have its terms and its invoicing checked by someone qualified
+Top-Rated Team (Danylo Burykin SZČO), have its terms and its invoicing checked by someone qualified
 before the door goes live, not after the first client.
 
 ## What a live door actually needs

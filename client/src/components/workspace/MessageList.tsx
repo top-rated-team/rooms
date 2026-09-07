@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { Info, Sparkles } from "lucide-react";
 import { AGENT_BY_ID, DEFAULT_AGENT_ID, EXPERT_BY_KEY, type AgentDef, type ExpertDef } from "@shared/roster";
 import type { Channel, Member, Message } from "@shared/schema";
 import type { TypingSignal } from "@/hooks/use-workspace";
 import { MessageItem } from "@/components/workspace/MessageItem";
 import { cn } from "@/lib/utils";
+import { CHROME, FOCUS, LABEL, META, READ } from "@/components/workspace/room-style";
 
 /** Messages closer together than this from one author render as a single run. */
 const RUN_WINDOW_MS = 5 * 60 * 1000;
@@ -18,8 +18,8 @@ function dayKey(value: Date | string): string {
 function dayLabel(value: Date | string): string {
   const date = new Date(value);
   const today = new Date();
-  const yesterday = new Date(today.getTime() - 86_400_000);
   if (date.toDateString() === today.toDateString()) return "Today";
+  const yesterday = new Date(today.getTime() - 86_400_000);
   if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
   return date.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
 }
@@ -71,9 +71,37 @@ export interface MessageListProps {
   onStarter: (question: string, agentId: string) => void;
   /** Click one of the two-click hire. Offered under the newest agent turn only. */
   onGetPerson?: (message: Message) => void;
+  /**
+   * Where the column opens.
+   *
+   * "newest" is the chat default and what every later visit wants. "question"
+   * is the arrival, and it exists because the arrival panel says "the question
+   * you asked on the way in is here" — and, measured at 1440x900, it was not:
+   * the panel took the top 300 pixels, the transcript opened pinned to the
+   * newest message, and the visitor's own sentence sat 90 pixels above the
+   * window saying that. A promise made in the same frame that hides the thing
+   * promised is the one kind of copy this room cannot print.
+   *
+   * On "question" the column opens on the visitor's first sentence with the
+   * answer growing underneath it, and following-the-newest is off — there is
+   * exactly one answer coming, it starts directly below, and nothing should
+   * pull the reader off their own words while it arrives.
+   */
+  anchor?: "newest" | "question";
+  className?: string;
 }
 
-export function MessageList({ channel, messages, members, typing, llmReady, onStarter, onGetPerson }: MessageListProps) {
+export function MessageList({
+  channel,
+  messages,
+  members,
+  typing,
+  llmReady,
+  onStarter,
+  onGetPerson,
+  anchor = "newest",
+  className,
+}: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const pinnedRef = useRef(true);
   const channelId = channel?.id ?? null;
@@ -95,22 +123,52 @@ export function MessageList({ channel, messages, members, typing, llmReady, onSt
   const onScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
+    /* Nothing re-arms following-the-newest while the column is being held on
+       the visitor's question — including the scroll event the anchor itself
+       fires. Setting `scrollTop` emits a scroll, that scroll landed 98 pixels
+       from the bottom, 98 is inside the 120-pixel pin threshold, and the next
+       token of the streaming answer handed the column straight back to the
+       bottom. The anchor looked as though it had never run. */
+    if (anchor === "question") return;
     pinnedRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < PIN_THRESHOLD_PX;
-  }, []);
+  }, [anchor]);
 
-  // Switching channel always lands at the newest message.
+  // Switching channel always lands at the newest message — and so does coming
+  // back into view. On a phone the page hides this list while the arrival panel
+  // has the column, and a hidden element has no scroll height to set: without
+  // `className` in here, dismissing the panel handed back a transcript sitting
+  // at the top of the day with the newest message off the bottom of it.
+  //
+  // The one exception is the arrival — see `anchor`. Measured off rectangles
+  // rather than `offsetTop` because the message sits two elements inside the
+  // scroller and neither of them is positioned, so an offset parent here is
+  // whatever the page happens to be doing above it.
   useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (anchor === "question") {
+      const asked = ordered.find((message) => message.authorKind === "visitor");
+      const node = asked ? el.querySelector<HTMLElement>(`[data-message-id="${CSS.escape(asked.id)}"]`) : null;
+      if (node) {
+        pinnedRef.current = false;
+        el.scrollTop += node.getBoundingClientRect().top - el.getBoundingClientRect().top - 8;
+        return;
+      }
+    }
     pinnedRef.current = true;
-    const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [channelId]);
+    el.scrollTop = el.scrollHeight;
+    // `ordered.length` and not `ordered`: the answer streams into a message
+    // that already exists, and re-anchoring on every delta would fight it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [anchor, channelId, className, ordered.length]);
 
-  // Follow new output only when the reader has not scrolled back.
+  // Follow new output only when the reader has not scrolled back, and never
+  // while the column is anchored to the question.
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el || !pinnedRef.current) return;
+    if (!el || anchor === "question" || !pinnedRef.current) return;
     el.scrollTop = el.scrollHeight;
-  }, [ordered]);
+  }, [anchor, ordered]);
 
   const typingNames = typing
     .filter((t) => t.channelId === channelId)
@@ -124,49 +182,44 @@ export function MessageList({ channel, messages, members, typing, llmReady, onSt
     <div
       ref={scrollRef}
       onScroll={onScroll}
-      className="scrollbar-thin min-h-0 flex-1 overflow-y-auto"
+      className={cn("scrollbar-thin min-h-0 flex-1 overflow-y-auto", className)}
       data-testid="list-messages"
     >
-      <div className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-4">
+      <div className="mx-auto w-full max-w-[42rem] px-5 py-8 sm:px-8">
         {llmReady === false ? (
-          <div className="mb-4 flex items-start gap-2 rounded-md border border-card-border bg-card px-3 py-2 text-xs text-muted-foreground">
-            <Info className="mt-px h-4 w-4 shrink-0" />
-            <span>
-              Live agent answers are not configured on this deployment, so the agents will tell you that rather than
-              guess. The people on the team still read this workspace and reply here.
-            </span>
-          </div>
+          <p className={cn(CHROME, "mb-8 border-l border-border pl-4 text-muted-foreground")}>
+            Live agent answers are not configured on this deployment, so the agents will tell you that rather than
+            guess. The people on the team still read this room and reply here.
+          </p>
         ) : null}
 
         {ordered.length === 0 ? (
-          <div className="py-6">
-            <h2 className="text-lg font-semibold">
-              {channelAgent ? channelAgent.name : channel ? `#${channel.name}` : "Workspace"}
+          <div className="pb-4">
+            <h2 className={cn(CHROME, "font-medium")}>
+              {channelAgent ? channelAgent.name : channel ? `#${channel.name}` : "This room"}
             </h2>
-            <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+            <p className={cn(READ, "mt-2 text-muted-foreground")}>
               {channelAgent?.blurb ??
                 channel?.purpose ??
-                "Nothing here yet. Say what you are running ads for and what counts as a conversion."}
+                "Nothing here yet. Say what you are running ads for, and what counts as a conversion."}
             </p>
             {starters.length > 0 ? (
-              <div className="mt-5">
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Start with one of these
-                </p>
-                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <div className="mt-7">
+                <p className={LABEL}>Ask one of these</p>
+                <ul className="mt-2">
                   {starters.map((starter) => (
-                    <button
-                      key={starter.question}
-                      type="button"
-                      onClick={() => onStarter(starter.question, starter.agentId)}
-                      className="hover-elevate active-elevate-2 rounded-md border border-card-border bg-card px-3 py-2 text-left text-sm text-foreground sm:max-w-[19rem]"
-                      data-testid="button-starter"
-                    >
-                      {starter.question}
-                    </button>
+                    <li key={starter.question} className="border-t border-border last:border-b">
+                      <button
+                        type="button"
+                        onClick={() => onStarter(starter.question, starter.agentId)}
+                        className={cn(READ, FOCUS, "block w-full py-3 text-left hover:text-muted-foreground")}
+                        data-testid="button-starter"
+                      >
+                        {starter.question}
+                      </button>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
             ) : null}
           </div>
@@ -187,11 +240,9 @@ export function MessageList({ channel, messages, members, typing, llmReady, onSt
           return (
             <div key={message.id}>
               {!sameDay ? (
-                <div className="my-4 flex items-center gap-3">
+                <div className="flex items-center gap-3 py-6">
                   <span className="h-px flex-1 bg-border" />
-                  <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                    {dayLabel(message.createdAt)}
-                  </span>
+                  <span className={LABEL}>{dayLabel(message.createdAt)}</span>
                   <span className="h-px flex-1 bg-border" />
                 </div>
               ) : null}
@@ -208,10 +259,10 @@ export function MessageList({ channel, messages, members, typing, llmReady, onSt
           );
         })}
 
-        <div className={cn("h-6 px-2 pt-2 text-xs text-muted-foreground", typingNames.length === 0 && "invisible")}>
+        <div className={cn(META, "h-6 pt-4 text-muted-foreground", typingNames.length === 0 && "invisible")}>
           {typingNames.length > 0
             ? `${typingNames.slice(0, 3).join(", ")} ${typingNames.length === 1 ? "is" : "are"} typing…`
-            : " "}
+            : " "}
         </div>
       </div>
     </div>

@@ -1,13 +1,20 @@
-import { ExternalLink, TriangleAlert, UserPlus } from "lucide-react";
 import { AGENT_BY_ID, EXPERT_BY_KEY, type AgentDef, type ExpertDef } from "@shared/roster";
 import type { Citation, Member, Message } from "@shared/schema";
-import { Avatar, initialsFor, toneFor } from "@/components/workspace/Avatar";
 import { badgeForKey } from "@/components/workspace/MemberRail";
 import { Markdown } from "@/components/workspace/Markdown";
 import { cn } from "@/lib/utils";
+import { ACTION, CHROME, LABEL, LINK, META, READ } from "@/components/workspace/room-style";
 
-const GET_PERSON_BUTTON =
-  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring [&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0 hover-elevate active-elevate-2 border border-card-border bg-card min-h-7 px-2 text-muted-foreground";
+/* ---------------------------------------------------------------------------
+ * A turn in the transcript, set like something written rather than something
+ * posted. There is no avatar, no bubble and no background wash: a name at the
+ * chrome size, and under it the words at the reading size, in the serif.
+ *
+ * The one distinction the column draws is between a question and an answer,
+ * and it draws it the way the front page draws it — the question is soft ink
+ * behind a rule, the answer is full ink. Same size for both, because whose
+ * words they are is not a matter of importance.
+ * ------------------------------------------------------------------------- */
 
 function relativeTime(value: Date | string): string {
   const then = new Date(value).getTime();
@@ -21,12 +28,6 @@ function relativeTime(value: Date | string): string {
   return new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function clockTime(value: Date | string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-}
-
 function agentFor(memberKey: string): AgentDef | undefined {
   if (!memberKey.startsWith("agent:")) return undefined;
   const agent: AgentDef | undefined = AGENT_BY_ID[memberKey.slice("agent:".length)];
@@ -38,23 +39,31 @@ function expertFor(memberKey: string): ExpertDef | undefined {
   return expert;
 }
 
-function CitationChips({ citations }: { citations: Citation[] }) {
+/**
+ * Citations used to be bordered chips. They are a line now, under a rule, the
+ * way the front page prints what an answer used — and they are the only
+ * underlined thing in an answer, so they are still the first thing the eye
+ * finds after the last sentence.
+ */
+function Citations({ citations }: { citations: Citation[] }) {
   return (
-    <div className="mt-3 flex flex-wrap gap-2" data-testid="list-citations">
+    <p className={cn(META, "mt-4 border-t border-border pt-2 text-muted-foreground")} data-testid="list-citations">
+      <span className={cn(LABEL, "mr-2")}>Read from</span>
       {citations.map((citation, index) => (
-        <a
-          key={`${citation.url}-${index}`}
-          href={citation.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={citation.snippet ?? citation.url}
-          className="hover-elevate active-elevate-2 inline-flex max-w-full items-center gap-1.5 rounded-md border border-card-border bg-card px-2 py-1 text-xs text-muted-foreground"
-        >
-          <ExternalLink className="h-3 w-3 shrink-0" />
-          <span className="truncate">{citation.title}</span>
-        </a>
+        <span key={`${citation.url}-${index}`}>
+          {index > 0 ? <span className="px-1.5 text-muted-foreground">·</span> : null}
+          <a
+            href={citation.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={citation.snippet ?? citation.url}
+            className={LINK}
+          >
+            {citation.title}
+          </a>
+        </span>
       ))}
-    </div>
+    </p>
   );
 }
 
@@ -95,23 +104,22 @@ export function MessageItem({ message, member, showAuthor, onGetPerson }: Messag
   const errorNotice = errorNoticeFor(meta.error);
 
   // System events are the workspace narrating itself. Most are one-liners and read
-  // best as a chip; the opening briefing is real prose and has to keep its markdown.
+  // best as a single line between rules; the opening briefing is real prose and
+  // has to keep its markdown.
   if (meta.event === "workspace_created") {
     return (
-      <div className="py-2" data-testid="event-workspace_created">
-        <div className="rounded-lg border border-card-border bg-card px-5 py-4">
-          <Markdown>{message.body}</Markdown>
-        </div>
+      <div className="border-y border-border py-5" data-testid="event-workspace_created">
+        <Markdown className={cn(READ, "text-foreground")}>{message.body}</Markdown>
       </div>
     );
   }
 
   if (meta.event) {
     return (
-      <div className="flex justify-center py-2" data-testid={`event-${meta.event}`}>
-        <span className="rounded-full border border-card-border bg-card px-3 py-1 text-xs text-muted-foreground">
-          {message.body}
-        </span>
+      <div className="flex items-center gap-3 py-4" data-testid={`event-${meta.event}`}>
+        <span className="h-px flex-1 bg-border" />
+        <span className={cn(META, "text-muted-foreground")}>{message.body}</span>
+        <span className="h-px flex-1 bg-border" />
       </div>
     );
   }
@@ -120,85 +128,62 @@ export function MessageItem({ message, member, showAuthor, onGetPerson }: Messag
   const expert = expertFor(message.authorKey);
   const name = member?.displayName ?? agent?.name ?? expert?.name ?? "Someone";
   const role = member?.role ?? agent?.title ?? expert?.title ?? null;
-  const initials = member?.initials ?? agent?.initials ?? expert?.initials ?? initialsFor(name);
-  const tone = toneFor(message.authorKey, message.authorKind);
   const isVisitor = message.authorKind === "visitor";
   const isAgent = message.authorKind === "agent";
   const citations = meta.citations ?? [];
 
   return (
+    /* `data-message-id` is read by MessageList when the column has to open on
+       this turn rather than on the newest one — see its `anchor` prop. It is a
+       separate attribute from the test id on purpose: one is a hook for tests
+       and can be renamed, the other is behaviour. */
     <div
-      className={cn(
-        "group flex gap-3 rounded-md px-2 py-1.5",
-        showAuthor && "mt-4 first:mt-0",
-        // Visitor turns get a wash rather than an alignment flip: this is a
-        // group chat, not a two-party thread.
-        isVisitor && "bg-secondary/40",
-      )}
+      className={cn(showAuthor ? "mt-7 first:mt-0" : "mt-3")}
+      data-message-id={message.id}
       data-testid={`message-${message.id}`}
     >
-      <div className="w-8 shrink-0 pt-0.5">
-        {showAuthor ? (
-          <Avatar initials={initials} tone={tone} size="md" title={name} />
-        ) : (
-          <span className="block select-none text-center text-[10px] leading-7 text-muted-foreground opacity-0 group-hover:opacity-100">
-            {clockTime(message.createdAt)}
-          </span>
-        )}
-      </div>
+      {showAuthor ? (
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className={cn(CHROME, "font-medium")}>{name}</span>
+          {/* The badge rule holds in the transcript too: a badge says what
+              someone does here, never what they are made of. "AI" is not a
+              job — see MemberRail.tsx, where the vocabulary lives. */}
+          {isAgent ? (
+            <span className={LABEL} data-testid={`badge-message-${message.id}`}>
+              {badgeForKey(message.authorKey, "agent")}
+            </span>
+          ) : null}
+          {role ? <span className={cn(META, "text-muted-foreground")}>{role}</span> : null}
+          <span className={cn(META, "text-muted-foreground")}>{relativeTime(message.createdAt)}</span>
+        </div>
+      ) : null}
 
-      <div className="min-w-0 flex-1">
-        {showAuthor ? (
-          <div className="mb-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <span className="text-sm font-semibold">{name}</span>
-            {/* The badge rule holds in the transcript too: a badge says what
-                someone does here, never what they are made of. "AI" is not a
-                job — see MemberRail.tsx, where the vocabulary lives. */}
-            {isAgent ? (
-              <span
-                className="rounded border border-card-border bg-muted px-1 py-px text-[10px] font-medium text-muted-foreground"
-                data-testid={`badge-message-${message.id}`}
-              >
-                {badgeForKey(message.authorKey, "agent")}
-              </span>
-            ) : null}
-            {role ? <span className="text-xs text-muted-foreground">{role}</span> : null}
-            <span className="text-xs text-muted-foreground">{relativeTime(message.createdAt)}</span>
-          </div>
-        ) : null}
-
-        <Markdown>{message.body}</Markdown>
+      <div className={cn(isVisitor && "border-l border-border pl-4")}>
+        <Markdown className={cn(READ, "mt-1.5", isVisitor ? "text-muted-foreground" : "text-foreground")}>
+          {message.body}
+        </Markdown>
 
         {meta.streaming ? (
           <span
-            className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-cursor-blink bg-foreground align-middle"
+            className="ml-0.5 inline-block h-4 w-px translate-y-0.5 animate-cursor-blink bg-foreground align-middle"
             aria-label="Still writing"
           />
         ) : null}
-
-        {errorNotice ? (
-          <p className="mt-2 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-            <TriangleAlert className="mt-px h-4 w-4 shrink-0" />
-            <span>{errorNotice}</span>
-          </p>
-        ) : null}
-
-        {citations.length > 0 ? <CitationChips citations={citations} /> : null}
-
-        {isAgent && onGetPerson && !meta.streaming ? (
-          <div className="mt-3">
-            <button
-              type="button"
-              onClick={() => onGetPerson(message)}
-              className={GET_PERSON_BUTTON}
-              data-testid="button-get-person"
-            >
-              <UserPlus />
-              Get a person on this
-            </button>
-          </div>
-        ) : null}
       </div>
+
+      {errorNotice ? (
+        <p className={cn(CHROME, "mt-3 border-l border-destructive pl-3 text-destructive")}>{errorNotice}</p>
+      ) : null}
+
+      {citations.length > 0 ? <Citations citations={citations} /> : null}
+
+      {isAgent && onGetPerson && !meta.streaming ? (
+        <div className="mt-4">
+          <button type="button" onClick={() => onGetPerson(message)} className={ACTION} data-testid="button-get-person">
+            Get a person on this
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

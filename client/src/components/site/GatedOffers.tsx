@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { ArrowRight, ExternalLink, Loader2 } from "lucide-react";
 
 import DoorCard from "@/components/site/DoorCard";
+import { ACTION, ACTION_QUIET, HEADING, LINK, META, META_PLAIN, READ_MUTED } from "@/components/site/doors/quiet";
 import { collectSource } from "@/components/site/LeadDialog";
 import { DEFAULT_DOOR_ID, DOORS, DOOR_BY_ID, type DoorContract, type DoorDef, type DoorTier } from "@shared/doors";
 
@@ -24,15 +24,16 @@ import { DEFAULT_DOOR_ID, DOORS, DOOR_BY_ID, type DoorContract, type DoorDef, ty
  * route the rest of the site already uses — and remembers the answer in this
  * browser so a returning visitor is not asked twice. It is not a lock either:
  * what is below is ordinary page content, and nothing here says otherwise.
+ *
+ * This round restyled it and changed nothing it does. The card is gone, the
+ * field is a rule rather than a box, and the words are shorter — but the tier
+ * rule, the request, the storage key, the "show them anyway" path and the
+ * refusal to name a gated door before the step are exactly as they were. A
+ * restyle that quietly weakened a gate would be the worst kind of redesign.
  */
 
-const BTN_BASE =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2";
-const BTN_PRIMARY = `${BTN_BASE} bg-primary text-primary-foreground border border-primary-border min-h-9 px-4 py-2`;
-const BTN_GHOST = `${BTN_BASE} border border-transparent min-h-8 rounded-md px-3 text-xs`;
-
 const FIELD =
-  "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50";
+  "type-body w-full border-0 border-b border-input bg-transparent px-0 py-[var(--s1)] text-foreground placeholder:text-muted-foreground focus:border-foreground focus-visible:outline-none focus-visible:ring-0 disabled:opacity-50";
 
 /* ------------------------------- the split -------------------------------- */
 
@@ -76,8 +77,6 @@ interface GatedProduct {
   /** The site it runs on. Printed as the address, not as a naked link. */
   href: string;
   domain: string;
-  initials: string;
-  tone: string;
   /** What it does, in the words a buyer would use. One or two sentences. */
   line: string;
   contract: DoorContract;
@@ -97,8 +96,6 @@ const GATED_PRODUCTS: GatedProduct[] = [
     name: "Top-Voice",
     href: "https://top-voice.ai",
     domain: "top-voice.ai",
-    initials: "TV",
-    tone: "bg-chart-3/10 text-chart-3",
     line: "Engagement on LinkedIn from profiles you already own — commenting and replying where the people you sell to are reading, instead of buying impressions in front of them. It runs today, and what it does is written out in full on its own site.",
     contract: OURS,
   },
@@ -107,8 +104,6 @@ const GATED_PRODUCTS: GatedProduct[] = [
     name: "Warmlike",
     href: "https://warmlike.com",
     domain: "warmlike.com",
-    initials: "WL",
-    tone: "bg-chart-1/10 text-chart-1",
     line: "The same kind of work pointed at a list you bring: warming up the people on it before anyone sends them a pitch. It runs today, and what it does is written out in full on its own site.",
     contract: OURS,
   },
@@ -247,25 +242,25 @@ export function GatedOffers({ className }: GatedOffersProps) {
 
   if (!access) {
     return (
-      <section
-        id="more-offers"
-        data-testid="section-offers-gate"
-        className={`max-w-4xl scroll-mt-24 ${className ?? ""}`}
-      >
-        <div className="rounded-lg border border-card-border bg-card p-5 sm:p-6">
-          <h2 className="text-base font-semibold sm:text-lg" data-testid="text-offers-gate-headline">
-            There are more offers than the ones above, and they are not on the open page.
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Behind this: {behindLine} What they have in common today is LinkedIn — activity carried out on real
-            profiles, ours or yours, rather than through an ad account. Ours are a cheaper way in than a managed
-            campaign, and they carry a different kind of risk, because they run on somebody&rsquo;s personal account.
-            That is why we would rather show them to people we can reply to than print them on an open page.
-          </p>
+      <section id="more-offers" data-testid="section-offers-gate" className={`scroll-mt-24 ${className ?? ""}`}>
+        <div className="grid gap-[var(--s3)] border-t border-border pt-[var(--s3)] lg:grid-cols-[minmax(0,32ch)_minmax(0,1fr)] lg:gap-[var(--s5)]">
+          <div>
+            <p className={META}>Not on the open page</p>
+            <h2 className={`mt-[var(--s1)] ${HEADING}`} data-testid="text-offers-gate-headline">
+              There are more offers than the ones above.
+            </h2>
+          </div>
 
-          <form onSubmit={submit} noValidate className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-start">
-            <div className="min-w-0 flex-1">
-              <label htmlFor="offers-email" className="mb-1.5 block text-sm font-medium">
+          <div>
+            <p className={READ_MUTED}>
+              Behind this: {behindLine} What they have in common today is LinkedIn — activity carried out on real
+              profiles, ours or yours, rather than through an ad account. Ours are a cheaper way in than a managed
+              campaign, and they carry a different kind of risk, because they run on somebody&rsquo;s personal account.
+              That is why we would rather show them to people we can reply to than print them on an open page.
+            </p>
+
+            <form onSubmit={submit} noValidate className="mt-[var(--s4)] max-w-md">
+              <label htmlFor="offers-email" className={META}>
                 Email
               </label>
               <input
@@ -276,7 +271,7 @@ export function GatedOffers({ className }: GatedOffersProps) {
                 autoComplete="email"
                 aria-invalid={emailError ? true : undefined}
                 aria-describedby={emailError ? "offers-email-error" : undefined}
-                className={FIELD}
+                className={`mt-[var(--s1)] ${FIELD}`}
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
@@ -284,196 +279,178 @@ export function GatedOffers({ className }: GatedOffersProps) {
                 }}
               />
               {emailError ? (
-                <p id="offers-email-error" className="mt-1.5 text-xs text-destructive">
+                <p id="offers-email-error" className="type-note mt-[var(--s1)] text-destructive">
                   {emailError}
                 </p>
               ) : null}
-            </div>
-            <button
-              type="submit"
-              data-testid="button-offers-reveal"
-              className={`${BTN_PRIMARY} sm:mt-7`}
-              disabled={sending}
-            >
-              {sending ? <Loader2 className="animate-spin" /> : null}
-              Show the offers
-              {sending ? null : <ArrowRight />}
-            </button>
-          </form>
-
-          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-            {/* Whatever this sentence says is sent has to be what the request
-                above actually carries: collectSource() puts the page, the
-                referrer and any campaign parameters in the URL into it, and a
-                line promising an address and nothing else was describing a
-                smaller request than the one being made. */}
-            This sends us your address, the page you are on and where you came from. It is not an account, there is no
-            password, and the only thing that happens next is that a person may write back. This browser remembers it,
-            so you are not asked again. The offers above stay open to everyone whether you fill this in or not.
-          </p>
-
-          {sendError ? (
-            <div role="alert" className="mt-4 rounded-md border border-border bg-muted/40 p-3">
-              <p className="text-sm text-destructive">{sendError}</p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Nobody on our side has your address. You can try again, or read the offers without giving us one — they
-                are not being kept from you.
-              </p>
-              <button
-                type="button"
-                data-testid="button-offers-anyway"
-                className={`${BTN_GHOST} mt-2 -ml-3 text-foreground`}
-                onClick={() => reveal(email.trim(), false)}
-              >
-                Show them anyway
+              <button type="submit" data-testid="button-offers-reveal" className={`${ACTION} mt-[var(--s3)]`} disabled={sending}>
+                {sending ? "Sending…" : "Show the offers"}
               </button>
-            </div>
-          ) : null}
+            </form>
+
+            <p className={`mt-[var(--s4)] max-w-[62ch] ${META_PLAIN}`}>
+              {/* Whatever this sentence says is sent has to be what the request
+                  above actually carries: collectSource() puts the page, the
+                  referrer and any campaign parameters in the URL into it, and a
+                  line promising an address and nothing else was describing a
+                  smaller request than the one being made. */}
+              This sends us your address, the page you are on and where you came from. It is not an account, there is no
+              password, and the only thing that happens next is that a person may write back. This browser remembers it,
+              so you are not asked again. The offers above stay open to everyone whether you fill this in or not.
+            </p>
+
+            {sendError ? (
+              <div role="alert" className="mt-[var(--s4)] border-t border-border pt-[var(--s2)]">
+                <p className="type-body text-destructive">{sendError}</p>
+                <p className={`mt-[var(--s1)] max-w-[62ch] ${META_PLAIN}`}>
+                  Nobody on our side has your address. You can try again, or read the offers without giving us one —
+                  they are not being kept from you.
+                </p>
+                <button
+                  type="button"
+                  data-testid="button-offers-anyway"
+                  className={`${ACTION_QUIET} mt-[var(--s2)]`}
+                  onClick={() => reveal(email.trim(), false)}
+                >
+                  Show them anyway
+                </button>
+              </div>
+            ) : null}
+          </div>
         </div>
       </section>
     );
   }
 
   return (
-    <section
-      id="more-offers"
-      data-testid="section-gated-offers"
-      className={`max-w-4xl scroll-mt-24 ${className ?? ""}`}
-    >
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-medium uppercase tracking-wide text-primary">The rest of the offers</p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight" data-testid="text-gated-offers-headline">
+    <section id="more-offers" data-testid="section-gated-offers" className={`scroll-mt-24 ${className ?? ""}`}>
+      <div className="grid gap-[var(--s3)] border-t border-border pt-[var(--s3)] lg:grid-cols-[minmax(0,32ch)_minmax(0,1fr)] lg:gap-[var(--s5)]">
+        <div>
+          <p className={META}>The rest of the offers</p>
+          <h2 className={`mt-[var(--s1)] ${HEADING}`} data-testid="text-gated-offers-headline">
             {behindLine.charAt(0).toUpperCase() + behindLine.slice(1)}
           </h2>
-        </div>
-        <button
-          type="button"
-          data-testid="button-offers-hide"
-          className={`${BTN_GHOST} text-muted-foreground`}
-          onClick={() => {
-            forgetAccess();
-            setAccess(null);
-            setEmail("");
-            setSendError(null);
-          }}
-        >
-          Hide these again
-        </button>
-      </div>
-
-      {access.delivered ? null : (
-        <p className="mt-3 text-xs leading-relaxed text-muted-foreground" data-testid="text-offers-not-delivered">
-          Your address never reached us, so nobody on our side has it. If you want an answer,{" "}
-          {OURS.contact ? (
-            <a href={contactHref(OURS.contact)} rel="noopener noreferrer" className="text-foreground hover:underline">
-              {OURS.contactLabel ?? "write to us"}
-            </a>
-          ) : (
-            "write to us"
-          )}
-          .
-        </p>
-      )}
-
-      {/* Ours first. The owner's order, and the only one that is honest: our own
-          work carries our own name, and the company below is not us. */}
-      <div className="mt-8 grid gap-4">
-        {GATED_PRODUCTS.map((product) => (
-          <article
-            key={product.id}
-            data-testid="card-gated-product"
-            className="rounded-lg border border-card-border bg-card p-5 sm:p-6"
+          <button
+            type="button"
+            data-testid="button-offers-hide"
+            className={`${ACTION_QUIET} mt-[var(--s3)]`}
+            onClick={() => {
+              forgetAccess();
+              setAccess(null);
+              setEmail("");
+              setSendError(null);
+            }}
           >
-            <div className="flex items-start gap-4">
-              <div
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-sm font-semibold ${product.tone}`}
-                aria-hidden="true"
+            Hide these again
+          </button>
+        </div>
+
+        <div>
+          {access.delivered ? null : (
+            <p className={`mb-[var(--s4)] max-w-[62ch] ${META_PLAIN}`} data-testid="text-offers-not-delivered">
+              Your address never reached us, so nobody on our side has it. If you want an answer,{" "}
+              {OURS.contact ? (
+                <a href={contactHref(OURS.contact)} rel="noopener noreferrer" className={`${LINK} text-foreground`}>
+                  {OURS.contactLabel ?? "write to us"}
+                </a>
+              ) : (
+                "write to us"
+              )}
+              .
+            </p>
+          )}
+
+          {/* Ours first. The owner's order, and the only one that is honest: our
+              own work carries our own name, and the company below is not us. */}
+          <div>
+            {GATED_PRODUCTS.map((product) => (
+              <article
+                key={product.id}
+                data-testid="card-gated-product"
+                className="border-t border-border py-[var(--s3)] first:border-t-0 first:pt-0"
               >
-                {product.initials}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-base font-semibold sm:text-lg" data-testid="text-gated-product-name">
-                    {product.name}
-                  </h3>
+                <h3 className={HEADING} data-testid="text-gated-product-name">
+                  {product.name}
+                </h3>
+                <p className={`mt-[var(--s1)] ${META}`}>
                   <a
                     href={product.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     data-testid="link-gated-product"
-                    className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
+                    className="draw hover:text-foreground"
                   >
                     {product.domain}
-                    <ExternalLink className="h-3 w-3" />
                   </a>
-                </div>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{product.line}</p>
-              </div>
-            </div>
-
-            <div className="mt-5 border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">
-              <p className="font-medium text-foreground" data-testid="text-gated-product-legal-name">
-                {product.contract.legalName}
-              </p>
-              <p className="mt-0.5">{product.contract.invoiceLine}</p>
-              {product.contract.termsUrl ? (
-                <a
-                  href={product.contract.termsUrl}
-                  rel="noopener noreferrer"
-                  data-testid="link-gated-product-terms"
-                  className="mt-1 inline-flex items-center gap-1 text-foreground hover:underline"
-                >
-                  Terms
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              ) : (
-                <p className="mt-0.5">
-                  {product.contract.legalName} has not published terms for this work yet, and this page will not show
-                  anybody else&rsquo;s.
                 </p>
-              )}
-            </div>
-          </article>
-        ))}
+                <p className={`mt-[var(--s2)] ${READ_MUTED}`}>{product.line}</p>
+                <p className={`mt-[var(--s2)] ${META_PLAIN}`} data-testid="text-gated-product-legal-name">
+                  {product.contract.invoiceLine}{" "}
+                  {product.contract.termsUrl ? (
+                    <a
+                      href={product.contract.termsUrl}
+                      rel="noopener noreferrer"
+                      data-testid="link-gated-product-terms"
+                      className={`${LINK} text-foreground`}
+                    >
+                      Terms
+                    </a>
+                  ) : (
+                    <span>
+                      {product.contract.legalName} has not published terms for this work yet, and this page will not
+                      show anybody else&rsquo;s.
+                    </span>
+                  )}
+                </p>
+              </article>
+            ))}
+          </div>
+
+          <p className={`mt-[var(--s4)] max-w-[62ch] ${READ_MUTED}`}>
+            They act on real LinkedIn accounts, and LinkedIn has rules about that which it enforces. Nothing here says
+            otherwise. If you want what is and is not allowed where you are written down before anything runs, that is
+            the LinkedIn automation door above — a lawyer writes the assessment first, and bills it separately.
+          </p>
+        </div>
       </div>
 
-      <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-        They act on real LinkedIn accounts, and LinkedIn has rules about that which it enforces. Nothing here says
-        otherwise. If you want what is and is not allowed where you are written down before anything runs, that is the
-        LinkedIn automation door above — a lawyer writes the assessment first, and bills it separately.
-      </p>
-
       {GATED_DOORS.length > 0 ? (
-        <div className="mt-12 border-t border-border pt-10">
-          <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Not Top-Rated Team</p>
-          <h3 className="mt-2 text-xl font-semibold tracking-tight" data-testid="text-gated-partner-headline">
-            {theirs === 1 ? "One offer from a different company." : "Offers from different companies."}
-          </h3>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            {theirs === 1 ? "Its own name, its own contract, its own invoice." : "Their own names, contracts and invoices."}{" "}
-            Top-Rated Team is not in that chain and takes no share of it, so if you buy this and something of ours you
-            get two of everything. The card names the company you would be buying from.
-          </p>
-          {/* True for as long as the row is not open: a door that is not live
-              offers a call, and that call is ours. Say so rather than letting a
-              visitor assume the button reaches them. */}
-          {GATED_DOORS.some((door) => door.status !== "live") ? (
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              The call on that card books time with Top-Rated Team, not with them. We would introduce you; we would not
-              be selling it to you.
-            </p>
-          ) : null}
+        <div className="mt-[var(--s5)] grid gap-[var(--s3)] border-t border-border pt-[var(--s3)] lg:grid-cols-[minmax(0,32ch)_minmax(0,1fr)] lg:gap-[var(--s5)]">
+          <div>
+            <p className={META}>Not Top-Rated Team</p>
+            <h3 className={`mt-[var(--s1)] ${HEADING}`} data-testid="text-gated-partner-headline">
+              {theirs === 1 ? "One offer from a different company." : "Offers from different companies."}
+            </h3>
+          </div>
 
-          <div className="mt-6 grid gap-4">
-            {GATED_DOORS.map((door) => (
-              <DoorCard key={door.id} door={door} />
+          <div>
+            <p className={READ_MUTED}>
+              {theirs === 1
+                ? "Its own name, its own contract, its own invoice."
+                : "Their own names, contracts and invoices."}{" "}
+              Top-Rated Team is not in that chain and takes no share of it, so if you buy this and something of ours you
+              get two of everything. The row names the company you would be buying from.
+            </p>
+            {/* True for as long as the row is not open: a door that is not live
+                offers a call, and that call is ours. Say so rather than letting
+                a visitor assume the button reaches them. */}
+            {GATED_DOORS.some((door) => door.status !== "live") ? (
+              <p className={`mt-[var(--s2)] ${READ_MUTED}`}>
+                The call on that page books time with Top-Rated Team, not with them. We would introduce you; we would
+                not be selling it to you.
+              </p>
+            ) : null}
+          </div>
+
+          <div className="lg:col-span-2">
+            {GATED_DOORS.map((door, position) => (
+              <DoorCard key={door.id} door={door} index={PUBLIC_DOORS.length + position + 1} />
             ))}
           </div>
         </div>
       ) : null}
 
-      <p className="mt-8 text-xs leading-relaxed text-muted-foreground">
+      <p className={`mt-[var(--s4)] max-w-[62ch] ${META_PLAIN}`}>
         Remembered in this browser{since ? ` since ${since}` : ""}, so you are not asked again. Clearing your browser
         data clears it, and so does &ldquo;Hide these again&rdquo;.
       </p>

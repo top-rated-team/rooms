@@ -15,6 +15,7 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { DOOR_BY_ID } from "@shared/doors";
 import { deliverLeadRequest, leadInbox, ledgerPath, recordLeadRequest, wasDelivered } from "./notify";
 
 // A ledger of its own, so a test run never touches the real one.
@@ -70,7 +71,11 @@ test("a request survives a webhook that throws", async () => {
   assert.ok(entry, "the request must be listed in the inbox");
   assert.equal(wasDelivered(entry), false, "the inbox must say it reached nobody");
   assert.equal(entry.request.doorId, "chatgpt-ads");
-  assert.equal(entry.request.legalName, "Top-Rated Team s.r.o.", "the door decides which company the request belongs to");
+  assert.equal(
+    entry.request.legalName,
+    DOOR_BY_ID["chatgpt-ads"].contract.legalName,
+    "the door decides which company the request belongs to",
+  );
   assert.equal(entry.request.message, "Purchases counted twice on Shopify.");
 });
 

@@ -1,6 +1,7 @@
-import { TriangleAlert } from "lucide-react";
+import { useState } from "react";
 import type { DoorContract } from "@shared/doors";
 import { cn } from "@/lib/utils";
+import { ACTION_QUIET, CHROME, LABEL, LINK, META } from "@/components/workspace/room-style";
 
 /* ---------------------------------------------------------------------------
  * The room's legal identity: which company is answerable for what happens here,
@@ -18,6 +19,12 @@ import { cn } from "@/lib/utils";
  * rendering nothing or borrowing ours. A door with no terms of its own shows
  * that it has none — never the terms of the company next to it.
  *
+ * WHAT THE RESTYLE DID TO IT. The block lost its card and its warning triangle
+ * and got bigger, not smaller: the line naming the company moved up from 11px
+ * to the chrome size, and the fault state now opens with the word FAULT in the
+ * one colour left in this room. A restyle that made this harder to notice would
+ * have been a worse room, not a quieter one.
+ *
  * This is design, not legal advice.
  * ------------------------------------------------------------------------- */
 
@@ -30,20 +37,24 @@ export interface RoomFooterProps {
   className?: string;
 }
 
+/** Long enough that it would push the invoice line and the terms out of sight. */
+const ENTITY_CLAMP = 180;
+
 export function RoomFooter({ contract, className }: RoomFooterProps) {
+  const [entityOpen, setEntityOpen] = useState(false);
   const legalName = contract?.legalName?.trim() ?? "";
+  const entity = contract?.entity?.trim() ?? "";
+  const entityLong = entity.length > ENTITY_CLAMP;
 
   if (!legalName) {
     // A room with no name behind it is a fault, not a tidy default, and the
     // person reading it is the one who needs to know.
     return (
-      <div className={cn("border-t border-card-border px-3 py-3", className)} data-testid="room-footer-missing">
-        <p className="flex items-start gap-2 text-[11px] leading-4 text-destructive">
-          <TriangleAlert className="mt-px h-3.5 w-3.5 shrink-0" />
-          <span>
-            This room is not saying which company is answerable for it. That is a fault in the room. Until it is fixed,
-            nothing here is an offer.
-          </span>
+      <div className={cn("border-t border-border px-4 py-4", className)} data-testid="room-footer-missing">
+        <p className={cn(LABEL, "text-destructive")}>Fault</p>
+        <p className={cn(CHROME, "mt-1.5 text-destructive")}>
+          This room is not saying which company is answerable for it. That is a fault in the room. Until it is fixed,
+          nothing here is an offer.
         </p>
       </div>
     );
@@ -57,46 +68,54 @@ export function RoomFooter({ contract, className }: RoomFooterProps) {
   const contactText = contract.contactLabel ?? (isEmail ? `Write to ${address}` : "Write to them");
 
   return (
-    <div className={cn("border-t border-card-border px-3 py-3", className)} data-testid="room-footer">
-      <h2 className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">This room</h2>
+    <div className={cn("border-t border-border px-4 py-4", className)} data-testid="room-footer">
+      <h2 className={LABEL}>This room</h2>
 
-      <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
+      <p className={cn(CHROME, "mt-1.5 text-muted-foreground")}>
         <span className="font-medium text-foreground" data-testid="text-room-legal-name">
           {legalName}
         </span>{" "}
         is answerable for this room.
       </p>
 
-      {contract.entity ? (
-        <p className="mt-1 text-[11px] leading-4 text-muted-foreground">{contract.entity}</p>
+      {entity ? (
+        <>
+          <p className={cn(META, "mt-1.5 text-muted-foreground", entityLong && !entityOpen && "line-clamp-2")}>
+            {entity}
+          </p>
+          {entityLong ? (
+            <button type="button" onClick={() => setEntityOpen((v) => !v)} className={cn(ACTION_QUIET, "mt-1")}>
+              {entityOpen ? "Less" : "More"}
+            </button>
+          ) : null}
+        </>
       ) : null}
 
       {contract.invoiceLine ? (
-        <p className="mt-1 text-[11px] leading-4 text-muted-foreground" data-testid="text-room-invoice-line">
+        <p className={cn(META, "mt-1.5 text-muted-foreground")} data-testid="text-room-invoice-line">
           {contract.invoiceLine}
         </p>
       ) : null}
 
       {termsUrl || contactHref ? (
-        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-4">
+        <p className={cn(META, "mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1")}>
           {termsUrl ? (
             <a
               href={termsUrl}
               target={externalTerms ? "_blank" : undefined}
               rel={externalTerms ? "noreferrer" : undefined}
-              className="rounded underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className={LINK}
               data-testid="link-room-terms"
             >
               Their terms
             </a>
           ) : null}
-          {termsUrl && contactHref ? <span className="text-muted-foreground">·</span> : null}
           {contactHref ? (
             <a
               href={contactHref}
               target={isEmail ? undefined : "_blank"}
               rel={isEmail ? undefined : "noreferrer"}
-              className="rounded underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className={LINK}
               data-testid="link-room-contact"
             >
               {contactText}
@@ -107,20 +126,20 @@ export function RoomFooter({ contract, className }: RoomFooterProps) {
 
       {/* Never fall back to the terms of the company next door. */}
       {termsUrl ? null : (
-        <p className="mt-1 text-[11px] leading-4 text-destructive" data-testid="text-room-terms-missing">
-          {legalName} has not published terms for this work yet, and this room will not show anybody else's. Nothing
-          here is an offer until it does.
+        <p className={cn(CHROME, "mt-2 text-destructive")} data-testid="text-room-terms-missing">
+          {legalName} has not published terms for this work yet, and this room will not show anybody else&apos;s.
+          Nothing here is an offer until it does.
         </p>
       )}
 
       {contactHref ? null : (
-        <p className="mt-1 text-[11px] leading-4 text-muted-foreground" data-testid="text-room-contact-missing">
+        <p className={cn(META, "mt-1.5 text-muted-foreground")} data-testid="text-room-contact-missing">
           There is no address on file for writing to {legalName} about this room.
         </p>
       )}
 
       {/* The other half of "who is behind this": who can read it. */}
-      <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
+      <p className={cn(META, "mt-3 text-muted-foreground")}>
         Private. The link is the only way in. Nothing here is public.
       </p>
     </div>

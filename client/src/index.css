@@ -1,119 +1,173 @@
+/* The two faces the scale is drawn for. Outfit sets the display and the
+ * metadata; Newsreader sets everything a person actually reads. Both fall back
+ * to faces that are already here — Inter is loaded by client/index.html, and
+ * Georgia is on every machine — so a blocked font request costs the texture and
+ * nothing else. */
+@import url("https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Outfit:wght@400;500;600&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ============================================================================
- * Brand tokens lifted verbatim from https://top-rated.team (light + dark).
- * Do not drift: this section is what makes ai.top-rated.team read as one site
- * with the main domain. If the main site retunes its palette, re-copy here.
+ * THE SCALE. Three text sizes, one spacing scale, one accent, no blue.
+ *
+ * Lifted from the quiet-studio concept: warm paper rather than pure white, ink
+ * rather than near-black, one clay accent, and three text sizes where this site
+ * used ten. The token NAMES are the ones the rest of the repository already
+ * reads — --background, --foreground, --primary, --muted-foreground and the
+ * rest — so retuning the site is a change to these values and to nothing else.
+ * Nobody has to edit a component to lose the blue.
+ *
+ * Dark mode is the same tokens with different values, and nothing under .dark
+ * introduces a name that light does not have.
  * ========================================================================== */
 
 :root {
-  --button-outline: rgba(0, 0, 0, 0.1);
-  --badge-outline: rgba(0, 0, 0, 0.05);
-  --opaque-button-border-intensity: -8;
-  --elevate-1: rgba(0, 0, 0, 0.03);
-  --elevate-2: rgba(0, 0, 0, 0.08);
+  /* --- the three sizes. There is no fourth. --------------------------------
+   * display  — the one big line on a page
+   * body     — everything a person reads, set in the serif
+   * meta     — labels, captions, the company that sends the invoice
+   */
+  --type-display: clamp(2.5rem, 1.1rem + 4.6vw, 4.25rem);
+  --type-body: 1.1875rem;
+  --type-meta: 0.8125rem;
 
-  --background: 0 0% 100%;
-  --foreground: 220 15% 15%;
-  --border: 220 10% 90%;
-  --input: 220 10% 80%;
-  --ring: 217 91% 55%;
+  --leading-display: 0.98;
+  --leading-body: 1.62;
+  --leading-meta: 1.5;
+  --tracking-display: -0.035em;
+  --tracking-meta: 0.09em;
 
-  --card: 220 15% 98%;
-  --card-foreground: 220 15% 15%;
-  --card-border: 220 10% 92%;
+  /* --- spacing. Six steps and a page width. ------------------------------- */
+  --s1: 0.5rem;
+  --s2: 1rem;
+  --s3: 1.75rem;
+  --s4: 3rem;
+  --s5: 5rem;
+  --s6: 8rem;
+  --page: 74rem;
 
-  --popover: 0 0% 100%;
-  --popover-foreground: 220 15% 15%;
-  --popover-border: 220 10% 90%;
-
-  --primary: 217 91% 55%;
-  --primary-foreground: 0 0% 100%;
-
-  --secondary: 220 15% 95%;
-  --secondary-foreground: 220 15% 20%;
-
-  --muted: 220 10% 94%;
-  --muted-foreground: 220 10% 40%;
-
-  --accent: 145 65% 42%;
-  --accent-foreground: 0 0% 100%;
-
-  --destructive: 0 72% 50%;
-  --destructive-foreground: 0 0% 100%;
-
-  --chart-1: 217 91% 55%;
-  --chart-2: 145 65% 42%;
-  --chart-3: 35 95% 55%;
-  --chart-4: 280 70% 50%;
-  --chart-5: 340 82% 52%;
-
-  --sidebar: 220 15% 97%;
-  --sidebar-foreground: 220 15% 15%;
-  --sidebar-border: 220 10% 90%;
-  --sidebar-primary: 217 91% 55%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 15% 93%;
-  --sidebar-accent-foreground: 220 15% 15%;
-  --sidebar-ring: 217 91% 55%;
-
-  --font-sans: "Inter", "Segoe UI", sans-serif;
+  --font-sans: "Outfit", "Inter", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-read: "Newsreader", Georgia, "Times New Roman", serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --radius: 0.5rem;
+
+  /* --- interaction overlays: a tint derived from the ground rather than a
+   * hand-picked hover colour. ---------------------------------------------- */
+  --button-outline: rgba(28, 24, 19, 0.1);
+  --badge-outline: rgba(28, 24, 19, 0.05);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(28, 24, 19, 0.035);
+  --elevate-2: rgba(28, 24, 19, 0.08);
+
+  /* --- paper and ink ------------------------------------------------------ */
+  --background: 40 38% 92%;
+  --foreground: 33 19% 9%;
+  --border: 38 23% 77%;
+  --input: 38 23% 77%;
+  --ring: 16 70% 36%;
+
+  /* The sunk band, and every surface that used to be a card. */
+  --card: 40 33% 88%;
+  --card-foreground: 33 19% 9%;
+  --card-border: 38 26% 84%;
+
+  --popover: 40 45% 96%;
+  --popover-foreground: 33 19% 9%;
+  --popover-border: 38 23% 77%;
+
+  /* The one accent. It is clay, it is used sparingly, and it is the only
+   * colour on the site that is neither paper nor ink. */
+  --primary: 16 70% 36%;
+  --primary-foreground: 40 48% 94%;
+
+  --secondary: 40 33% 88%;
+  --secondary-foreground: 33 19% 9%;
+
+  --muted: 40 33% 88%;
+  --muted-foreground: 33 11% 38%;
+
+  /* Same clay. The old value was a second accent — a green — and a site with
+   * one accent does not have a spare. */
+  --accent: 16 70% 36%;
+  --accent-foreground: 40 48% 94%;
+
+  /* Errors keep a red, because an error that reads as decoration is worse than
+   * an ugly one. Warmed so it belongs to this palette, and kept far enough
+   * round the wheel from the clay to be told apart from it. */
+  --destructive: 2 68% 42%;
+  --destructive-foreground: 40 48% 94%;
+
+  /* The five door tones. They were blue, green, orange, purple and pink; they
+   * are now five readings of the same warm ink, so a list of doors is a list
+   * rather than a paint chart. */
+  --chart-1: 16 45% 38%;
+  --chart-2: 95 15% 32%;
+  --chart-3: 33 30% 36%;
+  --chart-4: 12 18% 42%;
+  --chart-5: 48 22% 33%;
+
+  --sidebar: 40 33% 90%;
+  --sidebar-foreground: 33 19% 9%;
+  --sidebar-border: 38 23% 77%;
+  --sidebar-primary: 16 70% 36%;
+  --sidebar-primary-foreground: 40 48% 94%;
+  --sidebar-accent: 40 30% 85%;
+  --sidebar-accent-foreground: 33 19% 9%;
+  --sidebar-ring: 16 70% 36%;
 }
 
 .dark {
-  --button-outline: rgba(255, 255, 255, 0.1);
-  --badge-outline: rgba(255, 255, 255, 0.05);
+  --button-outline: rgba(236, 228, 214, 0.1);
+  --badge-outline: rgba(236, 228, 214, 0.05);
   --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255, 255, 255, 0.04);
-  --elevate-2: rgba(255, 255, 255, 0.09);
+  --elevate-1: rgba(236, 228, 214, 0.04);
+  --elevate-2: rgba(236, 228, 214, 0.09);
 
-  --background: 220 20% 8%;
-  --foreground: 220 10% 95%;
-  --border: 220 15% 18%;
-  --input: 220 15% 25%;
-  --ring: 217 91% 60%;
+  --background: 34 20% 7%;
+  --foreground: 38 37% 88%;
+  --border: 35 20% 17%;
+  --input: 35 20% 17%;
+  --ring: 19 63% 60%;
 
-  --card: 220 18% 11%;
-  --card-foreground: 220 10% 95%;
-  --card-border: 220 15% 15%;
+  --card: 36 21% 9%;
+  --card-foreground: 38 37% 88%;
+  --card-border: 34 22% 13%;
 
-  --popover: 220 18% 12%;
-  --popover-foreground: 220 10% 95%;
-  --popover-border: 220 15% 16%;
+  --popover: 36 21% 11%;
+  --popover-foreground: 38 37% 88%;
+  --popover-border: 35 20% 17%;
 
-  --primary: 217 91% 60%;
-  --primary-foreground: 0 0% 100%;
+  --primary: 19 63% 60%;
+  --primary-foreground: 34 20% 7%;
 
-  --secondary: 220 15% 16%;
-  --secondary-foreground: 220 10% 95%;
+  --secondary: 36 21% 13%;
+  --secondary-foreground: 38 37% 88%;
 
-  --muted: 220 12% 15%;
-  --muted-foreground: 220 10% 60%;
+  --muted: 36 21% 12%;
+  --muted-foreground: 34 11% 57%;
 
-  --accent: 145 60% 45%;
-  --accent-foreground: 0 0% 100%;
+  --accent: 19 63% 60%;
+  --accent-foreground: 34 20% 7%;
 
-  --destructive: 0 65% 45%;
-  --destructive-foreground: 0 0% 100%;
+  --destructive: 2 62% 52%;
+  --destructive-foreground: 34 20% 7%;
 
-  --chart-1: 217 91% 65%;
-  --chart-2: 145 60% 55%;
-  --chart-3: 35 95% 60%;
-  --chart-4: 280 70% 60%;
-  --chart-5: 340 82% 60%;
+  --chart-1: 19 55% 62%;
+  --chart-2: 95 18% 58%;
+  --chart-3: 33 32% 60%;
+  --chart-4: 12 25% 64%;
+  --chart-5: 48 24% 58%;
 
-  --sidebar: 220 18% 10%;
-  --sidebar-foreground: 220 10% 95%;
-  --sidebar-border: 220 15% 15%;
-  --sidebar-primary: 217 91% 60%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 15% 16%;
-  --sidebar-accent-foreground: 220 10% 95%;
-  --sidebar-ring: 217 91% 60%;
+  --sidebar: 36 21% 8%;
+  --sidebar-foreground: 38 37% 88%;
+  --sidebar-border: 34 22% 13%;
+  --sidebar-primary: 19 63% 60%;
+  --sidebar-primary-foreground: 34 20% 7%;
+  --sidebar-accent: 36 21% 13%;
+  --sidebar-accent-foreground: 38 37% 88%;
+  --sidebar-ring: 19 63% 60%;
 }
 
 /* Opaque button borders are derived from their fill, one notch darker (light)
@@ -241,4 +295,240 @@
   .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
   }
+}
+
+/* ============================================================================
+ * THE THREE SIZES, AS CLASSES
+ *
+ * Deliberately plain CSS rather than @layer utilities: these are the site's
+ * vocabulary and they belong in the stylesheet whether or not Tailwind's
+ * scanner has seen them used yet.
+ * ========================================================================== */
+
+.type-display {
+  font-family: var(--font-sans);
+  font-size: var(--type-display);
+  font-weight: 500;
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  text-wrap: balance;
+}
+
+.type-body {
+  font-family: var(--font-read);
+  font-size: var(--type-body);
+  font-weight: 400;
+  line-height: var(--leading-body);
+  letter-spacing: 0;
+}
+
+/* Small caps for labels, captions and the company that sends the invoice. */
+.type-meta {
+  font-family: var(--font-sans);
+  font-size: var(--type-meta);
+  font-weight: 400;
+  line-height: var(--leading-meta);
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+}
+
+/* The same size without the shouting, for a sentence rather than a label. */
+.type-note {
+  font-family: var(--font-sans);
+  font-size: var(--type-meta);
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+.font-read {
+  font-family: var(--font-read);
+}
+
+/* The display face on something that is not a heading tag — a name in the
+ * index, the label above a case. Declared after .type-body on purpose: the two
+ * are used together, and the later of two equal rules is the one that wins, so
+ * this is what makes "reading size, display face" expressible at all. */
+.font-display {
+  font-family: var(--font-sans);
+}
+
+/* The only link decoration on the site: a rule that draws itself under the
+ * words rather than a colour that shouts before it is read. */
+.draw {
+  color: inherit;
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+  padding-bottom: 1px;
+  transition: background-size 0.38s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.draw:hover,
+.draw:focus-visible {
+  background-size: 100% 1px;
+}
+
+/* Where a link has to be visible before anyone hovers it — the one way into the
+ * room, and the two in the footer — the rule is already drawn. */
+.draw-on {
+  background-size: 100% 1px;
+}
+.draw-on:hover,
+.draw-on:focus-visible {
+  background-size: 0% 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draw,
+  .draw-on {
+    transition-duration: 0.001ms;
+  }
+}
+
+/* ============================================================================
+ * ONE SCALE FOR THE WHOLE SITE, NOT ONLY FOR THE PAGES THAT WERE REWRITTEN
+ *
+ * The research counted ten distinct text sizes across client/src/components/site
+ * and client/src/pages. Rewriting three files removes some of them; the rest
+ * live in components other people own and would drift back the first time
+ * somebody typed text-3xl out of habit.
+ *
+ * So the ten Tailwind sizes are mapped onto the three that exist. A page keeps
+ * whatever class it has and lands on the right size anyway:
+ *
+ *   text-3xl / 4xl / 5xl / 6xl  ->  display
+ *   text-base / lg / xl / 2xl   ->  body
+ *   text-sm / text-xs           ->  meta
+ *
+ * Scoped, through :has(), to pages carrying the site header. The workspace is an
+ * application rather than a page — its own rails, its own density — and it is
+ * deliberately left on Tailwind's scale. If :has() ever fails, none of these
+ * rules applies and the site renders at Tailwind's sizes: plainer, never
+ * broken.
+ * ========================================================================== */
+
+:root:has([data-site-chrome]) .text-6xl,
+:root:has([data-site-chrome]) .text-5xl,
+:root:has([data-site-chrome]) .text-4xl,
+:root:has([data-site-chrome]) .text-3xl {
+  font-size: var(--type-display);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+}
+
+:root:has([data-site-chrome]) .text-2xl,
+:root:has([data-site-chrome]) .text-xl,
+:root:has([data-site-chrome]) .text-lg,
+:root:has([data-site-chrome]) .text-base {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
+/* Anything with no size class at all — the root font size the browser hands
+ * out, which is where a stray fourth size creeps back in — is the reading
+ * size, since on these pages that is what an unmarked run of text is. */
+:root:has([data-site-chrome]) body {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
+:root:has([data-site-chrome]) .text-sm,
+:root:has([data-site-chrome]) .text-xs {
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+/* Prose is the streamed answer. It arrives as markdown at whatever size the
+ * typography plugin picked; on a site page it is the thing being read, so it is
+ * set at the reading size like everything else. */
+:root:has([data-site-chrome]) .prose-sm {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
+/* What a person reads is set in the serif; what they operate — buttons, fields,
+ * labels, headings — stays on the display sans. Site pages only. */
+:root:has([data-site-chrome]) :is(p, li, dd, blockquote, figcaption) {
+  font-family: var(--font-read);
+}
+
+/* ============================================================================
+ * THE PANEL, OUT OF ITS BOX
+ *
+ * AskWidget still renders as a card — border, shadow, padding, bordered starter
+ * chips, bordered citations — because it is somebody else's file and every
+ * other page still wants it that way. Inside the home page's band it is
+ * unwrapped: the band is already a surface, and a card inside a band is two
+ * boxes saying the same thing.
+ *
+ * Every rule here is addressed by data-testid, which is that component's stable
+ * hook. If those change, the panel keeps its own chrome and the page is plainer
+ * than intended rather than broken. Delete this block the day AskWidget stops
+ * drawing a card of its own.
+ * ========================================================================== */
+
+.home-panel [data-testid="widget-ask"] {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* The four questions: a list with hairlines, not a tray of pills. */
+.home-panel div:has(> [data-testid="button-ask-starter"]) {
+  display: block;
+}
+.home-panel [data-testid="button-ask-starter"] {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+  border-radius: 0;
+  background: none;
+  padding: var(--s2) 0;
+  font-family: var(--font-read);
+  font-size: var(--type-body);
+  line-height: 1.45;
+  color: hsl(var(--foreground));
+}
+.home-panel [data-testid="button-ask-starter"]:last-of-type {
+  border-bottom: 1px solid hsl(var(--border));
+}
+.home-panel [data-testid="button-ask-starter"]:hover {
+  color: hsl(var(--primary));
+}
+
+/* A citation is a source, not a chip. */
+.home-panel [data-testid="link-ask-citation"] {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: 0 var(--s2) 0 0;
+}
+
+/* The composer is a rule to write on, not a box to fill in. */
+.home-panel [data-testid="input-ask-question"] {
+  border: 0;
+  border-bottom: 1px solid hsl(var(--foreground));
+  border-radius: 0;
+  background: none;
+  padding-left: 0;
+  padding-right: 0;
+  font-family: var(--font-read);
+  font-size: var(--type-body);
+  line-height: 1.5;
+}
+
+/* "4 more" sits under the list as a note, not as a fifth button in the tray. */
+.home-panel div:has(> [data-testid="button-ask-starter"]) > button:not([data-testid="button-ask-starter"]) {
+  margin-top: var(--s2);
+  padding-left: 0;
+  font-family: var(--font-sans);
+  font-size: var(--type-meta);
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
 }

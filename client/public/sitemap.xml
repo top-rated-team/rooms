@@ -12,9 +12,8 @@
   than edited. See docs/DEPLOY.md for the domain, and the handoff about a
   build-time generator.
 
-  /work/chatgpt-ads is absent because that row's `path` is "/" and /work/<slug>
-  redirects there: one page, one URL, no duplicate for a crawler to choose
-  between.
+  / is the index of every public door. /work/chatgpt-ads is the door itself —
+  the argument for conversion tracking that used to be the home page.
 
   Two kinds of address are absent on purpose.
 
@@ -39,6 +38,11 @@
   <url>
     <loc>https://ai.top-rated.team/work</loc>
     <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ai.top-rated.team/work/chatgpt-ads</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>

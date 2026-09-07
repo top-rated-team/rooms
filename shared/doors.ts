@@ -38,7 +38,10 @@ export const DOOR_TIERS: Record<DoorTier, DoorTierDef> = {
   white: {
     id: "white",
     label: "Ours end to end",
-    meaning: "Top-Rated Team signs the contract, sends the invoice and answers for the work.",
+    // Deliberately not a restatement of `invoiceLine`: the two are printed one
+    // under the other on the door page, and a page that says the same sentence
+    // twice has said it less than once.
+    meaning: "Nobody else is in this one. One company, one contract, one invoice, and one place to take a complaint.",
   },
   "light-grey": {
     id: "light-grey",
@@ -78,6 +81,24 @@ export interface DoorContract {
   contactLabel?: string;
 }
 
+/**
+ * A tool of ours the door runs on, named on the door and on its row.
+ *
+ * A buyer deciding between suppliers is entitled to know which half of the work
+ * is software and which half is a person, and to see the software under its own
+ * name rather than as "our proprietary platform". Only one exists today —
+ * adgrant.ai — and it appears on the two doors it is true of, because a tool
+ * named on a door it has nothing to do with is an advertisement.
+ */
+export interface DoorTool {
+  /** What it is called, as it is called on its own site. */
+  name: string;
+  /** Where it lives. */
+  href: string;
+  /** What it does and where it stops, in the buyer's words. */
+  line: string;
+}
+
 export interface DoorDef {
   id: string;
   /** URL segment: /work/<slug>. Also the value handed to the room as its source door. */
@@ -98,6 +119,8 @@ export interface DoorDef {
   agentLine: string;
   /** At least four. The panel prints the first four and hides the rest behind "N more" — eight on a card is a menu, and a menu is read by nobody. */
   starters: string[];
+  /** A tool of ours this door runs on, where one exists. Most doors are people and have none. */
+  tool?: DoorTool;
   contract: DoorContract;
   tier: DoorTier;
   status: DoorStatus;
@@ -122,10 +145,10 @@ export interface DoorDef {
 
 /** Doors 1-5 and 7. One company, one contract, one invoice. */
 const TOP_RATED_TEAM: DoorContract = {
-  legalName: "Top-Rated Team s.r.o.",
+  legalName: "Top-Rated Team (Danylo Burykin SZČO)",
   entity: "The company that runs top-rated.team, with people in Prague, Kyiv and Madeira.",
   termsUrl: `${MAIN_SITE_URL}/terms`,
-  invoiceLine: "Top-Rated Team s.r.o. signs the contract and sends the invoice.",
+  invoiceLine: "Top-Rated Team (Danylo Burykin SZČO) signs the contract and sends the invoice.",
   contact: `${MAIN_SITE_URL}/contact`,
   contactLabel: "Write to Top-Rated Team",
 };
@@ -134,8 +157,11 @@ export const DOORS: DoorDef[] = [
   {
     id: "chatgpt-ads",
     slug: "chatgpt-ads",
-    // The one door that already exists: it is the landing page this site was built as.
-    path: "/",
+    /* This row used to say "/" — it was the landing page the site was built as.
+     * The home page is now the landing for every door, so this one answers on
+     * its own address like the other six and carries the conversion-tracking
+     * pitch that used to be the home page. */
+    path: "/work/chatgpt-ads",
     initials: "CA",
     tone: "bg-primary/10 text-primary",
     headline: "Conversion tracking for ChatGPT Ads",
@@ -177,7 +203,16 @@ export const DOORS: DoorDef[] = [
       "How do I structure a $3K/month B2B SaaS account?",
       "Our CPA doubled after a bidding change — how do we diagnose it?",
       "We spend $30K a month and still cannot say which campaigns pay. Where would you start?",
+      // The one question that sends a visitor to the door next to this one.
+      "We are a nonprofit with a $10k Ad Grant. Is that the same work as a paid account?",
     ],
+    // Named here as well as on the Ad Grants door, and named with its limit:
+    // this door is mostly paid accounts, where the tool has no part to play.
+    tool: {
+      name: "AdGrant.AI",
+      href: "https://adgrant.ai",
+      line: "Our own tool, and it is for Google Ad Grants accounts rather than paid ones. It reads a nonprofit's website and writes campaigns, ad groups, keywords, ads and extensions into their own Google Ads account through the official Google Ads API. On a paid account it has no part to play: a paid account is bid on, not generated. If you are a nonprofit, the Ad Grants door is the one to read.",
+    },
     contract: TOP_RATED_TEAM,
     tier: "white",
     status: "live",
@@ -204,12 +239,19 @@ export const DOORS: DoorDef[] = [
       "We report on donations and volunteer sign-ups, not clicks. Can you set that tracking up?",
       "After the setup, who runs the account each month — your team or the software?",
     ],
+    // The automated half of this door, under its own name. The other half is a
+    // person, and the line says where one stops and the other starts.
+    tool: {
+      name: "AdGrant.AI",
+      href: "https://adgrant.ai",
+      line: "Our own tool, and the automated half of this door. It reads your website and writes campaigns, ad groups, keywords, ads and extensions into your own Google Ads account through the official Google Ads API, under a manager-account link you can remove. It is not signed in as you, and it does not run the account afterwards — the conversion tracking and the month-to-month work are a person, on the same contract.",
+    },
     contract: {
       ...TOP_RATED_TEAM,
       // Only the entity line moves: the tool is ours and so are the hours after
       // it, so this door stays one contract and one invoice.
       entity:
-        "The company that runs top-rated.team. Ad Grants setup runs on our own tool, adgrant.ai, which writes through the official Google Ads API under a manager-account link you can remove; the management and the conversion tracking after it are our own people, on the same contract.",
+        "The company that runs top-rated.team. The Ad Grants setup runs on our own tool, adgrant.ai; the management and the conversion tracking after it are our own people, on the same contract, so this door is one contract and one invoice either way.",
     },
     tier: "white",
     status: "live",
@@ -258,12 +300,12 @@ export const DOORS: DoorDef[] = [
       "Can this be built against the official LinkedIn API instead of a browser session?",
     ],
     contract: {
-      legalName: "Top-Rated Team s.r.o.",
+      legalName: "Top-Rated Team (Danylo Burykin SZČO)",
       entity:
         "The company that runs top-rated.team. The written assessment is not ours: it comes from a qualified lawyer, on the lawyer's own paper.",
       termsUrl: `${MAIN_SITE_URL}/terms`,
       invoiceLine:
-        "Top-Rated Team s.r.o. invoices the build. The lawyer invoices the assessment separately, and we do not mark it up.",
+        "Top-Rated Team (Danylo Burykin SZČO) invoices the build. The lawyer invoices the assessment separately, and we do not mark it up.",
       contact: `${MAIN_SITE_URL}/contact`,
       contactLabel: "Write to Top-Rated Team",
     },

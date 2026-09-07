@@ -88,11 +88,16 @@ docs/                             doors, deployment, build spec, brand reference
 
 ## Brand
 
-`client/src/index.css` carries top-rated.team's design tokens copied verbatim, light
-and dark, along with its `hover-elevate` interaction system. The header and footer are
-reproductions of the production markup — see `docs/REFERENCE-HEADER-FOOTER.md`. If the
-main site retunes its palette or nav, re-copy rather than approximating: the whole
-point is that this reads as one site.
+`client/src/index.css` carries this site's own tokens, light and dark: warm paper,
+one clay accent, three type sizes and one spacing scale. They used to be a verbatim
+copy of top-rated.team's palette and are not any more — **re-copying that palette
+would put the blue back**, which is the one thing this design does not have.
+
+The logo is the exception and the only blue left on the page, kept deliberately.
+
+`docs/REFERENCE-HEADER-FOOTER.md` documents the ten-link header and the seventeen-link
+footer this round replaced. It is kept as a record of what was there, not as markup to
+copy: following it would restore everything that was removed, including "FREE leads".
 
 ## Security notes
 
