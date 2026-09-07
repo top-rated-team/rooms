@@ -20,6 +20,12 @@ import { countWord, firstSentence } from "@/components/site/home/doorText";
  *
  * A row links to its door only when the row says that door has a page.
  *
+ * It lists PUBLIC_DOORS, not DOORS — which is also why the paragraph above the
+ * table cannot claim that one of these rows belongs to another company. Every
+ * public row is invoiced by us; the only row that is not is the gated one, and
+ * it is not on this page. Saying otherwise here would be a disclosure about
+ * something the visitor cannot see.
+ *
  * It lists PUBLIC_DOORS, not DOORS. The tier rule in GatedOffers.tsx is the only
  * place the split may be decided, and this page is open to anyone: printing the
  * grey row here would name the partner and their offer on the front page, which
@@ -44,8 +50,9 @@ export function DoorIndex() {
           {countWord(PUBLIC_DOORS.length).replace(/^./, (c) => c.toUpperCase())} things, and who sends the invoice for each.
         </h2>
         <p className="type-body m-0 text-muted-foreground">
-          Whoever sets the price is the seller. One of these is delivered by an entirely different company, under its own
-          contract and its own invoice, and we take no share of it. It says so here rather than in a footnote.
+          Whoever sets the price is the seller, so every row says which company would send the invoice — before you pick
+          one, rather than in a footnote afterwards. On this page that is the same company six times. Some work is
+          delivered by a different company entirely, under its own contract; where that is true the row says so.
         </p>
       </div>
 
