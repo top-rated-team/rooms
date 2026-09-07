@@ -498,7 +498,34 @@ const AI_BUILDS: Corpus = {
   ],
 };
 
-const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS, LINKEDIN_AUTOMATION, AI_BUILDS];
+/**
+ * Our own Ad Grants material, not Google's. Case studies, templates, tricks,
+ * vertical pages and what the tool on adgrant.ai actually takes. The ad-grants
+ * corpus above is support.google.com; putting this in that file would let the
+ * agent cite our practice as Google's rule.
+ *
+ * `extractArticleBody` does not yet know this host, so `kb:fetch` leaves
+ * data/kb/kb.adgrant-ai.json untouched — the hand-written file on disk. The
+ * URL list is the registry of what that file is for.
+ */
+const ADGRANT_AI: Corpus = {
+  namespace: "adgrant-ai",
+  file: "kb.adgrant-ai.json",
+  label: "AdGrant.AI — our own Ad Grants material (adgrant.ai), not Google's documentation",
+  htmlPages: [
+    { title: "AdGrant.AI", url: "https://adgrant.ai/" },
+    { title: "Ad Grant Glossary", url: "https://adgrant.ai/glossary" },
+    { title: "Case Studies", url: "https://adgrant.ai/case-studies" },
+    { title: "Tips & Tricks", url: "https://adgrant.ai/tricks" },
+    { title: "Starter Templates", url: "https://adgrant.ai/templates" },
+    { title: "Nonprofit verticals", url: "https://adgrant.ai/nonprofits" },
+    { title: "How a Homeless Shelter Structures Its Google Ad Grant Account", url: "https://adgrant.ai/case-studies/homeless-shelter-google-ad-grant-structure" },
+    { title: "Avoid Account Suspension from the Google Ad Grant 5% CTR Rule", url: "https://adgrant.ai/tricks/avoid-account-suspension-google-ad-grant-5-percent-ctr-rule" },
+    { title: "Maximize Conversions Bidding for Google Ad Grants Explained", url: "https://adgrant.ai/glossary/maximize-conversions-bidding-google-ad-grants" },
+  ],
+};
+
+const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS, LINKEDIN_AUTOMATION, AI_BUILDS, ADGRANT_AI];
 /* -------------------------------- chunking -------------------------------- */
 
 const TARGET_CHARS = 1200;

@@ -6,7 +6,7 @@ import { BOOK_A_CALL_URL } from "@shared/roster";
 import DoorCard from "@/components/site/DoorCard";
 import { ACTION_QUIET, DISPLAY, LINK, META, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
 import Footer from "@/components/site/Footer";
-import GatedOffers, { PUBLIC_DOORS, countWord } from "@/components/site/GatedOffers";
+import GatedOffers, { LISTED_DOORS, PUBLIC_DOORS, countWord } from "@/components/site/GatedOffers";
 import Header from "@/components/site/Header";
 import { collectSource } from "@/components/site/LeadDialog";
 
@@ -123,7 +123,7 @@ export function Doors() {
           </div>
 
           <div>
-            {PUBLIC_DOORS.map((door, position) => (
+            {LISTED_DOORS.map((door, position) => (
               <DoorCard key={door.id} door={door} index={position + 1} />
             ))}
           </div>

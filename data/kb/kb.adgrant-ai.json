@@ -1,0 +1,133 @@
+{
+ "namespace": "adgrant-ai",
+ "builtAt": "2026-09-07T15:00:00.000Z",
+ "documents": 9,
+ "chunks": [
+  {
+   "id": "adgrant.ai#0",
+   "title": "AdGrant.AI",
+   "url": "https://adgrant.ai/",
+   "heading": "AdGrant.AI > What the tool takes",
+   "text": "AdGrant.AI is a working tool. It needs a Google Ad Grant the nonprofit already holds. If you have not yet secured a Google Ad Grant, the page offers to request assistance. The form takes a website URL and a 10-digit Google Ads Customer ID. The website URL must be authorised as the nonprofit domain on the grant account; all subdomains are included by default, and you can add another domain. The Customer ID is the number in the top right corner of Google Ads, written 123-456-7890."
+  },
+  {
+   "id": "adgrant.ai#1",
+   "title": "AdGrant.AI",
+   "url": "https://adgrant.ai/",
+   "heading": "AdGrant.AI > LinkedIn sign-in",
+   "text": "You can send a LinkedIn message with your Customer ID, or sign in with LinkedIn. Sign-in is used only to limit free generations: the page's own words are that it only uses your profile URL. There is a language picker and a location picker. By submitting the form you agree to the Privacy Policy and Terms of Service."
+  },
+  {
+   "id": "adgrant.ai#2",
+   "title": "AdGrant.AI",
+   "url": "https://adgrant.ai/",
+   "heading": "AdGrant.AI > Manager account invitation and review",
+   "text": "Google will send an invitation to connect on behalf of Top-Rated Team MCC. You can ignore it if you use a manual upload for the generated account structure. The tool writes campaigns, ad groups, keywords, ads and extensions. The generated structure can be reviewed before anything runs in the account. AdGrant.AI is not affiliated with Google and Google does not endorse or sponsor the app."
+  },
+  {
+   "id": "adgrant.ai#3",
+   "title": "AdGrant.AI",
+   "url": "https://adgrant.ai/",
+   "heading": "AdGrant.AI > The library",
+   "text": "The same site carries a glossary of Ad Grant terms, case studies that are real account breakdowns, tricks that are custom workarounds, starter templates, and vertical pages under /nonprofits. Those pages are our own material: case studies, templates, tricks and verticals are what we have found works, not Google's documentation."
+  },
+  {
+   "id": "case-studies/homeless-shelter-google-ad-grant-structure#0",
+   "title": "How a Homeless Shelter Structures Its Google Ad Grant Account",
+   "url": "https://adgrant.ai/case-studies/homeless-shelter-google-ad-grant-structure",
+   "heading": "How a Homeless Shelter Structures Its Google Ad Grant Account > Bottom-line takeaway",
+   "text": "From managing 600+ Google Ad Grant accounts, a well-structured homeless shelter account usually runs 3 campaigns, each with about 3 ad groups, and uses around 9 keywords per ad group. This setup balances focus and reach while using the $10,000 monthly grant budget. Most accounts seen tend to be small, with the median account running only 1 campaign. For a nonprofit focused on emergency housing and donations, dividing campaigns lets you target different audience intents without overlap."
+  },
+  {
+   "id": "case-studies/homeless-shelter-google-ad-grant-structure#1",
+   "title": "How a Homeless Shelter Structures Its Google Ad Grant Account",
+   "url": "https://adgrant.ai/case-studies/homeless-shelter-google-ad-grant-structure",
+   "heading": "How a Homeless Shelter Structures Its Google Ad Grant Account > Example campaigns",
+   "text": "A mid-size regional homeless shelter example runs 3 main campaigns: Emergency Housing Assistance, targeting people searching for urgent shelter; Donation and Support, attracting donors and volunteers; and Resources & Prevention Programs, covering educational services and long-term help. Each campaign has roughly 3 ad groups. In Emergency Housing Assistance those groups are Local Shelter Locations (keywords such as emergency shelter near me), Eligibility Requirements (how to qualify for emergency housing), and Hours and Services (shelter open hours, overnight shelter services)."
+  },
+  {
+   "id": "case-studies/homeless-shelter-google-ad-grant-structure#2",
+   "title": "How a Homeless Shelter Structures Its Google Ad Grant Account",
+   "url": "https://adgrant.ai/case-studies/homeless-shelter-google-ad-grant-structure",
+   "heading": "How a Homeless Shelter Structures Its Google Ad Grant Account > Ads, extensions, budget",
+   "text": "Each ad group holds around 9 keywords using multi-word, relevant phrases that avoid overly broad or generic terms. In every ad group there are at least 2 active text ads. The account uses about 7 sitelinks (Apply for Shelter, Make a Donation, Volunteer Opportunities, Success Stories, Shelter Locations, Donate Monthly, Contact Us) and 5 callout extensions (24/7 Support, No Eligibility Requirements, Trusted Local Shelter, Immediate Assistance, Safe & Confidential). With a daily budget of around $329, most spend goes to Emergency Housing Assistance because search intent there is urgent. Default manual CPC with a $2 cap keeps costs predictable; conversion tracking would be needed before exploring Smart Bidding."
+  },
+  {
+   "id": "case-studies/homeless-shelter-google-ad-grant-structure#3",
+   "title": "How a Homeless Shelter Structures Its Google Ad Grant Account",
+   "url": "https://adgrant.ai/case-studies/homeless-shelter-google-ad-grant-structure",
+   "heading": "How a Homeless Shelter Structures Its Google Ad Grant Account > Trade-offs",
+   "text": "Too few campaigns means unclear messaging; broader accounts often struggle with poor CTR because ads and keywords are not tightly themed. Too many campaigns or keywords can dilute spend; the median nonprofit account analysed hovered around 3 campaigns. Generic keywords hurt quality score and CTR. Not using extensions leaves space unused; accounts have been seen to lift CTR by 10-15% just by adding sitelinks and callouts. This is our observation from accounts we have run, not a Google policy page."
+  },
+  {
+   "id": "tricks/avoid-account-suspension-google-ad-grant-5-percent-ctr-rule#0",
+   "title": "Avoid Account Suspension from the Google Ad Grant 5% CTR Rule",
+   "url": "https://adgrant.ai/tricks/avoid-account-suspension-google-ad-grant-5-percent-ctr-rule",
+   "heading": "Avoid Account Suspension from the Google Ad Grant 5% CTR Rule",
+   "text": "Google requires every Ad Grant account to maintain at least a 5% CTR each month. Miss it and the account risks suspension. From managing over 600 accounts, the practical work is targeted, relevant ads and a tight account structure, not chasing clicks blindly. If CTR drops below 5% for even one month, Google may suspend the account, and recovery can be long. You cannot run broad, low-intent keywords or sloppy ads and hope. What follows on this page is how we keep accounts inside that rule; the rule itself is Google's."
+  },
+  {
+   "id": "tricks/avoid-account-suspension-google-ad-grant-5-percent-ctr-rule#1",
+   "title": "Avoid Account Suspension from the Google Ad Grant 5% CTR Rule",
+   "url": "https://adgrant.ai/tricks/avoid-account-suspension-google-ad-grant-5-percent-ctr-rule",
+   "heading": "Avoid Account Suspension from the Google Ad Grant 5% CTR Rule > What the numbers look like",
+   "text": "A $10,000 per month grant is about 329 clicks a day at a $2 max CPC over 30 days. If ads show 6,580 times a day but only get 100 clicks, CTR is 1.5%, well below 5%. Google reads that as ads that are not relevant. The usual pitfall is keywords that are too broad, or ads that do not match searcher intent, which produce impressions and almost no clicks."
+  },
+  {
+   "id": "tricks/avoid-account-suspension-google-ad-grant-5-percent-ctr-rule#2",
+   "title": "Avoid Account Suspension from the Google Ad Grant 5% CTR Rule",
+   "url": "https://adgrant.ai/tricks/avoid-account-suspension-google-ad-grant-5-percent-ctr-rule",
+   "heading": "Avoid Account Suspension from the Google Ad Grant 5% CTR Rule > What we actually do",
+   "text": "Use tight, relevant keywords of two or more words, not generic single words such as help or donate. Headlines and descriptions should match the keywords and the landing page. Run at least two ads per ad group, which Google requires, and divide campaigns into tightly themed ad groups. If the nonprofit is local, do not show ads outside the service area. Add negative keywords so irrelevant searches do not fire the ads. Check weekly and pause keywords or ads with CTR below 1-2%. Maximize Conversions bidding can remove the $2 CPC cap and help CTR, but it needs conversion tracking. Narrow targeting means less traffic; that is acceptable because quality is what keeps the 5%."
+  },
+  {
+   "id": "glossary/maximize-conversions-bidding-google-ad-grants#0",
+   "title": "Maximize Conversions Bidding for Google Ad Grants Explained",
+   "url": "https://adgrant.ai/glossary/maximize-conversions-bidding-google-ad-grants",
+   "heading": "Maximize Conversions Bidding for Google Ad Grants Explained",
+   "text": "By default, Google Ad Grants limit CPC to $2. Switching to Maximize Conversions removes that ceiling. Google then sets bids from live signals such as device, location and time of day, aiming at conversions rather than clicks. You cannot run Maximize Conversions without conversion tracking: the Google Ads conversion tag has to fire on the actions that matter, such as donations or newsletter sign-ups. The algorithm also needs some history, ideally 15-30 conversions in the last 30 days, and there is a learning phase of one to two weeks."
+  },
+  {
+   "id": "glossary/maximize-conversions-bidding-google-ad-grants#1",
+   "title": "Maximize Conversions Bidding for Google Ad Grants Explained",
+   "url": "https://adgrant.ai/glossary/maximize-conversions-bidding-google-ad-grants",
+   "heading": "Maximize Conversions Bidding for Google Ad Grants Explained > Trade-offs we have seen",
+   "text": "With Maximize Conversions some clicks cost more than $2, so budget can run out earlier in the day and ads may not show around the clock. If conversion goals are not tracked well, the strategy underperforms. In one worked example on this page, a grant that averaged a $2 CPC and 100 monthly conversions moved to a higher average CPC and 350 monthly conversions, still inside the $10,000 monthly budget, which dropped cost per conversion from about $100 to about $28. That example is ours, from accounts we have run, not a figure Google publishes."
+  },
+  {
+   "id": "glossary",
+   "title": "Ad Grant Glossary",
+   "url": "https://adgrant.ai/glossary",
+   "heading": "Ad Grant Glossary",
+   "text": "AdGrant.AI's glossary explains Ad Grant terms the way we use them on live grant accounts: Maximize Conversions bidding, manager accounts (MCC), Quality Score, broad match keywords, impression share, sitelink extensions, geographic targeting, Ad Rank, and click-through rate. These pages are our explanations. Google's own definitions live on support.google.com and are a separate corpus."
+  },
+  {
+   "id": "case-studies",
+   "title": "Case Studies",
+   "url": "https://adgrant.ai/case-studies",
+   "heading": "Case Studies",
+   "text": "AdGrant.AI case studies are account breakdowns from work on grant accounts, not Google's documentation. They cover how an environmental nonprofit, a community arts nonprofit, a youth mentoring nonprofit, a homeless shelter, a regional food bank and an animal shelter structure campaigns, ad groups, keywords, ads and extensions. The numbers in those pages are what we have seen, including a median around 3 campaigns and around 9 keywords per ad group."
+  },
+  {
+   "id": "tricks",
+   "title": "Tips & Tricks",
+   "url": "https://adgrant.ai/tricks",
+   "heading": "Tips & Tricks",
+   "text": "AdGrant.AI tricks are workarounds we have used on grant accounts: adding and verifying extra domains, collecting remarketing audiences from grant traffic, bypassing the $2 CPC cap with Smart Bidding once conversion tracking is in place, staying inside the 5% CTR rule, stretching the $10,000 monthly budget, and recovering a suspended grant account. They are our practice. The underlying policies are Google's."
+  },
+  {
+   "id": "templates",
+   "title": "Starter Templates",
+   "url": "https://adgrant.ai/templates",
+   "heading": "Starter Templates",
+   "text": "AdGrant.AI starter templates are ready-made account structures by kind of nonprofit: youth mentoring, veterans services, religious and faith, homeless shelters, health clinics, food banks, environmental, education and literacy, domestic violence, disability services, arts and culture, and animal shelters. They are our starting points, generated in the same shape the tool writes from a website, not a Google template library."
+  },
+  {
+   "id": "nonprofits",
+   "title": "Nonprofit verticals",
+   "url": "https://adgrant.ai/nonprofits",
+   "heading": "Nonprofit verticals",
+   "text": "AdGrant.AI vertical pages cover animal shelters, food banks, homeless shelters, youth mentoring, arts and culture, environmental nonprofits, health clinics, education and literacy, veterans services, disability services, religious and faith organisations, and domestic violence services, plus city pages. They describe how we would structure a grant account for that kind of organisation. They are our claims about what has worked, not Google's rules for those verticals."
+  }
+ ]
+}

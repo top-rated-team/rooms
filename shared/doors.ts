@@ -52,7 +52,11 @@ export const DOOR_TIERS: Record<DoorTier, DoorTierDef> = {
   },
   grey: {
     id: "grey",
-    label: "A different company",
+    // "Partner", on the owner's instruction, replacing "A different company".
+    // The old label was accurate and read as a warning; this one names the
+    // relationship. What it MEANS is unchanged and is the sentence below —
+    // whose contract, whose invoice, and that we take no share.
+    label: "Partner",
     meaning:
       "Another company contracts with you, does the work and invoices you. Top-Rated Team is not in that chain and takes no share of it.",
   },
@@ -102,6 +106,8 @@ export interface DoorContract {
 export interface DoorTool {
   /** What it is called, as it is called on its own site. */
   name: string;
+  /** Wordmark as the product prints it. Optional; only AdGrant.AI has one today. */
+  mark?: string;
   /** Where it lives. */
   href: string;
   /** What it does and where it stops, in the buyer's words. */
@@ -163,6 +169,12 @@ export interface DoorDef {
    * citing somebody else's documentation.
    */
   kbNamespace: string | null;
+  /**
+   * A second corpus of our own material, where one exists. `kbNamespace` stays
+   * the platform's documentation; this one is our claims — case studies,
+   * templates, tricks — so an agent cannot cite them as the platform's rule.
+   */
+  ownKbNamespace?: string | null;
 }
 
 /** Doors 1-5 and 7. One company, one contract, one invoice. */
@@ -269,6 +281,7 @@ export const DOORS: DoorDef[] = [
     // person, and the line says where one stops and the other starts.
     tool: {
       name: "AdGrant.AI",
+      mark: "AdGrant.AI",
       href: "https://adgrant.ai",
       line: "Our own tool, and the automated half of this door. It reads your website and writes campaigns, ad groups, keywords, ads and extensions into your own Google Ads account through the official Google Ads API, under a manager-account link you can remove. It is not signed in as you, and it does not run the account afterwards — the conversion tracking and the month-to-month work are a person, on the same contract.",
     },
@@ -284,6 +297,7 @@ export const DOORS: DoorDef[] = [
     priceTier: "setup",
     status: "live",
     kbNamespace: "ad-grants",
+    ownKbNamespace: "adgrant-ai",
   },
   {
     id: "linkedin-ads",
@@ -434,6 +448,58 @@ export const DOORS: DoorDef[] = [
     priceTier: "custom",
     status: "live",
     kbNamespace: "ai-builds",
+  },
+  {
+    /*
+     * THE EIGHTH ROW, and it is two offers rather than one — which is why it
+     * needs a page rather than a line.
+     *
+     *   1. Us as a subcontractor behind somebody else's brand, invisible to
+     *      their end clients. Mostly agencies in first-tier countries, but the
+     *      owner is explicit that it is not only those countries, not only
+     *      marketing agencies, and not necessarily agencies at all.
+     *   2. This platform itself under their name, with their own set of doors —
+     *      partly or entirely different from ours.
+     *
+     * The second could eventually run itself, through a partner registering and
+     * configuring their own doors, and that admin could then be a door into its
+     * own room. The owner called that excessive for now and he is right:
+     * conversation with a white-label partner is individual and exclusive, and a
+     * self-service form would promise something that does not exist. So the page
+     * is the two offers, the contact and a way to write — and no form pretending
+     * to be onboarding.
+     *
+     * `coming` because the page here is not built. The offer itself is live and
+     * has been for years, at top-rated.team/white-label, which is where the
+     * apex migration has to land it.
+     */
+    id: "white-label",
+    slug: "white-label",
+    path: "/services/white-label",
+    initials: "WL",
+    tone: "bg-primary/10 text-primary",
+    headline: "White label — our work under your name",
+    blurb:
+      "Two ways round. We deliver the work behind your brand, invisible to your clients and answering to you. Or this platform runs under your name, with your own set of services rather than ours. Agencies use both, and so do teams that are not agencies.",
+    firstAgentId: null,
+    agentLine:
+      "No agent answers first in this door. What a white-label arrangement looks like depends on whose clients they are, whose paper the work is on and which of your services we would be behind — and that is a conversation with a person, not a form.",
+    starters: [
+      "Can you deliver Google Ads work under our brand, without our client knowing you exist?",
+      "Could we run this platform as our own, with our own set of services?",
+      "Whose contract is my client on, and whose invoice do they receive?",
+      "We are not an agency. Does this still work for us?",
+    ],
+    contract: TOP_RATED_TEAM,
+    tier: "white",
+    priceTier: "custom",
+    status: "coming",
+    comingLine:
+      "This page is not written yet. Until it is, top-rated.team/white-label describes the arrangement and a call covers the rest.",
+    // No corpus, and not because one is missing: what a white-label arrangement
+    // looks like is not documented by any platform. It is our own commercial
+    // terms, and a person states those.
+    kbNamespace: null,
   },
 ];
 
