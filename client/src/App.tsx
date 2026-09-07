@@ -3,6 +3,7 @@ import { Route, Switch } from "wouter";
 
 import Door from "@/pages/door";
 import Doors from "@/pages/doors";
+import CaseStudies from "@/pages/case-studies";
 import Pricing from "@/pages/pricing";
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="/" component={Landing} />
         <Route path="/services" component={Doors} />
         <Route path="/pricing" component={Pricing} />
+        <Route path="/case-studies" component={CaseStudies} />
         {/* Every door answers here. Which one, and whether it has a panel at
             all, is read out of the row — see shared/doors.ts. */}
         <Route path="/services/:slug" component={Door} />

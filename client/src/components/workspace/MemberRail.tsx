@@ -1,7 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID, type DoorContract } from "@shared/doors";
-import { AGENT_BY_ID, EXPERTS, type AgentDef } from "@shared/roster";
+import { AGENT_BY_ID, EXPERT_BY_KEY, EXPERTS, type AgentDef } from "@shared/roster";
 import type { Member, MemberKind } from "@shared/schema";
+import { AgentMark } from "@/components/workspace/AgentMark";
+import { Avatar } from "@/components/workspace/Avatar";
 import { cn } from "@/lib/utils";
 import { ACTION_QUIET, CHROME, LABEL, META } from "@/components/workspace/room-style";
 
@@ -24,13 +26,16 @@ import { ACTION_QUIET, CHROME, LABEL, META } from "@/components/workspace/room-s
  * questions people do ask are "can this one do the thing" and "who do I
  * complain to", and only a job answers those.
  *
- * THE BADGE IS NO LONGER A PILL, AND THE LINE UNDER IT GOT BIGGER.
+ * THE BADGE IS NO LONGER A PILL, AND THE LINE UNDER IT IS NO LONGER FURNITURE.
  *
- * The six words are unchanged and so are the six lines. What changed is that a
- * badge is now a word set beside the name at the metadata size instead of a
- * bordered chip, and the accountability line moved up from 11px to the room's
- * chrome size — because the line is the part that answers "who do I complain
- * to", and it was set two sizes smaller than the decoration around it.
+ * The six words are unchanged and so are the six lines. A badge is a word set
+ * beside the name at the metadata size instead of a bordered chip. The
+ * accountability line is the part that answers "who do I complain to". When it
+ * names another company, another door, or a fact a reader would not assume, it
+ * stays in view at the chrome size. When it only repeats what this room already
+ * says — our people, in a room we sign for — it waits behind a press, not a
+ * hover: a phone has no hover, and the words have to stay in the page so they
+ * can be copied.
  *
  * WHICH COMPANY A LINE MAY NAME
  *
@@ -269,6 +274,81 @@ function roleFor(member: Member): string {
   return "";
 }
 
+/**
+ * A line that names another company, sits on somebody else's door, or says
+ * something a reader would not assume, stays in view. The ordinary case — our
+ * own people, in a room we are answerable for — repeats the footer, so it
+ * waits behind a press. A hover is not a way in; a phone has none.
+ */
+function lineStaysOpen(
+  line: string,
+  badge: RoomBadge,
+  company: string | null,
+  outside?: OutsideAgent,
+): boolean {
+  if (outside) return true;
+  if (badge === "Partner team" || badge === "Guest") return true;
+  if (company !== OUR_LEGAL_NAME) return true;
+  const ordinary = new Set([
+    BADGE_LINE.Owner,
+    BADGE_LINE.Client,
+    `Paid through ${endSentence(OUR_LEGAL_NAME)}`,
+    `Ours. ${BADGE_LINE.Agent}`,
+  ]);
+  return !ordinary.has(line);
+}
+
+function MemberGlyph({ member, dimmed }: { member: Member; dimmed?: boolean }) {
+  if (member.kind === "agent") {
+    const agent: AgentDef | undefined = AGENT_BY_ID[member.memberKey.replace(/^agent:/, "")];
+    return (
+      <AgentMark
+        mark={agent?.mark}
+        initials={agent?.initials ?? member.initials}
+        size="xs"
+        dimmed={dimmed}
+      />
+    );
+  }
+  const expert = EXPERT_BY_KEY[member.memberKey];
+  return (
+    <Avatar
+      initials={member.initials}
+      photo={expert?.photo}
+      size="xs"
+      dimmed={dimmed}
+    />
+  );
+}
+
+function AccountabilityLine({
+  line,
+  staysOpen,
+  memberKey,
+}: {
+  line: string;
+  staysOpen: boolean;
+  memberKey: string;
+}) {
+  const text = (
+    <p className={cn(CHROME, "mt-1 select-text text-muted-foreground")} data-testid={`accountability-${memberKey}`}>
+      {line}
+    </p>
+  );
+  if (staysOpen) return text;
+  return (
+    <details className="mt-1">
+      <summary
+        className={cn(ACTION_QUIET, "cursor-pointer list-none [&::-webkit-details-marker]:hidden")}
+        data-testid={`button-accountability-${memberKey}`}
+      >
+        Who answers
+      </summary>
+      {text}
+    </details>
+  );
+}
+
 interface MemberRowProps {
   member: Member;
   detail?: MemberDetail;
@@ -292,92 +372,98 @@ function MemberRow({ member, detail, viewer, company, onOpenDm, onRevoke }: Memb
   const budgetSpent = outside ? outside.callsUsed >= outside.callsPerDay : false;
   const expired = outside ? isExpired(outside) : false;
   const control = controlFor(badge, member, outside);
+  const staysOpen = lineStaysOpen(line, badge, company, outside);
 
   return (
     <li className={cn("border-t border-border py-3", revoked && "opacity-60")} data-testid={`member-${member.memberKey}`}>
-      <div className="flex items-baseline justify-between gap-3">
-        <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
-          {canDm ? (
-            <button
-              type="button"
-              onClick={() => onOpenDm(member.memberKey)}
-              className={cn(CHROME, "truncate font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:underline")}
-              data-testid={`button-dm-${member.memberKey}`}
-            >
-              {member.displayName}
-            </button>
-          ) : (
-            <span className={cn(CHROME, "truncate font-medium")}>{member.displayName}</span>
-          )}
-          <span className={LABEL} data-testid={`badge-${member.memberKey}`}>
-            {badge}
-          </span>
-        </div>
+      <div className="flex items-start gap-2.5">
+        <MemberGlyph member={member} dimmed={Boolean(revoked)} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+              {canDm ? (
+                <button
+                  type="button"
+                  onClick={() => onOpenDm(member.memberKey)}
+                  className={cn(CHROME, "truncate font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:underline")}
+                  data-testid={`button-dm-${member.memberKey}`}
+                >
+                  {member.displayName}
+                </button>
+              ) : (
+                <span className={cn(CHROME, "truncate font-medium")}>{member.displayName}</span>
+              )}
+              <span className={LABEL} data-testid={`badge-${member.memberKey}`}>
+                {badge}
+              </span>
+            </div>
 
-        {viewer === "owner" && !revoked && onRevoke && control ? (
-          <button
-            type="button"
-            onClick={() => onRevoke(member.memberKey)}
-            className={cn(ACTION_QUIET, "shrink-0")}
-            data-testid={`button-revoke-${member.memberKey}`}
-          >
-            {control}
-          </button>
-        ) : null}
-      </div>
+            {viewer === "owner" && !revoked && onRevoke && control ? (
+              <button
+                type="button"
+                onClick={() => onRevoke(member.memberKey)}
+                className={cn(ACTION_QUIET, "shrink-0")}
+                data-testid={`button-revoke-${member.memberKey}`}
+              >
+                {control}
+              </button>
+            ) : null}
+          </div>
 
-      <p className={cn(CHROME, "mt-1 text-muted-foreground")}>{line}</p>
-      {detail?.note ? <p className={cn(META, "mt-1 text-muted-foreground")}>{detail.note}</p> : null}
-      {!detail?.note && role && member.kind !== "agent" ? (
-        <p className={cn(META, "mt-1 truncate text-muted-foreground")}>{role}</p>
-      ) : null}
+          <AccountabilityLine line={line} staysOpen={staysOpen} memberKey={member.memberKey} />
+          {detail?.note ? <p className={cn(META, "mt-1 text-muted-foreground")}>{detail.note}</p> : null}
+          {!detail?.note && role && member.kind !== "agent" ? (
+            <p className={cn(META, "mt-1 truncate text-muted-foreground")}>{role}</p>
+          ) : null}
 
-      {outside && !revoked ? (
-        <div className="mt-2 space-y-1.5">
-          <p className={cn(META, "text-muted-foreground")}>
-            <span className="font-medium text-foreground">{OUTSIDE_MODE_LABEL[outside.mode]}.</span>{" "}
-            {OUTSIDE_MODE_LINE[outside.mode]}
-          </p>
-          {showUsage ? (
-            <p className={cn(META, budgetSpent || expired ? "text-destructive" : "text-muted-foreground")}>
-              {budgetSpent
-                ? `Budget spent — ${outside.callsPerDay} calls today. It stopped, and said so in the thread.`
-                : `${outside.callsUsed} of ${outside.callsPerDay} calls today.`}{" "}
-              {expired
-                ? `Expired ${dayLabel(outside.expiresOn)}. It has to be re-added.`
-                : `Expires ${dayLabel(outside.expiresOn)}.`}
+          {outside && !revoked ? (
+            <div className="mt-2 space-y-1.5">
+              <p className={cn(META, "text-muted-foreground")}>
+                <span className="font-medium text-foreground">{OUTSIDE_MODE_LABEL[outside.mode]}.</span>{" "}
+                {OUTSIDE_MODE_LINE[outside.mode]}
+              </p>
+              {showUsage ? (
+                <p className={cn(META, budgetSpent || expired ? "text-destructive" : "text-muted-foreground")}>
+                  {budgetSpent
+                    ? `Budget spent — ${outside.callsPerDay} calls today. It stopped, and said so in the thread.`
+                    : `${outside.callsUsed} of ${outside.callsPerDay} calls today.`}{" "}
+                  {expired
+                    ? `Expired ${dayLabel(outside.expiresOn)}. It has to be re-added.`
+                    : `Expires ${dayLabel(outside.expiresOn)}.`}
+                </p>
+              ) : null}
+              <p className={cn(META, "text-muted-foreground")}>Name supplied by their tool, unchecked.</p>
+              <button
+                type="button"
+                onClick={() => setLimitsOpen((v) => !v)}
+                className={ACTION_QUIET}
+                aria-expanded={limitsOpen}
+                data-testid={`button-limits-${member.memberKey}`}
+              >
+                {limitsOpen ? "Hide what it can never do" : "What it can never do"}
+              </button>
+              {limitsOpen ? (
+                <ul className="space-y-1 border-l border-border pl-3">
+                  {OUTSIDE_AGENT_LIMITS.map((limit) => (
+                    <li key={limit} className={cn(META, "text-muted-foreground")}>
+                      {limit}
+                    </li>
+                  ))}
+                  <li className={cn(META, "text-muted-foreground")}>
+                    These four are not settings. There is no screen that turns them on.
+                  </li>
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
+
+          {revoked ? (
+            <p className={cn(META, "mt-1.5 text-muted-foreground")}>
+              Revoked {dayLabel(revoked.on)} by {revoked.by} — reason: {revoked.reason}
             </p>
           ) : null}
-          <p className={cn(META, "text-muted-foreground")}>Name supplied by their tool, unchecked.</p>
-          <button
-            type="button"
-            onClick={() => setLimitsOpen((v) => !v)}
-            className={ACTION_QUIET}
-            aria-expanded={limitsOpen}
-            data-testid={`button-limits-${member.memberKey}`}
-          >
-            {limitsOpen ? "Hide what it can never do" : "What it can never do"}
-          </button>
-          {limitsOpen ? (
-            <ul className="space-y-1 border-l border-border pl-3">
-              {OUTSIDE_AGENT_LIMITS.map((limit) => (
-                <li key={limit} className={cn(META, "text-muted-foreground")}>
-                  {limit}
-                </li>
-              ))}
-              <li className={cn(META, "text-muted-foreground")}>
-                These four are not settings. There is no screen that turns them on.
-              </li>
-            </ul>
-          ) : null}
         </div>
-      ) : null}
-
-      {revoked ? (
-        <p className={cn(META, "mt-1.5 text-muted-foreground")}>
-          Revoked {dayLabel(revoked.on)} by {revoked.by} — reason: {revoked.reason}
-        </p>
-      ) : null}
+      </div>
     </li>
   );
 }

@@ -70,3 +70,76 @@ export interface KbStatus {
   /** True when OPENAI_API_KEY is configured, i.e. agents can actually answer. */
   llmReady: boolean;
 }
+
+/* ----------------------------- room identity ------------------------------ */
+/* Binding is a second fact about a room. The address in /w/:token remains a
+ * bearer credential: identifying someone does not turn that token into a
+ * password, and a bound room still opens for anyone who has the link. */
+
+/** How identified the visitor in this room is. Anonymous is the default. */
+export type RoomAccessLevel = "anonymous" | "signed-in";
+
+export type RoomBindingProvider = "linkedin" | "whatsapp";
+
+/**
+ * What the room will say about who it is bound to, and which of the two
+ * identification routes can be offered right now. Nothing in this shape is a
+ * credential: no token, no phone number, no provider id.
+ */
+export interface RoomBindingState {
+  level: RoomAccessLevel;
+  bound: boolean;
+  /**
+   * True when a visitor has put something of their own into the room — a link,
+   * a snippet, a long paste — and the room is not bound yet. That is the only
+   * moment this product asks them to identify themselves.
+   */
+  needsIdentify: boolean;
+  provider: RoomBindingProvider | null;
+  /** The name they chose to give, or null when the room is not bound. */
+  displayName: string | null;
+  linkedin: {
+    available: boolean;
+    /** Set when LinkedIn cannot be offered; the sentence the strip prints. */
+    unavailableLine?: string;
+  };
+  whatsapp: {
+    available: boolean;
+    /** Set when WhatsApp cannot be offered; the strip keeps LinkedIn and prints this. */
+    unavailableLine?: string;
+  };
+}
+
+/* ---------------------- rented accounts (boosters) ---------------------- */
+/* Capacity, not people. The room never receives the API's `name` field: that
+ * is the real name of the person whose account is rented. What leaves the
+ * server is this shape and only this shape — an allowlist, so a field flygen
+ * adds later cannot leak by default. */
+
+/** Operational state as the room is allowed to see it. */
+export type BoosterState = "live" | "restricted" | "under_appeal" | "rental_ending" | "unknown";
+
+/**
+ * A rented account as the room sees it. Not a member: no avatar, no badge, no
+ * presence, no memberKey. The call sign is assigned from the account id and
+ * is the only name this object carries.
+ */
+export interface RoomBooster {
+  /** Stable label, e.g. `Booster 03 · Basalt`. */
+  callSign: string;
+  /** 1-based register number, for order. */
+  number: number;
+  state: BoosterState;
+  /** Proxy country code. Identifies nobody. */
+  location: string | null;
+  /** ISO timestamp if the API exposes a rental end date; otherwise null. */
+  rentalEndsAt: string | null;
+}
+
+/**
+ * `unavailable` is a different fact from an empty list: we could not ask, so
+ * the panel must not read as "no boosters".
+ */
+export type BoosterInventory =
+  | { status: "ok"; boosters: RoomBooster[] }
+  | { status: "unavailable" };

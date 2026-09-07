@@ -37,6 +37,8 @@ import { rateLimit } from "./rateLimit";
 import { llmReady, streamAgentAnswer } from "./ai/agentRuntime";
 import { kbStatus } from "./ai/kb";
 import { ASK_LEDGER_KEY, askBudgetUsd, askLedgerKey, claimAgentTurn, guardAgentTurn, recordTurnCost } from "./spend";
+import { acceptWhatsAppInbound, bindingStateForToken, completeLinkedIn, startLinkedIn, startWhatsApp } from "./identity";
+import { listBoosters } from "./flygen";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -447,6 +449,12 @@ export function registerRoutes(app: Express): void {
   const inboxLimit = rateLimit({ windowMs: 60_000, max: 30, message: "Too many requests. Wait a moment." });
   const askLimit = rateLimit({ windowMs: 60_000, max: 20, message: "Too many questions at once. Wait a few seconds and ask again." });
   const messageLimit = rateLimit({ windowMs: 60_000, max: 60, message: "Slow down a moment — too many messages." });
+  const identityLimit = rateLimit({
+    windowMs: 60 * 60_000,
+    max: 20,
+    message: "Too many identification attempts from this address. Try again later.",
+  });
+  const identityWebhookLimit = rateLimit({ windowMs: 60_000, max: 120, message: "Too many requests. Wait a moment." });
 
   /* --------------------------- workspaces --------------------------- */
 
@@ -538,6 +546,20 @@ export function registerRoutes(app: Express): void {
       const state = await requireWorkspace(req, res);
       if (!state) return;
       res.json(state);
+    }),
+  );
+
+  /* ----------------------------- boosters ----------------------------- */
+  /* Read-only inventory of rented accounts. Capacity, not members: this list
+   * is never written into `state.members`. Fetch and display; nothing here
+   * rents, releases, signs in, appeals, retries, or computes a 2FA code. */
+
+  app.get(
+    "/api/workspaces/:token/boosters",
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      res.json(await listBoosters());
     }),
   );
 
@@ -999,6 +1021,83 @@ export function registerRoutes(app: Express): void {
   app.get("/api/kb/status", (_req, res) => {
     res.json({ ...kbStatus(), llmReady: llmReady() });
   });
+
+  /* ---------------------- room identity (two routes) ---------------------- */
+
+  app.get(
+    "/api/workspaces/:token/identity",
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const binding = await bindingStateForToken(state.workspace.token);
+      if (!binding) return notFound(res, "Workspace not found");
+      res.json(binding);
+    }),
+  );
+
+  app.get(
+    "/api/workspaces/:token/identity/linkedin",
+    identityLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const start = startLinkedIn({
+        workspaceId: state.workspace.id,
+        token: state.workspace.token,
+        publicBaseUrl: publicBaseUrl(req),
+      });
+      if (!start.ok) {
+        res.status(503).json({ error: start.line });
+        return;
+      }
+      res.redirect(302, start.url);
+    }),
+  );
+
+  app.get(
+    "/api/identity/linkedin/callback",
+    route(async (req, res) => {
+      const result = await completeLinkedIn({
+        code: typeof req.query.code === "string" ? req.query.code : undefined,
+        state: typeof req.query.state === "string" ? req.query.state : undefined,
+        error: typeof req.query.error === "string" ? req.query.error : undefined,
+      });
+      const dest = result.token ? `/w/${result.token}` : "/w";
+      res.redirect(302, dest);
+    }),
+  );
+
+  app.get(
+    "/api/workspaces/:token/identity/whatsapp",
+    identityLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const start = await startWhatsApp({
+        workspaceId: state.workspace.id,
+        token: state.workspace.token,
+        roomUrl: `${publicBaseUrl(req)}/w/${state.workspace.token}`,
+      });
+      if (!start.ok) {
+        res.status(503).json({ error: start.line });
+        return;
+      }
+      res.json(start.offer);
+    }),
+  );
+
+  app.post(
+    "/api/identity/whatsapp/inbound",
+    identityWebhookLimit,
+    route(async (req, res) => {
+      const result = acceptWhatsAppInbound(req.body, req.get("x-webhook-secret") ?? undefined);
+      if (!result.accepted) {
+        res.status(401).json({ error: "Not found" });
+        return;
+      }
+      res.status(200).json({ ok: true });
+    }),
+  );
 
   // Anything else under /api is a missing endpoint, not a client route: without
   // this it would fall through to the SPA and answer HTML to a fetch().

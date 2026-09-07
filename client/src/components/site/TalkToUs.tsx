@@ -1,0 +1,98 @@
+import { lazy, Suspense, useState } from "react";
+import { Link } from "wouter";
+
+import { BOOK_A_CALL_URL } from "@shared/roster";
+import { LINK, META, PAGE, READ_MUTED } from "@/components/site/doors/quiet";
+
+/* ---------------------------------------------------------------------------
+ * THREE WAYS THAT ARE NOT THE PANEL
+ *
+ * Every surface on this site funnels to one thing: ask an agent a question, and
+ * keep the answer if it is worth keeping. That is a good funnel and it is the
+ * wrong funnel for some of the people arriving.
+ *
+ * A visitor may simply want a person. They may want to send something and read
+ * a reply tomorrow. They may want to see what we have actually done before they
+ * talk to anybody at all. None of those is served by a box that answers
+ * questions, and a site that offers only the box tells that visitor to leave.
+ *
+ * So: book a call, leave a message, read the cases. It sits on the home page and
+ * on every door, ABOVE the panel — before the room, not after it, because
+ * somebody who wanted a human should not have to work out that the chat is not
+ * the only door.
+ *
+ * The message form is the LeadDialog the redesign unmounted from six places. It
+ * still works and still lands in the one inbox, so this is a re-mount rather
+ * than a second mechanism — and a form beats a mailto here, because a mailto
+ * needs a mail client the visitor may not have and leaves us no record.
+ *
+ * It is lazily loaded: LeadDialog pulls in Radix, and the landing chunk is what
+ * paid traffic downloads first.
+ * ------------------------------------------------------------------------- */
+
+const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) => ({ default: m.LeadDialog })));
+
+const ACTION_LINE = "type-body font-medium";
+
+export interface TalkToUsProps {
+  /** Set on a door page, where this sits inside the page's own rhythm. */
+  className?: string;
+}
+
+export function TalkToUs({ className = "" }: TalkToUsProps) {
+  const [messageOpen, setMessageOpen] = useState(false);
+
+  return (
+    <section className={`${PAGE} ${className}`} data-testid="block-talk-to-us">
+      <div className="grid gap-[var(--s3)] border-t border-border pt-[var(--s3)] lg:grid-cols-[minmax(0,32ch)_minmax(0,1fr)] lg:gap-[var(--s5)]">
+        <div>
+          <p className={META}>Or skip the agent</p>
+          <p className={`mt-[var(--s2)] ${READ_MUTED}`}>
+            The panel is free and it answers from documentation, but it is not the only way in. If you would rather
+            talk to a person, or send something and read a reply tomorrow, do that instead.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-[var(--s2)]">
+          <p className={ACTION_LINE}>
+            <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" data-testid="link-book-a-call" className={LINK}>
+              Book a call
+            </a>
+            <span className={`ml-[var(--s2)] ${META}`}>20 minutes, free, with a person who does the work</span>
+          </p>
+
+          <p className={ACTION_LINE}>
+            <button type="button" onClick={() => setMessageOpen(true)} data-testid="button-leave-a-message" className={LINK}>
+              Leave a message
+            </button>
+            <span className={`ml-[var(--s2)] ${META}`}>Goes to one inbox, answered by a person</span>
+          </p>
+
+          <p className={ACTION_LINE}>
+            <Link href="/case-studies" data-testid="link-case-studies" className={LINK}>
+              Read the cases
+            </Link>
+            <span className={`ml-[var(--s2)] ${META}`}>What the work did to two real accounts</span>
+          </p>
+        </div>
+      </div>
+
+      {messageOpen ? (
+        <Suspense fallback={null}>
+          <LeadDialog
+            open={messageOpen}
+            onOpenChange={setMessageOpen}
+            /* No prefill. `intent` on LeadPrefill is a ServiceDef id that the
+               dialog pre-selects in its own list, so a made-up value like
+               "message:google-ads" would select nothing and quietly break the
+               field. The door a message came from is already recorded: the
+               dialog calls collectSource() itself and sends it with the lead. */
+            prefill={null}
+          />
+        </Suspense>
+      ) : null}
+    </section>
+  );
+}
+
+export default TalkToUs;

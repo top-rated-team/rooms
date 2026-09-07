@@ -14,6 +14,12 @@ export interface AgentDef {
   title: string;
   blurb: string;
   initials: string;
+  /**
+   * Name of this agent's glyph in AgentMark.tsx. Geometry in one ink, not a
+   * logo and not a colour: two agents have to stay tellable apart at 20
+   * pixels. Absent means the two-letter initials already on this row.
+   */
+  mark?: string;
   /** Tailwind classes for the avatar chip. */
   tone: string;
   /**
@@ -41,6 +47,13 @@ export interface ExpertDef {
   name: string;
   title: string;
   initials: string;
+  /**
+   * Public path of a real photograph, when one exists at
+   * client/public/assets/people/<id>.jpg. Set only for a file that is
+   * actually in the tree. Absent means the two-letter monogram — a
+   * finished state, not a gap to fill with a generated likeness.
+   */
+  photo?: string;
   specialties: string[];
   badges: string[];
   /**
@@ -187,6 +200,7 @@ export const AGENTS: AgentDef[] = [
     blurb:
       "Knows the ChatGPT Ads pixel, Conversions API, supported events, campaign and bulk APIs — grounded in developers.openai.com/ads and cites the page it used.",
     initials: "CA",
+    mark: "pixel",
     tone: "bg-primary/10 text-primary",
     useKb: true,
     kbNamespace: "chatgpt-ads",
@@ -211,6 +225,7 @@ ${KB_RULES}`,
     blurb:
       "Maps your funnel to events, plans pixel + server-side coverage, deduplication, consent and offline conversions — then scopes the human setup.",
     initials: "CT",
+    mark: "rings",
     tone: "bg-accent/10 text-accent",
     useKb: true,
     kbNamespace: "chatgpt-ads",
@@ -247,6 +262,7 @@ ${KB_RULES}`,
     blurb:
       "Account structure, bidding, Performance Max, Shopping feeds, negatives and the conversion tracking underneath them — grounded in the Google Ads Help Centre and the Google Ads API docs, and cites the page it used.",
     initials: "GA",
+    mark: "wedge",
     tone: "bg-chart-1/10 text-chart-1",
     // Reads data/kb/kb.google-ads.json and nothing else: server/ai/kb.ts keys
     // its indexes by namespace and never falls back to another corpus.
@@ -294,6 +310,7 @@ ${GOOGLE_ADS_KB_RULES}`,
     blurb:
       "Eligibility, the 5% click-through rule, the website and account-management policies, the conversion tracking a grant is measured on, and what the Google Ads API writes into a nonprofit's own account — cites the Google page it used.",
     initials: "AG",
+    mark: "diamond",
     tone: "bg-chart-2/10 text-chart-2",
     // Reads data/kb/kb.ad-grants.json and nothing else — the Ad Grants policies,
     // not the general Google Ads corpus and not OpenAI's.
@@ -352,6 +369,7 @@ ${AD_GRANTS_KB_RULES}`,
     title: "Facebook & Instagram performance",
     blurb: "Advantage+ campaigns, creative testing, CAPI and event-match quality.",
     initials: "MA",
+    mark: "hex",
     tone: "bg-chart-4/10 text-chart-4",
     useKb: false,
     starters: [
@@ -370,6 +388,7 @@ the Conversions API, event match quality and attribution windows.`,
     title: "B2B demand gen on LinkedIn",
     blurb: "ABM targeting, lead gen forms, Insight Tag and CRM-closed-loop reporting.",
     initials: "LA",
+    mark: "plus",
     tone: "bg-chart-5/10 text-chart-5",
     // Reads data/kb/kb.linkedin-ads.json and nothing else — LinkedIn's own
     // advertising help centre. This is the agent that answered a live visitor
@@ -398,6 +417,7 @@ ${kbRules(
     title: "Technical SEO and programmatic content",
     blurb: "Crawl and index health, keyword and gap analysis, programmatic page systems.",
     initials: "SE",
+    mark: "peak",
     tone: "bg-chart-3/10 text-chart-3",
     useKb: false,
     starters: ["Why did our impressions drop after the migration?", "Where are our content gaps vs competitors?"],
@@ -414,6 +434,7 @@ into thin content.`,
     title: "Content marketing and landing copy",
     blurb: "Messaging, landing page copy, lifecycle email and thought-leadership programmes.",
     initials: "CM",
+    mark: "lines",
     tone: "bg-chart-2/10 text-chart-2",
     useKb: false,
     starters: ["Rewrite our hero section for a B2B SaaS audience.", "Plan a 90-day content programme for a new category."],
@@ -430,6 +451,7 @@ asked — do not just describe what the copy should do.`,
     title: "Websites, apps and automations built with AI tooling",
     blurb: "Landing pages, internal tools, integrations and AI agents — scoped and shipped fast.",
     initials: "AD",
+    mark: "bracket",
     tone: "bg-primary/10 text-primary",
     useKb: false,
     starters: [
@@ -451,6 +473,7 @@ engineer must own.`,
     blurb:
       "Which permissions are open to any developer and which need LinkedIn's approval, and what the interfaces for invitations, messages, connections and posting require — cites the page it used, and never says whether an automation is permitted.",
     initials: "LL",
+    mark: "cycle",
     tone: "bg-chart-4/10 text-chart-4",
     // Its own agent rather than the shared ai-dev one, which the ai-builds door
     // also points at: one agent carries one namespace, so a shared agent could
@@ -502,6 +525,7 @@ ${kbRules(
     blurb:
       "Retrieval from a body of files with citations, function calling into a system the model does not own, and GPT Actions including the no-login option — cites the OpenAI page it used.",
     initials: "AB",
+    mark: "nest",
     tone: "bg-accent/10 text-accent",
     // Its own agent rather than the shared ai-dev one, which three SERVICES
     // rows still point at: one agent carries one namespace. Reads

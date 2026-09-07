@@ -333,7 +333,7 @@ export const DOORS: DoorDef[] = [
     path: "/services/ad-grants",
     initials: "AG",
     tone: "bg-chart-2/10 text-chart-2",
-    headline: "Google Ad Grants, set up through the official Google Ads API",
+    headline: "Google Ad Grant AI setup through the official Google Ads API",
     blurb:
       "Campaigns, ad groups, keywords, ads and extensions are generated from your own website and written into your Google Ads account through the official Google Ads API — under a manager-account link you can remove, not a tool signed in as you. The setup is the automated half; the other half is a person, on the conversion tracking that lets the grant report donations and sign-ups instead of clicks, and on the month-to-month work that keeps the account inside the rules that suspend grants.",
     // Its own agent, not the Google Ads one: this door's agent reads Google's
