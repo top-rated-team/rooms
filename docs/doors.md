@@ -28,8 +28,8 @@ one offer costs.
 | Door | Tier | Who invoices | State |
 |---|---|---|---|
 | Conversion tracking for ChatGPT Ads | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | live at `/work/chatgpt-ads` |
-| Google Ads management | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | coming — knowledge built, waiting on retrieval |
-| Google Ad Grants, set up through the official Google Ads API | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | coming — knowledge built, waiting on retrieval |
+| Google Ads management | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | live |
+| Google Ad Grants, set up through the official Google Ads API | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | live |
 | LinkedIn Ads | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | coming |
 | LinkedIn automation, with a written legal assessment | Lawyer first | Top-Rated Team (Danylo Burykin SZČO) for the build; the lawyer bills the assessment | coming |
 | LinkedIn growth | A different company | Maksymenko LinkedIn Growth | coming |
@@ -103,9 +103,12 @@ corpora are built today: `chatgpt-ads` (`data/kb/kb.json`), `google-ads`
 invent an answer — the agent says what it is missing, which is honest and also a
 wasted visit. Build the corpus before you set the door live.
 
-Read the next section before you rely on this field. **Nothing reads it at retrieval
-time yet**, so setting a second door live today does not give that door its own
-knowledge — it gives it the first door's.
+This field is read on the answer path. Each corpus is loaded into its own index and
+`retrieve()` takes the namespace first, so an agent reads its own corpus and nothing
+else — **and gets nothing rather than a neighbour's documentation when its own corpus
+has no match.** Verified on the live site: the ChatGPT Ads agent cites
+`developers.openai.com`, the Google Ads and Ad Grants agents cite `support.google.com`,
+and an agent with no corpus returns no citations at all.
 
 **`contract`** — five fields and an optional sixth, and they are the ones that cost
 money to get wrong.
@@ -217,38 +220,43 @@ What was learned building the Google ones, none of which was obvious:
   say; put an agency's opinion in it and the agent will cite the agency's opinion as
   Google's rule.
 
-**4. Retrieval that can tell one corpus from another — and this is the part that is not
-finished.**
+**4. Retrieval that can tell one corpus from another. This shipped, and the Google Ads
+and Ad Grants doors are open.**
 
-`server/ai/kb.ts` loads exactly one file, `data/kb/kb.json`, into one index, and
-`retrieve(query, k)` searches all of it. It takes no namespace. `kbNamespace` on a door
-row is read in two places in `AskWidget.tsx`, both of them display, and nowhere on the
-path that fetches an answer. `server/ai/agentRuntime.ts` gates retrieval on
-`agent.useKb` alone.
+`server/ai/kb.ts` loads every `*.json` in `data/kb/` into its own index, and
+`retrieve(namespace, query, k)` takes the namespace **first**, because it is the argument
+that must not be left out. The namespace travels on the **agent**, not on the request:
+one agent reads one corpus, so `/api/ask`, the API contract and the client are untouched
+by it.
 
-So a second door set live today would not answer out of its own corpus. It would answer
-out of the ChatGPT Ads corpus, and cite `developers.openai.com` for a question about
-Google Ad Grants — confidently, in the house voice, with a working link. **That is worse
-than a closed door**, which is why both rows are still `coming` and both new agents are
-`useKb: false` with the reason written beside them.
+**There is no fallback, and that is the point.** A corpus with nothing to say returns
+nothing, and the agent then says so. The alternative — answering out of a neighbour's
+documentation — would cite `developers.openai.com` for a question about Google Ad
+Grants: confidently, in the house voice, with a working link. That is worse than a
+closed door.
 
-What has to change, in two files nobody's door row can reach:
+Three tests in `server/ai/kb.test.ts` hold it down: each corpus retrieves only its own
+hosts, an unbuilt namespace returns `[]`, and every live door's `kbNamespace` matches its
+agent's. The unbuilt-namespace probe **chooses** its namespace from what is actually
+missing rather than naming one, so opening a door cannot turn that test red.
 
-- `server/ai/kb.ts` — load every corpus in `data/kb/` rather than only `kb.json`, tag
-  each chunk with its file's `namespace` (defaulting to `chatgpt-ads` where the field is
-  absent, so an older file still works), keep the vectors concatenated in the same order
-  as the chunks so the index alignment `kb:embed` depends on survives, and give
-  `retrieve()` a namespace argument that skips chunks belonging to any other one.
-- `server/ai/agentRuntime.ts` — pass `agent.kbNamespace` into `retrieve()`, and stop
-  naming ChatGPT Ads in the two prompt strings that describe the excerpts
-  (`contextBlock` and `NO_EXCERPTS_INSTRUCTION`), which currently tell every grounded
-  agent that its sources are OpenAI's and that its subject postdates the model's
-  training data.
+### Opening one of the four doors that are still `coming`
 
-The namespace deliberately travels on the **agent**, not on the request: one agent reads
-one corpus, so nothing has to change in `/api/ask`, in the API contract, or in the
-client. When that lands, this door opens by flipping four values — `useKb` on the two
-agents, `status` on the two rows — and deleting two `comingLine`s.
+Four things, and `node scripts/check-parcels.mjs` plus `npm run verify` between them:
+
+1. **The corpus.** Add a `Corpus` const to `scripts/build-kb.ts` and its name to the
+   `CORPORA` array on the last line of that file. A corpus that is not registered there
+   is never fetched, chunked or embedded — a hand-written `data/kb/kb.<door>.json` will
+   load and serve, but every deploy runs `kb:build` over the registry and yours is not
+   in it.
+2. **The agent.** `shared/roster.ts`. `linkedin-ads` already has an entry — flip
+   `useKb` to true and give it `kbNamespace`. The `linkedin-automation` and `ai-builds`
+   rows both point at the shared `ai-dev` agent, and **one agent carries one corpus**, so
+   each of those doors needs an agent of its own. Do not repoint `ai-dev`: three
+   `SERVICES` rows use it too.
+3. **The row.** `status`, and delete the `comingLine`.
+4. **`kb:embed` needs `OPENAI_API_KEY`.** Without it the corpus serves in BM25 mode,
+   which works and is not a fault. The live deployment has a key.
 
 ## Adding the eighth door
 

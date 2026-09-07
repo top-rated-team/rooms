@@ -1,11 +1,15 @@
 {
   "//": "Who may touch what, written down BEFORE anyone starts. Two parcels claiming one file is the failure this file exists to prevent, and it costs one second to catch here instead of four hours in a merge. Read docs/parallel-dev.md first — it carries the brief to paste and the rule about not committing while agents are still typing.",
-  "//seams": "Files everything needs. A parcel may ADD up to three lines to one of these and delete none, and must declare which lines up front. Two one-line additions merge by keeping both; two thirty-line edits merge into something nobody can verify.",
+  "//seams": "Files everything needs. A parcel may ADD up to three lines to one of these and delete none, and must declare which lines up front. Two one-line additions merge by keeping both; two thirty-line edits merge into something nobody can verify. TWO STATED EXCEPTIONS, because the three-line grammar would make them unusable: scripts/build-kb.ts admits one appended Corpus const plus this door's name on the CORPORA line, and shared/roster.ts admits one whole appended agent entry. Both are appends at the end of a list, which is the shape that merges.",
   "seams": [
     "client/src/App.tsx",
     "shared/doors.ts",
     "shared/roster.ts",
     "shared/api.ts",
+    "shared/schema.ts",
+    "server/routes.ts",
+    "server/ai/agentRuntime.ts",
+    "scripts/build-kb.ts",
     "package.json"
   ],
   "//frozen": "Nobody edits these during a parallel run. A change here invalidates every parcel at once.",
@@ -16,12 +20,26 @@
     "client/src/index.css"
   ],
   "//alone": "Parcels marked runAlone touch the room, the panel or the shell — everything reads those, and two agents in them at once produce a merge nobody can check. One agent, let it finish, then start the others.",
-  "//order": "Three at a time. Suggested first wave: spend-limits, door-linkedin-ads, favicon-and-social. Then the two remaining doors together. Then the runAlone ones, one after another.",
+  "//order": "Three at a time, and NEVER two doors in the same wave — every door appends a Corpus const to scripts/build-kb.ts and a name to its CORPORA line, and they share one working tree. Wave 1: spend-limits, door-linkedin-ads, favicon-and-social. Wave 2: door-linkedin-automation, llms-txt, legal-name-display. Wave 3: door-ai-builds, payment-link. Then the runAlone ones, one after another. And do not let two agents run `npm run verify` at the same moment: vite empties dist/ on every build, so a concurrent build reads a directory another one is deleting. Ask them to report and run it yourself, or stagger it.",
   "parcels": {
     "room": {
       "owns": [
         "client/src/pages/workspace.tsx",
-        "client/src/components/workspace/**"
+        "client/src/components/workspace/AdGrantPanel.tsx",
+        "client/src/components/workspace/Avatar.tsx",
+        "client/src/components/workspace/ChannelHeader.tsx",
+        "client/src/components/workspace/Composer.tsx",
+        "client/src/components/workspace/InviteExpertDialog.tsx",
+        "client/src/components/workspace/Markdown.tsx",
+        "client/src/components/workspace/MemberRail.tsx",
+        "client/src/components/workspace/MessageItem.tsx",
+        "client/src/components/workspace/MessageList.tsx",
+        "client/src/components/workspace/NewChannelDialog.tsx",
+        "client/src/components/workspace/RoomArrival.tsx",
+        "client/src/components/workspace/RoomFooter.tsx",
+        "client/src/components/workspace/ShareLinkBar.tsx",
+        "client/src/components/workspace/WorkspaceSidebar.tsx",
+        "client/src/components/workspace/room-style.ts"
       ],
       "seams": {
         "client/src/App.tsx": [
@@ -33,7 +51,8 @@
       },
       "runAlone": true,
       "why": "Everything reads the room. Two agents in it at once produce a merge nobody can check. It was missing from this manifest, which is the one place that is meant to prevent exactly that.",
-      "done": "Whatever the parcel says — but alone, and never at the same time as approval-card, outside-agent or recurring-and-digest, which all write into it."
+      "done": "Whatever the parcel says on the day — but alone, and never at the same time as approval-card, outside-agent, recurring-and-digest or payment-link, each of which adds a file to the same directory. Two things are known to be waiting here and neither is cosmetic: shared/playbook.ts seeds ONE room for all seven doors, so a charity opening a room through the Ad Grants door is told the checklist is a ChatGPT-Ads conversion-tracking engagement; and server/storage.ts seeds our own roster unconditionally, so a room opened through the partner's door prints an accountability line naming the wrong company as the payer. Both are in files this parcel does not own — hand them over, or take server/storage.ts as a seam and say so.",
+      "//owns": "Written out rather than globbed. `client/src/components/workspace/**` swallowed four other parcels' files — AdmitAgentDialog, ApprovalCard, PriceCard and TaskPanel — and a glob cannot say \"except those\". A NEW file under this directory belongs to whichever parcel creates it, not to this one."
     },
     "spend-limits": {
       "owns": [
@@ -43,76 +62,83 @@
       ],
       "seams": {
         "server/routes.ts": [
-          "one guard call before the model call"
+          "one guard call before the model call, and one cost-event call after the stream ends"
+        ],
+        "server/ai/agentRuntime.ts": [
+          "line 42: a `usage?: { model: string; promptTokens: number; completionTokens: number }` member on AgentStreamChunk",
+          "line 198: `stream_options: { include_usage: true },` in create()'s body",
+          "inside the for-await loop: yield the usage chunk when the API sends one, taking the model from `opened.model` and NOT from importing CHAT_MODEL — the 404 fallback silently switches to gpt-4o-mini, and that is the one case where a logged model would otherwise be wrong"
         ]
       },
       "runAlone": false,
       "why": "An agent reply costs about a quarter of a cent and a human conversation about three. Two agents answering each other cost about $4 an hour on this model — which is not frightening, and that is the danger: left running it is $104 a day and nobody notices, because nothing alarming happens at $4.",
-      "done": "Three independent bounds, because each fails differently: a count of turns per room, a clock that stops an agent after N minutes of activity, and a budget in money per room per month, warned at 80% and paused at 100%. One cost event logged per turn — room, agent, model, tokens in, tokens out, dollars — and nothing more. The count is taken atomically BEFORE the model call, so two messages arriving together cannot both pass. A test asserts an agent-authored message never triggers a reply, which is the invariant this product already has for free and which somebody will eventually remove by accident."
+      "done": "READ docs/OPENAI-SDK-NOTES.md first: the token-accounting recipe is already written there, so do not re-derive it. Today AgentStreamChunk carries only delta, citations and error, and create() sets no stream_options — so no token count, dollar figure or model name reaches the caller at all, and a cost log written today would be invented. The seam above is what makes the numbers exist. Then three independent bounds, because each fails differently: a count of turns per room, a clock that stops an agent after N minutes of activity, and a budget in money per room per month, warned at 80% and paused at 100%. One cost event per turn — room, agent, model, tokens in, tokens out, dollars — and nothing more. The count is taken atomically BEFORE the model call, so two messages arriving together cannot both pass. ON THE AGENT-REPLIES-TO-AGENT INVARIANT: check before you test it. POST /api/workspaces/:token/messages hard-codes authorKind \"visitor\" and resolveAgent takes no author argument, so a server-authored message cannot currently reach the reply path at all — the invariant holds by construction rather than by a rule. Say which it is in your report, and write the test against what the code actually does."
     },
     "door-linkedin-ads": {
       "owns": [
-        "data/kb/kb.linkedin-ads.json",
-        "scripts/kb-sources/linkedin-ads.ts"
+        "data/kb/kb.linkedin-ads.json"
       ],
       "seams": {
-        "shared/doors.ts": [
-          "the linkedin-ads row: status and any copy fix"
+        "scripts/build-kb.ts": [
+          "one Corpus const appended after AD_GRANTS, and \"LINKEDIN_ADS\" appended to the CORPORA array on line 243"
         ],
         "shared/roster.ts": [
-          "one agent entry"
+          "the EXISTING linkedin-ads agent entry, rewritten not appended: useKb false -> true, add kbNamespace: \"linkedin-ads\", and add a kbRules(...) call to its systemPrompt. Do not add a second agent — this one already exists and the door already points at it."
+        ],
+        "shared/doors.ts": [
+          "the linkedin-ads row only: status, and any copy fix"
         ]
       },
       "runAlone": false,
       "why": "The row exists and the page renders honestly as not open. Opening it is a corpus, an agent and one word — the machinery landed with the namespace change.",
-      "done": "A corpus from LinkedIn's own advertising documentation only — nothing behind a login, no third-party blog. An agent with a persona, what it knows, what it refuses, and where it stops. Two real buyer questions asked through /api/ask with the answers and citations pasted into the report. FIRST, ANSWER THE QUESTION THE OWNER HAS NOT: nobody has confirmed LinkedIn Ads is actually sold. If it is not, say so and stop — do not build a door for a service that does not exist."
+      "done": "A corpus from LinkedIn's own advertising documentation only — nothing behind a login, no third-party blog. The agent it grounds ALREADY EXISTS (shared/roster.ts, id linkedin-ads, today useKb: false with no namespace) and the door row already points at it, so this is a rewrite of one entry, not a new agent. EVIDENCE IS A TEST, NOT A SCREENSHOT: there is no OPENAI_API_KEY on this machine, so /api/ask cannot answer here. Add a case to server/ai/kb.test.ts asserting that retrieve(\"linkedin-ads\", q) returns the expected pages for two named buyer questions and that no hit comes from another corpus's host. `npm run kb:embed` also needs the key, so the corpus will serve in BM25 mode locally — that is normal and not a failure to report. The live deployment DOES have a key and does answer, so after the operator deploys, the two buyer questions can be asked for real; put them in the report as the check to run, not as a check you ran. FIRST, ANSWER THE QUESTION THE OWNER HAS NOT: nobody has confirmed LinkedIn Ads is actually sold. If it is not, say so and stop — do not build a door for a service that does not exist."
     },
     "door-linkedin-automation": {
       "owns": [
-        "data/kb/kb.linkedin-automation.json",
-        "scripts/kb-sources/linkedin-automation.ts"
+        "data/kb/kb.linkedin-automation.json"
       ],
       "seams": {
-        "shared/doors.ts": [
-          "the linkedin-automation row"
+        "scripts/build-kb.ts": [
+          "one Corpus const appended after AD_GRANTS, and \"LINKEDIN_AUTOMATION\" appended to the CORPORA array on line 243"
         ],
         "shared/roster.ts": [
-          "one agent entry"
+          "a NEW agent entry appended to AGENTS after ai-dev — id and handle \"linkedin-automation\", useKb: true, kbNamespace: \"linkedin-automation\", systemPrompt = HOUSE_STYLE + persona + its own kbRules(...). About twenty lines, and that is agreed here. DO NOT touch the ai-dev entry."
+        ],
+        "shared/doors.ts": [
+          "the linkedin-automation row only: firstAgentId -> \"linkedin-automation\", the agentLine that currently says \"The AI Dev Agent\", status, comingLine, and the blurb fix below"
         ]
       },
       "runAlone": false,
-      "why": "This is the owner's own service — building automation for a client who then operates it, with a written legal assessment in front of it.",
-      "done": "Same shape as the other doors. The agent must NEVER say whether any particular automation is permitted by a platform: it names the assessment and stops. The door's current blurb claims the work is built 'against documented interfaces', which contradicts what the product it describes actually does — fix the copy or hand the contradiction back."
+      "why": "This is the owner's own service — building automation for a client who then operates it, with a written legal assessment in front of it. The row currently points at the shared ai-dev agent, which the ai-builds row also points at; one agent carries one namespace, so two doors cannot both ground on it. This parcel gives the door its own.",
+      "done": "Same shape as door-linkedin-ads, including the evidence rule: a retrieval test, not a pasted answer. The agent is NEW here (the row shares ai-dev with the ai-builds door today, and one agent can only carry one corpus). The agent must NEVER say whether any particular automation is permitted by a platform: it names the assessment and stops. The door's current blurb claims the work is built \"against documented interfaces\", which contradicts what the product it describes actually does — fix the copy or hand the contradiction back."
     },
     "door-ai-builds": {
       "owns": [
-        "data/kb/kb.ai-builds.json",
-        "scripts/kb-sources/ai-builds.ts"
+        "data/kb/kb.ai-builds.json"
       ],
       "seams": {
-        "shared/doors.ts": [
-          "the ai-builds row"
+        "scripts/build-kb.ts": [
+          "one Corpus const appended after AD_GRANTS, and \"AI_BUILDS\" appended to the CORPORA array on line 243"
         ],
         "shared/roster.ts": [
-          "one agent entry"
+          "a NEW agent entry appended to AGENTS — id and handle \"ai-builds\", useKb: true, kbNamespace: \"ai-builds\", its own kbRules(...). DO NOT touch the ai-dev entry, which the SERVICES rows also point at."
+        ],
+        "shared/doors.ts": [
+          "the ai-builds row only: firstAgentId, the agentLine, status, comingLine"
         ]
       },
       "runAlone": false,
       "why": "The owner already sells custom AI builds at being.marketing. This door is that direction of the workspace, not a separate brand a client has to learn.",
-      "done": "Same shape. Read what is actually sold at being.marketing before writing a word of it."
+      "done": "Same shape, same evidence rule — a retrieval test. The agent is NEW: the row points at ai-dev today, which three SERVICES rows and the linkedin-automation door also point at. Read what is actually sold at being.marketing before writing a word of it — and note it renders client-side, so fetching the URL returns an empty shell; open it in a browser or read its bundle."
     },
     "favicon-and-social": {
       "owns": [
         "client/public/assets/**"
       ],
-      "seams": {
-        "client/index.html": [
-          "the icon and image lines"
-        ]
-      },
+      "seams": {},
       "runAlone": false,
       "why": "The browser tab, the bookmark and every link pasted into a chat all currently load one 1238x1238, 74 KB square. A square logo shared in a messenger reads as somebody's avatar rather than as a site.",
-      "done": "A small favicon set from the existing mark, and a proper wide social image — the mark plus the name on the site's own ground, sized for a link preview. The logo itself is not redrawn: it is the one place colour lives on an otherwise colourless page, and that is deliberate."
+      "done": "A small favicon set from the existing mark, and a proper wide social image — the mark plus the name on the site's own ground, sized for a link preview. The logo itself is not redrawn: it is the one place colour lives on an otherwise colourless page, and that is deliberate. client/index.html IS FROZEN and you may not edit it — one shell serves every route. Your output is wired by the operator, so the parcel is NOT DONE until your report carries this block verbatim, all five lines, because four are not enough: line 41 rel=icon href; line 42 apple-touch-icon href (the 180px one); line 61 og:image content, as an absolute URL, plus og:image:width and og:image:height; line 71 twitter:image content; and line 65 twitter:card, which must change from \"summary\" to \"summary_large_image\" — without that last one the wide image is still shown as a square thumbnail, which is the exact failure this parcel exists to fix. Verification is `npm run verify` plus confirming the files land in dist/public/assets/ under the names your block references. Not a browser tab and not a card scraper."
     },
     "outside-agent": {
       "owns": [
@@ -157,7 +183,8 @@
       },
       "runAlone": true,
       "why": "Rooms are working chats for one-off, ongoing and recurring work. Four of the seven doors are retainers. The method has to live in the room without adding a screen.",
-      "done": "Three primitives and no new screens: a repeat setting on a task card so checking it off brings it back next week; one weekly message saying what moved and what is waiting on the client; and one line at the top of the channel saying what the room is doing now and who it is waiting on — the channel header already prints a line in that spot. Agents write the digest and chase what is late. Only a person changes or promises anything."
+      "done": "Three primitives and no new screens: a repeat setting on a task card so checking it off brings it back next week; one weekly message saying what moved and what is waiting on the client; and one line at the top of the channel saying what the room is doing now and who it is waiting on — the channel header already prints a line in that spot. Agents write the digest and chase what is late. Only a person changes or promises anything.",
+      "//owns": "TaskPanel.tsx already exists and is the room's furniture. It is listed here rather than under `room` because this parcel rewrites it; both parcels are runAlone, so they never hold it at the same moment."
     },
     "payment-link": {
       "owns": [
@@ -176,20 +203,16 @@
     },
     "legal-name-display": {
       "owns": [
-        "client/src/components/site/LegalName.tsx",
         "docs/doors.md"
       ],
       "seams": {
         "shared/doors.ts": [
           "a displayName beside legalName"
-        ],
-        "client/index.html": [
-          "the s.r.o. line in the offline page"
         ]
       },
       "runAlone": false,
       "why": "The owner does not want his personal name set in every page's chrome. It is a trading-name question, and the answer differs by surface rather than being one setting.",
-      "done": "Two fields instead of one: displayName 'Top-Rated Team' for chrome and body copy, legalName 'Top-Rated Team (Danylo Burykin SZČO)' for the places where a person is deciding who they are dealing with — the footer's identification line, the Terms, the room footer, and any invoice. Plain selectable text in those places, NOT an image and NOT behind a hover: a hover does not exist on a phone, and somebody copying the name into their own accounting needs to be able to select it. A hover or a quiet small line is fine as presentation on top of that, never instead of it. Fix the four remaining 'Top-Rated Team s.r.o.' strings in docs/doors.md and client/index.html while you are here — shared/doors.ts is already done."
+      "done": "Two fields instead of one: displayName \"Top-Rated Team\" for chrome and body copy, legalName \"Top-Rated Team (Danylo Burykin SZČO)\" for the places where a person is deciding who they are dealing with — the footer's identification line, the Terms, the room footer, and any invoice. Plain selectable text in those places, NOT an image and NOT behind a hover: a hover does not exist on a phone, and somebody copying the name into their own accounting needs to be able to select it. A hover or a quiet small line is fine as presentation on top of that, never instead of it. Then delete the hard-coded OUR_DISPLAY_NAME constant in client/src/pages/workspace.tsx and read contract.displayName instead — that file belongs to the room parcel, so hand it over rather than editing it. The \"Top-Rated Team s.r.o.\" strings are already gone: do not go looking for them."
     },
     "llms-txt": {
       "owns": [
