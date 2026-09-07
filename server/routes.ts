@@ -36,7 +36,7 @@ import {
 import { rateLimit } from "./rateLimit";
 import { llmReady, streamAgentAnswer } from "./ai/agentRuntime";
 import { kbStatus } from "./ai/kb";
-import { guardAgentTurn, recordTurnCost } from "./spend";
+import { ASK_LEDGER_KEY, askBudgetUsd, askLedgerKey, claimAgentTurn, guardAgentTurn, recordTurnCost } from "./spend";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -863,6 +863,35 @@ export function registerRoutes(app: Express): void {
         return;
       }
 
+      /*
+       * THE PUBLIC PANEL HAS TO BE BOUNDED TOO, and until now it was not.
+       *
+       * server/spend.ts went in guarding the ROOM path, which is where an agent
+       * loop was imagined. It missed the endpoint that actually faces the
+       * internet: /api/ask is on every door, needs no token, and anyone can call
+       * it. The only thing here was a 20-per-minute rate limit per address,
+       * which permits 28,800 answers a day from one IP and has no ceiling at all
+       * across many.
+       *
+       * This was not theoretical. A stale polling loop of my own sat on this
+       * endpoint for about five hours, one call every twenty-five seconds, and
+       * nothing anywhere noticed or stopped it. That is the exact failure the
+       * spend module was written for, on the surface it did not cover.
+       *
+       * Two claims, because they fail differently: one for this address, so a
+       * single caller cannot spend the whole ceiling, and one for the endpoint as
+       * a whole, because the real exposure is many addresses rather than one.
+       */
+      const askIp = typeof req.ip === "string" && req.ip ? req.ip : "unknown";
+      const mine = claimAgentTurn(askLedgerKey(askIp));
+      const everyone = mine.ok ? claimAgentTurn(ASK_LEDGER_KEY, Date.now(), askBudgetUsd()) : mine;
+      if (!everyone.ok) {
+        send({ type: "error", message: everyone.message });
+        send({ type: "done" });
+        finish();
+        return;
+      }
+
       send({
         type: "status",
         stage: "retrieving",
@@ -931,6 +960,11 @@ export function registerRoutes(app: Express): void {
             continue;
           }
           if (chunk.citations && chunk.citations.length > 0) citations = chunk.citations;
+          if (chunk.usage) {
+            // Both ledgers the claim above read, or the ceilings never move.
+            recordTurnCost(askLedgerKey(askIp), agentId, chunk.usage);
+            recordTurnCost(ASK_LEDGER_KEY, agentId, chunk.usage);
+          }
           if (chunk.delta) {
             // Kept so the finished answer can be signed. The visitor may hand it
             // back when keeping the conversation, and the receipt is what lets the
