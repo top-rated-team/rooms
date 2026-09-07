@@ -438,7 +438,67 @@ const LINKEDIN_AUTOMATION: Corpus = {
   ],
 };
 
-const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS, LINKEDIN_AUTOMATION];
+/**
+ * Door 7. OpenAI's own API documentation for the work this door sells: an
+ * agent that retrieves from a body of files and cites them, function calling
+ * that writes into a system the model does not own, and GPT Actions —
+ * including the no-authentication option, which is the platform fact behind
+ * a custom AI that runs without a login. Markdown twins, same as door 1.
+ *
+ * Pricing pages, model-comparison pages and cost calculators are deliberately
+ * absent: this door is sold as "custom", a person names the figure, and a
+ * corpus is what an agent is allowed to say. ChatGPT Ads pages are absent
+ * because they are door 1's subject and its own corpus already reads them.
+ *
+ * being.marketing is not in this list. It is a Gumroad store that renders
+ * client-side; this fetcher would index the empty shell. What is sold there
+ * was read in the browser before the agent persona was written, and lives
+ * on the agent, not in the retrieved excerpts.
+ */
+const AI_BUILDS: Corpus = {
+  namespace: "ai-builds",
+  file: "kb.ai-builds.json",
+  label: "Custom AI builds — developers.openai.com/api/docs",
+  markdownPages: [
+    // Retrieval and citation — the first starter on the door.
+    { title: "File search", url: "https://developers.openai.com/api/docs/guides/tools-file-search.md" },
+    { title: "Retrieval", url: "https://developers.openai.com/api/docs/guides/retrieval.md" },
+    { title: "Citation Formatting", url: "https://developers.openai.com/api/docs/guides/citation-formatting.md" },
+    { title: "Vector embeddings", url: "https://developers.openai.com/api/docs/guides/embeddings.md" },
+    { title: "Web QA with embeddings", url: "https://developers.openai.com/api/docs/tutorials/web-qa-embeddings.md" },
+    { title: "File inputs", url: "https://developers.openai.com/api/docs/guides/file-inputs.md" },
+    { title: "Optimizing LLM Accuracy", url: "https://developers.openai.com/api/docs/guides/optimizing-llm-accuracy.md" },
+    // Write-back — the CRM starter. The model proposes a call; the client's
+    // code executes it. That split is the whole of an honest answer.
+    { title: "Function calling", url: "https://developers.openai.com/api/docs/guides/function-calling.md" },
+    { title: "Using tools", url: "https://developers.openai.com/api/docs/guides/tools.md" },
+    { title: "GPT Actions", url: "https://developers.openai.com/api/docs/actions/introduction.md" },
+    { title: "Getting started with GPT Actions", url: "https://developers.openai.com/api/docs/actions/getting-started.md" },
+    { title: "GPT Action authentication", url: "https://developers.openai.com/api/docs/actions/authentication.md" },
+    { title: "Data retrieval with GPT Actions", url: "https://developers.openai.com/api/docs/actions/data-retrieval.md" },
+    { title: "Production notes on GPT Actions", url: "https://developers.openai.com/api/docs/actions/production.md" },
+    { title: "Sending and returning files with GPT Actions", url: "https://developers.openai.com/api/docs/actions/sending-files.md" },
+    { title: "GPT Actions library", url: "https://developers.openai.com/api/docs/actions/actions-library.md" },
+    { title: "MCP and Connectors", url: "https://developers.openai.com/api/docs/guides/tools-connectors-mcp.md" },
+    // What a production build has to survive, and whose data it is.
+    { title: "Data controls in the OpenAI platform", url: "https://developers.openai.com/api/docs/guides/your-data.md" },
+    { title: "Production best practices", url: "https://developers.openai.com/api/docs/guides/production-best-practices.md" },
+    { title: "Rate limits", url: "https://developers.openai.com/api/docs/guides/rate-limits.md" },
+    { title: "Streaming API responses", url: "https://developers.openai.com/api/docs/guides/streaming-responses.md" },
+    { title: "Structured model outputs", url: "https://developers.openai.com/api/docs/guides/structured-outputs.md" },
+    // Completions and Conversation state are deliberately absent: both
+    // pages print the same sample twice, and the retrieval test keys a
+    // chunk by url+heading+text, so a duplicate fails the count. This
+    // panel's use of Chat Completions is stated on the agent, which is
+    // a fact about this codebase rather than a citation. The Assistants
+    // migration page is here so the agent can say that API is retired
+    // rather than recommending it from memory.
+    { title: "Assistants migration guide", url: "https://developers.openai.com/api/docs/assistants/migration.md" },
+    { title: "Agents SDK", url: "https://developers.openai.com/api/docs/guides/agents.md" },
+  ],
+};
+
+const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS, LINKEDIN_AUTOMATION, AI_BUILDS];
 /* -------------------------------- chunking -------------------------------- */
 
 const TARGET_CHARS = 1200;

@@ -22,8 +22,7 @@ scripts/build-llms.ts, so neither can drift from what a visitor reads.
 - A conversation the visitor keeps becomes a room at an address of its own,
   with our agents and our people in it and no signup — the link in the browser
   is the whole account.
-- Five of the six offers below answer questions today. The remaining one has a
-  page and no panel on it yet, and that page says in one sentence why.
+- Every offer below answers questions today.
 - Live answers need an OpenAI key on the deployment. Without one the panel
   says they are not configured, rather than producing something shaped like an
   answer.
@@ -268,15 +267,25 @@ it runs out. We build them for clients, and we sell two of our own at
 being.marketing — a multilingual life-story writer, and a set of custom AIs
 that run without a login.
 
-Status: not open yet. This door has no panel yet. The builds are running, so
-start with a call.
+Status: open, with a panel on the page.
 
 Tier: Ours end to end. Nobody else is in this one. One company, one contract,
 one invoice, and one place to take a complaint.
 
-No panel yet, and no questions printed. The page still names who would answer:
-The AI Dev Agent answers first: what is a two-hour job, what is a two-week
-job, and which parts a person has to own.
+Panel: The AI Builds Agent answers first, from OpenAI's own API documentation,
+and cites the page it used: retrieval and file search, function calling into a
+system the model does not own, and GPT Actions including the no-authentication
+option. It does not quote a price for a build or for keeping one running, and
+it does not see the visitor's codebase or CRM.
+
+Questions the panel offers:
+
+- Can you build an agent that answers from our own documentation and cites it?
+- We want a workspace like this one, on our domain and our data. What does
+  that take?
+- What does it cost to keep an agent running once it is built, and who owns
+  the code?
+- Can an agent write back into our CRM, or only read from it?
 
 Who you would be buying from: Top-Rated Team (Danylo Burykin SZČO). The
 company that runs top-rated.team, with people in Prague, Madeira, Kyiv,

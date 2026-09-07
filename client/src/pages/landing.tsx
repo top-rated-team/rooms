@@ -67,9 +67,14 @@ export function Landing() {
       <Header />
       <main>
         <FirstScreen />
+        {/* The index second, on the owner's reading: the panel defaults to one
+            door's agent, so putting it here made the home page look like that
+            door's sales page again — which is exactly what this redesign moved
+            to /services/chatgpt-ads. The list answers "what do you do" before
+            anything invites a question. */}
+        <DoorIndex />
         <Plate />
         <Panel />
-        <DoorIndex />
         <Results />
         {/* Low, and after the work: a price means nothing until the reader
             knows what it buys. Every figure here is read off shared/pricing.ts,

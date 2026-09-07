@@ -65,6 +65,14 @@ export const DOOR_TIERS: Record<DoorTier, DoorTierDef> = {
 export interface DoorContract {
   /** Legal name, exactly as it appears on the contract. */
   legalName: string;
+  /**
+   * Trading name, for chrome and body copy. A window frame and a sentence
+   * about the work say "Top-Rated Team"; the footer, the Terms, the room
+   * footer and any invoice say legalName. Two fields because the answer
+   * differs by surface rather than being one setting. Set on every door
+   * row; a room with no door behind it may omit it.
+   */
+  displayName?: string;
   /** What kind of body it is and what it trades as, in a client's words. */
   entity: string;
   /** Terms the room links to. `null` when the entity has not supplied one yet — the room must say so rather than falling back to ours. */
@@ -160,6 +168,7 @@ export interface DoorDef {
 /** Doors 1-5 and 7. One company, one contract, one invoice. */
 const TOP_RATED_TEAM: DoorContract = {
   legalName: "Top-Rated Team (Danylo Burykin SZČO)",
+  displayName: "Top-Rated Team",
   entity: "The company that runs top-rated.team, with people in Prague, Madeira, Kyiv, Bratislava and Batumi.",
   termsUrl: `${MAIN_SITE_URL}/terms`,
   invoiceLine: "Top-Rated Team (Danylo Burykin SZČO) signs the contract and sends the invoice.",
@@ -339,6 +348,7 @@ export const DOORS: DoorDef[] = [
     ],
     contract: {
       legalName: "Top-Rated Team (Danylo Burykin SZČO)",
+      displayName: "Top-Rated Team",
       entity:
         "The company that runs top-rated.team. The written assessment is not ours: it comes from a qualified lawyer, on the lawyer's own paper.",
       termsUrl: `${MAIN_SITE_URL}/terms`,
@@ -381,6 +391,7 @@ export const DOORS: DoorDef[] = [
     ],
     contract: {
       legalName: "Maksymenko LinkedIn Growth",
+      displayName: "Maksymenko LinkedIn Growth",
       entity: "A different company. Its own contract, its own invoice, its own support address.",
       // No fallback here on purpose: a room opened from this door must show the
       // partner's terms or say it has none, never quietly borrow ours.
@@ -409,9 +420,9 @@ export const DOORS: DoorDef[] = [
     headline: "Custom AI builds",
     blurb:
       "The agent you are talking to is the thing itself: an assistant grounded in one body of knowledge, wired into one stack, that hands the work to a person where it runs out. We build them for clients, and we sell two of our own at being.marketing — a multilingual life-story writer, and a set of custom AIs that run without a login.",
-    firstAgentId: "ai-dev",
+    firstAgentId: "ai-builds",
     agentLine:
-      "The AI Dev Agent answers first: what is a two-hour job, what is a two-week job, and which parts a person has to own.",
+      "The AI Builds Agent answers first, from OpenAI's own API documentation, and cites the page it used: retrieval and file search, function calling into a system the model does not own, and GPT Actions including the no-authentication option. It does not quote a price for a build or for keeping one running, and it does not see the visitor's codebase or CRM.",
     starters: [
       "Can you build an agent that answers from our own documentation and cites it?",
       "We want a workspace like this one, on our domain and our data. What does that take?",
@@ -421,8 +432,7 @@ export const DOORS: DoorDef[] = [
     contract: TOP_RATED_TEAM,
     tier: "white",
     priceTier: "custom",
-    status: "coming",
-    comingLine: "This door has no panel yet. The builds are running, so start with a call.",
+    status: "live",
     kbNamespace: "ai-builds",
   },
 ];

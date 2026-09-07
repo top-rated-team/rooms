@@ -21,8 +21,7 @@ make.
 - A conversation the visitor keeps becomes a room at an address of its own,
   with our agents and our people in it and no signup — the link in the browser
   is the whole account.
-- Five of the six offers below answer questions today. The remaining one has a
-  page and no panel on it yet, and that page says in one sentence why.
+- Every offer below answers questions today.
 - Live answers need an OpenAI key on the deployment. Without one the panel
   says they are not configured, rather than producing something shaped like an
   answer.
@@ -34,7 +33,7 @@ make.
 - [Google Ad Grants, set up through the official Google Ads API](https://ai.top-rated.team/services/ad-grants): Campaigns, ad groups, keywords, ads and extensions are generated from your own website and written into your Google Ads account through the official Google Ads API — under a manager-account link you can remove, not a tool signed in as you. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
 - [LinkedIn Ads for B2B](https://ai.top-rated.team/services/linkedin-ads): Account-based targeting, lead gen forms, the Insight Tag, and a closed loop from spend to pipeline in your CRM — so the report says revenue rather than form fills. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
 - [LinkedIn automation — with a written legal assessment](https://ai.top-rated.team/services/linkedin-automation): A qualified lawyer writes down what is and is not allowed where you are before anything runs, on their own paper. Lawyer first; invoiced by Top-Rated Team (Danylo Burykin SZČO).
-- [Custom AI builds](https://ai.top-rated.team/services/ai-builds): The agent you are talking to is the thing itself: an assistant grounded in one body of knowledge, wired into one stack, that hands the work to a person where it runs out. Not open yet. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
+- [Custom AI builds](https://ai.top-rated.team/services/ai-builds): The agent you are talking to is the thing itself: an assistant grounded in one body of knowledge, wired into one stack, that hands the work to a person where it runs out. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
 
 ## Pages
 
