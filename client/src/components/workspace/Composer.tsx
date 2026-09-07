@@ -8,7 +8,7 @@ import {
   type ChangeEvent,
   type KeyboardEvent,
 } from "react";
-import { AGENTS, BOOK_A_CALL_URL, DEFAULT_AGENT_ID, EXPERTS } from "@shared/roster";
+import { AGENTS, AGENT_BY_ID, BOOK_A_CALL_URL, EXPERTS } from "@shared/roster";
 import type { Channel, Member } from "@shared/schema";
 import type { ConnectionStatus } from "@/hooks/use-workspace";
 import { Avatar, toneFor } from "@/components/workspace/Avatar";
@@ -36,7 +36,6 @@ interface MentionOption {
 }
 
 const SLASH_HINTS = [
-  { command: "/ask ", label: "/ask", detail: "ask the ChatGPT Ads agent" },
   { command: "/task ", label: "/task", detail: "add a line to the list" },
   { command: "/invite", label: "/invite", detail: "bring in a person" },
   { command: "/call", label: "/call", detail: "book a call" },
@@ -102,6 +101,12 @@ export interface ComposerProps {
   members: Member[];
   connection: ConnectionStatus;
   sending: boolean;
+  /**
+   * Which agent `/ask` summons. The channel's counterpart in an agent thread,
+   * otherwise the door's first agent. Null when no agent of ours answers here,
+   * so the command is not offered and does not quietly call the ChatGPT Ads one.
+   */
+  askAgentId?: string | null;
   onSend: (body: string, mentions: string[]) => void;
   onTyping: () => void;
   onCreateTask: (title: string) => void;
@@ -115,6 +120,7 @@ export function Composer({
   members,
   connection,
   sending,
+  askAgentId,
   onSend,
   onTyping,
   onCreateTask,
@@ -128,6 +134,13 @@ export function Composer({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const options = useMemo(() => mentionOptions(members), [members]);
+  const askAgent = askAgentId ? AGENT_BY_ID[askAgentId] : undefined;
+  const slashHints = useMemo(() => {
+    const ask = askAgent
+      ? [{ command: "/ask ", label: "/ask", detail: `ask ${askAgent.name}` }]
+      : [];
+    return [...ask, ...SLASH_HINTS];
+  }, [askAgent]);
   const mention = menuOpen ? activeMentionQuery(value, caret) : null;
   const matches = useMemo(() => {
     if (!mention) return [];
@@ -218,15 +231,15 @@ export function Composer({
     }
     if (raw.startsWith("/ask ")) {
       const question = raw.slice("/ask ".length).trim();
-      if (!question) return;
+      if (!question || !askAgent) return;
       setValue("");
-      onSend(question, [`agent:${DEFAULT_AGENT_ID}`]);
+      onSend(question, [`agent:${askAgent.id}`]);
       return;
     }
 
     setValue("");
     onSend(raw, mentionKeysIn(raw, options));
-  }, [channel, offline, onCreateTask, onInvite, onSend, options, value]);
+  }, [askAgent, channel, offline, onCreateTask, onInvite, onSend, options, value]);
 
   const onChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -364,7 +377,7 @@ export function Composer({
             </span>
           ) : (
             <>
-              {SLASH_HINTS.map((hint) => (
+              {slashHints.map((hint) => (
                 <button
                   key={hint.label}
                   type="button"
