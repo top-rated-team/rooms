@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 
+import AdGrantDoor from "@/components/site/doors/AdGrantDoor";
 import ChatGptAdsBody from "@/components/site/doors/ChatGptAdsBody";
 
 /**
@@ -22,6 +23,15 @@ import ChatGptAdsBody from "@/components/site/doors/ChatGptAdsBody";
  */
 export const DOOR_BODIES: Record<string, ComponentType> = {
   "chatgpt-ads": ChatGptAdsBody,
+  /*
+   * The second one, and it earns it by the rule above: adgrant.ai is a working
+   * tool with 74 pages of its own material behind it, and this is the only door
+   * where the thing being sold is software the visitor operates rather than
+   * people doing work. It was built by the door-ad-grants-adgrant-ai parcel and
+   * sat imported by nothing until this line, because door.tsx was not its file
+   * to edit — the handoff it could not apply itself.
+   */
+  "ad-grants": AdGrantDoor,
 };
 
 export function doorBody(doorId: string): ComponentType | undefined {

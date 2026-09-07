@@ -38,6 +38,7 @@
  * carrying no figure instead of being swept into `custom`.
  */
 export type PriceTierId =
+  | "audit"
   | "task"
   | "support"
   | "setup"
@@ -79,6 +80,26 @@ export interface PriceRow {
  */
 export const PRICES: PriceRow[] = [
   {
+    /*
+     * FIRST, AND FREE, AND IT IS THE ONE THAT LEADS.
+     *
+     * Advertisers switched their accounts over to the platforms' own automation
+     * and to agents they added themselves, and are now living with what those
+     * did. Fixing that is what the whole market is doing this year, us included,
+     * and it is the most honest front door we have: it starts by looking rather
+     * than by selling, and what it finds is either a problem we can name or a
+     * clean account, which is worth knowing either way.
+     *
+     * Free with no condition attached and no card, because a condition on a free
+     * audit is what makes people distrust free audits.
+     */
+    id: "audit",
+    price: "free",
+    buys: "An expert read of your paid ads accounts, by a person.",
+    condition: "No card, no signup, and no obligation after it. You get what we found, whether or not you want us to fix it.",
+    ours: true,
+  },
+  {
     id: "task",
     price: "from $49 per task",
     buys: "A contractor dedicated to one task.",
@@ -98,7 +119,7 @@ export const PRICES: PriceRow[] = [
   {
     id: "setup",
     price: "$99",
-    buys: "One conversion-tracking setup, or one month of managing one Google Ad Grants account.",
+    buys: "One conversion-tracking setup, or one month of managing one Google Ad Grant account.",
     // The dual meaning is the owner's, and it is the row most likely to be
     // misread, so the page says which of the two applies rather than leaving a
     // visitor to guess from a slash.

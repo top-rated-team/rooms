@@ -50,8 +50,10 @@ export function DoorIndex() {
           problem.
         </h2>
         <p className="type-body m-0 text-muted-foreground">
-          Each one that is open starts with a question rather than a form, and the agent answering it reads only that
-          service&rsquo;s own documentation.
+          Most paid ads accounts we open have been handed to the platform&rsquo;s own automation and to agents somebody
+          added, and are now optimising against something nobody chose. The free audit is the first row for that
+          reason. Each one that is open starts with a question rather than a form, and the agent answering it reads
+          only that service&rsquo;s own documentation.
         </p>
       </div>
 

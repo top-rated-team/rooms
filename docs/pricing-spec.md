@@ -10,7 +10,7 @@ implement it: `pricing-and-packaging` and `room-identity-binding`.
 |---|---|
 | **from $49 per task** | A contractor dedicated to the project. **Unlimited hours on that task.** |
 | **$49 / month** | Content-generation support, or boosting support for top-voice.ai or warmlike.com |
-| **$99** | A conversion-tracking setup, **or** a full month of managing one Google Ad Grants account |
+| **$99** | A conversion-tracking setup, **or** a full month of managing one Google Ad Grant account |
 | **from $499 / month** | Managing paid advertising accounts |
 | **+$49 / month** | Boosters for top-voice.ai or warmlike.com on the client's own account or Pages |
 | **free** | Content campaigns and autopilot (its own door) and the AI agent — **on the condition of the client's own Anthropic and/or OpenAI keys**, which is then what pays for talking to the agents and for agents talking to each other |

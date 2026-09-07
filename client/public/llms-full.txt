@@ -1,7 +1,7 @@
 # Top-Rated Team — ai.top-rated.team, in full
 
 > Paid advertising, the measurement under it, and the custom AI around both.
-> Seven offers a visitor can read here, and one room behind all of them. Where
+> Eight offers a visitor can read here, and one room behind all of them. Where
 > a service is contracted and invoiced by a partner rather than by Top-Rated
 > Team, its row says so. Every price the site publishes is on one page,
 > /pricing, and the agents may repeat those and no others.
@@ -23,8 +23,9 @@ scripts/build-llms.ts, so neither can drift from what a visitor reads.
 - A conversation the visitor keeps becomes a room at an address of its own,
   with our agents and our people in it and no signup — the link in the browser
   is the whole account.
-- Six of the seven offers below answer questions today. The remaining one has
-  a page and no panel on it yet, and that page says in one sentence why.
+- Six of the eight offers below answer questions today. The remaining two have
+  a page and no panel on them yet, and each of those pages says in one
+  sentence why.
 - Live answers need an OpenAI key on the deployment. Without one the panel
   says they are not configured, rather than producing something shaped like an
   answer.
@@ -43,7 +44,34 @@ Contact: https://top-rated.team/contact
 
 ## Offers
 
-### 1. Conversion tracking for ChatGPT Ads
+### 1. Free expert audit of your paid ads accounts
+
+https://ai.top-rated.team/services/paid-ads-audit
+
+A person reads your Google Ads, LinkedIn Ads or Meta account and tells you
+what the automation in it has actually been doing. Most accounts we open have
+been run by the platform's own bidding and by agents somebody added, and are
+now optimising against something nobody chose. You get what we found either
+way, and there is nothing to sign to get it.
+
+Status: open, and no agent of ours answers in it.
+
+Tier: Ours end to end. Nobody else is in this one. One company, one contract,
+one invoice, and one place to take a complaint.
+
+No panel. No agent answers first in this door, and that is the point: an audit
+is a person opening an account they can see. No documentation can say what the
+automation did to yours, so nothing here will guess at it.
+
+Who you would be buying from: Top-Rated Team (Danylo Burykin SZČO). The
+company that runs top-rated.team, with people in Prague, Madeira, Kyiv,
+Bratislava and Batumi. Top-Rated Team (Danylo Burykin SZČO) signs the contract
+and sends the invoice.
+
+Terms: https://top-rated.team/terms
+Contact: https://top-rated.team/contact
+
+### 2. Conversion tracking for ChatGPT Ads
 
 https://ai.top-rated.team/services/chatgpt-ads
 
@@ -80,7 +108,7 @@ and sends the invoice.
 Terms: https://top-rated.team/terms
 Contact: https://top-rated.team/contact
 
-### 2. Google Ads management
+### 3. Google Ads management
 
 https://ai.top-rated.team/services/google-ads
 
@@ -112,11 +140,11 @@ Questions the panel offers. It prints the first four and puts the rest behind a 
 
 Runs on a tool of ours: AdGrant.AI — https://adgrant.ai
 
-Our own tool, and it is for Google Ad Grants accounts rather than paid ones.
-It reads a nonprofit's website and writes campaigns, ad groups, keywords, ads
-and extensions into their own Google Ads account through the official Google
-Ads API. On a paid account it has no part to play: a paid account is bid on,
-not generated. If you are a nonprofit, the Ad Grants door is the one to read.
+Our own tool, and it is for Google Ad Grant accounts rather than paid ones. It
+reads a nonprofit's website and writes campaigns, ad groups, keywords, ads and
+extensions into their own Google Ads account through the official Google Ads
+API. On a paid account it has no part to play: a paid account is bid on, not
+generated. If you are a nonprofit, the Ad Grants door is the one to read.
 
 Who you would be buying from: Top-Rated Team (Danylo Burykin SZČO). The
 company that runs top-rated.team, with people in Prague, Madeira, Kyiv,
@@ -126,7 +154,44 @@ and sends the invoice.
 Terms: https://top-rated.team/terms
 Contact: https://top-rated.team/contact
 
-### 3. Google Ad Grants, set up through the official Google Ads API
+### 4. LinkedIn Ads for B2B
+
+https://ai.top-rated.team/services/linkedin-ads
+
+Account-based targeting, lead gen forms, the Insight Tag, and a closed loop
+from spend to pipeline in your CRM — so the report says revenue rather than
+form fills.
+
+Status: open, with a panel on the page.
+
+Tier: Ours end to end. Nobody else is in this one. One company, one contract,
+one invoice, and one place to take a complaint.
+
+Panel: The LinkedIn Ads Agent answers first, from LinkedIn's own advertising
+documentation, and cites the page it used: campaign objectives, audience
+targeting including company and contact lists, Lead Gen Forms, the Insight Tag
+and the Conversions API, and the CRM sync the closed loop runs on. It does not
+give a cost per lead, a budget or a price — a person does that — and where
+LinkedIn's own documentation is silent it says so rather than filling the gap.
+
+Questions the panel offers:
+
+- Can we upload our target account list, or only target by job title and
+  industry?
+- Lead gen forms vs landing pages for a $200 ACV product?
+- Our LinkedIn leads never become opportunities. Is that the targeting or the
+  offer?
+- How do we get LinkedIn spend and CRM pipeline into one report?
+
+Who you would be buying from: Top-Rated Team (Danylo Burykin SZČO). The
+company that runs top-rated.team, with people in Prague, Madeira, Kyiv,
+Bratislava and Batumi. Top-Rated Team (Danylo Burykin SZČO) signs the contract
+and sends the invoice.
+
+Terms: https://top-rated.team/terms
+Contact: https://top-rated.team/contact
+
+### 5. Google Ad Grants, set up through the official Google Ads API
 
 https://ai.top-rated.team/services/ad-grants
 
@@ -180,44 +245,7 @@ the invoice.
 Terms: https://top-rated.team/terms
 Contact: https://top-rated.team/contact
 
-### 4. LinkedIn Ads for B2B
-
-https://ai.top-rated.team/services/linkedin-ads
-
-Account-based targeting, lead gen forms, the Insight Tag, and a closed loop
-from spend to pipeline in your CRM — so the report says revenue rather than
-form fills.
-
-Status: open, with a panel on the page.
-
-Tier: Ours end to end. Nobody else is in this one. One company, one contract,
-one invoice, and one place to take a complaint.
-
-Panel: The LinkedIn Ads Agent answers first, from LinkedIn's own advertising
-documentation, and cites the page it used: campaign objectives, audience
-targeting including company and contact lists, Lead Gen Forms, the Insight Tag
-and the Conversions API, and the CRM sync the closed loop runs on. It does not
-give a cost per lead, a budget or a price — a person does that — and where
-LinkedIn's own documentation is silent it says so rather than filling the gap.
-
-Questions the panel offers:
-
-- Can we upload our target account list, or only target by job title and
-  industry?
-- Lead gen forms vs landing pages for a $200 ACV product?
-- Our LinkedIn leads never become opportunities. Is that the targeting or the
-  offer?
-- How do we get LinkedIn spend and CRM pipeline into one report?
-
-Who you would be buying from: Top-Rated Team (Danylo Burykin SZČO). The
-company that runs top-rated.team, with people in Prague, Madeira, Kyiv,
-Bratislava and Batumi. Top-Rated Team (Danylo Burykin SZČO) signs the contract
-and sends the invoice.
-
-Terms: https://top-rated.team/terms
-Contact: https://top-rated.team/contact
-
-### 5. LinkedIn automation — with a written legal assessment
+### 6. LinkedIn automation — with a written legal assessment
 
 https://ai.top-rated.team/services/linkedin-automation
 
@@ -259,7 +287,7 @@ separately, and we do not mark it up.
 Terms: https://top-rated.team/terms
 Contact: https://top-rated.team/contact
 
-### 6. Custom AI builds
+### 7. Custom AI builds
 
 https://ai.top-rated.team/services/ai-builds
 
@@ -297,7 +325,7 @@ and sends the invoice.
 Terms: https://top-rated.team/terms
 Contact: https://top-rated.team/contact
 
-### 7. White label — our work under your name
+### 8. White label — our work under your name
 
 https://ai.top-rated.team/services/white-label
 
@@ -564,7 +592,7 @@ next.
 - Prices, budgets, timelines and promised results. No page publishes any of
   them, and the agents are instructed to say that pricing and scope come from
   a person rather than produce a figure.
-- More offers than the seven listed. https://ai.top-rated.team/services asks
+- More offers than the eight listed. https://ai.top-rated.team/services asks
   for an email address before it names them, they are absent from sitemap.xml,
   and their pages are noindex — so a file at the root does not name them
   either.
