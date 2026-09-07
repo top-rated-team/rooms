@@ -143,3 +143,35 @@ export interface RoomBooster {
 export type BoosterInventory =
   | { status: "ok"; boosters: RoomBooster[] }
   | { status: "unavailable" };
+
+/* ----------------------------- thread prices ------------------------------ */
+/* One invoice sitting in a thread. Not a plan, not a subscription, not a
+ * page of prices. The person doing the work invoices the work; Top-Rated Team
+ * invoices its own fee separately; the card says which of those this is. */
+
+/**
+ * A price put in a thread, paid or not. The figure is a display string derived
+ * from cents on the server, never typed twice. `legalName` is who invoices this
+ * amount, as it must appear on paper.
+ */
+export interface ThreadPrice {
+  id: string;
+  /** The figure the visitor reads, derived from cents on the server. */
+  amount: string;
+  currency: string;
+  /** What this invoice is for. */
+  for: string;
+  /**
+   * Who sends this invoice. `expert` is the person doing the work. `house` is
+   * Top-Rated Team's own fee, billed separately.
+   */
+  issuer: "expert" | "house";
+  /** Legal name on the invoice. Plain selectable text, never a hover. */
+  legalName: string;
+  status: "open" | "paid";
+  /** ISO timestamp when the room recorded payment; null while open. */
+  paidAt: string | null;
+  channelId: string;
+  /** Thread root, when this price sits under a specific turn. */
+  parentId: string | null;
+}
