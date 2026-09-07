@@ -25,7 +25,7 @@ const PAGE_DESCRIPTION =
 /** The count, in the index's own words, so the heading cannot outlive the list. */
 const INDEX_HEADLINE = `${countWord(PUBLIC_DOORS.length).charAt(0).toUpperCase()}${countWord(
   PUBLIC_DOORS.length,
-).slice(1)} things, and who sends the invoice for each.`;
+).slice(1)} services, and who sends the invoice for each.`;
 
 /**
  * The index: one line per door, rendered straight from shared/doors.ts.

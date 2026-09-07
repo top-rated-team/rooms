@@ -47,7 +47,7 @@ export function DoorIndex() {
     <section id="doors" className="mx-auto max-w-[var(--page)] scroll-mt-[var(--s3)] px-[var(--s3)] pt-[var(--s6)]">
       <div className="grid grid-cols-1 items-baseline gap-[var(--s3)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)]">
         <h2 className="type-body m-0 font-display font-medium">
-          {countWord(PUBLIC_DOORS.length).replace(/^./, (c) => c.toUpperCase())} things, and who sends the invoice for each.
+          {countWord(PUBLIC_DOORS.length).replace(/^./, (c) => c.toUpperCase())} services, and who sends the invoice for each.
         </h2>
         <p className="type-body m-0 text-muted-foreground">
           Whoever sets the price is the seller, so every row says which company would send the invoice — before you pick

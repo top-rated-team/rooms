@@ -40,8 +40,7 @@ export function FirstScreen() {
   return (
     <section className="mx-auto grid max-w-[var(--page)] grid-cols-1 items-end gap-[var(--s4)] px-[var(--s3)] py-[var(--s5)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)] lg:py-[var(--s6)]">
       <h1 className="type-display m-0" data-testid="text-home-headline">
-        {countWord(PUBLIC_DOORS.length).replace(/^./, (c) => c.toUpperCase())} kinds of work. One room behind all of
-        them.
+        {countWord(PUBLIC_DOORS.length).replace(/^./, (c) => c.toUpperCase())} services. One room behind all of them.
       </h1>
 
       <div>
