@@ -259,7 +259,7 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent">
                 <Check className="h-5 w-5" />
               </div>
-              <Dialog.Title className="text-xl font-semibold tracking-tight">Received and written down</Dialog.Title>
+              <Dialog.Title className="pr-8 text-xl font-semibold tracking-tight">Received and written down</Dialog.Title>
               <Dialog.Description className="mt-2 text-sm text-muted-foreground">
                 {answerer ? (
                   <>
