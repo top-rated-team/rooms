@@ -56,6 +56,19 @@ services:
         value: gpt-5-mini
       - key: OPENAI_EMBED_MODEL
         value: text-embedding-3-small
+      - key: ROOM_MONTHLY_BUDGET_USD
+        value: "5"          # What one room may spend on AI answers in a month, in
+                            # dollars. server/spend.ts warns the room at 80% and stops
+                            # sending questions to the model at 100%; two other bounds
+                            # sit under it, a rolling count of 30 turns an hour and a
+                            # 20-minute active clock, and neither is configurable.
+                            # An agent turn costs roughly a quarter of a cent, so $5 is
+                            # about two thousand answers — generous for one engagement
+                            # and cheap enough that a loop nobody notices costs $5 and
+                            # not $104 a day. Raise it per service, never remove it:
+                            # a value that is not a positive number is ignored and the
+                            # $5 default applies, because a room with no ceiling is the
+                            # one failure this cannot have.
       - key: LEAD_NOTIFY_EMAIL
         value: dan@being.marketing
       - key: LEAD_WEBHOOK_URL

@@ -36,6 +36,7 @@ import {
 import { rateLimit } from "./rateLimit";
 import { llmReady, streamAgentAnswer } from "./ai/agentRuntime";
 import { kbStatus } from "./ai/kb";
+import { guardAgentTurn, recordTurnCost } from "./spend";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -242,6 +243,8 @@ async function runAgentReply(reply: AgentReply): Promise<void> {
     return;
   }
 
+  if (!(await guardAgentTurn(reply))) return;
+
   const placeholder = await storage.addMessage(reply.workspaceId, {
     channelId: reply.channelId,
     authorKey,
@@ -266,6 +269,7 @@ async function runAgentReply(reply: AgentReply): Promise<void> {
         body += chunk.delta;
         broadcast(reply.token, { type: "message_delta", id: placeholder.id, channelId: reply.channelId, delta: chunk.delta });
       }
+      if (chunk.usage) recordTurnCost(reply.workspaceId, reply.agentId, chunk.usage);
     }
   } catch (streamError) {
     console.error("[agent] stream failed:", streamError);
