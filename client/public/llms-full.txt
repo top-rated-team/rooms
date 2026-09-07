@@ -1,0 +1,530 @@
+# Top-Rated Team — ai.top-rated.team, in full
+
+> Paid advertising, the measurement under it, and the custom AI around both.
+> Six offers a visitor can read here, and one room behind all of them. Every
+> offer names the company that signs the contract and sends the invoice. None
+> of them publishes a price.
+
+This is the long version of llms.txt. Every offer below is a row in
+shared/doors.ts, and every claim made about it here is one that offer's own
+page makes. The last section is the one door page with an argument of its own,
+taken out of the component that draws it. Both files are written by
+scripts/build-llms.ts, so neither can drift from what a visitor reads.
+
+## How a visit works
+
+- Each offer has a page of its own. Where the offer is open, that page carries
+  a panel: a visitor asks a question in it, an agent answers from
+  documentation and links the pages it used, and that costs nothing and does
+  not need their name.
+- The conversation is not saved while that is happening, and the page says so
+  under the answer: nothing is saved yet, close the tab and it is gone.
+- A conversation the visitor keeps becomes a room at an address of its own,
+  with our agents and our people in it and no signup — the link in the browser
+  is the whole account.
+- Five of the six offers below answer questions today. The remaining one has a
+  page and no panel on it yet, and that page says in one sentence why.
+- Live answers need an OpenAI key on the deployment. Without one the panel
+  says they are not configured, rather than producing something shaped like an
+  answer.
+
+## Who runs the site
+
+Top-Rated Team (Danylo Burykin SZČO). The company that runs top-rated.team,
+with people in Prague, Madeira, Kyiv, Bratislava and Batumi.
+
+It publishes this website. Where an offer belongs to another company, that
+company is named on the offer, in its footer and in any room opened through
+it, and this one does not sign that work, invoice it or answer for it.
+
+Terms: https://top-rated.team/terms
+Contact: https://top-rated.team/contact
+
+## Offers
+
+### 1. Conversion tracking for ChatGPT Ads
+
+https://ai.top-rated.team/use-case/chatgpt-ads
+
+The one part of paid ads any AI agent still can't finish for you. Pixel,
+Conversions API, deduplication and consent — installed on your real site,
+verified against live conversions, and documented before we hand it back.
+
+Status: open, with a panel on the page.
+
+Tier: Ours end to end. Nobody else is in this one. One company, one contract,
+one invoice, and one place to take a complaint.
+
+Panel: The ChatGPT Ads Agent answers first, from developers.openai.com/ads,
+and cites the page it used.
+
+Questions the panel offers. It prints the first four and puts the rest behind a "4 more" control:
+
+- How do I install the ChatGPT Ads pixel on Shopify without breaking checkout?
+- Which event should I optimise on if our sales cycle is 60 days and nothing
+  is bought online?
+- What is the difference between oppref and obref, and do I need both?
+- Our purchases are being counted twice. How does deduplication actually work?
+- Can I send a conversion from HubSpot when a deal moves to closed-won?
+- What do I need to add to our Content Security Policy for the pixel?
+- We're in the EU. How do I gate the pixel behind consent without losing every
+  conversion?
+- How do I confirm real events are arriving, not just getting a 200 back?
+
+Who you would be buying from: Top-Rated Team (Danylo Burykin SZČO). The
+company that runs top-rated.team, with people in Prague, Madeira, Kyiv,
+Bratislava and Batumi. Top-Rated Team (Danylo Burykin SZČO) signs the contract
+and sends the invoice.
+
+Terms: https://top-rated.team/terms
+Contact: https://top-rated.team/contact
+
+### 2. Google Ads management
+
+https://ai.top-rated.team/use-case/google-ads
+
+Search, Performance Max and Shopping, run by the people Google books to train
+other advertisers. Account structure, bidding and negatives — and the
+measurement underneath them, because bad data makes every bidding decision
+wrong.
+
+Status: open, with a panel on the page.
+
+Tier: Ours end to end. Nobody else is in this one. One company, one contract,
+one invoice, and one place to take a complaint.
+
+Panel: The Google Ads Agent answers first, from Google's own Google Ads
+documentation, and cites the page it used: account structure, bidding,
+Performance Max, Shopping feeds and the conversion tracking underneath them.
+It does not audit an account it cannot see, and it does not say whether Google
+will approve an ad or lift a suspension.
+
+Questions the panel offers. It prints the first four and puts the rest behind a "1 more" control:
+
+- Should we split PMax from Search, or let PMax absorb everything?
+- How do I structure a $3K/month B2B SaaS account?
+- Our CPA doubled after a bidding change — how do we diagnose it?
+- We spend $30K a month and still cannot say which campaigns pay. Where would
+  you start?
+- We are a nonprofit with a $10k Ad Grant. Is that the same work as a paid
+  account?
+
+Runs on a tool of ours: AdGrant.AI — https://adgrant.ai
+
+Our own tool, and it is for Google Ad Grants accounts rather than paid ones.
+It reads a nonprofit's website and writes campaigns, ad groups, keywords, ads
+and extensions into their own Google Ads account through the official Google
+Ads API. On a paid account it has no part to play: a paid account is bid on,
+not generated. If you are a nonprofit, the Ad Grants door is the one to read.
+
+Who you would be buying from: Top-Rated Team (Danylo Burykin SZČO). The
+company that runs top-rated.team, with people in Prague, Madeira, Kyiv,
+Bratislava and Batumi. Top-Rated Team (Danylo Burykin SZČO) signs the contract
+and sends the invoice.
+
+Terms: https://top-rated.team/terms
+Contact: https://top-rated.team/contact
+
+### 3. Google Ad Grants, set up through the official Google Ads API
+
+https://ai.top-rated.team/use-case/ad-grants
+
+Campaigns, ad groups, keywords, ads and extensions are generated from your own
+website and written into your Google Ads account through the official Google
+Ads API — under a manager-account link you can remove, not a tool signed in as
+you. The setup is the automated half; the other half is a person, on the
+conversion tracking that lets the grant report donations and sign-ups instead
+of clicks, and on the month-to-month work that keeps the account inside the
+rules that suspend grants.
+
+Status: open, with a panel on the page.
+
+Tier: Ours end to end. Nobody else is in this one. One company, one contract,
+one invoice, and one place to take a complaint.
+
+Panel: The Ad Grants Agent answers first, from Google's own Ad Grants
+policies, and cites the page it used: the 5% click-through rule, the website
+and account-management policies, what the API upload writes into your account,
+and what conversion tracking needs from your website. It does not say whether
+Google will approve or reinstate an account — a person reads the account
+before anyone answers that.
+
+Questions the panel offers:
+
+- Google suspended our grant account over the 5% click-through rule. Can you
+  rebuild it?
+- Do you build the campaigns inside our own Google Ads account, or do we
+  import files by hand?
+- We report on donations and volunteer sign-ups, not clicks. Can you set that
+  tracking up?
+- After the setup, who runs the account each month — your team or the
+  software?
+
+Runs on a tool of ours: AdGrant.AI — https://adgrant.ai
+
+Our own tool, and the automated half of this door. It reads your website and
+writes campaigns, ad groups, keywords, ads and extensions into your own Google
+Ads account through the official Google Ads API, under a manager-account link
+you can remove. It is not signed in as you, and it does not run the account
+afterwards — the conversion tracking and the month-to-month work are a person,
+on the same contract.
+
+Who you would be buying from: Top-Rated Team (Danylo Burykin SZČO). The
+company that runs top-rated.team. The Ad Grants setup runs on our own tool,
+adgrant.ai; the management and the conversion tracking after it are our own
+people, on the same contract, so this door is one contract and one invoice
+either way. Top-Rated Team (Danylo Burykin SZČO) signs the contract and sends
+the invoice.
+
+Terms: https://top-rated.team/terms
+Contact: https://top-rated.team/contact
+
+### 4. LinkedIn Ads for B2B
+
+https://ai.top-rated.team/use-case/linkedin-ads
+
+Account-based targeting, lead gen forms, the Insight Tag, and a closed loop
+from spend to pipeline in your CRM — so the report says revenue rather than
+form fills.
+
+Status: open, with a panel on the page.
+
+Tier: Ours end to end. Nobody else is in this one. One company, one contract,
+one invoice, and one place to take a complaint.
+
+Panel: The LinkedIn Ads Agent answers first, from LinkedIn's own advertising
+documentation, and cites the page it used: campaign objectives, audience
+targeting including company and contact lists, Lead Gen Forms, the Insight Tag
+and the Conversions API, and the CRM sync the closed loop runs on. It does not
+give a cost per lead, a budget or a price — a person does that — and where
+LinkedIn's own documentation is silent it says so rather than filling the gap.
+
+Questions the panel offers:
+
+- Can we upload our target account list, or only target by job title and
+  industry?
+- Lead gen forms vs landing pages for a $200 ACV product?
+- Our LinkedIn leads never become opportunities. Is that the targeting or the
+  offer?
+- How do we get LinkedIn spend and CRM pipeline into one report?
+
+Who you would be buying from: Top-Rated Team (Danylo Burykin SZČO). The
+company that runs top-rated.team, with people in Prague, Madeira, Kyiv,
+Bratislava and Batumi. Top-Rated Team (Danylo Burykin SZČO) signs the contract
+and sends the invoice.
+
+Terms: https://top-rated.team/terms
+Contact: https://top-rated.team/contact
+
+### 5. LinkedIn automation — with a written legal assessment
+
+https://ai.top-rated.team/use-case/linkedin-automation
+
+A qualified lawyer writes down what is and is not allowed where you are before
+anything runs, on their own paper. We then build only that and hand your team
+the code to operate, naming in the scope which parts go through LinkedIn's own
+API and which drive your own logged-in session — because sign-in, email and
+posting are the only permissions LinkedIn gives out without approval.
+
+Status: open, with a panel on the page.
+
+Tier: Lawyer first. A qualified lawyer writes down what is allowed where you
+are before anything is built, and bills that part separately.
+
+Panel: The LinkedIn Automation Agent answers first, from LinkedIn's own
+developer documentation, and cites the page it used: which permissions are
+open to any developer, which need LinkedIn's approval or a partner programme,
+and what the interfaces for invitations, messages, connections and posting
+require. It never says whether a particular automation is permitted — not by
+LinkedIn and not where you are. That is the lawyer's written assessment, and
+it is written before anything runs.
+
+Questions the panel offers:
+
+- What can be automated on LinkedIn without putting the account at risk?
+- We want follow-ups sent from our sales team's own profiles. Is that allowed
+  where we are?
+- What does the written assessment cover, who writes it, and what does it
+  cost?
+- Can this be built against the official LinkedIn API instead of a browser
+  session?
+
+Who you would be buying from: Top-Rated Team (Danylo Burykin SZČO). The
+company that runs top-rated.team. The written assessment is not ours: it comes
+from a qualified lawyer, on the lawyer's own paper. Top-Rated Team (Danylo
+Burykin SZČO) invoices the build. The lawyer invoices the assessment
+separately, and we do not mark it up.
+
+Terms: https://top-rated.team/terms
+Contact: https://top-rated.team/contact
+
+### 6. Custom AI builds
+
+https://ai.top-rated.team/use-case/ai-builds
+
+The agent you are talking to is the thing itself: an assistant grounded in one
+body of knowledge, wired into one stack, that hands the work to a person where
+it runs out. We build them for clients, and we sell two of our own at
+being.marketing — a multilingual life-story writer, and a set of custom AIs
+that run without a login.
+
+Status: not open yet. This door has no panel yet. The builds are running, so
+start with a call.
+
+Tier: Ours end to end. Nobody else is in this one. One company, one contract,
+one invoice, and one place to take a complaint.
+
+No panel yet, and no questions printed. The page still names who would answer:
+The AI Dev Agent answers first: what is a two-hour job, what is a two-week
+job, and which parts a person has to own.
+
+Who you would be buying from: Top-Rated Team (Danylo Burykin SZČO). The
+company that runs top-rated.team, with people in Prague, Madeira, Kyiv,
+Bratislava and Batumi. Top-Rated Team (Danylo Burykin SZČO) signs the contract
+and sends the invoice.
+
+Terms: https://top-rated.team/terms
+Contact: https://top-rated.team/contact
+
+## The conversion-tracking argument, from https://ai.top-rated.team/use-case/chatgpt-ads
+
+The longest-running offer is the only one with more to say than its row, and
+this is that page below its panel: the seven places a conversion-tracking
+engagement goes wrong, the four steps, the two results with the sentence
+saying what they are not, and the six objections including the two that end
+with the company telling somebody not to hire it.
+
+### Most of paid ads is now automatable. This part is not.
+
+We will not pretend otherwise. Creating the pixel, the API key and the event
+setting is three API calls. Generating the snippet, the hashing code, the
+batching loop and the retry logic is code generation, and an agent does it
+well. Answering “which event, which data shape, which field name” is retrieval
+— that is what the agent above is for, and it is free.
+
+None of that is where engagements go wrong. These seven are.
+
+#### Deciding what counts as a conversion
+
+There is no endpoint for a business decision, and this one is close to
+irreversible: the optimisation event cannot be changed after a campaign is
+created, and custom events are not eligible goals at all.
+
+Prevents: Optimising on lead_created when the money is in
+appointment_scheduled — and a campaign rebuild, plus a second learning period,
+to correct it.
+
+bidding_type: "conversions" · ces_…
+
+#### Touching a live template or tag manager
+
+The snippet belongs near the top of <head> on every measured page of a real
+codebase or a real container, which means deploy access, a staging pass, a
+Content Security Policy change reviewed by whoever owns security, and a
+rollback plan.
+
+Prevents: A checkout broken by a tag, or a CSP that silently blocks the SDK on
+the one page that mattered.
+
+oaiq("init") · script-src
+
+#### Building and deploying a server endpoint
+
+The Conversions API is server-only, so someone stands up a real endpoint in
+your stack that keeps the key in a secret manager, fires on the right webhook,
+and respects the seven-days-past, ten-minutes-future timestamp window.
+
+Prevents: An API key shipped to the browser, where anyone can write
+conversions into your account — or a batch of 1,000 events rejected because
+one of them was malformed.
+
+POST /v1/events · timestamp_ms
+
+#### Event ID strategy across two systems
+
+Deduplication keys on pixel ID plus event name plus event ID, and the first
+event received wins, so the browser and the server must agree on one string
+generated somewhere both can reach — before either half is written.
+
+Prevents: Every purchase counted twice, or the rich server event with amount
+and hashed user data discarded in favour of the thin browser one that arrived
+first.
+
+event_id · id
+
+#### Consent gating
+
+Consent must be set before init, blocked events are never replayed, and the
+image tag has no consent command at all — so gating moves into render logic
+and has to match what your policy actually promises.
+
+Prevents: Conversions deleted in bulk by a consent banner that resolves a
+moment after the pixel has already fired.
+
+oaiq("consent", …) · __obref
+
+#### CRM and offline conversion plumbing
+
+The API accepts offline, phone_call, physical_store and email as action
+sources, but nothing ships the data: the stage has to be chosen, identifiers
+normalised and hashed correctly, backfills kept inside the timestamp window,
+and the job kept running after handover.
+
+Prevents: Bidding trained on form fills while the actual revenue sits in a CRM
+nobody connected.
+
+action_source: "offline" · emails_sha256
+
+#### Verifying real events, not preview events
+
+A 200 response confirms the event reached the ingestion pipeline, not that it
+completed downstream, and validate_only deliberately saves nothing — so
+proving a setup works means real conversions on the real site, reconciled
+against Ads Manager over days.
+
+Prevents: A setup that looks green in a debug console on Tuesday and reports
+nothing by Friday.
+
+GET /conversions/events · validate_only
+
+The documentation is good and public. The API surface is small. What you are
+paying for is the decision at the top, the hands on a live system in the
+middle, and the verification at the end.
+
+There is no magic: just expertise, dedicated hours, and a systematic approach.
+
+### Four steps, and the first two are free.
+
+Nothing here needs a contract before you know whether we are useful. The work
+starts when you have seen the answer and still want hands on it.
+
+#### Ask
+
+Instant, free
+
+Put a real question to the agent in the panel above. It answers from the
+official ChatGPT Ads documentation and cites the page it used. If your
+question turns out to be a five-minute fix, you will have it in five minutes
+and we will have cost you nothing.
+
+#### Scope
+
+Shared room, no signup
+
+Keep the answer and it becomes a room. Your stack, your money event, and the
+checklist of what actually has to happen, in one shared space with our agents
+and our people in it. The link in the address bar is the whole account —
+bookmark it, or send it to your developer.
+
+#### Implement
+
+Our engineer, your stack
+
+Pixel in the real template, Conversions API endpoint in your own backend with
+the key in your secret manager, one event ID agreed across both halves,
+consent wired to the banner you already run, CRM stages mapped if the money
+closes offline.
+
+#### Verify and hand over
+
+Documented, with a rollback note
+
+Real conversions fired on the real site and reconciled in Ads Manager over
+days, not a debug console screenshot. Then a written map of what fires where,
+and a rollback note for whoever touches the site next.
+
+### +180% conversion growth
+
+Commercial proxies. Offline conversions only.
+
+Nothing was bought on the website. Every conversion that mattered came back
+from the CRM, which meant the measurement had to be built before the bidding
+was worth touching.
+
+### +477% conversion growth, −81% cost per conversion
+
+An account previously run with incorrectly configured conversions.
+
+The campaigns were not the problem. The account had been optimising against
+conversions that were counted wrong, so the auction had been buying the wrong
+clicks with real budget for months. Fixing the measurement is what moved the
+numbers.
+
+Both of those are Google Ads accounts, because ChatGPT Ads conversion tracking
+shipped in mid-2026 and anyone claiming years of results on it is selling you
+something. The measurement work is the same work: decide the event, install it
+properly, prove it in the platform.
+
+### The questions people actually ask.
+
+Including the two that end with us telling you not to hire us. We would rather
+lose the engagement than take one where we add nothing.
+
+#### The documentation is public and it's only a snippet. Why would I pay anyone?
+
+Because the snippet is the easy hour. The hard parts are deciding which event
+is your money event — a choice you cannot change after the campaign is created
+— getting the tag into a live template without breaking checkout, standing up
+the server endpoint the Conversions API requires, and proving that real
+conversions, not test fires, are landing in Ads Manager. If your team already
+has those four covered, you genuinely do not need us.
+
+#### Can't your AI agent just do the whole thing?
+
+No, and we would rather say so than sell you a demo. The agent is very good at
+the documentation: which event names exist, which data shape each one takes,
+how deduplication keys work, what belongs in your Content Security Policy. It
+cannot deploy to your site, hold your API key, decide what a conversion is
+worth to your business, or watch Ads Manager for three days to confirm the
+numbers are real. That is what the humans are for.
+
+#### We already run Tag Manager and we have a developer.
+
+Then this is probably a short engagement, and we will tell you that on the
+call. The usual gap is not GTM skill — it is that the Conversions API cannot
+be called from the browser at all, so the server half needs backend work and a
+secret store, and that browser and server events must share one event ID
+agreed before either half is written. We can do only that piece and leave the
+rest with your developer.
+
+#### We don't sell online. Deals close on the phone weeks later.
+
+Then the browser is the wrong place to measure and half the industry's advice
+does not apply to you. ChatGPT Ads accepts server-side events with
+action_source set to offline or phone_call, so the real work is connecting
+your CRM: defining which stage counts, hashing the identifiers correctly, and
+sending the event inside the platform's timestamp window. That is a build, and
+it is the kind we do.
+
+#### What access do you need, and what happens to our customers' data?
+
+Site or tag manager access to install, and ad account access to define the
+conversion and verify it. Personal data never leaves your systems in the clear
+— emails, phone numbers, names and customer IDs are normalised and SHA-256
+hashed before they are sent, which the platform requires and we implement. We
+will never ask you to paste an API key or a password into a chat window;
+access is arranged through proper invite flows.
+
+#### How long does it take, and how do I know it's finished?
+
+A typical setup is days, not weeks, and most of the elapsed time is waiting
+for real conversions to accumulate so we can check them rather than guess.
+Done means: events firing on the real site, the server-side path live, browser
+and server deduplicating to one conversion, consent behaving the way your
+policy says it should, numbers reconciled in Ads Manager, and a written map of
+what fires where — including a rollback note for whoever touches the site
+next.
+
+## Not in this file
+
+- Room addresses. A kept conversation lives at /w/<token>, and that token is a
+  bearer credential in the URL: writing one down publishes it. robots.txt
+  disallows /w/, those pages carry noindex, and this file leaves them out for
+  the same reason.
+- The HTTP API. robots.txt disallows /api/ as well, and this file follows it.
+- Prices, budgets, timelines and promised results. No page publishes any of
+  them, and the agents are instructed to say that pricing and scope come from
+  a person rather than produce a figure.
+- More offers than the six listed. https://ai.top-rated.team/use-case asks for
+  an email address before it names them, they are absent from sitemap.xml, and
+  their pages are noindex — so a file at the root does not name them either.

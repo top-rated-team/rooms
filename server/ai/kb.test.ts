@@ -85,6 +85,11 @@ const PROBES: Record<string, string[]> = {
     "Can we target a list of named accounts with Matched Audiences company list targeting?",
     "How do Lead Gen Forms reach our CRM, and what does the Revenue Attribution Report show?",
   ],
+  "linkedin-automation": [
+    "Which LinkedIn permissions are Open Permissions available to all developers without special approval?",
+    "Usage of the Invitations API is restricted to approved partners subject to an API agreement.",
+    "How does LinkedIn API rate limiting work, and what is the response when a call exceeds it?",
+  ],
 };
 
 const ALL_PROBES = Object.values(PROBES).flat();
@@ -244,4 +249,61 @@ test("the LinkedIn Ads door's printed questions reach LinkedIn's own pages", asy
       );
     }
   }
+});
+
+test("the LinkedIn Automation door's printed questions reach LinkedIn's own developer pages", async () => {
+  // Same evidence rule as the LinkedIn Ads case above: there is no OPENAI_API_KEY
+  // on this machine, so /api/ask cannot answer here and a pasted answer would
+  // prove nothing. Two named buyer questions, asserted against the corpus on
+  // disk, and no hit from another corpus's host.
+  //
+  // The first is the panel starter about the official API, which is the fact
+  // the door's blurb now states instead of "documented interfaces". The second
+  // is the invitations question a buyer actually asks — the page it must reach
+  // says the interface is restricted to approved partners, which is not the
+  // same fact as "permitted".
+  const questions: Array<{ question: string; expects: RegExp }> = [
+    { question: "Can this be built against the official LinkedIn API instead of a browser session?", expects: /share on linkedin|sign in with linkedin|getting access/i },
+    { question: "Can an app send connection invitations through the official API?", expects: /invitation/i },
+  ];
+
+  const foreign = new Set<string>();
+  for (const [namespace, keys] of corpora) {
+    if (namespace === "linkedin-automation") continue;
+    for (const key of keys) foreign.add(new URL(key.split("\u0000")[0]).host);
+  }
+  assert.ok(foreign.size > 0, "no other corpus is on disk, so this test cannot show a leak");
+
+  for (const { question, expects } of questions) {
+    const hits = await retrieve("linkedin-automation", question, 8);
+    assert.ok(hits.length > 0, `the LinkedIn automation corpus returned nothing for "${question}"`);
+    assert.ok(
+      hits.some((hit) => expects.test(hit.title)),
+      `"${question}" came back with no ${expects} page in it: ${hits.map((hit) => hit.title).join(" / ")}`,
+    );
+
+    for (const hit of hits) {
+      const host = new URL(hit.url).host;
+      assert.equal(host, "learn.microsoft.com", `"${question}" cited ${host}, which is not LinkedIn's own developer documentation`);
+      assert.ok(
+        !foreign.has(host),
+        `"${question}" cited ${host}, a host that belongs to another door's corpus: ${hit.url}`,
+      );
+    }
+  }
+});
+
+test("the LinkedIn Automation Agent names the assessment and does not answer permitted", () => {
+  const agent = AGENT_BY_ID["linkedin-automation"];
+  assert.ok(agent, "the LinkedIn Automation Agent is missing from the roster");
+  assert.equal(agent.kbNamespace, "linkedin-automation");
+  const prompt = agent.systemPrompt.toLowerCase();
+  assert.ok(
+    prompt.includes("never say whether a particular automation is permitted"),
+    "the agent's prompt dropped the refusal this door exists to carry",
+  );
+  assert.ok(
+    prompt.includes("assessment"),
+    "the agent's prompt no longer names the assessment it is supposed to stop at",
+  );
 });

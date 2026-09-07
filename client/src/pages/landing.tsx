@@ -7,6 +7,7 @@ import FirstScreen from "@/components/site/home/FirstScreen";
 import Panel from "@/components/site/home/Panel";
 import Plate from "@/components/site/home/Plate";
 import Results from "@/components/site/home/Results";
+import Ladder from "@/components/site/Ladder";
 
 /* ---------------------------------------------------------------------------
  * THE HOME PAGE
@@ -70,6 +71,11 @@ export function Landing() {
         <Panel />
         <DoorIndex />
         <Results />
+        {/* Low, and after the work: a price means nothing until the reader
+            knows what it buys. Every figure here is read off shared/pricing.ts,
+            which is also what every agent's prompt is given — so the page and
+            the agents cannot quote different numbers. */}
+        <Ladder />
 
         <section className="mx-auto max-w-[var(--page)] px-[var(--s3)] pt-[var(--s6)]">
           <div className="max-w-[44ch]">
