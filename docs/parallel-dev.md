@@ -104,6 +104,21 @@ extra parcel is another set of handoffs somebody has to apply afterwards.
 
 ---
 
+## Before you commit
+
+```bash
+node scripts/staged-owners.mjs && git commit …
+```
+
+It reads `parcels.json`, looks at what is staged, and names any staged file a
+parcel owns — the files an agent may be in the middle of. It exits non-zero when
+it finds one, so it stops a commit in a `&&` chain.
+
+**It exists because the rule below was broken twice, the second time by the
+person who wrote it.** A broad `git add` while an agent is writing is easy to
+type and invisible afterwards: the tree compiles, the tests pass, and nobody
+finds out until the agent reports against a file that has moved under it.
+
 ## While it runs
 
 **Do not commit.** The single most expensive mistake made on this project so far
