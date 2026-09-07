@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { AGENT_BY_ID, DEFAULT_AGENT_ID, EXPERT_BY_KEY, type AgentDef, type ExpertDef } from "@shared/roster";
+import { AGENT_BY_ID, EXPERT_BY_KEY, type AgentDef, type ExpertDef } from "@shared/roster";
 import type { Channel, Member, Message } from "@shared/schema";
+import type { ThreadPrice } from "@shared/api";
 import type { TypingSignal } from "@/hooks/use-workspace";
 import { MessageItem } from "@/components/workspace/MessageItem";
+import { PriceCard, threadPriceFromMeta } from "@/components/workspace/PriceCard";
 import { cn } from "@/lib/utils";
 import { CHROME, FOCUS, LABEL, META, READ } from "@/components/workspace/room-style";
 
@@ -41,13 +43,16 @@ function startersFor(agent: AgentDef | undefined, count: number): Starter[] {
   return agent.starters.slice(0, count).map((question) => ({ question, agentId: agent.id }));
 }
 
-function starterQuestions(channel: Channel | null): Starter[] {
+function starterQuestions(channel: Channel | null, doorAgentId?: string | null): Starter[] {
   const channelAgent = agentForChannel(channel);
   if (channelAgent) return startersFor(channelAgent, 4);
-  return [
-    ...startersFor(AGENT_BY_ID[DEFAULT_AGENT_ID], 2),
-    ...startersFor(AGENT_BY_ID["conversion-tracking"], 2),
-  ];
+  const doorAgent = doorAgentId ? AGENT_BY_ID[doorAgentId] : undefined;
+  if (doorAgent) return startersFor(doorAgent, 4);
+  return [];
+}
+
+function priceOn(message: Message): ThreadPrice | null {
+  return threadPriceFromMeta({ price: message.meta?.price });
 }
 
 function nameForKey(key: string, members: Member[]): string {
@@ -68,6 +73,12 @@ export interface MessageListProps {
   typing: TypingSignal[];
   /** null while /api/kb/status is still in flight. */
   llmReady: boolean | null;
+  /**
+   * The agent that opens this door, when the channel itself has none. Empty
+   * project channels used to offer ChatGPT Ads and conversion-tracking
+   * questions in every room, including a grant room that is not that work.
+   */
+  doorAgentId?: string | null;
   onStarter: (question: string, agentId: string) => void;
   /** Click one of the two-click hire. Offered under the newest agent turn only. */
   onGetPerson?: (message: Message) => void;
@@ -97,6 +108,7 @@ export function MessageList({
   members,
   typing,
   llmReady,
+  doorAgentId,
   onStarter,
   onGetPerson,
   anchor = "newest",
@@ -175,8 +187,34 @@ export function MessageList({
     .map((t) => nameForKey(t.memberKey, members))
     .filter((name, index, all) => all.indexOf(name) === index);
 
-  const starters = starterQuestions(channel);
+  const starters = starterQuestions(channel, doorAgentId);
   const channelAgent = agentForChannel(channel);
+  const idsInChannel = useMemo(() => new Set(ordered.map((message) => message.id)), [ordered]);
+  const pricesByParent = useMemo(() => {
+    const map = new Map<string, ThreadPrice[]>();
+    for (const message of ordered) {
+      const price = priceOn(message);
+      if (!price?.parentId || !idsInChannel.has(price.parentId)) continue;
+      const list = map.get(price.parentId) ?? [];
+      list.push(price);
+      map.set(price.parentId, list);
+    }
+    return map;
+  }, [idsInChannel, ordered]);
+  const childPriceIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const message of ordered) {
+      const price = priceOn(message);
+      if (price?.parentId && idsInChannel.has(price.parentId)) ids.add(message.id);
+    }
+    return ids;
+  }, [idsInChannel, ordered]);
+  const lastVisibleIndex = useMemo(() => {
+    for (let i = ordered.length - 1; i >= 0; i--) {
+      if (!childPriceIds.has(ordered[i].id)) return i;
+    }
+    return -1;
+  }, [childPriceIds, ordered]);
 
   return (
     <div
@@ -201,7 +239,7 @@ export function MessageList({
             <p className={cn(READ, "mt-2 text-muted-foreground")}>
               {channelAgent?.blurb ??
                 channel?.purpose ??
-                "Nothing here yet. Say what you are running ads for, and what counts as a conversion."}
+                "Nothing here yet. Write what you need done."}
             </p>
             {starters.length > 0 ? (
               <div className="mt-7">
@@ -226,7 +264,15 @@ export function MessageList({
         ) : null}
 
         {ordered.map((message, index) => {
-          const previous = index > 0 ? ordered[index - 1] : undefined;
+          if (childPriceIds.has(message.id)) return null;
+
+          let previous: Message | undefined;
+          for (let i = index - 1; i >= 0; i--) {
+            if (!childPriceIds.has(ordered[i].id)) {
+              previous = ordered[i];
+              break;
+            }
+          }
           const sameDay = previous ? dayKey(previous.createdAt) === dayKey(message.createdAt) : false;
           const isEvent = Boolean(message.meta?.event);
           const previousWasEvent = Boolean(previous?.meta?.event);
@@ -236,6 +282,9 @@ export function MessageList({
             !previousWasEvent &&
             previous.authorKey === message.authorKey &&
             new Date(message.createdAt).getTime() - new Date(previous.createdAt).getTime() < RUN_WINDOW_MS;
+          const price = priceOn(message);
+          const attached = pricesByParent.get(message.id) ?? [];
+          const paidNotice = message.authorKind === "system" && Boolean(message.meta?.paid) && !price;
 
           return (
             <div key={message.id}>
@@ -246,15 +295,26 @@ export function MessageList({
                   <span className="h-px flex-1 bg-border" />
                 </div>
               ) : null}
-              <MessageItem
-                message={message}
-                member={memberByKey.get(message.authorKey)}
-                showAuthor={!withinRun}
-                // Only the last message carries it. The need appears at the
-                // live edge of the thread, and a button under every answer is
-                // a nag rather than an offer.
-                onGetPerson={index === ordered.length - 1 ? onGetPerson : undefined}
-              />
+              {paidNotice ? (
+                <p className={cn(META, "py-3 text-muted-foreground")} data-testid={`event-paid-${message.id}`}>
+                  {message.body}
+                </p>
+              ) : price ? (
+                <PriceCard price={price} />
+              ) : (
+                <MessageItem
+                  message={message}
+                  member={memberByKey.get(message.authorKey)}
+                  showAuthor={!withinRun}
+                  // Only the last message carries it. The need appears at the
+                  // live edge of the thread, and a button under every answer is
+                  // a nag rather than an offer.
+                  onGetPerson={index === lastVisibleIndex ? onGetPerson : undefined}
+                />
+              )}
+              {attached.map((attachedPrice) => (
+                <PriceCard key={attachedPrice.id} price={attachedPrice} />
+              ))}
             </div>
           );
         })}

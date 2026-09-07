@@ -20,7 +20,8 @@ import {
 } from "@shared/schema";
 import type { WorkspaceState } from "@shared/api";
 import { AGENT_BY_ID, EXPERTS } from "@shared/roster";
-import { CONVERSION_TRACKING_TASKS, SEED_CHANNELS } from "@shared/playbook";
+import { seedFor } from "@shared/playbook";
+import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
 import { getDb, hasDb, type AppDatabase } from "./db";
 
 /* ------------------------------ input shapes ------------------------------ */
@@ -134,7 +135,27 @@ interface Seed {
  * implementations so an in-memory workspace and a persisted one are identical.
  */
 function buildSeed(workspaceId: string, input: CreateWorkspaceInput, now: Date): Seed {
-  const channelRows: Channel[] = SEED_CHANNELS.map((seed, index) => ({
+  /*
+   * THE DOOR DECIDES WHAT IS IN THE ROOM. Everything below used to be the same
+   * whichever door a visitor came through, which put our people and our
+   * conversion-tracking checklist into a room opened on a partner's door — see
+   * seedFor() in shared/playbook.ts for why that was the worst defect here.
+   *
+   * An unstamped room falls back to the default door rather than to nothing:
+   * a room with no channels at all is unusable, and routes.ts already renders
+   * the fault state for a room that named no company.
+   */
+  const door = DOOR_BY_ID[input.source?.door ?? ""] ?? DOOR_BY_ID[DEFAULT_DOOR_ID];
+  const ours = door.contract.legalName === DOOR_BY_ID[DEFAULT_DOOR_ID].contract.legalName;
+  const plan = seedFor({
+    id: door.id,
+    slug: door.slug,
+    headline: door.headline,
+    firstAgentId: door.firstAgentId,
+    ours,
+  });
+
+  const channelRows: Channel[] = plan.channels.map((seed, index) => ({
     id: nanoid(),
     workspaceId,
     slug: seed.slug,
@@ -164,12 +185,17 @@ function buildSeed(workspaceId: string, input: CreateWorkspaceInput, now: Date):
   // the assignee on the first checklist item, so it must exist as a member even
   // though nothing opens a channel with it up front.
   const agentKeys: string[] = [];
-  for (const seed of SEED_CHANNELS) {
+  for (const seed of plan.channels) {
     if (seed.kind === "agent" && seed.counterpartKey && !agentKeys.includes(seed.counterpartKey)) {
       agentKeys.push(seed.counterpartKey);
     }
   }
-  if (!agentKeys.includes("agent:conversion-tracking")) agentKeys.push("agent:conversion-tracking");
+  /* The conversion-tracking agent is the assignee on that door's checklist, so
+   * it has to exist as a member there — and only there. It used to be added to
+   * every room, including rooms with no checklist and rooms that are not ours. */
+  if (plan.tasks.some((task) => task.assigneeKey === "agent:conversion-tracking")) {
+    if (!agentKeys.includes("agent:conversion-tracking")) agentKeys.push("agent:conversion-tracking");
+  }
 
   for (const key of agentKeys) {
     const agent = AGENT_BY_ID[key.replace(/^agent:/, "")];
@@ -187,7 +213,7 @@ function buildSeed(workspaceId: string, input: CreateWorkspaceInput, now: Date):
     });
   }
 
-  for (const expertId of ["ihor", "dan"]) {
+  for (const expertId of plan.expertIds) {
     const expert = EXPERTS.find((candidate) => candidate.id === expertId);
     if (!expert) continue;
     memberRows.push({
@@ -203,7 +229,7 @@ function buildSeed(workspaceId: string, input: CreateWorkspaceInput, now: Date):
     });
   }
 
-  const taskRows: Task[] = CONVERSION_TRACKING_TASKS.map((seed, index) => ({
+  const taskRows: Task[] = plan.tasks.map((seed, index) => ({
     id: nanoid(),
     workspaceId,
     title: seed.title,

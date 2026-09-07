@@ -5,9 +5,11 @@ import { DEFAULT_DOOR_ID, DOOR_BY_ID, type DoorContract, type DoorDef } from "@s
 import type { Channel, Message, TaskStatus } from "@shared/schema";
 import { useTheme } from "@/hooks/use-theme";
 import { listStoredWorkspaces, useWorkspace } from "@/hooks/use-workspace";
+import { AccountsPanel } from "@/components/workspace/AccountsPanel";
 import { AdGrantPanel, AD_GRANT_SETUP, type SetupLine } from "@/components/workspace/AdGrantPanel";
 import { ChannelHeader, type MobileView } from "@/components/workspace/ChannelHeader";
 import { Composer } from "@/components/workspace/Composer";
+import { IdentifyStrip } from "@/components/workspace/IdentifyStrip";
 import { InviteExpertDialog, type HireOffer } from "@/components/workspace/InviteExpertDialog";
 import { MemberRail } from "@/components/workspace/MemberRail";
 import { MessageList } from "@/components/workspace/MessageList";
@@ -77,11 +79,10 @@ const OUR_LEGAL_NAME = DOOR_BY_ID[DEFAULT_DOOR_ID].contract.legalName;
  * Burykin SZČO)", which is a legal form doing the work of a label.
  *
  * So chrome says the trading name and the footer says the legal one, and both
- * are on screen at once in the rooms where it matters. It is typed here because
- * `DoorContract` carries only `legalName` today; the handoff adds a
- * `displayName` beside it and this constant becomes one lookup.
+ * are on screen at once in the rooms where it matters. The trading name is
+ * `contract.displayName` on our own door row, not a string typed again here.
  */
-const OUR_DISPLAY_NAME = "Top-Rated Team";
+const OUR_DISPLAY_NAME = DOOR_BY_ID[DEFAULT_DOOR_ID].contract.displayName ?? "Top-Rated Team";
 
 /**
  * The brief is read by a person, in a sheet and then in a notification, so the
@@ -261,6 +262,7 @@ export default function WorkspacePage() {
    * calendar from a company the room does not name and the footer says is
    * missing. Nothing on screen should imply a seller the room cannot produce. */
   const ours = door ? door.contract.legalName === OUR_LEGAL_NAME : null;
+  const doorAgentId = door?.firstAgentId ?? null;
 
   /* Workspace URLs are bearer credentials: they must never be indexed. */
   useEffect(() => {
@@ -281,7 +283,7 @@ export default function WorkspacePage() {
   useEffect(() => {
     const previous = document.title;
     const name = state?.workspace.name;
-    document.title = name ? (ours ? `${name} — Top-Rated Team` : name) : "Workspace";
+    document.title = name ? (ours ? `${name} — ${OUR_DISPLAY_NAME}` : name) : "Workspace";
     return () => {
       document.title = previous;
     };
@@ -703,6 +705,7 @@ export default function WorkspacePage() {
                 members={members}
                 typing={typing}
                 llmReady={kb ? kb.llmReady : null}
+                doorAgentId={doorAgentId}
                 onStarter={onStarter}
                 onGetPerson={onGetPerson}
                 /* The arrival opens the column on the visitor's own question,
@@ -711,11 +714,26 @@ export default function WorkspacePage() {
                 anchor={showArrival ? "question" : "newest"}
                 className={showArrival ? "hidden lg:block" : undefined}
               />
+              {/* Above the composer, not on arrival: the strip asks once the
+                  room already holds something of theirs, which is the moment
+                  they are about to paste more of it. IdentifyStrip hides
+                  itself until that is true. Remounting on a new visitor turn
+                  is what makes it appear after the paste rather than eight
+                  seconds later on its own poll. */}
+              <IdentifyStrip
+                key={`${state.workspace.token}:${written.filter((m) => m.authorKind === "visitor").length}`}
+                token={state.workspace.token}
+              />
               <Composer
                 channel={activeChannel}
                 members={members}
                 connection={connection}
                 sending={sending}
+                askAgentId={
+                  activeChannel?.kind === "agent" && activeChannel.counterpartKey
+                    ? activeChannel.counterpartKey.replace(/^agent:/, "")
+                    : doorAgentId
+                }
                 onSend={onSend}
                 onTyping={onTyping}
                 onCreateTask={onCreateTask}
@@ -732,13 +750,11 @@ export default function WorkspacePage() {
               )}
               data-testid="rail-right"
             >
-              {/* Four regions, one rail, and all four have to be on screen at
-                  once: who is here, the tool, the list, and the company
-                  answerable for the room. Each is capped rather than allowed to
-                  push the next one below the fold — the first render of this
-                  restyle let the member list grow until the checklist and the
-                  footer were both off screen, which is exactly the failure the
-                  brief calls out: quieter is not the same as gone. */}
+              {/* Who is here, the working panels, and the company answerable
+                  for the room. The member list and the footer are capped so
+                  they cannot push the other off the fold — quieter is not the
+                  same as gone. Boosters sit in the scrolling middle, as
+                  inventory, never in the member list. */}
               <MemberRail
                 members={members}
                 /* The same contract the footer prints: a line under a badge
@@ -758,6 +774,11 @@ export default function WorkspacePage() {
                     seven, and in those two it is the first thing in the column
                     that is not a name. */}
                 <AdGrantPanel doorId={door?.id} alreadyAdded={setupAlreadyAdded} onAddSetup={addSetup} />
+                {/* Our rented accounts, as inventory, never as names. A room
+                    another company invoices does not show this list: the
+                    accounts are ours, and putting them in that room would
+                    tell their client they had our capacity on their team. */}
+                {ours === true ? <AccountsPanel token={state.workspace.token} /> : null}
                 <TaskPanel tasks={tasks} members={members} onCreate={onCreateTask} onUpdate={onUpdateTask} />
               </div>
               {/* A room must not be able to render without saying which company
@@ -779,6 +800,7 @@ export default function WorkspacePage() {
         onInvite={onInvite}
         defaultEmail={state.workspace.visitorEmail}
         defaultName={state.workspace.visitorName}
+        doorId={door?.id}
         offer={hireOffer}
       />
       <NewChannelDialog open={channelDialogOpen} onOpenChange={setChannelDialogOpen} onCreate={onCreateChannel} />

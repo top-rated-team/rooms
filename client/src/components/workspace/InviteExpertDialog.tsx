@@ -82,6 +82,12 @@ export interface InviteExpertDialogProps {
   onInvite: (input: { memberKey: string; note?: string; email?: string; name?: string }) => Promise<boolean>;
   defaultEmail?: string | null;
   defaultName?: string | null;
+  /**
+   * The door this room was opened through. The conversion-tracking reason is
+   * only true of that door; printing it in an Ad Grants room would tell the
+   * visitor this room is a different engagement than the one they opened.
+   */
+  doorId?: string;
   /** What the room knows about this particular need. */
   offer?: HireOffer;
 }
@@ -92,6 +98,7 @@ export function InviteExpertDialog({
   onInvite,
   defaultEmail,
   defaultName,
+  doorId,
   offer,
 }: InviteExpertDialogProps) {
   const [memberKey, setMemberKey] = useState(offer?.memberKey ?? DEFAULT_EXPERT.memberKey);
@@ -146,7 +153,9 @@ export function InviteExpertDialog({
   const rateLine = moneyLine(offer);
   const reason =
     offer?.reason ??
-    (expert.leadsConversionTracking ? `Offered because this room is about conversion tracking, and ${first} leads that work.` : null);
+    (doorId === "chatgpt-ads" && expert.leadsConversionTracking
+      ? `Offered because this room is about conversion tracking, and ${first} leads that work.`
+      : null);
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -267,7 +276,7 @@ export function InviteExpertDialog({
                   value={brief}
                   onChange={(event) => setBrief(event.target.value)}
                   rows={8}
-                  placeholder="Shopify checkout, we need purchase events in ChatGPT Ads and GA4 to agree."
+                  placeholder="What they should look at, and what done looks like."
                   className={cn(
                     READ,
                     "scrollbar-thin mt-2 max-h-[46vh] w-full resize-y border-b border-foreground bg-transparent pb-2 outline-none placeholder:text-muted-foreground",
