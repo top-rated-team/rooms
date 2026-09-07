@@ -1,10 +1,14 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useLocation } from "wouter";
 
+import type { CreateWorkspaceResponse } from "@shared/api";
+import { BOOK_A_CALL_URL } from "@shared/roster";
 import DoorCard from "@/components/site/DoorCard";
+import { ACTION_QUIET, DISPLAY, LINK, META, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
 import Footer from "@/components/site/Footer";
 import GatedOffers, { PUBLIC_DOORS, countWord } from "@/components/site/GatedOffers";
 import Header from "@/components/site/Header";
-import { BOOK_A_CALL_URL } from "@shared/roster";
+import { collectSource } from "@/components/site/LeadDialog";
 
 /* How many doors a stranger reads, written out. Derived rather than typed, so
  * moving a door behind the email step — a tier change in shared/doors.ts — does
@@ -18,24 +22,32 @@ const PAGE_TITLE = `${WAYS_IN.charAt(0).toUpperCase() + WAYS_IN.slice(1)} | Top-
 const PAGE_DESCRIPTION =
   "Paid ads, measurement and custom AI builds, as one offer per row and one workspace behind all of them. Each row says which company signs the contract and sends the invoice, and each one starts a conversation rather than a form.";
 
-const BTN_BASE =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2";
-const BTN_SECONDARY = `${BTN_BASE} bg-secondary text-secondary-foreground border border-secondary-border min-h-9 px-4 py-2`;
+/** The count, in the index's own words, so the heading cannot outlive the list. */
+const INDEX_HEADLINE = `${countWord(PUBLIC_DOORS.length).charAt(0).toUpperCase()}${countWord(
+  PUBLIC_DOORS.length,
+).slice(1)} things, and who sends the invoice for each.`;
 
 /**
- * The overview: one row per door, rendered straight from shared/doors.ts.
+ * The index: one line per door, rendered straight from shared/doors.ts.
  *
  * Not every row, though — the list here is the doors a stranger reads, and the
  * rest sit under it behind one email field. Which is which is decided in
  * GatedOffers.tsx and nowhere else, so moving a row between the two is a tier
  * change in shared/doors.ts rather than an edit to this page.
  *
- * Nothing here imports from the workspace chunk. A visitor landing on this page
- * is choosing which conversation to have, and they should not pay for a room
- * they may never open.
+ * It used to be six bordered cards with two chips and two buttons each. It is
+ * now a table of contents: a number, a name, what it is, and the company that
+ * would send the invoice. Nothing here imports from the workspace chunk — a
+ * visitor choosing which conversation to have should not pay for a room they
+ * may never open — except the one line at the bottom that opens one, which is
+ * a fetch and a redirect rather than an import.
  */
 export function Doors() {
-  // Same approach as the landing page: no helmet dependency, and the previous
+  const [, navigate] = useLocation();
+  const [openingRoom, setOpeningRoom] = useState(false);
+  const [roomError, setRoomError] = useState<string | null>(null);
+
+  // Same approach as the door pages: no helmet dependency, and the previous
   // title and description are put back when the visitor navigates away.
   useEffect(() => {
     const previousTitle = document.title;
@@ -60,48 +72,99 @@ export function Doors() {
     };
   }, []);
 
+  /**
+   * The one visible way through to the room from this page, and the same
+   * sentence a door page uses. There is no door to stamp it with here, so
+   * collectSource() falls back to the door that runs the site — which is the
+   * company whose name the room will print, and it is the right one.
+   */
+  const openRoom = useCallback(async () => {
+    if (openingRoom) return;
+    setOpeningRoom(true);
+    setRoomError(null);
+    try {
+      const res = await fetch("/api/workspaces", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: collectSource() }),
+      });
+      if (!res.ok) {
+        setRoomError(
+          res.status === 429
+            ? "That is a lot of workspaces from one address. Give it a minute, or book a call."
+            : "The workspace could not be created. Book a call and we will pick it up from there.",
+        );
+        return;
+      }
+      const state = (await res.json()) as CreateWorkspaceResponse;
+      navigate(`/w/${state.workspace.token}`);
+    } catch {
+      setRoomError("Network error creating the workspace. Book a call and we will pick it up from there.");
+    } finally {
+      setOpeningRoom(false);
+    }
+  }, [navigate, openingRoom]);
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
 
-      <main className="flex-1 pt-16">
-        <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
-          <div className="max-w-3xl">
-            <p className="text-sm font-medium uppercase tracking-wide text-primary">{WAYS_IN}</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight lg:text-4xl">
-              Each one starts a conversation, not a form.
-            </h1>
-            <p className="mt-5 text-lg text-muted-foreground">
-              Pick the one that sounds like your problem. If none of them do, there is a person at the bottom of this
-              page.
-            </p>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Every row says who signs the contract and sends the invoice, because that is the part worth reading before
-              you pick one.
+      <main className="flex-1">
+        <section className={`${PAGE} pt-[var(--s5)]`}>
+          <p className={META}>Index</p>
+
+          <div className="mt-[var(--s4)] grid items-end gap-[var(--s4)] pb-[var(--s5)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)]">
+            <h1 className={DISPLAY}>{INDEX_HEADLINE}</h1>
+            <p className={READ_MUTED}>
+              Whoever sets the price is the seller, so every row names the company that would send the invoice — before
+              you pick one rather than in a footnote afterwards. Pick the one that sounds like your problem; each one
+              opens a conversation rather than a form.
             </p>
           </div>
 
-          <div className="mt-12 grid max-w-4xl gap-4">
-            {PUBLIC_DOORS.map((door) => (
-              <DoorCard key={door.id} door={door} />
+          <div>
+            {PUBLIC_DOORS.map((door, position) => (
+              <DoorCard key={door.id} door={door} index={position + 1} />
             ))}
           </div>
 
           {/* Under the list, and under nothing else: the rows above stay whole
               for somebody who never fills this in. */}
-          <GatedOffers className="mt-12" />
+          <GatedOffers className="mt-[var(--s6)]" />
 
-          <div className="mt-10 flex max-w-4xl flex-wrap items-center gap-4">
-            <p className="text-sm text-muted-foreground">None of these?</p>
-            <a
-              href={BOOK_A_CALL_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="link-doors-book-call"
-              className={BTN_SECONDARY}
+          <div className="max-w-[46ch] pt-[var(--s6)]">
+            <p className={READ}>
+              If none of these sounds like your problem, a person is the shorter path.{" "}
+              <a
+                href={BOOK_A_CALL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="link-doors-book-call"
+                className={LINK}
+              >
+                Take a call
+              </a>
+              .
+            </p>
+
+            <p className={`mt-[var(--s3)] ${READ_MUTED}`}>
+              Whichever row you pick, the answer can become a room: one address, our agents and our people in it, and no
+              signup — the link in your browser is the whole account.
+            </p>
+            <button
+              type="button"
+              data-testid="button-doors-open-room"
+              className={`${ACTION_QUIET} mt-[var(--s3)]`}
+              onClick={() => void openRoom()}
+              disabled={openingRoom}
             >
-              Talk to a person
-            </a>
+              {openingRoom ? "Opening a room…" : "Open one without asking anything first"}
+            </button>
+            {roomError ? (
+              <p role="alert" className="type-note mt-[var(--s2)] text-destructive">
+                {roomError}
+              </p>
+            ) : null}
           </div>
         </section>
       </main>

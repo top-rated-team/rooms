@@ -1,6 +1,5 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, Redirect, useLocation, useRoute } from "wouter";
-import { ArrowLeft, ArrowRight, ExternalLink, Loader2 } from "lucide-react";
 
 import type { CreateWorkspaceResponse } from "@shared/api";
 import {
@@ -10,10 +9,23 @@ import {
   DOOR_TIERS,
   doorAgent,
   type DoorDef,
-  type DoorTier,
 } from "@shared/doors";
 import { BOOK_A_CALL_URL } from "@shared/roster";
 import AskWidget from "@/components/site/AskWidget";
+import { doorBody } from "@/components/site/doors/bodies";
+import {
+  ACTION,
+  ACTION_QUIET,
+  DISPLAY,
+  HEADING,
+  LINK,
+  META,
+  META_PLAIN,
+  PAGE,
+  PANEL_CHROME,
+  READ,
+  READ_MUTED,
+} from "@/components/site/doors/quiet";
 import Footer from "@/components/site/Footer";
 /* Which tiers a stranger reads is decided in one place; this page reads that
  * decision rather than making a second one. */
@@ -21,25 +33,8 @@ import { isPublicDoor } from "@/components/site/GatedOffers";
 import Header from "@/components/site/Header";
 import KeepStrip from "@/components/site/KeepStrip";
 import { collectSource } from "@/components/site/LeadDialog";
-import { Badge } from "@/components/ui/badge";
 import { usePanelState, type CreateRoomResult } from "@/hooks/use-panel-state";
 import NotFound from "@/pages/not-found";
-
-const BTN_BASE =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2";
-const BTN_PRIMARY = `${BTN_BASE} bg-primary text-primary-foreground border border-primary-border min-h-9 px-4 py-2`;
-const BTN_SECONDARY = `${BTN_BASE} bg-secondary text-secondary-foreground border border-secondary-border min-h-9 px-4 py-2`;
-const BTN_SECONDARY_SM = `${BTN_BASE} bg-secondary text-secondary-foreground border border-secondary-border min-h-8 rounded-md px-3 text-xs`;
-const BTN_GHOST_SM = `${BTN_BASE} border border-transparent min-h-8 rounded-md px-3 text-xs`;
-
-/* Same mapping as DoorCard.tsx, for the same reason: a different company does
- * not wear our colour. Duplicated rather than exported, because two callers is
- * not yet a shared module. */
-const TIER_VARIANT: Record<DoorTier, "default" | "secondary" | "outline"> = {
-  white: "default",
-  "light-grey": "secondary",
-  grey: "outline",
-};
 
 /**
  * The company that runs this site, read off the door that pays for it rather
@@ -54,16 +49,36 @@ function contactHref(contact: string): string {
 }
 
 /**
- * One page for every door. Everything a visitor reads here — the headline, the
- * blurb, the agent's job, the four starters, the tier and the company that will
- * send the invoice — is read out of the row in shared/doors.ts. There is no
- * per-door component and no per-door sentence in this file: opening a door is
- * editing a row, and nothing else.
+ * One page for every door, in the quiet-studio language.
+ *
+ * Everything a visitor reads here — the headline, the blurb, the agent's job,
+ * the four starters, the tier, the tool where there is one, and the company
+ * that will send the invoice — is read out of the row in shared/doors.ts. One
+ * door adds a section of its own on top of that; which one, and why that is the
+ * only exception, is written down in doors/bodies.tsx.
+ *
+ * What this page stopped doing, and why:
+ *
+ * - **No cards, no badges, no tinted initials square, no icons.** The measured
+ *   problem was a page of chrome: the tier was a pill, the status was a second
+ *   pill, the contract was a bordered box, and the panel floated in another
+ *   one. Those are now hairline rules and space, and the tier is a sentence.
+ * - **One action in the first screen, not two.** "Ask your question" and "Talk
+ *   to a person" stood side by side and split the click. Asking is what this
+ *   page is for; the person is offered under the company's name, which is where
+ *   a person is what you actually want.
+ * - **The panel gets a band of the page.** It is the argument of the whole
+ *   site, and it was a card in a column beside a column of chrome.
+ * - **The footer no longer outweighs the page.** The pitch was 770 pixels
+ *   against 550 of footer with 530 of nothing between; the door now has its
+ *   panel, its contract and — on the door that has one — its whole argument
+ *   above that footer.
  */
 function DoorPage({ door }: { door: DoorDef }) {
   const [, navigate] = useLocation();
   const tier = DOOR_TIERS[door.tier];
   const agent = doorAgent(door);
+  const Body = doorBody(door.id);
 
   /* Two things have to be true before a panel is honest: the row says the door
    * is open, and it names an agent that exists in the roster. The partner's row
@@ -73,7 +88,7 @@ function DoorPage({ door }: { door: DoorDef }) {
   const panelIsOpen = door.status === "live" && agent !== undefined;
   const oursToAnswer = door.contract.legalName === OUR_LEGAL_NAME;
 
-  // Same approach as /work and the landing page: no helmet dependency, and the
+  // Same approach as /work and the home page: no helmet dependency, and the
   // previous title and description are put back on the way out.
   useEffect(() => {
     const previousTitle = document.title;
@@ -99,7 +114,7 @@ function DoorPage({ door }: { door: DoorDef }) {
       if (created) element.remove();
       else element.content = previousDescription;
     };
-  }, [door]);
+  }, [door, oursToAnswer]);
 
   /* A door that /work only names after the email step must not arrive from a
    * search result instead. sitemap.xml leaves those rows out for the same
@@ -127,10 +142,11 @@ function DoorPage({ door }: { door: DoorDef }) {
   }, [door.id]);
 
   /**
-   * Mints the room and deliberately does not navigate — the same contract
-   * Hero.tsx's createRoom has, and for the same reason: "Kept. This
-   * conversation now has an address" is only true if the address is on screen
-   * before the page moves.
+   * Mints the room and deliberately does not navigate — the same contract the
+   * home page's panel has, and for the same reason: "Kept. This conversation
+   * now has an address" is only true if the address is on screen before the
+   * page moves. The one caller that does navigate is openRoom below, which has
+   * no address to show because there is no conversation yet.
    *
    * collectSource() reads the door off the path, which resolves correctly from
    * /work/<slug> because that is what the row's `path` says. The door is
@@ -181,10 +197,7 @@ function DoorPage({ door }: { door: DoorDef }) {
 
   /**
    * The panel's own "Start a workspace" button is a deliberate press, so it is
-   * trigger (c) and goes through the same Keep flow as everything else. Copied
-   * from Hero.tsx rather than shared with it: the landing page must keep its
-   * own hero, and a third caller is when this moves into a component of its
-   * own.
+   * trigger (c) and goes through the same Keep flow as everything else.
    */
   const keepFromPanel = useCallback(
     async (opts?: { agentId?: string; firstMessage?: string }): Promise<string | null> => {
@@ -194,7 +207,7 @@ function DoorPage({ door }: { door: DoorDef }) {
     [panel],
   );
 
-  /** The panel is the fastest free answer on the page, so the button puts the cursor in it. */
+  /** The panel is the fastest free answer on the page, so the action puts the cursor in it. */
   const askInPanel = useCallback(() => {
     const field = document.getElementById("ask-question");
     if (!(field instanceof HTMLTextAreaElement)) return;
@@ -203,276 +216,352 @@ function DoorPage({ door }: { door: DoorDef }) {
     field.focus({ preventScroll: true });
   }, []);
 
+  /* ------------------------- the way through to a room -------------------
+   *
+   * The room is the product and it had no visible entrance: it existed only
+   * as the far end of the Keep flow, so somebody who read the page without
+   * typing anything never found out it was there. This is the entrance —
+   * one line of text at the bottom of the page, under the sentence that
+   * explains what a room is, in the quietest thing on the page that is still
+   * a link. It is deliberately not a second button beside the first: the
+   * page's one action is asking, and this is where a person who has finished
+   * reading goes next.
+   *
+   * It mints through the same createRoom as the Keep flow, so the room is
+   * stamped with this door and its footer names this door's company. It is
+   * only offered where a panel is open — a room opened from a door with no
+   * agent is an empty room, and on the partner's door it would be one of our
+   * rooms wearing their name.
+   */
+  const [openingRoom, setOpeningRoom] = useState(false);
+  const [roomError, setRoomError] = useState<string | null>(null);
+
+  const openRoom = useCallback(async () => {
+    if (openingRoom) return;
+    setOpeningRoom(true);
+    setRoomError(null);
+    const result = await createRoom();
+    setOpeningRoom(false);
+    if (!result.ok) {
+      setRoomError(result.error);
+      return;
+    }
+    navigate(result.room.path);
+  }, [createRoom, navigate, openingRoom]);
+
   const room = panel.stage === "kept" ? panel.room : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
 
-      <main className="flex-1 pt-16">
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-          <Link
-            href="/work"
-            data-testid="link-door-back"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            All doors
-          </Link>
+      <main className="flex-1">
+        {/* ------------------------- the first screen ------------------------ */}
+        <div className={`${PAGE} pt-[var(--s5)]`}>
+          <p className={META}>
+            <Link href="/work" data-testid="link-door-back" className="draw hover:text-foreground">
+              Index
+            </Link>
+            <span aria-hidden="true"> · </span>
+            <span data-testid="text-door-tier">{tier.label}</span>
+            {door.status === "coming" ? (
+              <>
+                <span aria-hidden="true"> · </span>
+                <span data-testid="text-door-status">Not open yet</span>
+              </>
+            ) : null}
+          </p>
 
-          <div className="mt-8 grid items-start gap-12 lg:grid-cols-[1.08fr_1fr] lg:gap-16">
+          <div className="mt-[var(--s4)] grid items-end gap-[var(--s4)] pb-[var(--s6)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)]">
+            <h1 className={DISPLAY} data-testid="text-door-headline">
+              {door.headline}
+            </h1>
+
             <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <div
-                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-sm font-semibold ${door.tone}`}
-                  aria-hidden="true"
-                >
-                  {door.initials}
-                </div>
-                <Badge variant={TIER_VARIANT[door.tier]} data-testid="badge-door-tier">
-                  {tier.label}
-                </Badge>
-                {door.status === "coming" ? (
-                  <Badge variant="outline" data-testid="badge-door-status">
-                    Not open yet
-                  </Badge>
-                ) : null}
-              </div>
-
-              <h1
-                className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl"
-                data-testid="text-door-headline"
-              >
-                {door.headline}
-              </h1>
-
-              <p className="mt-6 max-w-xl text-lg text-muted-foreground" data-testid="text-door-blurb">
+              <p className={READ_MUTED} data-testid="text-door-blurb">
                 {door.blurb}
               </p>
 
-              {/* The panel prints this line itself, beside the agent it is
-                  about, so it is only wanted here on a door that has no panel
-                  — where it is the only place a visitor is told who answers. */}
-              {panelIsOpen ? null : (
-                <p className="mt-4 max-w-xl text-sm text-muted-foreground" data-testid="text-door-agent-line">
-                  {door.agentLine}
-                </p>
-              )}
-
+              {/* One action on the page, and it is the thing the page is for.
+                  A door with no panel has nothing to ask, so it has no action
+                  here either — the call is offered once, below, beside the
+                  sentence that says why there is no panel. Two "talk to a
+                  person" links on one screen is the second call to action this
+                  direction exists to delete. */}
               {panelIsOpen ? (
-                <div className="mt-8 flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    data-testid="button-door-ask"
-                    className={BTN_PRIMARY}
-                    onClick={askInPanel}
-                  >
-                    Ask your question
-                    <ArrowRight />
+                <div className="mt-[var(--s4)]">
+                  <button type="button" data-testid="button-door-ask" className={ACTION} onClick={askInPanel}>
+                    Put a question to the agent
                   </button>
-                  <a
-                    href={BOOK_A_CALL_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    data-testid="link-door-book-call"
-                    // The explicit form of trigger (a): they asked for a person.
-                    // The call opens in its own tab, so the question about
-                    // keeping the conversation is waiting when they come back.
-                    onClick={panel.noteAskedForAPerson}
-                    className={BTN_SECONDARY}
-                  >
-                    Talk to a person
-                  </a>
                 </div>
               ) : null}
-
-              {/* Whoever is named here is who the room names. It is set by the
-                  row, not by a person remembering. */}
-              <div
-                data-testid="block-door-contract"
-                className="mt-10 max-w-xl rounded-lg border border-card-border bg-card p-5 sm:p-6"
-              >
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Who you would be buying from
-                </p>
-                <p className="mt-2 text-sm font-medium" data-testid="text-door-legal-name">
-                  {door.contract.legalName}
-                </p>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{door.contract.entity}</p>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{door.contract.invoiceLine}</p>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{tier.meaning}</p>
-
-                <div className="mt-4 flex flex-col gap-2 border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">
-                  {door.contract.termsUrl ? (
-                    <a
-                      href={door.contract.termsUrl}
-                      rel="noopener noreferrer"
-                      data-testid="link-door-terms"
-                      className="inline-flex w-fit items-center gap-1 text-foreground hover:underline"
-                    >
-                      Terms
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  ) : (
-                    // Never offer the terms of the company next door.
-                    <p>
-                      {door.contract.legalName} has not published terms for this work yet, and this page will not show
-                      anybody else&rsquo;s.
-                    </p>
-                  )}
-
-                  {door.contract.contact ? (
-                    <a
-                      href={contactHref(door.contract.contact)}
-                      rel="noopener noreferrer"
-                      data-testid="link-door-contact"
-                      className="inline-flex w-fit items-center gap-1 text-foreground hover:underline"
-                    >
-                      {door.contract.contactLabel ?? door.contract.contact}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  ) : (
-                    // Same rule as the terms: their address or none, never ours.
-                    <p>
-                      {door.contract.legalName} has not given an address for this door yet, and this page will not show
-                      anybody else&rsquo;s.
-                    </p>
-                  )}
-                </div>
-              </div>
             </div>
+          </div>
+        </div>
 
-            {/* The panel and the line under it are one card: the promise about
-                what is saved belongs to the thing doing the saving. The first
-                child is the panel; its bottom edge is removed so the row below
-                continues it. Same arrangement as the hero on /. */}
-            <div className="lg:pl-4">
+        {/* --------------------------- the panel band ------------------------ */}
+        <div className="border-y border-border bg-card py-[var(--s5)] lg:py-[var(--s6)]">
+          <div className={`${PAGE} grid gap-[var(--s4)] lg:grid-cols-[minmax(0,32ch)_minmax(0,1fr)] lg:gap-[var(--s5)]`}>
+            <div>
               {panelIsOpen ? (
                 <>
-                  <div className="[&>div:first-child]:rounded-b-none [&>div:first-child]:border-b-0">
-                    <AskWidget
-                      door={door}
-                      onStartWorkspace={keepFromPanel}
-                      onVisitorMessage={panel.noteVisitorMessage}
-                      onAskedForAPerson={panel.noteAskedForAPerson}
-                    />
-
-                    <div aria-live="polite">
-                      {room ? (
-                        <KeepStrip url={room.url} workspaceId={room.workspaceId} onOpen={() => navigate(room.path)} />
-                      ) : (
-                        <div
-                          data-testid="row-panel-keep"
-                          // Which of the four fired, readable in the DOM: the
-                          // rule is meant to be checked rather than trusted.
-                          data-trigger={panel.trigger ?? undefined}
-                          className="rounded-b-lg border border-card-border bg-card px-4 py-3 shadow-sm sm:px-6"
-                        >
-                          {panel.stage === "asking" ? (
-                            <div className="motion-safe:animate-fade-in-up">
-                              <p className="text-sm" data-testid="text-panel-question">
-                                That is yours, so this is worth keeping. Keep it, or stay anonymous?
-                              </p>
-                              <div className="mt-3 flex flex-wrap items-center gap-2">
-                                <button
-                                  type="button"
-                                  data-testid="button-panel-keep-it"
-                                  className={BTN_SECONDARY_SM}
-                                  onClick={() => void panel.keep()}
-                                  disabled={panel.keeping}
-                                >
-                                  {panel.keeping ? <Loader2 className="animate-spin" /> : null}
-                                  Keep it
-                                </button>
-                                <button
-                                  type="button"
-                                  data-testid="button-panel-stay-anonymous"
-                                  className={BTN_GHOST_SM}
-                                  onClick={panel.stayAnonymous}
-                                >
-                                  No, stay anonymous
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                              <p className="text-xs text-muted-foreground" data-testid="text-panel-promise">
-                                <span className="font-medium text-foreground">Nothing is saved yet.</span> Close this
-                                tab and it is gone.
-                              </p>
-                              {panel.messageCount > 0 ? (
-                                <button
-                                  type="button"
-                                  data-testid="button-panel-keep-this"
-                                  className={BTN_GHOST_SM}
-                                  onClick={() => void panel.keep()}
-                                  disabled={panel.keeping}
-                                >
-                                  {panel.keeping ? <Loader2 className="animate-spin" /> : null}
-                                  Keep this
-                                  {panel.keeping ? null : <ArrowRight />}
-                                </button>
-                              ) : null}
-                            </div>
-                          )}
-
-                          {panel.error ? (
-                            <p role="alert" className="mt-2 text-xs text-destructive">
-                              {panel.error}
-                            </p>
-                          ) : null}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="mt-3 text-center text-xs text-muted-foreground lg:text-left">
-                    Ask first. It costs nothing, and it is the fastest way to find out whether you need us at all.
+                  <h2 className={HEADING}>Ask it something before you decide anything.</h2>
+                  {/* The panel prints the agent's job itself, beside the agent
+                      it is about, so saying it here as well would put the same
+                      sentence twice in one screen. It is wanted only on a door
+                      with no panel, where it is the only place a visitor is
+                      told who would have answered. */}
+                  <p className={`mt-[var(--s2)] ${READ_MUTED}`}>
+                    It is free, it does not need your name, and it will tell you when your question is a five-minute
+                    fix.
                   </p>
                 </>
               ) : (
-                /* A door that cannot hold a conversation says so and offers the
-                   thing that can: a person. It never renders a panel that is
-                   not there. */
-                <div
-                  data-testid="block-door-shut"
-                  className="rounded-lg border border-card-border bg-card p-4 shadow-sm sm:p-6"
-                >
-                  <p className="text-sm font-medium" data-testid="text-door-shut">
-                    {door.status === "live"
-                      ? "No agent of ours answers in this door."
-                      : "This door is not open yet."}
-                  </p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                <>
+                  <h2 className={HEADING} data-testid="text-door-shut">
+                    {door.status === "live" ? "No agent of ours answers in this door." : "This door is not open yet."}
+                  </h2>
+                  <p className={`mt-[var(--s2)] ${READ_MUTED}`}>
                     {door.status === "live"
                       ? "There is no panel here, and this page will not stand one of our agents in front of somebody else's work."
                       : (door.comingLine ??
                         "The offer is real and this page is not finished. A person is the shorter path.")}
                   </p>
+                  <p className={`mt-[var(--s2)] ${META_PLAIN}`} data-testid="text-door-agent-line">
+                    {door.agentLine}
+                  </p>
+                </>
+              )}
+            </div>
 
-                  {/* One action, not two: the address to write to is already
-                      in the block on the left, under the name of the company
-                      it belongs to, which is where it means something. */}
+            <div>
+              {panelIsOpen ? (
+                <div className={PANEL_CHROME}>
+                  <AskWidget
+                    door={door}
+                    onStartWorkspace={keepFromPanel}
+                    onVisitorMessage={panel.noteVisitorMessage}
+                    onAskedForAPerson={panel.noteAskedForAPerson}
+                  />
+
+                  <div aria-live="polite" className="mt-[var(--s4)] border-t border-border pt-[var(--s2)]">
+                    {room ? (
+                      <KeepStrip url={room.url} workspaceId={room.workspaceId} onOpen={() => navigate(room.path)} />
+                    ) : (
+                      <div
+                        data-testid="row-panel-keep"
+                        // Which of the four fired, readable in the DOM: the
+                        // rule is meant to be checked rather than trusted.
+                        data-trigger={panel.trigger ?? undefined}
+                      >
+                        {panel.stage === "asking" ? (
+                          <div className="motion-safe:animate-fade-in-up">
+                            <p className={READ} data-testid="text-panel-question">
+                              That is yours, so this is worth keeping. Keep it, or stay anonymous?
+                            </p>
+                            <div className="mt-[var(--s2)] flex flex-wrap items-baseline gap-[var(--s3)]">
+                              <button
+                                type="button"
+                                data-testid="button-panel-keep-it"
+                                className={ACTION}
+                                onClick={() => void panel.keep()}
+                                disabled={panel.keeping}
+                              >
+                                {panel.keeping ? "Keeping…" : "Keep it"}
+                              </button>
+                              <button
+                                type="button"
+                                data-testid="button-panel-stay-anonymous"
+                                className={ACTION_QUIET}
+                                onClick={panel.stayAnonymous}
+                              >
+                                No, stay anonymous
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap items-baseline justify-between gap-x-[var(--s3)] gap-y-[var(--s1)]">
+                            <p className={META_PLAIN} data-testid="text-panel-promise">
+                              <span className="text-foreground">Nothing is saved yet.</span> Close this tab and it is
+                              gone.
+                            </p>
+                            {panel.messageCount > 0 ? (
+                              <button
+                                type="button"
+                                data-testid="button-panel-keep-this"
+                                className={ACTION_QUIET}
+                                onClick={() => void panel.keep()}
+                                disabled={panel.keeping}
+                              >
+                                {panel.keeping ? "Keeping…" : "Keep this"}
+                              </button>
+                            ) : null}
+                          </div>
+                        )}
+
+                        {panel.error ? (
+                          <p role="alert" className="type-note mt-[var(--s2)] text-destructive">
+                            {panel.error}
+                          </p>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* A door that cannot hold a conversation says so on the left
+                   and offers the thing that can. It never renders a panel that
+                   is not there. */
+                <div>
+                  <p className={READ}>
+                    A call covers the same ground, and it is with a person who can say what this would actually
+                    involve.
+                  </p>
                   <a
                     href={BOOK_A_CALL_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     data-testid="link-door-book-call"
-                    className={`${BTN_PRIMARY} mt-4`}
+                    className={`${ACTION} mt-[var(--s3)]`}
                   >
                     Talk to a person
                   </a>
-
                   {!oursToAnswer ? (
                     // Our calendar on somebody else's door has to say whose
                     // calendar it is.
-                    <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                    <p className={`mt-[var(--s3)] ${META_PLAIN}`}>
                       That call is with {OUR_LEGAL_NAME}, not with {door.contract.legalName}.
                     </p>
                   ) : null}
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* ----------------------- what this door has to say ------------------ */}
+        {Body ? <Body /> : null}
+
+        {/* ------------------------------ the tool --------------------------- */}
+        {/* Where software does part of the work, it is named, linked and given
+            its limit — a buyer choosing a supplier is entitled to know which
+            half is a program. Only the rows that carry a tool print this. */}
+        {door.tool ? (
+          <section className={`${PAGE} pt-[var(--s6)]`} data-testid="block-door-tool">
+            <div className="grid gap-[var(--s3)] border-t border-border pt-[var(--s3)] lg:grid-cols-[minmax(0,32ch)_minmax(0,1fr)] lg:gap-[var(--s5)]">
+              <div>
+                <p className={META}>The tool</p>
+                <h2 className={`mt-[var(--s2)] ${HEADING}`}>
+                  <a
+                    href={door.tool.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="link-door-tool"
+                    className={LINK}
+                  >
+                    {door.tool.name}
+                  </a>
+                </h2>
+              </div>
+              <p className={READ_MUTED} data-testid="text-door-tool-line">
+                {door.tool.line}
+              </p>
+            </div>
+          </section>
+        ) : null}
+
+        {/* -------------------- who you would be buying from ------------------ */}
+        {/* Whoever is named here is who the room names. It is set by the row,
+            not by a person remembering. */}
+        <section className={`${PAGE} pt-[var(--s6)]`} data-testid="block-door-contract">
+          <div className="grid gap-[var(--s3)] border-t border-border pt-[var(--s3)] lg:grid-cols-[minmax(0,32ch)_minmax(0,1fr)] lg:gap-[var(--s5)]">
+            <div>
+              <p className={META}>Who you would be buying from</p>
+              <p className={`mt-[var(--s2)] ${HEADING}`} data-testid="text-door-legal-name">
+                {door.contract.legalName}
+              </p>
+            </div>
+
+            <div>
+              <p className={READ_MUTED}>{door.contract.entity}</p>
+              <p className={`mt-[var(--s2)] ${READ_MUTED}`}>{door.contract.invoiceLine}</p>
+              <p className={`mt-[var(--s2)] ${READ_MUTED}`}>{tier.meaning}</p>
+
+              <p className={`mt-[var(--s4)] ${META_PLAIN}`}>
+                {door.contract.termsUrl ? (
+                  <a
+                    href={door.contract.termsUrl}
+                    rel="noopener noreferrer"
+                    data-testid="link-door-terms"
+                    className={`${LINK} text-foreground`}
+                  >
+                    Terms
+                  </a>
+                ) : (
+                  // Never offer the terms of the company next door.
+                  <span>
+                    {door.contract.legalName} has not published terms for this work yet, and this page will not show
+                    anybody else&rsquo;s.
+                  </span>
+                )}
+                <span aria-hidden="true"> · </span>
+                {door.contract.contact ? (
+                  <a
+                    href={contactHref(door.contract.contact)}
+                    rel="noopener noreferrer"
+                    data-testid="link-door-contact"
+                    className={`${LINK} text-foreground`}
+                  >
+                    {door.contract.contactLabel ?? door.contract.contact}
+                  </a>
+                ) : (
+                  // Same rule as the terms: their address or none, never ours.
+                  <span>
+                    {door.contract.legalName} has not given an address for this door yet, and this page will not show
+                    anybody else&rsquo;s.
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* --------------------------- the way out --------------------------- */}
+        <section className={`${PAGE} pt-[var(--s6)]`}>
+          <div className="max-w-[46ch]">
+            {/* "Ask first" is only true where there is something to ask. A door
+                with no panel closes on the sentence that is true of every door
+                we run, and offers no second way in — the call above is the way
+                in, and it was offered once. */}
+            {panelIsOpen ? (
+              <>
+                <p className={READ}>
+                  Ask first. It costs nothing, and it is the fastest way to find out whether you need us at all.
+                </p>
+                <p className={`mt-[var(--s3)] ${READ_MUTED}`}>
+                  A kept answer becomes a room: one address, our agents and our people in it, and no signup — the link
+                  in your browser is the whole account.
+                </p>
+                <button
+                  type="button"
+                  data-testid="button-door-open-room"
+                  className={`${ACTION_QUIET} mt-[var(--s3)]`}
+                  onClick={() => void openRoom()}
+                  disabled={openingRoom}
+                >
+                  {openingRoom ? "Opening a room…" : "Open one without asking anything first"}
+                </button>
+                {roomError ? (
+                  <p role="alert" className="type-note mt-[var(--s2)] text-destructive">
+                    {roomError}
+                  </p>
+                ) : null}
+              </>
+            ) : (
+              <p className={READ_MUTED}>
+                There is no magic: just expertise, dedicated hours, and a systematic approach.
+              </p>
+            )}
           </div>
         </section>
       </main>
@@ -483,12 +572,13 @@ function DoorPage({ door }: { door: DoorDef }) {
 }
 
 /**
- * /work/:slug — the address every door answers on.
+ * /work/:slug — the address every door answers on, all seven of them.
  *
- * A row whose `path` is somewhere else is redirected there rather than rendered
- * twice: the ChatGPT Ads row says `path: "/"`, so /work/chatgpt-ads sends the
- * visitor to the landing page, which is that door's own richer page. Move a
- * door's `path` and the redirect moves with it; no branch here names a door.
+ * The ChatGPT Ads row used to say `path: "/"` and this route redirected there.
+ * It does not any more: the home page is the landing for every door, and this
+ * one answers at /work/chatgpt-ads like its neighbours. The redirect stays for
+ * any row whose `path` is moved somewhere else in future, so no branch here
+ * names a door.
  */
 export function Door() {
   const [, params] = useRoute<{ slug: string }>("/work/:slug");

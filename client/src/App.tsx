@@ -35,6 +35,8 @@ export default function App() {
             all, is read out of the row — see shared/doors.ts. */}
         <Route path="/work/:slug" component={Door} />
         <Route path="/w/:token" component={Workspace} />
+        {/* /w with nothing after it: the rooms this browser remembers. */}
+        <Route path="/w" component={Workspace} />
         <Route component={NotFound} />
       </Switch>
     </Suspense>

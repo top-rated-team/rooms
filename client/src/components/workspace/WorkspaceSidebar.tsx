@@ -1,10 +1,25 @@
-import { useMemo, type ReactNode } from "react";
-import { Bot, Hash, Plus, UserPlus, X } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
 import { AGENTS, EXPERTS, MAIN_SITE_URL } from "@shared/roster";
 import type { Channel, Member } from "@shared/schema";
 import type { ConnectionStatus } from "@/hooks/use-workspace";
-import { Avatar, PresenceDot, toneFor } from "@/components/workspace/Avatar";
 import { cn } from "@/lib/utils";
+import { ACTION_QUIET, CHROME, FOCUS, LABEL, LINK, META } from "@/components/workspace/room-style";
+
+/* ---------------------------------------------------------------------------
+ * The rail of channels, on the sunk ground the front page uses for its panel
+ * band. There is no border down its right edge: the change of ground is the
+ * separation, which is one fewer line on screen and the same information.
+ *
+ * The active channel is the one row set on the paper ground — it belongs to the
+ * column it opens. Nothing here is a coloured pill, and the unread count is a
+ * number rather than a blue disc.
+ *
+ * WHAT WAS TAKEN OUT. This rail used to list all nine agents in the roster on
+ * first paint, seven of which are not in the room and three of which have no
+ * body of knowledge to answer from. Now it lists the agents that are actually
+ * in this room, and the rest sit behind one line — the same "four questions,
+ * not eight" rule the doors are written to.
+ * ------------------------------------------------------------------------- */
 
 const CONNECTION_LABEL: Record<ConnectionStatus, string> = {
   connecting: "Connecting…",
@@ -13,19 +28,8 @@ const CONNECTION_LABEL: Record<ConnectionStatus, string> = {
   closed: "Disconnected",
 };
 
-const CONNECTION_TONE: Record<ConnectionStatus, string> = {
-  connecting: "bg-status-away",
-  open: "bg-status-online",
-  reconnecting: "bg-status-away",
-  closed: "bg-status-offline",
-};
-
 function GroupLabel({ children }: { children: string }) {
-  return (
-    <h2 className="px-2 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-      {children}
-    </h2>
-  );
+  return <h2 className={cn(LABEL, "px-2 pb-1.5 pt-6 first:pt-0")}>{children}</h2>;
 }
 
 interface RowProps {
@@ -43,16 +47,16 @@ function Row({ active, unread, onClick, testId, children }: RowProps) {
       onClick={onClick}
       data-testid={testId}
       className={cn(
-        "hover-elevate active-elevate-2 flex w-full items-center gap-2 rounded-md border border-transparent px-2 py-1.5 text-left text-sm",
-        active ? "bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-accent-border font-medium" : "text-sidebar-foreground",
-        !active && unread > 0 && "font-semibold",
+        CHROME,
+        FOCUS,
+        "hover-elevate active-elevate-2 flex w-full items-baseline gap-2 px-2 py-1.5 text-left",
+        active ? "bg-background font-medium text-foreground" : "text-muted-foreground",
+        !active && unread > 0 && "font-medium text-foreground",
       )}
     >
-      {children}
+      <span className="min-w-0 flex-1 truncate">{children}</span>
       {unread > 0 && !active ? (
-        <span className="ml-auto shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground">
-          {unread > 99 ? "99+" : unread}
-        </span>
+        <span className={cn(META, "shrink-0 tabular-nums text-muted-foreground")}>{unread > 99 ? "99+" : unread}</span>
       ) : null}
     </button>
   );
@@ -90,6 +94,8 @@ export function WorkspaceSidebar({
   onClose,
   className,
 }: WorkspaceSidebarProps) {
+  const [allAgents, setAllAgents] = useState(false);
+
   const projectChannels = useMemo(() => channels.filter((c) => c.kind === "project"), [channels]);
   const dmChannels = useMemo(() => channels.filter((c) => c.kind === "dm"), [channels]);
   const agentChannels = useMemo(() => channels.filter((c) => c.kind === "agent"), [channels]);
@@ -112,33 +118,36 @@ export function WorkspaceSidebar({
     return [...rows, ...extras];
   }, [dmChannels, members]);
 
+  /* The agents in this room, and — behind one line — the rest of the roster. */
+  const { here, elsewhere } = useMemo(() => {
+    const inRoom = new Set<string>();
+    for (const member of members) if (member.kind === "agent") inRoom.add(member.memberKey);
+    for (const channel of agentChannels) if (channel.counterpartKey) inRoom.add(channel.counterpartKey);
+    return {
+      here: AGENTS.filter((agent) => inRoom.has(`agent:${agent.id}`)),
+      elsewhere: AGENTS.filter((agent) => !inRoom.has(`agent:${agent.id}`)),
+    };
+  }, [agentChannels, members]);
+
+  const agentsShown = allAgents ? [...here, ...elsewhere] : here;
+
   return (
-    <aside
-      className={cn("flex w-[260px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar", className)}
-      data-testid="sidebar-workspace"
-    >
-      <div className="flex h-12 shrink-0 items-center gap-2 border-b border-sidebar-border px-3">
-        <span className={cn("h-2 w-2 shrink-0 rounded-full", CONNECTION_TONE[connection])} aria-hidden="true" />
+    <aside className={cn("flex w-[15rem] shrink-0 flex-col bg-muted", className)} data-testid="sidebar-workspace">
+      <div className="flex shrink-0 items-baseline gap-3 px-4 py-4">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold" title={workspaceName}>
+          <p className={cn(CHROME, "truncate font-medium")} title={workspaceName}>
             {workspaceName}
           </p>
-          <p className="text-[11px] leading-none text-muted-foreground">{CONNECTION_LABEL[connection]}</p>
+          <p className={cn(META, "mt-0.5 text-muted-foreground")}>{CONNECTION_LABEL[connection]}</p>
         </div>
         {onClose ? (
-          <button
-            type="button"
-            onClick={onClose}
-            className="hover-elevate active-elevate-2 inline-flex h-8 w-8 items-center justify-center rounded-md border border-transparent"
-            data-testid="button-close-sidebar"
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
+          <button type="button" onClick={onClose} className={ACTION_QUIET} data-testid="button-close-sidebar">
+            Close
           </button>
         ) : null}
       </div>
 
-      <nav className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-2 pb-4">
+      <nav className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-2 pb-6">
         <GroupLabel>Channels</GroupLabel>
         {projectChannels.map((channel) => (
           <Row
@@ -148,26 +157,18 @@ export function WorkspaceSidebar({
             onClick={() => onSelectChannel(channel.id)}
             testId={`link-channel-${channel.slug}`}
           >
-            <Hash className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="truncate">{channel.name}</span>
+            #{channel.name}
           </Row>
         ))}
-        <button
-          type="button"
-          onClick={onAddChannel}
-          className="hover-elevate active-elevate-2 flex w-full items-center gap-2 rounded-md border border-transparent px-2 py-1.5 text-left text-sm text-muted-foreground"
-          data-testid="button-add-channel"
-        >
-          <Plus className="h-4 w-4 shrink-0" />
-          Add channel
+        <button type="button" onClick={onAddChannel} className={cn(ACTION_QUIET, "mx-2 mt-2")} data-testid="button-add-channel">
+          Add a channel
         </button>
 
-        <GroupLabel>Direct messages</GroupLabel>
+        <GroupLabel>People</GroupLabel>
         {dmRows.map(({ channel, memberKey }) => {
           const member = memberByKey.get(memberKey);
           const expert = EXPERTS.find((e) => e.memberKey === memberKey);
           const name = member?.displayName ?? expert?.name ?? memberKey;
-          const initials = member?.initials ?? expert?.initials ?? "??";
           return (
             <Row
               key={channel?.id ?? memberKey}
@@ -176,28 +177,16 @@ export function WorkspaceSidebar({
               onClick={() => (channel ? onSelectChannel(channel.id) : onOpenDm(memberKey))}
               testId={`link-dm-${memberKey}`}
             >
-              <Avatar
-                initials={initials}
-                tone={toneFor(memberKey, "expert")}
-                size="sm"
-                presence={member?.presence ?? "offline"}
-              />
-              <span className="truncate">{name}</span>
+              {name}
             </Row>
           );
         })}
-        <button
-          type="button"
-          onClick={onInvite}
-          className="hover-elevate active-elevate-2 flex w-full items-center gap-2 rounded-md border border-transparent px-2 py-1.5 text-left text-sm text-muted-foreground"
-          data-testid="button-invite-expert"
-        >
-          <UserPlus className="h-4 w-4 shrink-0" />
-          Invite an expert
+        <button type="button" onClick={onInvite} className={cn(ACTION_QUIET, "mx-2 mt-2")} data-testid="button-invite-expert">
+          Add a person
         </button>
 
-        <GroupLabel>AI agents</GroupLabel>
-        {AGENTS.map((agent) => {
+        <GroupLabel>Agents</GroupLabel>
+        {agentsShown.map((agent) => {
           const channel = agentChannels.find((c) => c.counterpartKey === `agent:${agent.id}`);
           return (
             <Row
@@ -207,28 +196,30 @@ export function WorkspaceSidebar({
               onClick={() => (channel ? onSelectChannel(channel.id) : onOpenAgent(agent.id))}
               testId={`link-agent-${agent.id}`}
             >
-              <Avatar initials={agent.initials} tone={agent.tone} size="sm" />
-              <span className="truncate">{agent.name}</span>
-              {channel ? null : <Bot className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+              {agent.name}
             </Row>
           );
         })}
+        {elsewhere.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => setAllAgents((v) => !v)}
+            className={cn(ACTION_QUIET, "mx-2 mt-2")}
+            aria-expanded={allAgents}
+            data-testid="button-more-agents"
+          >
+            {allAgents ? "Fewer" : `${elsewhere.length} more`}
+          </button>
+        ) : null}
       </nav>
 
-      <div className="shrink-0 border-t border-sidebar-border px-3 py-2">
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <PresenceDot presence={connection === "open" ? "online" : connection === "closed" ? "offline" : "away"} />
+      <div className="shrink-0 px-4 py-3">
+        <p className={cn(META, "flex items-baseline justify-between gap-3 text-muted-foreground")}>
           <span>{CONNECTION_LABEL[connection]}</span>
-          <a
-            href={MAIN_SITE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-auto hover:text-foreground"
-            data-testid="link-main-site"
-          >
+          <a href={MAIN_SITE_URL} target="_blank" rel="noopener noreferrer" className={LINK} data-testid="link-main-site">
             top-rated.team
           </a>
-        </div>
+        </p>
       </div>
     </aside>
   );

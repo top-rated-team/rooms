@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Check, LoaderCircle, X } from "lucide-react";
 import { BOOK_A_CALL_URL, EXPERTS, type ExpertDef } from "@shared/roster";
-import { Avatar, toneFor } from "@/components/workspace/Avatar";
 import { badgeForKey } from "@/components/workspace/MemberRail";
 import { cn } from "@/lib/utils";
+import { ACTION, ACTION_QUIET, CHROME, FOCUS, LABEL, LINK, META, READ } from "@/components/workspace/room-style";
 
 /* ---------------------------------------------------------------------------
  * HIRING A REAL PERSON IN TWO CLICKS
@@ -22,6 +21,13 @@ import { cn } from "@/lib/utils";
  *
  * Nobody is charged here. A name and a way to be invoiced is asked for once, at
  * the moment a quote is accepted, and not before.
+ *
+ * ON THE SHAPE. The room has no cards, and a modal is the one place that rule
+ * has to bend: something floating over prose must be bounded or it cannot be
+ * read. So it is a sheet against the edge of the window rather than a card in
+ * the middle of it — the room's ground, one hairline where it meets the page,
+ * no shadow and no rounded corner. The two clicks are unchanged, which is the
+ * only part of this that is load-bearing.
  * ------------------------------------------------------------------------- */
 
 const DEFAULT_EXPERT = EXPERTS.find((e) => e.leadsConversionTracking) ?? EXPERTS[0];
@@ -44,12 +50,6 @@ export interface HireOffer {
   /** Member keys the door makes available. Absent means the whole roster. */
   pool?: string[];
 }
-
-const PRIMARY_BUTTON =
-  "inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2 bg-primary text-primary-foreground border border-primary-border min-h-9 px-4 py-2";
-
-const QUIET_BUTTON =
-  "inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover-elevate active-elevate-2 border border-transparent min-h-8 px-2";
 
 function firstNameOf(expert: ExpertDef): string {
   return expert.name.split(/\s+/)[0] ?? expert.name;
@@ -153,53 +153,37 @@ export function InviteExpertDialog({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm" />
         <Dialog.Content
-          className="fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-md border border-popover-border bg-popover text-popover-foreground shadow-lg"
+          className="fixed right-0 top-0 z-50 flex h-dvh w-[calc(100vw-2rem)] max-w-md flex-col border-l border-border bg-background"
           data-testid="dialog-invite-expert"
         >
-          <div className="flex items-start justify-between gap-4 border-b border-card-border px-4 py-3">
-            <div>
-              <Dialog.Title className="text-base font-semibold">Get a person on this</Dialog.Title>
-              <Dialog.Description className="mt-1 text-xs text-muted-foreground">
-                Nothing is asked for twice. The brief below is lifted from this thread, and the answer comes back here.
-              </Dialog.Description>
-            </div>
+          <div className="flex shrink-0 items-baseline justify-between gap-4 px-6 pt-6">
+            <Dialog.Title className={cn(CHROME, "font-medium")}>Get a person on this</Dialog.Title>
             <Dialog.Close asChild>
-              <button
-                type="button"
-                className="hover-elevate active-elevate-2 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-transparent"
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
+              <button type="button" className={ACTION_QUIET}>
+                Close
               </button>
             </Dialog.Close>
           </div>
+          <Dialog.Description className={cn(META, "shrink-0 px-6 pt-2 text-muted-foreground")}>
+            Nothing is asked for twice. The brief below is lifted from this thread, and the answer comes back here.
+          </Dialog.Description>
 
           {sent ? (
-            <div className="px-4 py-6" data-testid="state-invite-sent">
-              <p className="flex items-center gap-2 text-sm font-medium">
-                <Check className="h-4 w-4 text-accent" />
-                Asked of {expert.name}, and written down.
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
+            <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-6 py-6" data-testid="state-invite-sent">
+              <p className={cn(READ, "text-foreground")}>Asked of {expert.name}, and written down.</p>
+              <p className={cn(READ, "mt-3 text-muted-foreground")}>
                 {expert.name} — {expert.title} — answers in this room, with the brief attached, within one working day.
                 Nothing has been agreed and nobody has been charged.
               </p>
               {address ? (
-                <p className="mt-3 text-xs text-muted-foreground" data-testid="text-invite-room-address">
+                <p className={cn(META, "mt-4 text-muted-foreground")} data-testid="text-invite-room-address">
                   This room is the address, and the only way back into it. Keep it:{" "}
-                  <code className="break-all rounded border border-card-border bg-muted px-1 py-0.5 font-mono text-[11px] text-foreground">
-                    {address}
-                  </code>
+                  <span className="break-all font-mono text-foreground">{address}</span>
                 </p>
               ) : null}
-              <p className="mt-3 text-xs text-muted-foreground">
+              <p className={cn(META, "mt-3 text-muted-foreground")}>
                 If it cannot wait a day,{" "}
-                <a
-                  href={BOOK_A_CALL_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline underline-offset-2"
-                >
+                <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={LINK}>
                   book a call
                 </a>{" "}
                 — it reaches the same people.
@@ -207,50 +191,42 @@ export function InviteExpertDialog({
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className={cn(PRIMARY_BUTTON, "mt-4 w-auto")}
+                className={cn(ACTION, "mt-6")}
                 data-testid="button-back-to-room"
               >
                 Back to the room
               </button>
             </div>
           ) : picking ? (
-            <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-4 py-3" data-testid="state-invite-pool">
-              <div className="flex items-baseline justify-between gap-2">
-                <h3 className="text-xs font-medium text-muted-foreground">Someone else on this work</h3>
-                <button type="button" onClick={() => setPicking(false)} className={QUIET_BUTTON}>
+            <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-6 py-6" data-testid="state-invite-pool">
+              <div className="flex items-baseline justify-between gap-3">
+                <h3 className={LABEL}>Someone else on this work</h3>
+                <button type="button" onClick={() => setPicking(false)} className={ACTION_QUIET}>
                   Back
                 </button>
               </div>
-              <ul className="mt-2 space-y-2">
+              <ul className="mt-2">
                 {pool.map((candidate) => {
                   const offered = candidate.memberKey === memberKey;
                   return (
-                    <li key={candidate.memberKey}>
+                    <li key={candidate.memberKey} className="border-t border-border last:border-b">
                       <button
                         type="button"
                         onClick={() => {
                           setMemberKey(candidate.memberKey);
                           setPicking(false);
                         }}
-                        className={cn(
-                          "flex w-full items-start gap-3 rounded-md border p-3 text-left",
-                          offered ? "border-primary bg-primary/5" : "border-card-border hover-elevate active-elevate-2",
-                        )}
+                        className={cn(FOCUS, "hover-elevate active-elevate-2 block w-full py-3 text-left")}
                         data-testid={`button-pick-${candidate.memberKey}`}
                       >
-                        <Avatar initials={candidate.initials} tone={toneFor(candidate.memberKey, "expert")} size="md" />
-                        <span className="min-w-0 flex-1">
-                          <span className="flex flex-wrap items-baseline gap-x-2">
-                            <span className="text-sm font-medium">{candidate.name}</span>
-                            <span className="rounded border border-card-border bg-muted px-1 text-[10px] font-medium leading-4 text-muted-foreground">
-                              {badgeForKey(candidate.memberKey, "expert")}
-                            </span>
-                            {offered ? <span className="text-[11px] text-primary">Offered now</span> : null}
-                          </span>
-                          <span className="block text-xs text-muted-foreground">{candidate.title}</span>
-                          <span className="mt-1 block text-[11px] text-muted-foreground">
-                            {candidate.specialties.join(" · ")}
-                          </span>
+                        <span className="flex flex-wrap items-baseline gap-x-3">
+                          <span className={cn(CHROME, "font-medium")}>{candidate.name}</span>
+                          <span className={LABEL}>{badgeForKey(candidate.memberKey, "expert")}</span>
+                          {offered ? <span className={cn(META, "text-foreground")}>Offered now</span> : null}
+                        </span>
+                        <span className={cn(META, "mt-1 block text-muted-foreground")}>{candidate.title}</span>
+                        <span className={cn(META, "mt-0.5 block text-muted-foreground")}>
+                          {candidate.specialties.join(" · ")}
                         </span>
                       </button>
                     </li>
@@ -259,78 +235,72 @@ export function InviteExpertDialog({
               </ul>
             </div>
           ) : (
-            <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-4 py-3" data-testid="state-invite-offer">
-              <div className="flex items-start gap-3" data-testid={`offered-${expert.memberKey}`}>
-                <Avatar initials={expert.initials} tone={toneFor(expert.memberKey, "expert")} size="lg" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-baseline gap-x-2">
-                    <span className="text-sm font-medium">{expert.name}</span>
-                    <span className="rounded border border-card-border bg-muted px-1 text-[10px] font-medium leading-4 text-muted-foreground">
-                      {badgeForKey(expert.memberKey, "expert")}
-                    </span>
+            <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-6 py-6" data-testid="state-invite-offer">
+              <div className="flex items-baseline justify-between gap-3" data-testid={`offered-${expert.memberKey}`}>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-baseline gap-x-3">
+                    <span className={cn(CHROME, "font-medium")}>{expert.name}</span>
+                    <span className={LABEL}>{badgeForKey(expert.memberKey, "expert")}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">{expert.specialties.join(" · ")}</p>
-                  {offer?.availability ? <p className="text-xs text-muted-foreground">{offer.availability}</p> : null}
-                  {rateLine ? <p className="text-xs text-muted-foreground">{rateLine}</p> : null}
-                  {reason ? <p className="mt-1 text-[11px] text-muted-foreground">{reason}</p> : null}
+                  <p className={cn(META, "mt-1 text-muted-foreground")}>{expert.specialties.join(" · ")}</p>
+                  {offer?.availability ? (
+                    <p className={cn(META, "mt-0.5 text-muted-foreground")}>{offer.availability}</p>
+                  ) : null}
+                  {rateLine ? <p className={cn(META, "mt-0.5 text-muted-foreground")}>{rateLine}</p> : null}
+                  {reason ? <p className={cn(META, "mt-1 text-muted-foreground")}>{reason}</p> : null}
                 </div>
                 <button
                   type="button"
                   onClick={() => setPicking(true)}
-                  className={cn(QUIET_BUTTON, "shrink-0 text-muted-foreground")}
+                  className={cn(ACTION_QUIET, "shrink-0")}
                   data-testid="button-someone-else"
                 >
                   Someone else
                 </button>
               </div>
 
-              <div className="mt-4">
-                <label htmlFor="invite-brief" className="mb-1 block text-xs font-medium text-muted-foreground">
-                  {offer?.brief
-                    ? `What ${first} is being asked to do — lifted from this thread, edit if wrong`
-                    : `What ${first} is being asked to do`}
+              <div className="mt-6">
+                <label htmlFor="invite-brief" className={cn(LABEL, "block")}>
+                  {offer?.brief ? `What ${first} is being asked to do — edit if wrong` : `What ${first} is being asked to do`}
                 </label>
                 <textarea
                   id="invite-brief"
                   value={brief}
                   onChange={(event) => setBrief(event.target.value)}
-                  rows={4}
+                  rows={8}
                   placeholder="Shopify checkout, we need purchase events in ChatGPT Ads and GA4 to agree."
-                  className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className={cn(
+                    READ,
+                    "scrollbar-thin mt-2 max-h-[46vh] w-full resize-y border-b border-foreground bg-transparent pb-2 outline-none placeholder:text-muted-foreground",
+                  )}
                   data-testid="input-invite-brief"
                 />
               </div>
 
               {failed ? (
-                <div className="mt-3 text-xs text-destructive" role="alert">
-                  <p>{failed}</p>
-                  <p className="mt-1 text-muted-foreground">
+                <div className="mt-4" role="alert">
+                  <p className={cn(CHROME, "text-destructive")}>{failed}</p>
+                  <p className={cn(META, "mt-1.5 text-muted-foreground")}>
                     Or{" "}
-                    <a
-                      href={BOOK_A_CALL_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline underline-offset-2"
-                    >
+                    <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={LINK}>
                       book a call
                     </a>{" "}
-                    and bring this room's link with you.
+                    and bring this room&apos;s link with you.
                   </p>
                 </div>
               ) : null}
 
-              <div className="mt-4">
+              <div className="mt-6">
                 <button
                   type="button"
                   onClick={() => void submit()}
                   disabled={busy}
-                  className={PRIMARY_BUTTON}
+                  className={ACTION}
                   data-testid="button-submit-invite"
                 >
-                  {busy ? <LoaderCircle className="animate-spin" /> : null}
-                  {estimate ? `Ask ${first} for a quote — about ${estimate}` : `Ask ${first} for a quote`}
+                  {busy ? "Asking" : estimate ? `Ask ${first} for a quote — about ${estimate}` : `Ask ${first} for a quote`}
                 </button>
-                <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
+                <p className={cn(META, "mt-3 text-muted-foreground")}>
                   No account and no card at this step. The answer comes back in this thread, and if the estimate is
                   wrong {first} says so before anybody owes anything.
                 </p>

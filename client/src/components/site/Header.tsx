@@ -1,162 +1,68 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation } from "wouter";
-import { Menu, X } from "lucide-react";
+import { Link } from "wouter";
 
-import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/site/ThemeToggle";
-import { BOOK_A_CALL_URL, MAIN_SITE_URL } from "@shared/roster";
+import { useTheme } from "@/hooks/use-theme";
 
-interface NavItem {
-  label: string;
-  href: string;
-  testid: string;
-  /** Renders in the "you are here" style the main site gives its active tab. */
-  current?: boolean;
-}
+/* ---------------------------------------------------------------------------
+ * THE MASTHEAD
+ *
+ * It carried thirteen things: a logo, ten nav items — one of them "FREE leads"
+ * — a theme control and a booking button, on every page, above every offer.
+ * Three are left.
+ *
+ * The minimum is: the name, which is the way back to the page that lists all
+ * the work; one link to that list, for the pages that are not it; and the
+ * theme, because a person reading at night has to be able to say so. Everything
+ * else that used to live here — Services, Case Studies, White-Label, Team,
+ * Blog, Contact, AdGrant.AI, Book a call — is either a page on top-rated.team
+ * that a visitor did not come here for, or an offer, and an offer belongs on
+ * the door that makes it rather than in the furniture above every door.
+ *
+ * It is not sticky any more, and that is deliberate. A bar pinned over the page
+ * is a permanent object on a design whose whole argument is that there are
+ * almost none; the pages are short, and the footer carries the same two links
+ * at the end of the scroll.
+ *
+ * data-site-chrome is load-bearing, not decoration: client/src/index.css keys
+ * the site's three-size type scale off it, so the pages that carry this header
+ * get the scale and the workspace does not.
+ * ------------------------------------------------------------------------- */
 
-/**
- * The main site's nav, in its order, plus one entry: this section. Everything
- * else is absolute to top-rated.team because that is a different origin — only
- * the ChatGPT Ads entry and the logo stay on this site.
- */
-const NAV_ITEMS: NavItem[] = [
-  { label: "ChatGPT Ads", href: "/", testid: "link-nav-chatgpt-ads", current: true },
-  { label: "Home", href: `${MAIN_SITE_URL}/`, testid: "link-nav-home" },
-  { label: "Services", href: `${MAIN_SITE_URL}/services`, testid: "link-nav-services" },
-  { label: "Case Studies", href: `${MAIN_SITE_URL}/case-studies`, testid: "link-nav-case-studies" },
-  { label: "White-Label", href: `${MAIN_SITE_URL}/white-label`, testid: "link-nav-white-label" },
-  { label: "FREE leads", href: `${MAIN_SITE_URL}/leads`, testid: "link-nav-free-leads" },
-  { label: "AdGrant.AI", href: "https://adgrant.ai", testid: "link-nav-adgrant.ai" },
-  { label: "Team", href: `${MAIN_SITE_URL}/team`, testid: "link-nav-team" },
-  { label: "Blog", href: `${MAIN_SITE_URL}/blog`, testid: "link-nav-blog" },
-  { label: "Contact", href: `${MAIN_SITE_URL}/contact`, testid: "link-nav-contact" },
-];
-
-function isInternal(href: string): boolean {
-  return href.startsWith("/");
-}
-
-/**
- * "You are here" is a fact about the page, not about the row. There is more than
- * one internal page now — `/` and `/work` — so the flag on the row is only a
- * default for the entries that live on the other origin and can never be here.
- */
-function isCurrent(item: NavItem, location: string): boolean {
-  return isInternal(item.href) ? location === item.href : Boolean(item.current);
-}
+const LINK = "draw text-muted-foreground hover:text-foreground";
 
 export function Header() {
-  const [location] = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    if (!mobileOpen) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMobileOpen(false);
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [mobileOpen]);
+  const { resolvedTheme, setTheme } = useTheme();
+  /* Two states rather than three. "System" is still what a visitor who never
+     presses this gets, because that is what the theme starts as; pressing it is
+     the moment they have an opinion, and an opinion is not a menu. */
+  const next = resolvedTheme === "dark" ? "light" : "dark";
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
-          <Link href="/" data-testid="link-logo" className="flex items-center gap-2">
-            <img src="/assets/top-rated-logo.png" alt="Top-Rated Team" className="h-10 w-10" />
-            <span className="font-semibold text-lg">Top-Rated Team</span>
+    <header data-site-chrome data-testid="site-header">
+      <div className="mx-auto flex max-w-[var(--page)] items-center justify-between gap-[var(--s3)] px-[var(--s3)] pt-[var(--s3)]">
+        <Link
+          href="/"
+          data-testid="link-logo"
+          className="type-meta flex items-center gap-2 font-medium tracking-[0.13em] text-foreground"
+        >
+          <img src="/assets/top-rated-logo.png" alt="" aria-hidden="true" className="h-5 w-5" />
+          Top-Rated Team
+        </Link>
+
+        <nav className="type-meta flex items-center gap-[var(--s3)]">
+          <Link href="/work" data-testid="link-nav-work" className={LINK}>
+            Work
           </Link>
-
-          <div className="hidden lg:flex items-center gap-1">
-            {NAV_ITEMS.map((item) => {
-              const button = (
-                <Button
-                  variant={isCurrent(item, location) ? "secondary" : "ghost"}
-                  size="sm"
-                  data-testid={item.testid}
-                >
-                  {item.label}
-                </Button>
-              );
-              return isInternal(item.href) ? (
-                <Link key={item.testid} href={item.href}>
-                  {button}
-                </Link>
-              ) : (
-                <a key={item.testid} href={item.href}>
-                  {button}
-                </a>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <a
-              href={BOOK_A_CALL_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden sm:block"
-            >
-              <Button data-testid="button-book-call">Book A Call</Button>
-            </a>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              aria-expanded={mobileOpen}
-              onClick={() => setMobileOpen((open) => !open)}
-              data-testid="button-mobile-menu"
-            >
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </div>
-        </div>
-
-        {mobileOpen && (
-          <div className="lg:hidden border-t border-border py-3" data-testid="nav-mobile">
-            <div className="flex flex-col gap-1">
-              {NAV_ITEMS.map((item) => {
-                const button = (
-                  <Button
-                    variant={isCurrent(item, location) ? "secondary" : "ghost"}
-                    size="sm"
-                    className="w-full justify-start"
-                    data-testid={`${item.testid}-mobile`}
-                  >
-                    {item.label}
-                  </Button>
-                );
-                return isInternal(item.href) ? (
-                  <Link
-                    key={item.testid}
-                    href={item.href}
-                    className="block"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    {button}
-                  </Link>
-                ) : (
-                  <a key={item.testid} href={item.href} className="block">
-                    {button}
-                  </a>
-                );
-              })}
-              <a
-                href={BOOK_A_CALL_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block sm:hidden mt-2"
-              >
-                <Button className="w-full" data-testid="button-book-call-mobile">
-                  Book A Call
-                </Button>
-              </a>
-            </div>
-          </div>
-        )}
-      </nav>
+          <button
+            type="button"
+            data-testid="button-theme-toggle"
+            onClick={() => setTheme(next)}
+            className={LINK}
+          >
+            {next === "dark" ? "Dark" : "Light"}
+            <span className="sr-only"> theme</span>
+          </button>
+        </nav>
+      </div>
     </header>
   );
 }

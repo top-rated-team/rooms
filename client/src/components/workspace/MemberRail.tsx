@@ -1,10 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, Plus, UserPlus } from "lucide-react";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID, type DoorContract } from "@shared/doors";
 import { AGENT_BY_ID, EXPERTS, type AgentDef } from "@shared/roster";
 import type { Member, MemberKind } from "@shared/schema";
-import { Avatar, toneFor } from "@/components/workspace/Avatar";
 import { cn } from "@/lib/utils";
+import { ACTION_QUIET, CHROME, LABEL, META } from "@/components/workspace/room-style";
 
 /* ---------------------------------------------------------------------------
  * THE BADGE RULE
@@ -24,6 +23,14 @@ import { cn } from "@/lib/utils";
  * turns this column into a ladder where "AI" quietly means cheap. The two
  * questions people do ask are "can this one do the thing" and "who do I
  * complain to", and only a job answers those.
+ *
+ * THE BADGE IS NO LONGER A PILL, AND THE LINE UNDER IT GOT BIGGER.
+ *
+ * The six words are unchanged and so are the six lines. What changed is that a
+ * badge is now a word set beside the name at the metadata size instead of a
+ * bordered chip, and the accountability line moved up from 11px to the room's
+ * chrome size — because the line is the part that answers "who do I complain
+ * to", and it was set two sizes smaller than the decoration around it.
  *
  * WHICH COMPANY A LINE MAY NAME
  *
@@ -62,6 +69,15 @@ export const BADGE_LINE: Record<RoomBadge, string> = {
 };
 
 export const BADGE_RULE = "A badge says what someone does here and who answers for them. It never says what they are made of.";
+
+/**
+ * Said once, at the top of the list, because the list itself implies the
+ * opposite. Four names sit in a new room before anybody has been told it
+ * exists, and until this line was written the room let a visitor believe they
+ * were being watched.
+ */
+export const WHO_IS_WATCHING =
+  "Listed here because this is the work they do. Nobody is told about this room until you ask for a person.";
 
 /**
  * The company that runs this site and the agents in the roster, read off the
@@ -253,12 +269,6 @@ function roleFor(member: Member): string {
   return "";
 }
 
-const CONTROL_BUTTON =
-  "inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md text-[11px] font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover-elevate active-elevate-2 border border-transparent min-h-6 px-1.5";
-
-const RAIL_BUTTON =
-  "inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2 bg-secondary text-secondary-foreground border border-secondary-border min-h-8 px-3";
-
 interface MemberRowProps {
   member: Member;
   detail?: MemberDetail;
@@ -282,112 +292,92 @@ function MemberRow({ member, detail, viewer, company, onOpenDm, onRevoke }: Memb
   const budgetSpent = outside ? outside.callsUsed >= outside.callsPerDay : false;
   const expired = outside ? isExpired(outside) : false;
   const control = controlFor(badge, member, outside);
-  const Chevron = limitsOpen ? ChevronDown : ChevronRight;
 
   return (
-    <li
-      className={cn("rounded-md px-1.5 py-1", revoked && "opacity-60")}
-      data-testid={`member-${member.memberKey}`}
-    >
-      <div className="flex items-start gap-2">
-        <Avatar
-          initials={member.initials}
-          tone={toneFor(member.memberKey, member.kind)}
-          size="sm"
-          presence={member.kind === "agent" || revoked ? null : member.presence}
-          dimmed={Boolean(revoked)}
-          className="mt-0.5"
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-1.5">
-            {canDm ? (
-              <button
-                type="button"
-                onClick={() => onOpenDm(member.memberKey)}
-                className="truncate rounded text-xs font-medium underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                data-testid={`button-dm-${member.memberKey}`}
-              >
-                {member.displayName}
-              </button>
-            ) : (
-              <span className="truncate text-xs font-medium">{member.displayName}</span>
-            )}
-            <span
-              className="shrink-0 rounded border border-card-border bg-muted px-1 text-[10px] font-medium leading-4 text-muted-foreground"
-              data-testid={`badge-${member.memberKey}`}
+    <li className={cn("border-t border-border py-3", revoked && "opacity-60")} data-testid={`member-${member.memberKey}`}>
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+          {canDm ? (
+            <button
+              type="button"
+              onClick={() => onOpenDm(member.memberKey)}
+              className={cn(CHROME, "truncate font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:underline")}
+              data-testid={`button-dm-${member.memberKey}`}
             >
-              {badge}
-            </span>
-          </div>
-
-          <p className="text-[11px] leading-4 text-muted-foreground">{line}</p>
-          {detail?.note ? <p className="text-[11px] leading-4 text-muted-foreground">{detail.note}</p> : null}
-          {!detail?.note && role && member.kind !== "agent" ? (
-            <p className="truncate text-[11px] leading-4 text-muted-foreground">{role}</p>
-          ) : null}
-
-          {outside && !revoked ? (
-            <div className="mt-1 space-y-1">
-              <p className="text-[11px] leading-4 text-muted-foreground">
-                <span className="font-medium text-foreground">{OUTSIDE_MODE_LABEL[outside.mode]}.</span>{" "}
-                {OUTSIDE_MODE_LINE[outside.mode]}
-              </p>
-              {showUsage ? (
-                <p
-                  className={cn("text-[11px] leading-4", budgetSpent || expired ? "text-destructive" : "text-muted-foreground")}
-                >
-                  {budgetSpent
-                    ? `Budget spent — ${outside.callsPerDay} calls today. It stopped, and said so in the thread.`
-                    : `${outside.callsUsed} of ${outside.callsPerDay} calls today.`}{" "}
-                  {expired
-                    ? `Expired ${dayLabel(outside.expiresOn)}. It has to be re-added.`
-                    : `Expires ${dayLabel(outside.expiresOn)}.`}
-                </p>
-              ) : null}
-              <p className="text-[11px] leading-4 text-muted-foreground">Name supplied by their tool, unchecked.</p>
-              <button
-                type="button"
-                onClick={() => setLimitsOpen((v) => !v)}
-                className="-ml-1 inline-flex items-center gap-0.5 rounded px-1 text-[11px] text-muted-foreground hover-elevate active-elevate-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                aria-expanded={limitsOpen}
-                data-testid={`button-limits-${member.memberKey}`}
-              >
-                <Chevron className="h-3 w-3" />
-                What it can never do
-              </button>
-              {limitsOpen ? (
-                <ul className="space-y-0.5 border-l border-card-border pl-2">
-                  {OUTSIDE_AGENT_LIMITS.map((limit) => (
-                    <li key={limit} className="text-[11px] leading-4 text-muted-foreground">
-                      {limit}
-                    </li>
-                  ))}
-                  <li className="pt-0.5 text-[11px] leading-4 text-muted-foreground">
-                    These four are not settings. There is no screen that turns them on.
-                  </li>
-                </ul>
-              ) : null}
-            </div>
-          ) : null}
-
-          {revoked ? (
-            <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
-              Revoked {dayLabel(revoked.on)} by {revoked.by} — reason: {revoked.reason}
-            </p>
-          ) : null}
+              {member.displayName}
+            </button>
+          ) : (
+            <span className={cn(CHROME, "truncate font-medium")}>{member.displayName}</span>
+          )}
+          <span className={LABEL} data-testid={`badge-${member.memberKey}`}>
+            {badge}
+          </span>
         </div>
 
         {viewer === "owner" && !revoked && onRevoke && control ? (
           <button
             type="button"
             onClick={() => onRevoke(member.memberKey)}
-            className={cn(CONTROL_BUTTON, "shrink-0 text-muted-foreground")}
+            className={cn(ACTION_QUIET, "shrink-0")}
             data-testid={`button-revoke-${member.memberKey}`}
           >
             {control}
           </button>
         ) : null}
       </div>
+
+      <p className={cn(CHROME, "mt-1 text-muted-foreground")}>{line}</p>
+      {detail?.note ? <p className={cn(META, "mt-1 text-muted-foreground")}>{detail.note}</p> : null}
+      {!detail?.note && role && member.kind !== "agent" ? (
+        <p className={cn(META, "mt-1 truncate text-muted-foreground")}>{role}</p>
+      ) : null}
+
+      {outside && !revoked ? (
+        <div className="mt-2 space-y-1.5">
+          <p className={cn(META, "text-muted-foreground")}>
+            <span className="font-medium text-foreground">{OUTSIDE_MODE_LABEL[outside.mode]}.</span>{" "}
+            {OUTSIDE_MODE_LINE[outside.mode]}
+          </p>
+          {showUsage ? (
+            <p className={cn(META, budgetSpent || expired ? "text-destructive" : "text-muted-foreground")}>
+              {budgetSpent
+                ? `Budget spent — ${outside.callsPerDay} calls today. It stopped, and said so in the thread.`
+                : `${outside.callsUsed} of ${outside.callsPerDay} calls today.`}{" "}
+              {expired
+                ? `Expired ${dayLabel(outside.expiresOn)}. It has to be re-added.`
+                : `Expires ${dayLabel(outside.expiresOn)}.`}
+            </p>
+          ) : null}
+          <p className={cn(META, "text-muted-foreground")}>Name supplied by their tool, unchecked.</p>
+          <button
+            type="button"
+            onClick={() => setLimitsOpen((v) => !v)}
+            className={ACTION_QUIET}
+            aria-expanded={limitsOpen}
+            data-testid={`button-limits-${member.memberKey}`}
+          >
+            {limitsOpen ? "Hide what it can never do" : "What it can never do"}
+          </button>
+          {limitsOpen ? (
+            <ul className="space-y-1 border-l border-border pl-3">
+              {OUTSIDE_AGENT_LIMITS.map((limit) => (
+                <li key={limit} className={cn(META, "text-muted-foreground")}>
+                  {limit}
+                </li>
+              ))}
+              <li className={cn(META, "text-muted-foreground")}>
+                These four are not settings. There is no screen that turns them on.
+              </li>
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+
+      {revoked ? (
+        <p className={cn(META, "mt-1.5 text-muted-foreground")}>
+          Revoked {dayLabel(revoked.on)} by {revoked.by} — reason: {revoked.reason}
+        </p>
+      ) : null}
     </li>
   );
 }
@@ -450,16 +440,18 @@ export function MemberRail({
   const total = people.length + agents.length;
 
   return (
-    <div className={cn("shrink-0 px-3 py-3", className)} data-testid="rail-members">
+    <div className={cn("px-4 py-4", className)} data-testid="rail-members">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold">In this room</h2>
-        <span className="text-xs text-muted-foreground">{total}</span>
+        <h2 className={LABEL}>In this room</h2>
+        <span className={cn(META, "text-muted-foreground")}>{total}</span>
       </div>
+
+      <p className={cn(META, "mt-1.5 text-muted-foreground")}>{WHO_IS_WATCHING}</p>
 
       {people.length > 0 ? (
         <>
-          <h3 className="mt-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">People</h3>
-          <ul className="mt-1 space-y-1.5">
+          <h3 className={cn(LABEL, "mt-5")}>People</h3>
+          <ul className="mt-1">
             {people.map((member) => (
               <MemberRow
                 key={member.memberKey}
@@ -477,8 +469,8 @@ export function MemberRail({
 
       {agents.length > 0 ? (
         <>
-          <h3 className="mt-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Agents</h3>
-          <ul className="mt-1 space-y-1.5">
+          <h3 className={cn(LABEL, "mt-5")}>Agents</h3>
+          <ul className="mt-1">
             {agents.map((member) => (
               <MemberRow
                 key={member.memberKey}
@@ -494,21 +486,19 @@ export function MemberRail({
         </>
       ) : null}
 
-      <div className="mt-3 space-y-2">
-        <button type="button" onClick={onInvite} className={RAIL_BUTTON} data-testid="button-rail-invite">
-          <UserPlus />
+      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+        <button type="button" onClick={onInvite} className={ACTION_QUIET} data-testid="button-rail-invite">
           Add a person
         </button>
         {onAddAgent ? (
-          <button type="button" onClick={onAddAgent} className={RAIL_BUTTON} data-testid="button-rail-add-agent">
-            <Plus />
+          <button type="button" onClick={onAddAgent} className={ACTION_QUIET} data-testid="button-rail-add-agent">
             Add an agent
           </button>
         ) : null}
       </div>
 
       {/* Printed where anybody can hold us to it. */}
-      <p className="mt-3 border-t border-card-border pt-2 text-[11px] leading-4 text-muted-foreground">{BADGE_RULE}</p>
+      <p className={cn(META, "mt-4 border-t border-border pt-3 text-muted-foreground")}>{BADGE_RULE}</p>
     </div>
   );
 }

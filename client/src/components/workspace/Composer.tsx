@@ -8,14 +8,23 @@ import {
   type ChangeEvent,
   type KeyboardEvent,
 } from "react";
-import { CornerDownLeft, SendHorizontal } from "lucide-react";
 import { AGENTS, BOOK_A_CALL_URL, DEFAULT_AGENT_ID, EXPERTS } from "@shared/roster";
 import type { Channel, Member } from "@shared/schema";
 import type { ConnectionStatus } from "@/hooks/use-workspace";
 import { Avatar, toneFor } from "@/components/workspace/Avatar";
 import { cn } from "@/lib/utils";
+import { ACTION, ACTION_QUIET, CHROME, META, READ } from "@/components/workspace/room-style";
 
 const MAX_TEXTAREA_PX = 200; // ~8 rows before the textarea starts scrolling.
+
+/* ---------------------------------------------------------------------------
+ * The composer is a rule with words on it, not a box with a blue button in the
+ * corner. It is the same shape the front page's panel uses: a line under what
+ * you are typing, and the action as a word at the end of it.
+ *
+ * Everything below the line is unchanged behaviour — the four slash commands,
+ * the @ menu, Enter to send — restated as words instead of icons.
+ * ------------------------------------------------------------------------- */
 
 interface MentionOption {
   key: string;
@@ -28,8 +37,8 @@ interface MentionOption {
 
 const SLASH_HINTS = [
   { command: "/ask ", label: "/ask", detail: "ask the ChatGPT Ads agent" },
-  { command: "/task ", label: "/task", detail: "add a task" },
-  { command: "/invite", label: "/invite", detail: "bring in a human" },
+  { command: "/task ", label: "/task", detail: "add a line to the list" },
+  { command: "/invite", label: "/invite", detail: "bring in a person" },
   { command: "/call", label: "/call", detail: "book a call" },
 ];
 
@@ -40,7 +49,7 @@ function mentionOptions(members: Member[]): MentionOption[] {
     label: agent.name,
     detail: agent.title,
     initials: agent.initials,
-    tone: agent.tone,
+    tone: toneFor(`agent:${agent.id}`, "agent"),
   }));
   const experts: MentionOption[] = EXPERTS.map((expert) => ({
     key: expert.memberKey,
@@ -97,6 +106,8 @@ export interface ComposerProps {
   onTyping: () => void;
   onCreateTask: (title: string) => void;
   onInvite: () => void;
+  /** Set by the page so the arrival panel's one action can land the cursor here. */
+  focusRef?: { current: (() => void) | null };
 }
 
 export function Composer({
@@ -108,6 +119,7 @@ export function Composer({
   onTyping,
   onCreateTask,
   onInvite,
+  focusRef,
 }: ComposerProps) {
   const [value, setValue] = useState("");
   const [caret, setCaret] = useState(0);
@@ -131,12 +143,13 @@ export function Composer({
   const offline = connection !== "open";
   const disabledReason =
     connection === "connecting"
-      ? "Connecting to the workspace…"
+      ? "Connecting to the room…"
       : connection === "reconnecting"
         ? "Reconnecting — your message would not reach anyone yet."
         : connection === "closed"
           ? "Disconnected. Reload the page to get back in."
           : null;
+  const disabledIsFault = connection === "reconnecting" || connection === "closed";
 
   useLayoutEffect(() => {
     const el = textareaRef.current;
@@ -148,6 +161,17 @@ export function Composer({
   useEffect(() => {
     setMenuIndex(0);
   }, [mention?.query]);
+
+  /* The arrival panel's only action is "say what you are working on", and this
+   * is where that lands. Handing the page a function rather than a ref to the
+   * element keeps the focus behaviour in the component that owns it. */
+  useEffect(() => {
+    if (!focusRef) return;
+    focusRef.current = () => textareaRef.current?.focus();
+    return () => {
+      focusRef.current = null;
+    };
+  }, [focusRef]);
 
   const insertMention = useCallback(
     (option: MentionOption) => {
@@ -250,19 +274,24 @@ export function Composer({
     setCaret(event.currentTarget.selectionStart);
   }, []);
 
+  /* Short enough to be read on a phone. The long version — "Enter sends, Shift
+     and Enter starts a new line" — was clipped mid-sentence at 390 wide, and it
+     said twice what the line under the rule already says once. */
   const placeholder = channel
     ? channel.kind === "agent"
-      ? "Ask a question. Enter sends, Shift+Enter starts a new line."
-      : `Message #${channel.name}. Type @ to reach an agent or a person.`
+      ? "Ask a question."
+      : `Write to #${channel.name}. Type @ for a person or an agent.`
     : "Pick a channel to start.";
 
   return (
-    <div className="shrink-0 border-t border-border bg-background">
-      <div className="mx-auto w-full max-w-3xl px-3 py-3 sm:px-4">
+    <div className="shrink-0 border-t border-border">
+      <div className="mx-auto w-full max-w-[42rem] px-5 py-5 sm:px-8">
         <div className="relative">
           {mention && matches.length > 0 ? (
+            /* A menu floating over prose has to be bounded or it cannot be
+               read. One hairline and the room's ground — no shadow, no radius. */
             <div
-              className="absolute bottom-full left-0 z-20 mb-2 w-full max-w-sm overflow-hidden rounded-md border border-popover-border bg-popover shadow-lg"
+              className="absolute bottom-full left-0 z-20 mb-3 w-full max-w-sm border border-border bg-background"
               data-testid="menu-mentions"
             >
               <ul role="listbox" aria-label="Mentions">
@@ -278,14 +307,14 @@ export function Composer({
                       }}
                       onMouseEnter={() => setMenuIndex(index)}
                       className={cn(
-                        "flex w-full items-center gap-2 px-3 py-2 text-left",
-                        index === menuIndex ? "bg-secondary" : "hover-elevate",
+                        "flex w-full items-baseline gap-3 px-3 py-2 text-left",
+                        index === menuIndex ? "bg-muted" : "hover-elevate",
                       )}
                     >
                       <Avatar initials={option.initials} tone={option.tone} size="sm" />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium">@{option.handle}</span>
-                        <span className="block truncate text-xs text-muted-foreground">{option.detail}</span>
+                        <span className={cn(CHROME, "block truncate font-medium")}>@{option.handle}</span>
+                        <span className={cn(META, "block truncate text-muted-foreground")}>{option.detail}</span>
                       </span>
                     </button>
                   </li>
@@ -294,12 +323,7 @@ export function Composer({
             </div>
           ) : null}
 
-          <div
-            className={cn(
-              "flex items-end gap-2 rounded-md border border-input bg-background px-2 py-2 focus-within:ring-1 focus-within:ring-ring",
-              offline && "opacity-60",
-            )}
-          >
+          <div className={cn("flex items-end gap-5 border-b border-foreground pb-2", offline && "opacity-60")}>
             <textarea
               ref={textareaRef}
               value={value}
@@ -312,25 +336,30 @@ export function Composer({
               onBlur={() => setMenuOpen(false)}
               placeholder={placeholder}
               aria-label="Message"
-              className="scrollbar-thin max-h-[200px] min-h-[2.25rem] flex-1 resize-none bg-transparent px-1 py-1.5 text-sm leading-6 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
+              className={cn(
+                READ,
+                "scrollbar-thin max-h-[200px] min-h-[1.75rem] flex-1 resize-none bg-transparent outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed",
+              )}
               data-testid="input-composer"
             />
             <button
               type="button"
               onClick={submit}
               disabled={offline || !channel || value.trim().length === 0 || sending}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2 bg-primary text-primary-foreground border border-primary-border min-h-9 px-4 py-2"
+              className={cn(ACTION, "mb-0.5")}
               data-testid="button-send"
             >
-              <SendHorizontal />
-              <span className="sr-only sm:not-sr-only">Send</span>
+              {sending ? "Sending" : "Send"}
             </button>
           </div>
         </div>
 
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-5 gap-y-2">
           {disabledReason ? (
-            <span className="text-destructive" data-testid="text-composer-disabled">
+            <span
+              className={cn(META, disabledIsFault ? "text-destructive" : "text-muted-foreground")}
+              data-testid="text-composer-disabled"
+            >
               {disabledReason}
             </span>
           ) : (
@@ -344,14 +373,13 @@ export function Composer({
                     setMenuOpen(false);
                     requestAnimationFrame(() => textareaRef.current?.focus());
                   }}
-                  className="hover-elevate active-elevate-2 rounded px-1 py-0.5"
+                  className={cn(ACTION_QUIET, "normal-case tracking-normal")}
                 >
-                  <span className="font-mono text-foreground">{hint.label}</span> {hint.detail}
+                  <span className="font-mono">{hint.label}</span>
+                  <span>{hint.detail}</span>
                 </button>
               ))}
-              <span className="ml-auto hidden items-center gap-1 sm:inline-flex">
-                <CornerDownLeft className="h-3 w-3" /> to send
-              </span>
+              <span className={cn(META, "ml-auto hidden text-muted-foreground sm:inline")}>Enter sends</span>
             </>
           )}
         </div>

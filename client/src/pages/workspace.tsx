@@ -1,20 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useRoute } from "wouter";
-import { ArrowLeft, Calendar, LoaderCircle, Moon, Sun } from "lucide-react";
 import { AGENT_BY_ID, BOOK_A_CALL_URL, EXPERTS, MAIN_SITE_URL, type AgentDef, type ExpertDef } from "@shared/roster";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID, type DoorContract, type DoorDef } from "@shared/doors";
 import type { Channel, Message, TaskStatus } from "@shared/schema";
+import { useTheme } from "@/hooks/use-theme";
 import { listStoredWorkspaces, useWorkspace } from "@/hooks/use-workspace";
+import { AdGrantPanel, AD_GRANT_SETUP, type SetupLine } from "@/components/workspace/AdGrantPanel";
 import { ChannelHeader, type MobileView } from "@/components/workspace/ChannelHeader";
 import { Composer } from "@/components/workspace/Composer";
 import { InviteExpertDialog, type HireOffer } from "@/components/workspace/InviteExpertDialog";
 import { MemberRail } from "@/components/workspace/MemberRail";
 import { MessageList } from "@/components/workspace/MessageList";
 import { NewChannelDialog } from "@/components/workspace/NewChannelDialog";
+import { RoomArrival } from "@/components/workspace/RoomArrival";
 import { RoomFooter } from "@/components/workspace/RoomFooter";
 import { ShareLinkBar } from "@/components/workspace/ShareLinkBar";
 import { TaskPanel } from "@/components/workspace/TaskPanel";
 import { WorkspaceSidebar } from "@/components/workspace/WorkspaceSidebar";
+import { ACTION, ACTION_QUIET, CHROME, LABEL, META, READ } from "@/components/workspace/room-style";
 import { cn } from "@/lib/utils";
 
 /** How much of an agent's answer goes into a brief before it stops being read. */
@@ -47,6 +50,10 @@ const BRIEF_LIMIT = 400;
  * DOOR_BY_ID[doorId] : undefined`, and a null legal name where there is none —
  * so a lead written on disk and a room on screen now agree about which rooms
  * have a company behind them.
+ *
+ * ANYTHING THAT OPENS A NEW WAY INTO THE ROOM HAS TO STAMP THIS. A room created
+ * without `source.door` renders the fault footer, correctly and loudly, which
+ * is the right behaviour and a bad first impression. See the handoff.
  * ------------------------------------------------------------------------- */
 const UNSTAMPED_ROOM: DoorContract = {
   legalName: "",
@@ -59,6 +66,45 @@ const UNSTAMPED_ROOM: DoorContract = {
 /** The company that runs this site, read off its own door rather than typed again. */
 const OUR_LEGAL_NAME = DOOR_BY_ID[DEFAULT_DOOR_ID].contract.legalName;
 
+/**
+ * THE SAME COMPANY, IN CHROME.
+ *
+ * "Top-Rated Team (Danylo Burykin SZČO)" is the name a person needs when they
+ * are deciding who they are dealing with: the room footer, the invoice line,
+ * the line under a badge that answers "who do I complain to". It is not the
+ * name a window frame needs, and this room put it in one — the top bar of a
+ * room opened through another company's door read "Call Top-Rated Team (Danylo
+ * Burykin SZČO)", which is a legal form doing the work of a label.
+ *
+ * So chrome says the trading name and the footer says the legal one, and both
+ * are on screen at once in the rooms where it matters. It is typed here because
+ * `DoorContract` carries only `legalName` today; the handoff adds a
+ * `displayName` beside it and this constant becomes one lookup.
+ */
+const OUR_DISPLAY_NAME = "Top-Rated Team";
+
+/**
+ * The brief is read by a person, in a sheet and then in a notification, so the
+ * agent's markdown has to come off it first. An answer that says
+ * "`OPENAI_API_KEY` is not set" arrived in the hire sheet with the backticks
+ * still on, which reads as somebody pasted the wrong thing.
+ *
+ * Deliberately small: fences, inline code, bold, italic and link syntax, and
+ * nothing else. This is not a markdown parser and must not become one — the
+ * text is going into a textarea a person can edit, and mangling it is worse
+ * than leaving a stray asterisk.
+ */
+function asPlainText(text: string): string {
+  return text
+    .replace(/```[a-z]*\n?/gi, "")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/(^|\s)\*([^*\n]+)\*/g, "$1$2")
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1 ($2)")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 /** Cuts prose to a readable length without slicing a word in half. */
 function trimTo(text: string, max: number): string {
   if (text.length <= max) return text;
@@ -67,66 +113,80 @@ function trimTo(text: string, max: number): string {
   return `${(space > max * 0.6 ? cut.slice(0, space) : cut).trimEnd()}…`;
 }
 
-const ICON_BUTTON =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2 border border-transparent h-9 w-9";
+/** One key per room: hiding the arrival panel in one room says nothing about another. */
+function arrivalKey(token: string): string {
+  return `tr-room-arrival:${token}`;
+}
 
-const PRIMARY_BUTTON =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2 bg-primary text-primary-foreground border border-primary-border min-h-9 px-4 py-2";
+function readDismissed(token: string): boolean {
+  try {
+    return window.localStorage.getItem(arrivalKey(token)) === "done";
+  } catch {
+    // Private mode. The panel shows again next visit, which is the safe way round.
+    return false;
+  }
+}
 
+/**
+ * The site's own theme state, not a second one. This used to toggle the `dark`
+ * class by hand and write the choice to `localStorage["theme"]` — a key nothing
+ * reads. `client/index.html` and `@/hooks/use-theme` both use `tr-theme`, so a
+ * visitor who switched the room to light got it back dark on the next load, and
+ * the rest of the site never heard about the choice at all.
+ */
 function ThemeToggle() {
-  const [dark, setDark] = useState<boolean>(() => document.documentElement.classList.contains("dark"));
-
-  const toggle = useCallback(() => {
-    const next = !document.documentElement.classList.contains("dark");
-    document.documentElement.classList.toggle("dark", next);
-    setDark(next);
-    try {
-      window.localStorage.setItem("theme", next ? "dark" : "light");
-    } catch {
-      // Theme preference is a nicety; the class on <html> is what matters now.
-    }
-  }, []);
+  const { resolvedTheme, setTheme } = useTheme();
+  const dark = resolvedTheme === "dark";
 
   return (
-    <button type="button" onClick={toggle} className={ICON_BUTTON} data-testid="button-theme-toggle">
-      {dark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-      <span className="sr-only">Toggle theme</span>
+    <button
+      type="button"
+      onClick={() => setTheme(dark ? "light" : "dark")}
+      className={ACTION_QUIET}
+      data-testid="button-theme-toggle"
+    >
+      {dark ? "Light" : "Dark"}
+      <span className="sr-only">Switch colour theme</span>
     </button>
   );
 }
 
 /**
- * The calendar behind this button is ours in every room, so in a room another
- * company is answerable for the button has to say whose it is: a bare "Book A
- * Call" there reads as that company's calendar, which is our contact standing
- * in for theirs. door.tsx says the same thing in a sentence under its own
- * booking button.
+ * The calendar behind this link is ours in every room, so in a room another
+ * company is answerable for it has to say whose it is: a bare "Book a call"
+ * there reads as that company's calendar, which is our contact standing in for
+ * theirs. door.tsx says the same thing in a sentence under its own booking
+ * button.
  *
  * `ours` is `null` until the room has loaded and said which door it came
- * through. Nothing on screen claims a company yet at that point, so the button
+ * through. Nothing on screen claims a company yet at that point, so the link
  * keeps its plain label rather than changing under the reader a moment later.
+ *
+ * It used to be a filled blue button, and it was the loudest thing in the room
+ * — louder than the two-click hire, which is the path that actually works. It
+ * is a word now. The hire is the button.
  */
 function TopBar({ workspaceName, ours }: { workspaceName: string | null; ours: boolean | null }) {
   return (
-    <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-background px-3 sm:px-4">
-      <a href={MAIN_SITE_URL} className="flex items-center gap-2" data-testid="link-logo">
-        <img src="/assets/top-rated-logo.png" alt="Top-Rated Team" className="h-6 w-6" />
-        <span className="hidden text-sm font-semibold sm:inline">Top-Rated Team</span>
+    <header className="flex shrink-0 flex-wrap items-baseline gap-x-4 gap-y-2 px-5 py-4 sm:px-8">
+      <a href={MAIN_SITE_URL} className="flex items-baseline gap-2" data-testid="link-logo">
+        <img src="/assets/top-rated-logo.png" alt="" aria-hidden="true" className="h-4 w-4 translate-y-0.5" />
+        <span className={LABEL}>{OUR_DISPLAY_NAME}</span>
       </a>
+      {/* Not on a phone. At 390 wide the bar wrapped to three lines — mark,
+          room name, actions — and with the address strip under it the room's
+          own first sentence started 600 pixels down an 844-pixel screen. The
+          name is still the tab title, still the heading of the channel list,
+          and still the first line of the sidebar; the top of a small screen is
+          the one place it was costing more than it said. */}
       {workspaceName ? (
-        <>
-          <span className="h-4 w-px bg-border" />
-          <span className="min-w-0 truncate text-sm text-muted-foreground" data-testid="text-workspace-name">
-            {workspaceName}
-          </span>
-        </>
+        <span className={cn(CHROME, "hidden min-w-0 truncate text-muted-foreground sm:inline")} data-testid="text-workspace-name">
+          {workspaceName}
+        </span>
       ) : null}
-      <div className="ml-auto flex items-center gap-2">
-        <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className="hidden sm:block">
-          <button type="button" className={PRIMARY_BUTTON} data-testid="button-book-call">
-            <Calendar />
-            {ours === false ? `Book a call with ${OUR_LEGAL_NAME}` : "Book A Call"}
-          </button>
+      <div className="ml-auto flex items-baseline gap-x-5">
+        <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={ACTION_QUIET} data-testid="button-book-call">
+          {ours === false ? `Call ${OUR_DISPLAY_NAME}` : "Book a call"}
         </a>
         <ThemeToggle />
       </div>
@@ -181,7 +241,11 @@ export default function WorkspacePage() {
   const [hireOffer, setHireOffer] = useState<HireOffer | undefined>(undefined);
   const [channelDialogOpen, setChannelDialogOpen] = useState(false);
   const [unread, setUnread] = useState<Record<string, number>>({});
+  const [arrivalDismissed, setArrivalDismissed] = useState(false);
   const messageCountsRef = useRef<Record<string, number> | null>(null);
+  /* The composer hands this back a function that puts the cursor in it. It is
+   * what the arrival panel's one action does, and the only thing it does. */
+  const focusComposerRef = useRef<(() => void) | null>(null);
 
   /* The stamp, resolved once and never guessed at — see the note at the top of
    * this file. `undefined` is a room that did not say which door it came
@@ -191,8 +255,12 @@ export default function WorkspacePage() {
     return stamp ? DOOR_BY_ID[stamp] : undefined;
   }, [state]);
 
-  /* Whether this room is one of ours. A room with no door is not ours to claim. */
-  const ours = door?.contract.legalName === OUR_LEGAL_NAME;
+  /* Whether this room is one of ours. Three answers, not two: yes, no, and — for
+   * a room that never said which door it came through — not known. It used to
+   * collapse the third into "no", which made the top bar disambiguate our
+   * calendar from a company the room does not name and the footer says is
+   * missing. Nothing on screen should imply a seller the room cannot produce. */
+  const ours = door ? door.contract.legalName === OUR_LEGAL_NAME : null;
 
   /* Workspace URLs are bearer credentials: they must never be indexed. */
   useEffect(() => {
@@ -218,6 +286,13 @@ export default function WorkspacePage() {
       document.title = previous;
     };
   }, [ours, state]);
+
+  /* Read once per room, not once per render: a panel that reappears halfway
+   * through a session is worse than one that never showed. */
+  useEffect(() => {
+    if (!token) return;
+    setArrivalDismissed(readDismissed(token));
+  }, [token]);
 
   const messages = useMemo(() => state?.messages ?? [], [state]);
   const channels = useMemo(() => state?.channels ?? [], [state]);
@@ -275,6 +350,28 @@ export default function WorkspacePage() {
     () => messages.filter((m) => m.channelId === activeChannelId),
     [activeChannelId, messages],
   );
+
+  /* ------------------------------- the arrival ------------------------------
+   * A room is new while the only things in it are the visitor's own opening
+   * question and the answer to it. The seeded system message does not count:
+   * the room narrating itself is not somebody using the room.
+   * ----------------------------------------------------------------------- */
+  const written = useMemo(() => messages.filter((m) => m.authorKind !== "system"), [messages]);
+  const hasQuestion = useMemo(() => written.some((m) => m.authorKind === "visitor"), [written]);
+  const showArrival = !arrivalDismissed && written.length <= 2;
+
+  const dismissArrival = useCallback(() => {
+    setArrivalDismissed(true);
+    try {
+      window.localStorage.setItem(arrivalKey(token), "done");
+    } catch {
+      // It closes for this visit either way.
+    }
+  }, [token]);
+
+  const startWriting = useCallback(() => {
+    focusComposerRef.current?.();
+  }, []);
 
   const selectChannel = useCallback((channelId: string) => {
     setActiveChannelId(channelId);
@@ -357,7 +454,26 @@ export default function WorkspacePage() {
   );
 
   /**
-   * The sheet opens either cold — "Invite an expert" from the rail, the sidebar
+   * The Ad Grants setup, put on the list as five real lines. One at a time on
+   * purpose: the server reads `state.tasks.length` to decide where a new line
+   * goes, so five at once would land in an order nobody chose.
+   */
+  const addSetup = useCallback(
+    async (lines: SetupLine[]) => {
+      for (const line of lines) {
+        await createTask({ title: line.title, detail: line.detail, assigneeKey: line.assigneeKey });
+      }
+    },
+    [createTask],
+  );
+
+  const setupAlreadyAdded = useMemo(
+    () => tasks.some((task) => task.title === AD_GRANT_SETUP[0].title),
+    [tasks],
+  );
+
+  /**
+   * The sheet opens either cold — "Add a person" from the rail, the sidebar
    * or the composer — or carrying what the thread already said. Going through
    * one function is what stops a cold invite arriving pre-filled with the brief
    * from a conversation somebody had ten minutes ago.
@@ -378,9 +494,10 @@ export default function WorkspacePage() {
       const asked = [...(index === -1 ? channelMessages : channelMessages.slice(0, index))]
         .reverse()
         .find((candidate) => candidate.authorKind === "visitor");
-      const stopped = trimTo(message.body.trim(), BRIEF_LIMIT);
+      const stopped = trimTo(asPlainText(message.body), BRIEF_LIMIT);
+      const question = asked ? asPlainText(asked.body) : "";
       openInvite({
-        brief: asked ? `${asked.body.trim()}\n\nWhere the agent stopped: ${stopped}` : stopped,
+        brief: question ? `${question}\n\nWhere the agent stopped: ${stopped}` : stopped,
       });
     },
     [channelMessages, openInvite],
@@ -412,11 +529,8 @@ export default function WorkspacePage() {
   if (status === "loading") {
     return (
       <Shell workspaceName={null}>
-        <div className="flex flex-1 items-center justify-center">
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            <LoaderCircle className="h-4 w-4 animate-spin" />
-            Opening your workspace…
-          </p>
+        <div className="flex flex-1 items-center justify-center px-5">
+          <p className={cn(META, "text-muted-foreground")}>Opening the room…</p>
         </div>
       </Shell>
     );
@@ -424,40 +538,48 @@ export default function WorkspacePage() {
 
   if (status === "not-found") {
     const stored = listStoredWorkspaces().filter((w) => w.token !== token);
+    /* ----------------------------- the way back in ---------------------------
+     * `/w` with nothing after it is not a broken link — it is somebody looking
+     * for a room they already have. The address IS the account, this browser is
+     * the only thing that remembers which addresses exist, and until now there
+     * was no page that would tell them. The site can now point one quiet link
+     * here, and the answer is either their rooms or the one true sentence about
+     * why they have none.
+     *
+     * Nothing is created here and nothing is looked up on the server: the list
+     * comes out of this browser's own storage, and a room opened on a phone has
+     * never been on this device and correctly does not appear.
+     * --------------------------------------------------------------------- */
+    const noAddress = token === "";
     return (
       <Shell workspaceName={null}>
-        <div className="flex flex-1 items-center justify-center px-4">
-          <div className="w-full max-w-md text-center">
-            <h1 className="text-xl font-semibold">This workspace link isn&apos;t valid</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              The link is the whole credential, so a typo or an expired copy leaves nothing to open. Starting a new
-              workspace takes one message.
+        <div className="flex flex-1 items-start justify-center overflow-y-auto px-5 py-12 sm:px-8">
+          <div className="w-full max-w-[34rem]">
+            <h1 className={cn(CHROME, "font-medium")}>{noAddress ? "Rooms on this device" : "This link is not a room"}</h1>
+            <p className={cn(READ, "mt-3 text-muted-foreground")}>
+              {noAddress
+                ? stored.length > 0
+                  ? "A room lives at its own address, and the address is the whole account. This browser is the only thing that remembers which ones you have — these are the ones it remembers."
+                  : "There is no room on this device yet. A room is made when a conversation turns out to be worth keeping: ask a question on any of the doors, and keep the answer. That is the whole step."
+                : "The link is the whole credential, so a typo or an expired copy leaves nothing to open. Starting a new room takes one message."}
             </p>
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className={cn(PRIMARY_BUTTON, "mt-5")}
-              data-testid="button-start-workspace"
-            >
-              <ArrowLeft />
-              Start a new workspace
+            <button type="button" onClick={() => navigate("/")} className={cn(ACTION, "mt-6")} data-testid="button-start-workspace">
+              {noAddress ? "Go to the doors" : "Start a new room"}
             </button>
 
             {stored.length > 0 ? (
-              <div className="mt-8 text-left">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Workspaces on this device
-                </h2>
-                <ul className="mt-2 space-y-1">
+              <div className="mt-12">
+                <h2 className={LABEL}>{noAddress ? "Kept here" : "Rooms on this device"}</h2>
+                <ul className="mt-2">
                   {stored.map((workspace) => (
-                    <li key={workspace.token}>
+                    <li key={workspace.token} className="border-t border-border last:border-b">
                       <button
                         type="button"
                         onClick={() => navigate(`/w/${workspace.token}`)}
-                        className="hover-elevate active-elevate-2 flex w-full items-center justify-between gap-3 rounded-md border border-card-border bg-card px-3 py-2 text-left text-sm"
+                        className={cn(CHROME, "hover-elevate active-elevate-2 flex w-full items-baseline justify-between gap-4 py-3 text-left")}
                       >
                         <span className="truncate">{workspace.name}</span>
-                        <span className="shrink-0 text-xs text-muted-foreground">
+                        <span className={cn(META, "shrink-0 text-muted-foreground")}>
                           {new Date(workspace.lastSeen).toLocaleDateString()}
                         </span>
                       </button>
@@ -475,16 +597,11 @@ export default function WorkspacePage() {
   if (status === "error" || !state) {
     return (
       <Shell workspaceName={null}>
-        <div className="flex flex-1 items-center justify-center px-4">
-          <div className="w-full max-w-md text-center">
-            <h1 className="text-xl font-semibold">The workspace did not load</h1>
-            <p className="mt-2 text-sm text-muted-foreground">{error ?? "Something went wrong on the way here."}</p>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className={cn(PRIMARY_BUTTON, "mt-5")}
-              data-testid="button-retry"
-            >
+        <div className="flex flex-1 items-start justify-center px-5 py-12 sm:px-8">
+          <div className="w-full max-w-[34rem]">
+            <h1 className={cn(CHROME, "font-medium")}>The room did not load</h1>
+            <p className={cn(READ, "mt-3 text-muted-foreground")}>{error ?? "Something went wrong on the way here."}</p>
+            <button type="button" onClick={() => window.location.reload()} className={cn(ACTION, "mt-6")} data-testid="button-retry">
               Try again
             </button>
           </div>
@@ -529,7 +646,7 @@ export default function WorkspacePage() {
 
         {sidebarOpen ? (
           <div className="fixed inset-0 z-40 flex lg:hidden" role="dialog" aria-modal="true" aria-label="Channels">
-            <div className="relative z-10 h-full shadow-xl">{sidebar(() => setSidebarOpen(false))}</div>
+            <div className="relative z-10 h-full border-r border-border">{sidebar(() => setSidebarOpen(false))}</div>
             <button
               type="button"
               aria-label="Close channels"
@@ -539,11 +656,12 @@ export default function WorkspacePage() {
           </div>
         ) : null}
 
-        <main className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col bg-background">
           <ShareLinkBar
             url={shareUrl}
             workspaceId={state.workspace.id}
             defaultEmail={state.workspace.visitorEmail}
+            verbose={showArrival}
           />
           <ChannelHeader
             channel={activeChannel}
@@ -564,6 +682,21 @@ export default function WorkspacePage() {
                 mobileView === "chat" ? "flex" : "hidden",
               )}
             >
+              {/* Above the transcript and outside its scroller: the transcript
+                  opens pinned to the newest message, so anything inside it is
+                  already scrolled past by the time the room is painted.
+                  On a phone it takes the column instead of sharing it — the
+                  first render of this gave the transcript a sixty-pixel window
+                  showing half a sentence, which is worse than not showing it.
+                  Hiding it, sending anything, or writing a second message all
+                  hand the column straight back. */}
+              {showArrival ? (
+                <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto border-b border-border lg:flex-none lg:overflow-visible">
+                  <div className="mx-auto w-full max-w-[42rem] px-5 py-7 sm:px-8">
+                    <RoomArrival hasQuestion={hasQuestion} onStart={startWriting} onDismiss={dismissArrival} />
+                  </div>
+                </div>
+              ) : null}
               <MessageList
                 channel={activeChannel}
                 messages={channelMessages}
@@ -572,6 +705,11 @@ export default function WorkspacePage() {
                 llmReady={kb ? kb.llmReady : null}
                 onStarter={onStarter}
                 onGetPerson={onGetPerson}
+                /* The arrival opens the column on the visitor's own question,
+                   because the panel directly above it says the question is
+                   there. Every other visit opens on the newest message. */
+                anchor={showArrival ? "question" : "newest"}
+                className={showArrival ? "hidden lg:block" : undefined}
               />
               <Composer
                 channel={activeChannel}
@@ -582,17 +720,25 @@ export default function WorkspacePage() {
                 onTyping={onTyping}
                 onCreateTask={onCreateTask}
                 onInvite={() => openInvite()}
+                focusRef={focusComposerRef}
               />
             </section>
 
             <aside
               className={cn(
-                "min-h-0 w-full shrink-0 flex-col border-border bg-background lg:w-[320px] lg:border-l xl:flex",
+                "min-h-0 w-full shrink-0 flex-col bg-muted lg:w-[19rem] xl:flex",
                 mobileView === "tasks" ? "flex" : "hidden",
                 railOpen ? "lg:flex" : "lg:hidden",
               )}
               data-testid="rail-right"
             >
+              {/* Four regions, one rail, and all four have to be on screen at
+                  once: who is here, the tool, the list, and the company
+                  answerable for the room. Each is capped rather than allowed to
+                  push the next one below the fold — the first render of this
+                  restyle let the member list grow until the checklist and the
+                  footer were both off screen, which is exactly the failure the
+                  brief calls out: quieter is not the same as gone. */}
               <MemberRail
                 members={members}
                 /* The same contract the footer prints: a line under a badge
@@ -600,20 +746,28 @@ export default function WorkspacePage() {
                 contract={door?.contract ?? UNSTAMPED_ROOM}
                 onInvite={() => openInvite()}
                 onOpenDm={(memberKey) => void openDm(memberKey)}
-                className="scrollbar-thin max-h-[38vh] overflow-y-auto border-b border-card-border"
+                className="scrollbar-thin max-h-[28vh] shrink-0 overflow-y-auto border-b border-border"
               />
-              <TaskPanel
-                tasks={tasks}
-                members={members}
-                onCreate={onCreateTask}
-                onUpdate={onUpdateTask}
-                className="flex-1"
-              />
+              <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
+                {/* ABOVE THE LIST, NOT UNDER IT. It was under it, on the
+                    argument that the tool ends up on the list anyway — and in
+                    an Ad Grants room rendered at 1440x900 it was below six
+                    seeded task rows and never once on screen. A thing the owner
+                    asked for that nobody can see has not been built. It is two
+                    lines and a disclosure, it appears in two rooms out of
+                    seven, and in those two it is the first thing in the column
+                    that is not a name. */}
+                <AdGrantPanel doorId={door?.id} alreadyAdded={setupAlreadyAdded} onAddSetup={addSetup} />
+                <TaskPanel tasks={tasks} members={members} onCreate={onCreateTask} onUpdate={onUpdateTask} />
+              </div>
               {/* A room must not be able to render without saying which company
                   is answerable for it and whose terms apply. This is the only
                   place that is said — and where the room cannot say it, this is
                   where it says that, rather than borrowing a name. */}
-              <RoomFooter contract={door?.contract ?? UNSTAMPED_ROOM} className="shrink-0" />
+              <RoomFooter
+                contract={door?.contract ?? UNSTAMPED_ROOM}
+                className="scrollbar-thin max-h-[30vh] shrink-0 overflow-y-auto"
+              />
             </aside>
           </div>
         </main>

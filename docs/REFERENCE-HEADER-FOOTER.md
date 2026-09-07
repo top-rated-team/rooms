@@ -1,8 +1,24 @@
 # Reference: top-rated.team header & footer (captured from production DOM)
 
-Reproduce these in React exactly. Nav order, labels, `data-testid` values, icon
-choices, class strings and copy are all load-bearing — the point is that a visitor
-cannot tell this section apart from the main site.
+> **Retired, and kept only as a record.** This document describes the chrome the
+> site had before the September 2026 redesign: a ten-link header and a footer of
+> seventeen links, seventeen hundred pixels of it, with "FREE leads" in two
+> places. All of that was deliberately removed.
+>
+> **Do not reproduce any of it.** Following the instructions below would restore
+> exactly what was taken out. The header is now three things — the wordmark, one
+> link to the work, the theme — and the footer is two links and the line saying
+> who publishes the site. `client/src/components/site/Header.tsx` and
+> `Footer.tsx` are the current definition; this file is only here so that
+> somebody who finds an old class name can see where it came from.
+
+Everything below this line is the historical capture.
+
+---
+
+Nav order, labels, `data-testid` values, icon choices, class strings and copy
+were all load-bearing while the aim was that a visitor could not tell this
+section apart from the main site. That is no longer the aim.
 
 Deltas allowed:
 - `href="/services"` → `https://top-rated.team/services` (cross-origin section).

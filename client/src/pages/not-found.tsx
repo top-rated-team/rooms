@@ -29,7 +29,7 @@ export default function NotFound() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
-      <main className="flex-1 pt-16">
+      <main className="flex-1">
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
           <div className="max-w-2xl">
             <p className="text-sm font-medium text-muted-foreground" data-testid="text-404-code">

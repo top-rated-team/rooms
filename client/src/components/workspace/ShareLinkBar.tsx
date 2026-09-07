@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Check, Copy, Link2, Mail, Share2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ACTION_QUIET, FOCUS, LABEL, META } from "@/components/workspace/room-style";
 
 async function copyText(value: string): Promise<boolean> {
   try {
@@ -63,6 +64,13 @@ export interface ShareLinkBarProps {
   workspaceId?: string;
   /** Also no longer read: it pre-filled the address field that has gone. */
   defaultEmail?: string | null;
+  /**
+   * Whether to print the sentence explaining what the link is. True for as long
+   * as the arrival panel is up, which is the minute somebody is deciding
+   * whether to keep the address; after that the address stays and the
+   * explanation stops taking two lines off the top of every screen for good.
+   */
+  verbose?: boolean;
 }
 
 /**
@@ -74,8 +82,11 @@ export interface ShareLinkBarProps {
  * server/notify.ts sends goes to the owner, and the room token is kept out of
  * every outbound payload on purpose. An offer to send it would be a promise
  * made by a button and kept by nobody.
+ *
+ * It used to be a bordered card at the top of the room. It is a line now, and
+ * it says the same thing.
  */
-export function ShareLinkBar({ url }: ShareLinkBarProps) {
+export function ShareLinkBar({ url, verbose = true }: ShareLinkBarProps) {
   const [copied, setCopied] = useState(false);
   const [shareSheet] = useState(hasShareSheet);
   const timer = useRef<number | undefined>(undefined);
@@ -92,20 +103,16 @@ export function ShareLinkBar({ url }: ShareLinkBarProps) {
   }, [url]);
 
   const onShare = useCallback(() => {
-    void navigator.share({ title: "Your workspace", url }).catch(() => {
+    void navigator.share({ title: "Your room", url }).catch(() => {
       // A sheet the visitor closed rejects here. There is nothing to report:
-      // the address is on screen either way, and Copy link is beside this.
+      // the address is on screen either way, and Copy is beside this.
     });
   }, [url]);
 
   return (
-    <div className="shrink-0 border-b border-card-border bg-card" data-testid="bar-share-link">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-xs sm:px-4">
-        <Link2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        <p className="text-muted-foreground">
-          <span className="font-medium text-foreground">This link is your account.</span> Anyone with it can read this
-          workspace. We do not email it to you. Save it now — until you do, this tab is the record.
-        </p>
+    <div className="shrink-0 border-b border-border px-5 py-3 sm:px-8" data-testid="bar-share-link">
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1.5">
+        <span className={LABEL}>The address</span>
 
         {/* Shown at every width, not just on a wide screen: the phone is where
             the address is hardest to get back, and a long press on a real link
@@ -118,43 +125,33 @@ export function ShareLinkBar({ url }: ShareLinkBarProps) {
             event.preventDefault();
           }}
           data-testid="text-share-url"
-          className="w-full min-w-0 break-all rounded border border-card-border bg-background px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground lg:w-auto lg:max-w-[22rem] lg:truncate"
+          className={cn(META, FOCUS, "min-w-0 max-w-full break-all font-mono text-muted-foreground lg:max-w-[26rem] lg:truncate")}
         >
           {url}
         </a>
 
-        <div className="ml-auto flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={onCopy}
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2 bg-secondary text-secondary-foreground border border-secondary-border min-h-8 px-3"
-            data-testid="button-copy-link"
-          >
-            {copied ? <Check className="text-accent" /> : <Copy />}
-            {copied ? "Copied" : "Copy link"}
+        <div className="ml-auto flex items-baseline gap-x-5">
+          <button type="button" onClick={onCopy} className={ACTION_QUIET} data-testid="button-copy-link">
+            {copied ? "Copied" : "Copy"}
           </button>
           {shareSheet ? (
-            <button
-              type="button"
-              onClick={onShare}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2 border border-transparent min-h-8 px-3"
-              data-testid="button-share-link"
-            >
-              <Share2 />
+            <button type="button" onClick={onShare} className={ACTION_QUIET} data-testid="button-share-link">
               Save or send it
             </button>
           ) : (
-            <a
-              href={mailtoHref(url)}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2 border border-transparent min-h-8 px-3"
-              data-testid="button-share-link"
-            >
-              <Mail />
+            <a href={mailtoHref(url)} className={ACTION_QUIET} data-testid="button-share-link">
               Email it to yourself
             </a>
           )}
         </div>
       </div>
+
+      {verbose ? (
+        <p className={cn(META, "mt-1.5 text-muted-foreground")}>
+          This link is the account. Anyone with it can read this room. We do not email it to you — until you save it,
+          this tab is the record.
+        </p>
+      ) : null}
     </div>
   );
 }

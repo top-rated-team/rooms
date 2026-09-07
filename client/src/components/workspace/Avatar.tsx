@@ -1,45 +1,48 @@
-import { AGENTS } from "@shared/roster";
 import type { MemberKind, Presence } from "@shared/schema";
 import { cn } from "@/lib/utils";
+
+/* ---------------------------------------------------------------------------
+ * An avatar here is two letters of ink. No fill, no ring, no rounded chip.
+ *
+ * It used to be a coloured square — blue for our agents, green for people, grey
+ * for anybody else's software — and it was the room's loudest colour on first
+ * paint. The colour said "whose is this", which is a real question, but the
+ * member rail answers it in a sentence directly underneath, and a sentence is
+ * the only place it can be answered honestly. So the square is gone and the
+ * sentence stayed.
+ *
+ * PRESENCE IS NOT DRAWN ANY MORE, AND THAT IS A CORRECTION.
+ *
+ * Every member is written into a room with `presence: "online"` and nothing in
+ * this repository ever changes it — not a disconnect, not a week of silence.
+ * server/storage.ts sets it at seed time, server/routes.ts sets it on invite,
+ * and there is no code path that sets "away" or "offline" for a person. So the
+ * green dot beside four names on first paint said four people are here right
+ * now, and none of them were. The room now says the true thing in words, in the
+ * member rail: nobody is watching until somebody is asked.
+ *
+ * The `presence` prop and `PresenceDot` are kept, unrendered, because the fix is
+ * on the server: when a disconnect actually writes "offline", this turns back on
+ * in one place. Until then the room does not draw a fact it does not have.
+ * ------------------------------------------------------------------------- */
 
 export type AvatarSize = "xs" | "sm" | "md" | "lg";
 
 const SIZES: Record<AvatarSize, string> = {
-  xs: "h-5 w-5 rounded text-[9px]",
-  sm: "h-6 w-6 rounded-md text-[10px]",
-  md: "h-8 w-8 rounded-md text-[11px]",
-  lg: "h-10 w-10 rounded-md text-xs",
-};
-
-const DOT_SIZES: Record<AvatarSize, string> = {
-  xs: "h-1.5 w-1.5",
-  sm: "h-2 w-2",
-  md: "h-2.5 w-2.5",
-  lg: "h-3 w-3",
-};
-
-const PRESENCE_TONE: Record<Presence, string> = {
-  online: "bg-status-online",
-  away: "bg-status-away",
-  offline: "bg-status-offline",
+  xs: "w-5 text-[11px]",
+  sm: "w-6 text-[11px]",
+  md: "w-7 text-[11px]",
+  lg: "w-8 text-[13px]",
 };
 
 /**
- * Agents carry the tone declared in the roster so an avatar always means the
- * same thing across the sidebar, the transcript and the task panel.
- *
- * An agent we do not run — somebody's ClickUp, Slack or HubSpot agent admitted
- * to one thread — has no roster entry, and must not be dressed in our colour.
- * It gets the neutral tone, so "whose is this" is answerable at a glance.
+ * Kept so callers keep compiling, and so the one thing tone was ever really for
+ * — telling our software from somebody else's — has a home if it comes back. It
+ * returns the same ink for everybody now: the rail says whose an agent is in a
+ * sentence, which is the only place that can be said without a legend.
  */
-export function toneFor(memberKey: string, kind: MemberKind): string {
-  if (kind === "agent") {
-    const agent = AGENTS.find((a) => `agent:${a.id}` === memberKey);
-    return agent?.tone ?? "bg-muted text-muted-foreground";
-  }
-  if (kind === "expert") return "bg-accent/10 text-accent";
-  if (kind === "system") return "bg-muted text-muted-foreground";
-  return "bg-secondary text-secondary-foreground";
+export function toneFor(_memberKey: string, _kind: MemberKind): string {
+  return "text-muted-foreground";
 }
 
 export function initialsFor(name: string): string {
@@ -54,36 +57,27 @@ export interface AvatarProps {
   initials: string;
   tone?: string;
   size?: AvatarSize;
+  /** Accepted and not drawn — see the note above. */
   presence?: Presence | null;
   title?: string;
-  /** Access that has ended: the row stays readable, and stops looking live. */
+  /** Access that has ended: the row stays readable and stops looking live. */
   dimmed?: boolean;
   className?: string;
 }
 
-export function Avatar({ initials, tone, size = "md", presence, title, dimmed, className }: AvatarProps) {
+export function Avatar({ initials, tone, size = "md", title, dimmed, className }: AvatarProps) {
   return (
-    <span className={cn("relative inline-flex shrink-0", dimmed && "opacity-60", className)} title={title}>
-      <span
-        className={cn(
-          "inline-flex items-center justify-center font-semibold uppercase leading-none",
-          SIZES[size],
-          tone ?? "bg-secondary text-secondary-foreground",
-        )}
-        aria-hidden="true"
-      >
-        {initials.slice(0, 2)}
-      </span>
-      {presence ? (
-        <span
-          className={cn(
-            "absolute -bottom-0.5 -right-0.5 rounded-full ring-2 ring-background",
-            DOT_SIZES[size],
-            PRESENCE_TONE[presence],
-          )}
-          aria-hidden="true"
-        />
-      ) : null}
+    <span
+      className={cn(
+        "shrink-0 select-none text-center font-medium uppercase tracking-[0.06em] tabular-nums",
+        SIZES[size],
+        tone ?? "text-muted-foreground",
+        dimmed && "opacity-60",
+        className,
+      )}
+      title={title}
+    >
+      <span aria-hidden="true">{initials.slice(0, 2)}</span>
       {title ? <span className="sr-only">{title}</span> : null}
     </span>
   );
@@ -94,6 +88,21 @@ export interface PresenceDotProps {
   className?: string;
 }
 
+/**
+ * Unrendered for now, for the reason in the note above. It draws in ink rather
+ * than in colour when it comes back: filled is here, hollow is away, and
+ * somebody who is not here has no mark at all.
+ */
 export function PresenceDot({ presence, className }: PresenceDotProps) {
-  return <span className={cn("inline-block h-2 w-2 rounded-full", PRESENCE_TONE[presence], className)} aria-hidden="true" />;
+  if (presence === "offline") return null;
+  return (
+    <span
+      className={cn(
+        "inline-block h-1.5 w-1.5 rounded-full",
+        presence === "online" ? "bg-foreground" : "border border-foreground",
+        className,
+      )}
+      aria-hidden="true"
+    />
+  );
 }
