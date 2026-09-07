@@ -49,8 +49,8 @@ export function Header() {
         </Link>
 
         <nav className="type-meta flex items-center gap-[var(--s3)]">
-          <Link href="/use-case" data-testid="link-nav-work" className={LINK}>
-            Work
+          <Link href="/use-case" data-testid="link-nav-services" className={LINK}>
+            Services
           </Link>
           <button
             type="button"
