@@ -411,6 +411,23 @@ function homeChannel(state: WorkspaceState): Channel {
 /* -------------------------------- routes ---------------------------------- */
 
 export function registerRoutes(app: Express): void {
+  /*
+   * The doors moved from /work to /use-case on 7 September 2026. These two
+   * redirects exist because the old addresses were published: they were in
+   * sitemap.xml, which crawlers had already fetched, and any link somebody
+   * saved or sent points at them.
+   *
+   * A 301 and not a client-side redirect. Everything that is not an API route
+   * is served the SPA shell, so /work/google-ads would answer 200 with the
+   * whole app and then move the visitor — which works for a person and is a
+   * duplicate page for a crawler. A 301 here is the only place the old address
+   * can be told, once, that it has permanently become the new one.
+   *
+   * Registered before anything else so no later handler can claim /work first.
+   */
+  app.get("/work", (_req, res) => res.redirect(301, "/use-case"));
+  app.get("/work/:slug", (req, res) => res.redirect(301, `/use-case/${encodeURIComponent(req.params.slug)}`));
+
   const createWorkspaceLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many workspaces from this address. Try again later, or book a call." });
   const leadLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many requests from this address. Try again later." });
   // Inviting people also raises a lead, so it gets its own budget rather than

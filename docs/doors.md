@@ -27,7 +27,7 @@ one offer costs.
 
 | Door | Tier | Who invoices | State |
 |---|---|---|---|
-| Conversion tracking for ChatGPT Ads | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | live at `/work/chatgpt-ads` |
+| Conversion tracking for ChatGPT Ads | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | live at `/use-case/chatgpt-ads` |
 | Google Ads management | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | live |
 | Google Ad Grants, set up through the official Google Ads API | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | live |
 | LinkedIn Ads | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | coming |
@@ -35,14 +35,14 @@ one offer costs.
 | LinkedIn growth | A different company | Maksymenko LinkedIn Growth | coming |
 | Custom AI builds | Ours end to end | Top-Rated Team (Danylo Burykin SZČO) | coming |
 
-"Coming" is not a placeholder or a lie. A coming door appears on `/work` with its own
+"Coming" is not a placeholder or a lie. A coming door appears on `/use-case` with its own
 one-line explanation of why its panel is shut, because an offer that is real and a page
 that is finished are two different things.
 
 ## Where a door lives
 
 All seven are rows in one file, `shared/doors.ts`. One row per door, no logic in it,
-nothing else to edit. Change a word there and the door page, the `/work` overview and
+nothing else to edit. Change a word there and the door page, the `/use-case` overview and
 every room opened through it change with it. If anything below disagrees with that
 file, the file is right — it is what the site actually reads.
 
@@ -52,9 +52,9 @@ file, the file is right — it is what the site actually reads.
 Every room ever opened through this door stores it. Choose it once and never change it;
 changing it orphans the rooms that already carry the old one.
 
-**`slug`** — the piece of the address after `/work/`. Normally the same as the id.
+**`slug`** — the piece of the address after `/use-case/`. Normally the same as the id.
 
-**`path`** — where the door lives today. `/work/<slug>` for all of them except the
+**`path`** — where the door lives today. `/use-case/<slug>` for all of them except the
 ChatGPT Ads door, which is the home page.
 
 **`initials`** and **`tone`** — two letters and a colour for the little square beside the
@@ -67,7 +67,7 @@ than inventing a colour.
 
 **`blurb`** — two sentences at most, in the words the buyer would use. Say what gets
 done, on whose system, and what proves it is done. The same two sentences are printed on
-the door and on the `/work` row, so they have to read as well in a list as under a
+the door and on the `/use-case` row, so they have to read as well in a list as under a
 headline.
 
 **`firstAgentId`** — which agent opens the conversation, or nothing at all. The partner
@@ -288,7 +288,7 @@ answering them badly is what makes a door useless:
 
 **Then check it as a visitor would**, in this order:
 
-1. Open `/work`. The new row reads plainly and the company under it is right.
+1. Open `/use-case`. The new row reads plainly and the company under it is right.
 2. Open the door. Ask one of its four starters. The answer streams, cites something
    real, and the line "Nothing is saved yet. Close this tab and it is gone" is under it.
    **Open the citation.** A door reading the wrong corpus still cites a working link to a

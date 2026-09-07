@@ -60,7 +60,7 @@ Do these in order. Nothing here needs a command line.
 - Write a third message and confirm the "keep it or stay anonymous" row appears.
 - Press **Keep this**, copy the address, and open it in a different browser —
   the room must be there with the conversation in it.
-- Open `/work` and confirm seven doors, one live and six saying "Not open yet".
+- Open `/use-case` and confirm seven doors, one live and six saying "Not open yet".
 
 ## If something is wrong
 
