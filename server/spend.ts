@@ -171,7 +171,38 @@ function sweep(now: number): void {
  * count and writing it back would let both through — which is the case the count
  * exists for.
  */
-export function claimAgentTurn(workspaceId: string, now: number = Date.now()): SpendClaim {
+/**
+ * The public panel's own monthly ceiling, separate from a room's.
+ *
+ * A room belongs to somebody who asked for it. /api/ask belongs to the internet:
+ * it is on every door, needs no token, and anyone can call it. So it gets its own
+ * budget, and the default is deliberately larger than a room's — it is marketing
+ * spend rather than delivery — while still being a number rather than no number.
+ */
+const DEFAULT_ASK_BUDGET_USD = 25;
+
+export function askBudgetUsd(): number {
+  const raw = process.env.ASK_MONTHLY_BUDGET_USD?.trim();
+  if (!raw) return DEFAULT_ASK_BUDGET_USD;
+  const parsed = Number(raw);
+  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  console.warn(`[spend] ASK_MONTHLY_BUDGET_USD is "${raw}", which is not a positive number — using $${DEFAULT_ASK_BUDGET_USD}.`);
+  return DEFAULT_ASK_BUDGET_USD;
+}
+
+/** Every answer the public panel gives, counted together against askBudgetUsd(). */
+export const ASK_LEDGER_KEY = "ask:all";
+
+/** One caller of the public panel, so a single address cannot spend the whole ceiling. */
+export function askLedgerKey(ip: string): string {
+  return `ask:ip:${ip}`;
+}
+
+export function claimAgentTurn(
+  workspaceId: string,
+  now: number = Date.now(),
+  budgetUsd: number = monthlyBudgetUsd(),
+): SpendClaim {
   if (++claimsSinceSweep >= SWEEP_EVERY_CLAIMS) {
     claimsSinceSweep = 0;
     sweep(now);
@@ -182,7 +213,7 @@ export function claimAgentTurn(workspaceId: string, now: number = Date.now()): S
   // Longest-lived stop first: a room paused for the month must not be told it
   // merely asked too quickly this hour, because that sentence would be false and
   // would send the visitor back in five minutes to read it again.
-  if (ledger.spentUsd >= monthlyBudgetUsd()) {
+  if (ledger.spentUsd >= budgetUsd) {
     return { ok: false, stop: "monthly_budget", message: BUDGET_MESSAGE };
   }
 

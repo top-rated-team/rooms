@@ -69,6 +69,16 @@ services:
                             # a value that is not a positive number is ignored and the
                             # $5 default applies, because a room with no ceiling is the
                             # one failure this cannot have.
+      - key: ASK_MONTHLY_BUDGET_USD
+        value: "25"         # What the PUBLIC panel may spend on answers in a month,
+                            # across everyone. Separate from ROOM_MONTHLY_BUDGET_USD
+                            # and deliberately larger: a room belongs to somebody who
+                            # asked for it, /api/ask belongs to the internet — it is on
+                            # every door, needs no token, and anyone can call it. There
+                            # is also a per-address bound of 30 answers an hour, which
+                            # is not configurable. As with the room budget, a value
+                            # that is not a positive number is ignored rather than
+                            # removing the ceiling.
       - key: LEAD_NOTIFY_EMAIL
         value: dan@being.marketing
       - key: LEAD_WEBHOOK_URL
