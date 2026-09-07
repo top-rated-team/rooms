@@ -14,9 +14,9 @@ const REPO = "~/Documents/ChatGPT Ads";
 
 const WAVES = [
   { n: 1, keys: ["spend-limits", "door-linkedin-ads", "favicon-and-social"] },
-  { n: 2, keys: ["door-linkedin-automation", "llms-txt", "legal-name-display"] },
-  { n: 3, keys: ["door-ai-builds", "payment-link", "identity-in-the-room"] },
-  { n: 4, keys: ["rented-accounts-inventory"] },
+  { n: 2, keys: ["door-linkedin-automation", "llms-txt", "pricing-and-packaging"] },
+  { n: 3, keys: ["door-ai-builds", "legal-name-display", "identity-in-the-room"] },
+  { n: 4, keys: ["rented-accounts-inventory", "payment-link", "room-identity-binding"] },
   { n: 5, keys: ["room"], alone: true },
   { n: 6, keys: ["outside-agent"], alone: true },
   { n: 7, keys: ["approval-card"], alone: true },

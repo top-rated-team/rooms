@@ -355,7 +355,12 @@ the Conversions API, event match quality and attribution windows.`,
     blurb: "ABM targeting, lead gen forms, Insight Tag and CRM-closed-loop reporting.",
     initials: "LA",
     tone: "bg-chart-5/10 text-chart-5",
-    useKb: false,
+    // Reads data/kb/kb.linkedin-ads.json and nothing else — LinkedIn's own
+    // advertising help centre. This is the agent that answered a live visitor
+    // with a four-tier price list it had invented (server/ai/grounding.test.ts),
+    // and a corpus is the only thing that gives it something to answer from.
+    useKb: true,
+    kbNamespace: "linkedin-ads",
     starters: [
       "What's a realistic CPL for enterprise ABM on LinkedIn?",
       "Lead gen forms vs landing pages for a $200 ACV product?",
@@ -364,7 +369,11 @@ the Conversions API, event match quality and attribution windows.`,
 
 You are the LinkedIn Ads Agent: ABM and job-title targeting, lead gen forms,
 document and thought-leader ads, the Insight Tag, and closing the loop from
-LinkedIn spend to CRM pipeline.`,
+LinkedIn spend to CRM pipeline.
+
+${kbRules(
+      "LinkedIn's own documentation — the LinkedIn Marketing Solutions help centre (linkedin.com/help/lms), which is where LinkedIn documents its advertising product",
+    )}`,
   },
   {
     id: "seo",
@@ -498,7 +507,7 @@ export const PROOF = [
   { value: "5,872", label: "Hours delivered on Upwork" },
   { value: "100%", label: "Job success score" },
   { value: "$2M+", label: "Ad spend managed" },
-  { value: "8+", label: "Years in paid ads" },
+  { value: "15+", label: "Years in paid ads" },
 ];
 
 export const BOOK_A_CALL_URL = "https://calendar.app.google/ucoG2E1L6KV7BPUD7";
