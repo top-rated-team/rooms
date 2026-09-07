@@ -26,7 +26,7 @@ Nine in the sitemap, plus five blog posts that are not in it. Fourteen.
 | Address | What it is | Where it goes | Settled? |
 |---|---|---|---|
 | `/` | the old home | the new home — the index of the doors | yes |
-| `/services` | what is sold | `/use-case`, which is the same job | yes |
+| `/services` | what is sold | `/services`, which is the same job | yes |
 | `/leads` | "FREE leads" | removed by the owner's decision — 301 to `/` | yes |
 | `/contact` | contact page | the footer's contact, or a thin page | yes |
 | `/case-studies` | results | needs a home: a page, or the section on `/` | **no** |
@@ -41,9 +41,9 @@ Nine in the sitemap, plus five blog posts that are not in it. Fourteen.
 | `/blog/stop-buying-leads-your-sales-team-cant-catch-sladriven-budget-brakes-for-google-` | post | keep at the same URL | recommended |
 
 Plus this application's own addresses, which are young but already in a sitemap
-crawlers have fetched: `/use-case` and the six door pages, and `/w` — all of
+crawlers have fetched: `/services` and the six door pages, and `/w` — all of
 which move from `ai.top-rated.team` to the apex and need 301s from the
-subdomain, exactly as `/work` got them when it became `/use-case`.
+subdomain, exactly as `/work` got them when it became `/services`.
 
 ## Four decisions, and why each one is the owner's
 
@@ -74,5 +74,5 @@ paid-ads team", so today the site and the agents disagree with each other too.
 3. Only then move the apex, with 301s from `ai.` in the same change.
 4. Keep `adgrant.ai` exactly as it is: canonical, its own 74 URLs, restyled in
    its own repository (`top-rated/adgrant.ai`). The same door also answers at
-   `/use-case/ad-grants` with a canonical link pointing at adgrant.ai, so the
+   `/services/ad-grants` with a canonical link pointing at adgrant.ai, so the
    two never compete.

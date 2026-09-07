@@ -412,8 +412,9 @@ function homeChannel(state: WorkspaceState): Channel {
 
 export function registerRoutes(app: Express): void {
   /*
-   * The doors moved from /work to /use-case on 7 September 2026. These two
-   * redirects exist because the old addresses were published: they were in
+   * The doors moved from /work to /use-case and then to /services, all on 7
+   * September 2026. These redirects exist because the old addresses were
+   * published: they were in
    * sitemap.xml, which crawlers had already fetched, and any link somebody
    * saved or sent points at them.
    *
@@ -423,10 +424,18 @@ export function registerRoutes(app: Express): void {
    * duplicate page for a crawler. A 301 here is the only place the old address
    * can be told, once, that it has permanently become the new one.
    *
-   * Registered before anything else so no later handler can claim /work first.
+   * /services is where they stay, and that is not a third change of mind:
+   * top-rated.team has answered on /services for years, so when the apex moves
+   * that URL already has standing and this application must not be the reason it
+   * stops working. /use-case existed for about an hour and is redirected for the
+   * same reason /work is — something may have been fetched in between.
+   *
+   * Registered before anything else so no later handler can claim them first.
    */
-  app.get("/work", (_req, res) => res.redirect(301, "/use-case"));
-  app.get("/work/:slug", (req, res) => res.redirect(301, `/use-case/${encodeURIComponent(req.params.slug)}`));
+  for (const stale of ["/work", "/use-case"]) {
+    app.get(stale, (_req, res) => res.redirect(301, "/services"));
+    app.get(`${stale}/:slug`, (req, res) => res.redirect(301, `/services/${encodeURIComponent(req.params.slug)}`));
+  }
 
   const createWorkspaceLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many workspaces from this address. Try again later, or book a call." });
   const leadLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many requests from this address. Try again later." });

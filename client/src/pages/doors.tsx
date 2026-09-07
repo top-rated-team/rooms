@@ -25,7 +25,7 @@ const PAGE_DESCRIPTION =
 /** The count, in the index's own words, so the heading cannot outlive the list. */
 const INDEX_HEADLINE = `${countWord(PUBLIC_DOORS.length).charAt(0).toUpperCase()}${countWord(
   PUBLIC_DOORS.length,
-).slice(1)} services, and who sends the invoice for each.`;
+).slice(1)} services. Pick the one that sounds like your problem.`;
 
 /**
  * The index: one line per door, rendered straight from shared/doors.ts.
@@ -116,9 +116,9 @@ export function Doors() {
           <div className="mt-[var(--s4)] grid items-end gap-[var(--s4)] pb-[var(--s5)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)]">
             <h1 className={DISPLAY}>{INDEX_HEADLINE}</h1>
             <p className={READ_MUTED}>
-              Whoever sets the price is the seller, so every row names the company that would send the invoice — before
-              you pick one rather than in a footnote afterwards. Pick the one that sounds like your problem; each one
-              opens a conversation rather than a form.
+              Each one opens a conversation rather than a form. Where a service is contracted, delivered and invoiced by
+              a different company, its own page says so and the room you keep repeats it in the footer — which is where
+              that belongs rather than in a column on a list.
             </p>
           </div>
 

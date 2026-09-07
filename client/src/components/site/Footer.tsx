@@ -48,7 +48,7 @@ function contactHref(contact: string): string {
  * else. `null` on our own doors and on every page that is not a door.
  */
 function useSomebodyElsesDoor(): DoorContract | null {
-  const [onDoorPage, params] = useRoute<{ slug: string }>("/use-case/:slug");
+  const [onDoorPage, params] = useRoute<{ slug: string }>("/services/:slug");
   if (!onDoorPage || !params) return null;
   const door: DoorDef | undefined = DOOR_BY_SLUG[params.slug];
   if (!door) return null;

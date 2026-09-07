@@ -8,7 +8,7 @@
  *
  * The caption used to end "the room it becomes carries the name of the company
  * that signs for that work — which is not always this one". That disclosure is
- * true of the door table on /use-case, where the partner's row appears after the
+ * true of the door table on /services, where the partner's row appears after the
  * email step. It is NOT true of this page: every row here is PUBLIC_DOORS, all
  * six invoiced by us. So it was pointing at something the reader cannot see,
  * which is the definition of confusing — the owner said so and was right. The
