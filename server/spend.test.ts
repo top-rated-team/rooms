@@ -292,7 +292,10 @@ describe("what the room is told when a turn is stopped", () => {
     for (const message of all) {
       assert.ok(message.length > 0);
       assert.match(message, /not sent to the model|it has stopped/);
-      assert.match(message, /someone from the team/);
+      // The intent, not the wording: every stop has to name a way to get the
+    // answer from a person. It used to pin "someone from the team"; the route
+    // was reworded when the audit found the old sentence was doing two jobs.
+    assert.match(message, /A person on the team can answer/);
     }
   });
 

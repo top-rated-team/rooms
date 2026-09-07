@@ -173,7 +173,6 @@ export function InviteExpertDialog({
               <p className={cn(READ, "text-foreground")}>Asked of {expert.name}, and written down.</p>
               <p className={cn(READ, "mt-3 text-muted-foreground")}>
                 {expert.name} — {expert.title} — answers in this room, with the brief attached, within one working day.
-                Nothing has been agreed and nobody has been charged.
               </p>
               {address ? (
                 <p className={cn(META, "mt-4 text-muted-foreground")} data-testid="text-invite-room-address">

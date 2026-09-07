@@ -50,9 +50,8 @@ export function DoorIndex() {
           problem.
         </h2>
         <p className="type-body m-0 text-muted-foreground">
-          Each one opens with a question rather than a form, and the answer comes from an agent reading that service's
-          own documentation. Where a service is delivered by a different company under its own contract, its own page
-          says so — and the room you keep says it again, in the footer, next to whose terms apply.
+          Each one that is open starts with a question rather than a form, and the agent answering it reads only that
+          service&rsquo;s own documentation.
         </p>
       </div>
 

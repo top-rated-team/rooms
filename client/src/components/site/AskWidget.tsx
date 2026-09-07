@@ -562,7 +562,7 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
               ? "Checking whether live answers are available…"
               : kbState === "ready" && kbMode === "empty"
                 ? "The documentation index is not built here, so answers will not carry citations."
-                : "No signup. Answers are pre-sales help, not an engagement."}
+                : "No signup, and Enter sends."}
           </p>
           <div className="flex items-center gap-2">
             {hasThread && !busy ? (

@@ -1,9 +1,10 @@
 # Top-Rated Team — ai.top-rated.team
 
 > Paid advertising, the measurement under it, and the custom AI around both.
-> Seven offers a visitor can read here, and one room behind all of them. Every
-> offer names the company that signs the contract and sends the invoice. None
-> of them publishes a price.
+> Seven offers a visitor can read here, and one room behind all of them. Where
+> a service is contracted and invoiced by a partner rather than by Top-Rated
+> Team, its row says so. Every price the site publishes is on one page,
+> /pricing, and the agents may repeat those and no others.
 
 This is the short index. llms-full.txt beside it is the same material at
 length. Both are written by scripts/build-llms.ts out of shared/doors.ts and

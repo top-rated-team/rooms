@@ -265,8 +265,15 @@ function DoorPage({ door }: { door: DoorDef }) {
             <Link href="/services" data-testid="link-door-back" className="draw hover:text-foreground">
               Index
             </Link>
-            <span aria-hidden="true"> · </span>
-            <span data-testid="text-door-tier">{tier.label}</span>
+            {oursToAnswer ? null : (
+              <>
+                <span aria-hidden="true"> · </span>
+                {/* Only when it is not ours. "Ours end to end" in the breadcrumb
+                    of our own door is the same non-information the legal name
+                    was, and DoorCard already applies this rule. */}
+                <span data-testid="text-door-tier">{tier.label}</span>
+              </>
+            )}
             {door.status === "coming" ? (
               <>
                 <span aria-hidden="true"> · </span>

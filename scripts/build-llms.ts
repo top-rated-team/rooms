@@ -255,8 +255,8 @@ function sectionToText(html: string): string {
 const SUMMARY = [
   "Paid advertising, the measurement under it, and the custom AI around both.",
   `${countWordCapital(PUBLIC_DOORS.length)} offers a visitor can read here, and one room behind all of them.`,
-  "Every offer names the company that signs the contract and sends the invoice.",
-  "None of them publishes a price.",
+  "Where a service is contracted and invoiced by a partner rather than by Top-Rated Team, its row says so.",
+  "Every price the site publishes is on one page, /pricing, and the agents may repeat those and no others.",
 ].join(" ");
 
 /**
