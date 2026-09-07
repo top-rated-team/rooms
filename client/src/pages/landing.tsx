@@ -8,6 +8,7 @@ import Panel from "@/components/site/home/Panel";
 import Plate from "@/components/site/home/Plate";
 import Results from "@/components/site/home/Results";
 import Ladder from "@/components/site/Ladder";
+import TalkToUs from "@/components/site/TalkToUs";
 
 /* ---------------------------------------------------------------------------
  * THE HOME PAGE
@@ -74,6 +75,9 @@ export function Landing() {
             anything invites a question. */}
         <DoorIndex />
         <Plate />
+        {/* Before the panel, not after it. Somebody who came wanting a person
+            should not have to work out that the box is not the only door. */}
+        <TalkToUs className="pt-[var(--s5)]" />
         <Panel />
         <Results />
         {/* Low, and after the work: a price means nothing until the reader

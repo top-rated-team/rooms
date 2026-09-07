@@ -32,6 +32,7 @@ import Footer from "@/components/site/Footer";
 import { isPublicDoor } from "@/components/site/GatedOffers";
 import Header from "@/components/site/Header";
 import KeepStrip from "@/components/site/KeepStrip";
+import TalkToUs from "@/components/site/TalkToUs";
 import { DoorPrice } from "@/components/site/Ladder";
 import { collectSource } from "@/components/site/LeadDialog";
 import { usePanelState, type CreateRoomResult } from "@/hooks/use-panel-state";
@@ -448,6 +449,14 @@ function DoorPage({ door }: { door: DoorDef }) {
             </div>
           </div>
         </div>
+
+        {/* ------------------------- the ways that are not the panel --------- */}
+        {/* Directly under the panel, which is the first place a reader who does
+            not want to type at a machine will look. The panel sits in the same
+            grid as the headline, so this cannot be placed above it without
+            breaking that two-column block — under it is the next thing read,
+            and it is still before anything is kept. */}
+        <TalkToUs className="pt-[var(--s5)]" />
 
         {/* ----------------------- what this door has to say ------------------ */}
         {Body ? <Body /> : null}

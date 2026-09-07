@@ -1,6 +1,12 @@
+import { lazy, Suspense, useState } from "react";
 import { Link } from "wouter";
 
+import { BOOK_A_CALL_URL } from "@shared/roster";
 import { useTheme } from "@/hooks/use-theme";
+
+/* Lazily loaded: LeadDialog pulls in Radix, and this header is in the landing
+   chunk that paid traffic downloads first. */
+const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) => ({ default: m.LeadDialog })));
 
 /* ---------------------------------------------------------------------------
  * THE MASTHEAD
@@ -31,6 +37,7 @@ const LINK = "draw text-muted-foreground hover:text-foreground";
 
 export function Header() {
   const { resolvedTheme, setTheme } = useTheme();
+  const [messageOpen, setMessageOpen] = useState(false);
   /* Two states rather than three. "System" is still what a visitor who never
      presses this gets, because that is what the theme starts as; pressing it is
      the moment they have an opinion, and an opinion is not a menu. */
@@ -109,6 +116,32 @@ export function Header() {
           <Link href="/pricing" data-testid="link-nav-pricing" className={LINK}>
             Pricing
           </Link>
+          {/*
+            THE TWO WAYS TO REACH A PERSON, in a bar that is now on every screen
+            of every page. The owner's reason: a visitor may be old-school and
+            want a human or an address, and a header offering only navigation
+            tells that visitor nothing about how to get one.
+
+            "Leave a message" opens the same LeadDialog the block lower down
+            opens, so there is one form and one inbox rather than two.
+          */}
+          <a
+            href={BOOK_A_CALL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="link-nav-book-a-call"
+            className={LINK}
+          >
+            Book a call
+          </a>
+          <button
+            type="button"
+            onClick={() => setMessageOpen(true)}
+            data-testid="button-nav-leave-a-message"
+            className={LINK}
+          >
+            Leave a message
+          </button>
           <button
             type="button"
             data-testid="button-theme-toggle"
@@ -120,6 +153,12 @@ export function Header() {
           </button>
         </nav>
       </div>
+
+      {messageOpen ? (
+        <Suspense fallback={null}>
+          <LeadDialog open={messageOpen} onOpenChange={setMessageOpen} prefill={null} />
+        </Suspense>
+      ) : null}
     </header>
   );
 }

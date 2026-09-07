@@ -36,6 +36,11 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://ai.top-rated.team/case-studies</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://ai.top-rated.team/pricing</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

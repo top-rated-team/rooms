@@ -1,5 +1,7 @@
 import { AGENT_BY_ID, EXPERT_BY_KEY, type AgentDef, type ExpertDef } from "@shared/roster";
 import type { Citation, Member, Message } from "@shared/schema";
+import { AgentMark } from "@/components/workspace/AgentMark";
+import { Avatar, initialsFor } from "@/components/workspace/Avatar";
 import { badgeForKey } from "@/components/workspace/MemberRail";
 import { Markdown } from "@/components/workspace/Markdown";
 import { cn } from "@/lib/utils";
@@ -7,13 +9,18 @@ import { ACTION, CHROME, LABEL, LINK, META, READ } from "@/components/workspace/
 
 /* ---------------------------------------------------------------------------
  * A turn in the transcript, set like something written rather than something
- * posted. There is no avatar, no bubble and no background wash: a name at the
- * chrome size, and under it the words at the reading size, in the serif.
+ * posted. There is no bubble and no background wash: a mark or two letters
+ * beside the name at the chrome size, and under it the words at the reading
+ * size, in the serif.
  *
- * The one distinction the column draws is between a question and an answer,
- * and it draws it the way the front page draws it — the question is soft ink
- * behind a rule, the answer is full ink. Same size for both, because whose
- * words they are is not a matter of importance.
+ * A person is a photograph or two letters. An agent is a geometric glyph.
+ * The two are drawn differently on purpose, so software is not mistaken for
+ * a person without a legend.
+ *
+ * The one distinction the column draws in the words themselves is between a
+ * question and an answer, and it draws it the way the front page draws it —
+ * the question is soft ink behind a rule, the answer is full ink. Same size
+ * for both, because whose words they are is not a matter of importance.
  * ------------------------------------------------------------------------- */
 
 function relativeTime(value: Date | string): string {
@@ -37,6 +44,37 @@ function agentFor(memberKey: string): AgentDef | undefined {
 function expertFor(memberKey: string): ExpertDef | undefined {
   const expert: ExpertDef | undefined = EXPERT_BY_KEY[memberKey];
   return expert;
+}
+
+function AuthorMark({
+  name,
+  member,
+  agent,
+  expert,
+  isAgent,
+}: {
+  name: string;
+  member: Member | undefined;
+  agent: AgentDef | undefined;
+  expert: ExpertDef | undefined;
+  isAgent: boolean;
+}) {
+  if (isAgent) {
+    return (
+      <AgentMark
+        mark={agent?.mark}
+        initials={agent?.initials ?? member?.initials ?? initialsFor(name)}
+        size="xs"
+      />
+    );
+  }
+  return (
+    <Avatar
+      initials={member?.initials ?? expert?.initials ?? initialsFor(name)}
+      photo={expert?.photo}
+      size="xs"
+    />
+  );
 }
 
 /**
@@ -142,48 +180,57 @@ export function MessageItem({ message, member, showAuthor, onGetPerson }: Messag
       data-message-id={message.id}
       data-testid={`message-${message.id}`}
     >
-      {showAuthor ? (
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className={cn(CHROME, "font-medium")}>{name}</span>
-          {/* The badge rule holds in the transcript too: a badge says what
-              someone does here, never what they are made of. "AI" is not a
-              job — see MemberRail.tsx, where the vocabulary lives. */}
-          {isAgent ? (
-            <span className={LABEL} data-testid={`badge-message-${message.id}`}>
-              {badgeForKey(message.authorKey, "agent")}
-            </span>
+      <div className="flex items-start gap-3">
+        {showAuthor ? (
+          <AuthorMark name={name} member={member} agent={agent} expert={expert} isAgent={isAgent} />
+        ) : (
+          <span className="h-5 w-5 shrink-0" aria-hidden="true" />
+        )}
+        <div className="min-w-0 flex-1">
+          {showAuthor ? (
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className={cn(CHROME, "font-medium")}>{name}</span>
+              {/* The badge rule holds in the transcript too: a badge says what
+                  someone does here, never what they are made of. "AI" is not a
+                  job — see MemberRail.tsx, where the vocabulary lives. */}
+              {isAgent ? (
+                <span className={LABEL} data-testid={`badge-message-${message.id}`}>
+                  {badgeForKey(message.authorKey, "agent")}
+                </span>
+              ) : null}
+              {role ? <span className={cn(META, "text-muted-foreground")}>{role}</span> : null}
+              <span className={cn(META, "text-muted-foreground")}>{relativeTime(message.createdAt)}</span>
+            </div>
           ) : null}
-          {role ? <span className={cn(META, "text-muted-foreground")}>{role}</span> : null}
-          <span className={cn(META, "text-muted-foreground")}>{relativeTime(message.createdAt)}</span>
+
+          <div className={cn(isVisitor && "border-l border-border pl-4")}>
+            <Markdown className={cn(READ, "mt-1.5", isVisitor ? "text-muted-foreground" : "text-foreground")}>
+              {message.body}
+            </Markdown>
+
+            {meta.streaming ? (
+              <span
+                className="ml-0.5 inline-block h-4 w-px translate-y-0.5 animate-cursor-blink bg-foreground align-middle"
+                aria-label="Still writing"
+              />
+            ) : null}
+          </div>
+
+          {errorNotice ? (
+            <p className={cn(CHROME, "mt-3 border-l border-destructive pl-3 text-destructive")}>{errorNotice}</p>
+          ) : null}
+
+          {citations.length > 0 ? <Citations citations={citations} /> : null}
+
+          {isAgent && onGetPerson && !meta.streaming ? (
+            <div className="mt-4">
+              <button type="button" onClick={() => onGetPerson(message)} className={ACTION} data-testid="button-get-person">
+                Get a person on this
+              </button>
+            </div>
+          ) : null}
         </div>
-      ) : null}
-
-      <div className={cn(isVisitor && "border-l border-border pl-4")}>
-        <Markdown className={cn(READ, "mt-1.5", isVisitor ? "text-muted-foreground" : "text-foreground")}>
-          {message.body}
-        </Markdown>
-
-        {meta.streaming ? (
-          <span
-            className="ml-0.5 inline-block h-4 w-px translate-y-0.5 animate-cursor-blink bg-foreground align-middle"
-            aria-label="Still writing"
-          />
-        ) : null}
       </div>
-
-      {errorNotice ? (
-        <p className={cn(CHROME, "mt-3 border-l border-destructive pl-3 text-destructive")}>{errorNotice}</p>
-      ) : null}
-
-      {citations.length > 0 ? <Citations citations={citations} /> : null}
-
-      {isAgent && onGetPerson && !meta.streaming ? (
-        <div className="mt-4">
-          <button type="button" onClick={() => onGetPerson(message)} className={ACTION} data-testid="button-get-person">
-            Get a person on this
-          </button>
-        </div>
-      ) : null}
     </div>
   );
 }

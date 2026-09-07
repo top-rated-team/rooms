@@ -1,15 +1,20 @@
+import { useEffect, useState } from "react";
 import type { MemberKind, Presence } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
 /* ---------------------------------------------------------------------------
- * An avatar here is two letters of ink. No fill, no ring, no rounded chip.
+ * An avatar here is a real photograph, or two letters of ink. Nothing in
+ * between: no silhouette, no generated face, no rounded chip. A missing file
+ * is a finished monogram, not a gap.
  *
  * It used to be a coloured square — blue for our agents, green for people, grey
  * for anybody else's software — and it was the room's loudest colour on first
  * paint. The colour said "whose is this", which is a real question, but the
  * member rail answers it in a sentence directly underneath, and a sentence is
  * the only place it can be answered honestly. So the square is gone and the
- * sentence stayed.
+ * sentence stayed. Agents are not drawn here at all: they have a mark of their
+ * own, in AgentMark.tsx, so a person and a piece of software are not the same
+ * shape.
  *
  * PRESENCE IS NOT DRAWN ANY MORE, AND THAT IS A CORRECTION.
  *
@@ -28,12 +33,15 @@ import { cn } from "@/lib/utils";
 
 export type AvatarSize = "xs" | "sm" | "md" | "lg";
 
-const SIZES: Record<AvatarSize, string> = {
-  xs: "w-5 text-[11px]",
-  sm: "w-6 text-[11px]",
-  md: "w-7 text-[11px]",
-  lg: "w-8 text-[13px]",
+/** Shared box so a photograph, two letters, and an agent mark occupy the same square. */
+export const AVATAR_BOX: Record<AvatarSize, string> = {
+  xs: "inline-flex h-5 w-5 items-center justify-center text-[11px] leading-none",
+  sm: "inline-flex h-6 w-6 items-center justify-center text-[11px] leading-none",
+  md: "inline-flex h-7 w-7 items-center justify-center text-[11px] leading-none",
+  lg: "inline-flex h-8 w-8 items-center justify-center text-[13px] leading-none",
 };
+
+const SIZES = AVATAR_BOX;
 
 /**
  * Kept so callers keep compiling, and so the one thing tone was ever really for
@@ -57,6 +65,11 @@ export interface AvatarProps {
   initials: string;
   tone?: string;
   size?: AvatarSize;
+  /**
+   * A real photograph. Absent, or a file that fails to load, means two letters.
+   * Never a silhouette.
+   */
+  photo?: string;
   /** Accepted and not drawn — see the note above. */
   presence?: Presence | null;
   title?: string;
@@ -65,11 +78,21 @@ export interface AvatarProps {
   className?: string;
 }
 
-export function Avatar({ initials, tone, size = "md", title, dimmed, className }: AvatarProps) {
+export function Avatar({ initials, tone, size = "md", photo, title, dimmed, className }: AvatarProps) {
+  const src = photo?.trim() || undefined;
+  const [broken, setBroken] = useState(false);
+
+  useEffect(() => {
+    setBroken(false);
+  }, [src]);
+
+  const showPhoto = Boolean(src) && !broken;
+
   return (
     <span
       className={cn(
-        "shrink-0 select-none text-center font-medium uppercase tracking-[0.06em] tabular-nums",
+        "shrink-0 select-none text-center font-medium tracking-[0.06em] tabular-nums",
+        showPhoto && "overflow-hidden",
         SIZES[size],
         tone ?? "text-muted-foreground",
         dimmed && "opacity-60",
@@ -77,7 +100,18 @@ export function Avatar({ initials, tone, size = "md", title, dimmed, className }
       )}
       title={title}
     >
-      <span aria-hidden="true">{initials.slice(0, 2)}</span>
+      {showPhoto ? (
+        <img
+          src={src}
+          alt=""
+          className="block h-full w-full object-cover"
+          onError={() => setBroken(true)}
+        />
+      ) : (
+        <span aria-hidden="true" className="uppercase">
+          {initials.slice(0, 2)}
+        </span>
+      )}
       {title ? <span className="sr-only">{title}</span> : null}
     </span>
   );

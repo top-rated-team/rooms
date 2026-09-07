@@ -191,7 +191,7 @@ and sends the invoice.
 Terms: https://top-rated.team/terms
 Contact: https://top-rated.team/contact
 
-### 5. Google Ad Grants, set up through the official Google Ads API
+### 5. Google Ad Grant AI setup through the official Google Ads API
 
 https://ai.top-rated.team/services/ad-grants
 
