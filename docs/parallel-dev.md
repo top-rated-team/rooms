@@ -1,5 +1,17 @@
 # Running several agents on this repository at once
 
+> **If you just want the prompts, you are in the wrong file.**
+>
+> ```bash
+> node scripts/build-prompts.mjs        # writes docs/prompts.html — open it, press Copy
+> node scripts/build-prompts.mjs --text # or print all twelve to the terminal
+> ```
+>
+> That gives you twelve finished prompts, one per parcel, each already naming the
+> exact files that parcel owns. Copy one, paste it into a fresh agent, done.
+>
+> This file is the reasoning behind them. You do not need it to start a run.
+
 One page. Everything on it is something you type or paste.
 
 ---
