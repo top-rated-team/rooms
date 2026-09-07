@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import { AGENTS, HOUSE_STYLE_FOR_TESTS } from "@shared/roster";
+import { PUBLISHED_FIGURES, currencyFigures } from "@shared/pricing";
 import { buildMessages, NO_EXCERPTS_INSTRUCTION, UNGROUNDED_INSTRUCTION } from "./agentRuntime";
 
 /**
@@ -82,62 +83,102 @@ describe("nothing in an agent's instructions permits it to quote money", () => {
     NO_EXCERPTS_INSTRUCTION,
   );
 
-  it("carries the price prohibition into every agent's system prompt", () => {
+  it("carries the price rule into every agent's system prompt", () => {
+    /*
+     * Re-aimed with the rule itself. This used to look for a blanket "never
+     * state a price"; the rule is now narrower, so the words it pins had to
+     * change with it. Several categories the old block forbade outright are
+     * legitimate now BECAUSE they are published — "+$49 / month" is a monthly
+     * fee — so pinning "never state a retainer" would hold the prompt to a rule
+     * the product no longer follows.
+     *
+     * What must still be forbidden by name is everything the page does not
+     * publish and that a helpful model would otherwise compute.
+     */
     for (const agent of AGENTS) {
       const p = agent.systemPrompt.toLowerCase();
-      assert.match(
-        p,
-        /never state|may never state/,
-        `${agent.id}'s prompt does not carry the prohibition block from the house style`,
-      );
-      assert.ok(
-        p.includes("price") && p.includes("percentage of ad spend"),
-        `${agent.id}'s prompt does not forbid a price and a percentage of ad spend by name. ` +
-          `"Never invent API fields" was the whole rule before, which is why a retainer got invented.`,
-      );
-      for (const word of ["timeline", "guarantee", "minimum"]) {
-        assert.ok(p.includes(word), `${agent.id}'s prompt does not mention ${word}`);
+      assert.match(p, /may never produce any other number/, `${agent.id} lacks the rule's core sentence`);
+      for (const forbidden of [
+        "no arithmetic",
+        "percentage of ad spend",
+        "no discount",
+        "cost per lead",
+        "minimum",
+        "timeline",
+        "guarantee",
+        "deliverables",
+      ]) {
+        assert.ok(p.includes(forbidden), `${agent.id}'s prompt does not forbid ${forbidden} by name`);
       }
     }
   });
 
-  it("names the specific things the live answer invented", () => {
-    // Each of these appeared in the real answer. If a future rewrite drops one,
-    // that is the door reopening.
-    const joined = everyPrompt.join("\n").toLowerCase();
-    for (const invented of ["retainer", "setup cost", "tier", "cost per lead", "deliverables"]) {
-      assert.ok(joined.includes(invented), `no instruction mentions "${invented}", which the live answer produced`);
+  it("still closes each way the live answer went wrong", () => {
+    /*
+     * The invented answer produced: a setup cost, three named monthly tiers, two
+     * percentages of ad spend, included hours, and a recommended budget range.
+     * A price and a tier are publishable now, so the test can no longer pin
+     * those words — what it pins is the mechanism each of them came through.
+     */
+    const joined = AGENTS.map((a) => a.systemPrompt)
+      .concat(HOUSE_STYLE_FOR_TESTS, UNGROUNDED_INSTRUCTION, NO_EXCERPTS_INSTRUCTION)
+      .join("\n")
+      .toLowerCase();
+    for (const mechanism of [
+      "no arithmetic",            // three tiers computed from one figure
+      "percentage of ad spend",   // "15% of ad spend"
+      "cost per lead",            // the CPL the door used to ask for
+      "minimum",                  // "recommended budget $3k-$5k"
+      "no range you assemble",    // the range itself
+      "never confirm a number the visitor suggests",
+    ]) {
+      assert.ok(joined.includes(mechanism), `no instruction closes "${mechanism}"`);
     }
   });
 
-  it("contains no currency figure other than the one credential, pinned by string", () => {
+  it("carries no currency figure that shared/pricing.ts does not publish", () => {
     /*
-     * An example price is a price: a model cannot tell an illustration from a
-     * quote, and neither can the visitor reading the answer. So the rule is that
-     * no prompt carries a figure — with exactly one allowed exception, written out
-     * here in full so that ADDING a second one fails.
+     * RE-AIMED, NOT RELAXED. Until prices were published this asserted that no
+     * prompt contained a figure at all, because the LinkedIn Ads agent had
+     * invented a four-tier price list on the live site. Prices now exist, so the
+     * rule became a different one rather than a weaker one: an agent may repeat
+     * a published price verbatim and may produce no other number. This is that
+     * rule as a test — every figure in every prompt has to appear in
+     * PUBLISHED_FIGURES, which is derived from PRICES itself.
      *
-     * The exception is a credential rather than a price. Separately from this
-     * test, it is worth the owner's attention: the redesign deliberately removed
-     * the four statistics from the site, and every agent still recites all five
-     * of them to a visitor. That is a marketing decision, not a test's to make.
+     * It caught something on its first run: the prohibition block I wrote
+     * illustrated a bad quote with "probably $600-700", which is exactly the
+     * failure the rule describes. A model cannot tell an illustration from a
+     * price, and neither can the visitor reading the answer back.
+     *
+     * The one exception is a credential rather than a price, written out so that
+     * adding a second one fails.
      */
-    const ALLOWED = "$2M+ ad spend managed";
+    const CREDENTIAL = "$2M+";
     for (const agent of AGENTS) {
-      const withoutCredential = agent.systemPrompt.split(ALLOWED).join("");
-      assert.doesNotMatch(
-        withoutCredential,
-        /[$€£]\s?\d/,
-        `${agent.id}'s prompt contains a currency figure beyond "${ALLOWED}". Whatever it is, a ` +
-          `model reading it may repeat it as what this costs.`,
+      const stray = currencyFigures(agent.systemPrompt).filter(
+        (figure) => figure !== CREDENTIAL && !PUBLISHED_FIGURES.includes(figure),
       );
-      // And the exception must still be the exception: if the credential is
-      // reworded or dropped, this test should be revisited rather than silently
-      // keep allowing a string nothing matches.
+      assert.deepEqual(
+        stray,
+        [],
+        `${agent.id}'s prompt carries ${stray.join(", ")}, which shared/pricing.ts does not publish. ` +
+          `Either add it to PRICES so the page shows it too, or take it out of the prompt.`,
+      );
       assert.ok(
-        agent.systemPrompt.includes(ALLOWED),
-        `${agent.id}'s prompt no longer contains "${ALLOWED}". Delete the exception from this test.`,
+        agent.systemPrompt.includes(CREDENTIAL),
+        `${agent.id}'s prompt no longer contains "${CREDENTIAL}". Delete the exception from this test.`,
       );
+    }
+  });
+
+  it("gives every agent the published list and the rule for using it", () => {
+    // A rule with no list is an agent that refuses a question the page answers.
+    for (const agent of AGENTS) {
+      assert.match(agent.systemPrompt, /may repeat a published price EXACTLY/, `${agent.id} lacks the rule`);
+      assert.ok(agent.systemPrompt.includes("from $49 per task"), `${agent.id} lacks the published list`);
+      assert.match(agent.systemPrompt, /No arithmetic/, `${agent.id} may still do sums on a price`);
+      assert.match(agent.systemPrompt, /Never confirm a number the visitor suggests/, `${agent.id}`);
     }
   });
 });

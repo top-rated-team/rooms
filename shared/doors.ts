@@ -14,6 +14,7 @@
  * the overview page cannot drift.
  */
 
+import { type PriceTierId } from "./pricing";
 import { AGENT_BY_ID, MAIN_SITE_URL, type AgentDef } from "./roster";
 
 /**
@@ -123,6 +124,19 @@ export interface DoorDef {
   tool?: DoorTool;
   contract: DoorContract;
   tier: DoorTier;
+  /**
+   * Which row of the published ladder this door is sold on — the door's price,
+   * held as a pointer into shared/pricing.ts rather than as a figure typed
+   * here. A door page renders this row and only this row, so a visitor reads
+   * what their own door costs instead of a table they have to find themselves
+   * in. `priceForDoor` in that file is the only way to resolve it.
+   *
+   * Not called `tier`: `tier` above is how much of the work is ours, which is a
+   * different question with a different answer, and one door — the partner's —
+   * has a `grey` work tier and a `partner` price row for related but separate
+   * reasons. Two fields, because they are two facts.
+   */
+  priceTier: PriceTierId;
   status: DoorStatus;
   /** Only for status "coming": why the panel is shut, in one sentence. */
   comingLine?: string;
@@ -183,6 +197,8 @@ export const DOORS: DoorDef[] = [
     ],
     contract: TOP_RATED_TEAM,
     tier: "white",
+    // The $99 row is a setup or a month of a grant account; this door is the setup.
+    priceTier: "setup",
     status: "live",
     kbNamespace: "chatgpt-ads",
   },
@@ -215,6 +231,7 @@ export const DOORS: DoorDef[] = [
     },
     contract: TOP_RATED_TEAM,
     tier: "white",
+    priceTier: "management",
     status: "live",
     kbNamespace: "google-ads",
   },
@@ -254,6 +271,8 @@ export const DOORS: DoorDef[] = [
         "The company that runs top-rated.team. The Ad Grants setup runs on our own tool, adgrant.ai; the management and the conversion tracking after it are our own people, on the same contract, so this door is one contract and one invoice either way.",
     },
     tier: "white",
+    // The other half of the $99 row: a month of managing one grant account.
+    priceTier: "setup",
     status: "live",
     kbNamespace: "ad-grants",
   },
@@ -284,6 +303,7 @@ export const DOORS: DoorDef[] = [
     ],
     contract: TOP_RATED_TEAM,
     tier: "white",
+    priceTier: "management",
     status: "live",
     kbNamespace: "linkedin-ads",
   },
@@ -294,11 +314,23 @@ export const DOORS: DoorDef[] = [
     initials: "LL",
     tone: "bg-chart-4/10 text-chart-4",
     headline: "LinkedIn automation — with a written legal assessment",
+    /* This used to end "against documented interfaces", which is not true of
+     * the work it describes. LinkedIn's own documentation says sign-in, email
+     * and posting as the member are the only permissions any developer can have
+     * without approval; invitations, messages and a member's connections are
+     * documented but restricted to approved partners under a signed agreement.
+     * So a build that is not a LinkedIn partner drives a logged-in session for
+     * most of what a buyer asks for, and the sentence now says which is which.
+     * It is the reason the assessment goes first, and hiding it behind
+     * "documented interfaces" sold the reassurance without the work. */
     blurb:
-      "Before anything runs on your account, a qualified lawyer writes down what is and is not allowed where you are. Then we build only that, against documented interfaces, and hand over the code.",
-    firstAgentId: "ai-dev",
+      "A qualified lawyer writes down what is and is not allowed where you are before anything runs, on their own paper. We then build only that and hand your team the code to operate, naming in the scope which parts go through LinkedIn's own API and which drive your own logged-in session — because sign-in, email and posting are the only permissions LinkedIn gives out without approval.",
+    // Its own agent, not the shared ai-dev one the ai-builds door also uses: one
+    // agent carries one corpus, and this door's refusal — never say whether an
+    // automation is permitted — is not a refusal ai-dev has any reason to carry.
+    firstAgentId: "linkedin-automation",
     agentLine:
-      "The AI Dev Agent answers first and scopes the build. It does not answer legal questions — that is the lawyer's assessment, and it is written before anything runs.",
+      "The LinkedIn Automation Agent answers first, from LinkedIn's own developer documentation, and cites the page it used: which permissions are open to any developer, which need LinkedIn's approval or a partner programme, and what the interfaces for invitations, messages, connections and posting require. It never says whether a particular automation is permitted — not by LinkedIn and not where you are. That is the lawyer's written assessment, and it is written before anything runs.",
     starters: [
       "What can be automated on LinkedIn without putting the account at risk?",
       "We want follow-ups sent from our sales team's own profiles. Is that allowed where we are?",
@@ -316,9 +348,17 @@ export const DOORS: DoorDef[] = [
       contactLabel: "Write to Top-Rated Team",
     },
     tier: "light-grey",
-    status: "coming",
-    comingLine:
-      "This door opens once the assessment is on the shelf and the agent knows to refuse legal questions rather than guess at them.",
+    // Custom for the build. The lawyer's assessment is the lawyer's price, on
+    // the lawyer's own paper, and this row does not speak for it.
+    priceTier: "custom",
+    /* Was "coming", on two conditions written into the comingLine: the
+     * assessment on the shelf, and an agent that refuses legal questions rather
+     * than guessing. The second is now in code — the LinkedIn Automation Agent
+     * has its own corpus and its own refusal, and reads no other door's
+     * documentation. The first is not a code fact and is not mine to assert;
+     * the parcel report says so, and if the assessment is not ready this row
+     * goes back to "coming" with that sentence and nothing else changes. */
+    status: "live",
     kbNamespace: "linkedin-automation",
   },
   {
@@ -351,6 +391,10 @@ export const DOORS: DoorDef[] = [
       contact: null,
     },
     tier: "grey",
+    // Not "custom": custom is still us quoting. Maksymenko sets this price and
+    // invoices it, so this site publishes no figure for it — docs/doors.md,
+    // "whoever sets the price is the seller of that work".
+    priceTier: "partner",
     status: "coming",
     comingLine:
       "This door opens when Maksymenko's registered name and terms are on the page, because the room has to show theirs and it has none to show yet.",
@@ -376,6 +420,7 @@ export const DOORS: DoorDef[] = [
     ],
     contract: TOP_RATED_TEAM,
     tier: "white",
+    priceTier: "custom",
     status: "coming",
     comingLine: "This door has no panel yet. The builds are running, so start with a call.",
     kbNamespace: "ai-builds",

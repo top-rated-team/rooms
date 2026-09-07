@@ -32,6 +32,7 @@ import Footer from "@/components/site/Footer";
 import { isPublicDoor } from "@/components/site/GatedOffers";
 import Header from "@/components/site/Header";
 import KeepStrip from "@/components/site/KeepStrip";
+import { DoorPrice } from "@/components/site/Ladder";
 import { collectSource } from "@/components/site/LeadDialog";
 import { usePanelState, type CreateRoomResult } from "@/hooks/use-panel-state";
 import NotFound from "@/pages/not-found";
@@ -564,6 +565,14 @@ function DoorPage({ door }: { door: DoorDef }) {
             )}
           </div>
         </section>
+
+        {/* Its own tier and nothing else. DoorPrice is given the row and resolves
+            the price from it, so a door physically cannot print a neighbour's —
+            the constraint is in what the function receives rather than in a
+            filter somebody has to keep correct. It prints BeforeYouBuy itself —
+            the call and the two Upwork profiles — so this page must not add a
+            second one, which it briefly did. */}
+        <DoorPrice door={door} />
       </main>
 
       <Footer />

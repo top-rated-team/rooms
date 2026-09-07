@@ -336,7 +336,109 @@ const LINKEDIN_ADS: Corpus = {
   ],
 };
 
-const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS];
+/**
+ * Door 5. LinkedIn's own developer documentation, which LinkedIn publishes on
+ * Microsoft Learn, and nothing else: no blog, no agency write-up, nothing
+ * behind a login. Every URL here was fetched and read before it was written
+ * down. The locale sits in the path (`/en-us/`) rather than in a query
+ * parameter, so these URLs are already pinned to the language the agent
+ * answers in — the same job `hl=en` and `lang=en` do above.
+ *
+ * What this corpus is FOR is the whole of the door. A visitor asks "can you
+ * automate this", and an honest answer has two halves: what LinkedIn publishes
+ * an interface for, and whether a particular automation is permitted where the
+ * visitor is. Only the first half is documentation. So the corpus is the
+ * permissions and partner-programme pages, the OAuth flows, what an
+ * integration has to handle, and the interfaces that touch invitations,
+ * messages, connections and posting — the three permissions open to any
+ * developer, and the many that are not.
+ *
+ * LinkedIn's User Agreement, its Professional Community Policies and its help
+ * pages about third-party software are deliberately absent, and that absence
+ * is the door. This agent may never say whether an automation is permitted; a
+ * corpus of prohibitions is what would make it answer that question anyway, in
+ * the house voice, with a working link. That question is the lawyer's written
+ * assessment, which is not ours and is not on this shelf. LinkedIn's
+ * advertising pages are absent for a plainer reason: they are the LinkedIn Ads
+ * door's subject and its own corpus already reads them.
+ *
+ * This corpus cannot be fetched by this script as it stands, and the parcel
+ * report hands that back. `extractArticleBody` picks its article container by
+ * host and knows two, both Google's; on this host the article body is the
+ * second `<div class="content">` — the first wraps the h1 alone, and is short
+ * enough to be dropped as furniture — so the container has to be chosen by
+ * length rather than by first match. The file on disk was built off this exact
+ * list with that change applied outside the repo. Until it lands here,
+ * `npm run kb:fetch -- linkedin-automation` fetches nothing and leaves the
+ * corpus exactly as it is, which is this script's documented behaviour and is
+ * why the door keeps answering in the meantime.
+ */
+const LINKEDIN_AUTOMATION: Corpus = {
+  namespace: "linkedin-automation",
+  file: "kb.linkedin-automation.json",
+  label: "LinkedIn automation — learn.microsoft.com/linkedin (LinkedIn's own API documentation)",
+  htmlPages: [
+    // Who is allowed to call anything at all. The first page is the one the
+    // door's corrected blurb rests on: sign-in, email and posting as the member
+    // are the only permissions LinkedIn gives out without approval.
+    { title: "Getting Access to LinkedIn APIs", url: "https://learn.microsoft.com/en-us/linkedin/shared/authentication/getting-access" },
+    { title: "Authenticating with OAuth 2.0 Overview", url: "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authentication" },
+    { title: "LinkedIn 3-Legged OAuth Flow", url: "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow" },
+    { title: "LinkedIn 2-Legged OAuth Flow", url: "https://learn.microsoft.com/en-us/linkedin/shared/authentication/client-credentials-flow" },
+    { title: "Refresh Tokens with OAuth 2.0", url: "https://learn.microsoft.com/en-us/linkedin/shared/authentication/programmatic-refresh-tokens" },
+    { title: "Token Introspection", url: "https://learn.microsoft.com/en-us/linkedin/shared/authentication/token-introspection" },
+    { title: "Application Secret Management", url: "https://learn.microsoft.com/en-us/linkedin/shared/authentication/application-secret-management" },
+    { title: "Developer Portal Tools", url: "https://learn.microsoft.com/en-us/linkedin/shared/authentication/developer-portal-tools" },
+    // The interfaces a buyer asks about by name: sending an invitation,
+    // sending a message, reading connections and a profile. Every one of them
+    // says on its own page what it is restricted to, which is the fact the
+    // agent is allowed to state — and it is not the same fact as "permitted".
+    { title: "Invitations API", url: "https://learn.microsoft.com/en-us/linkedin/shared/integrations/communications/invitations" },
+    { title: "Messages API", url: "https://learn.microsoft.com/en-us/linkedin/shared/integrations/communications/messages" },
+    { title: "Connections API", url: "https://learn.microsoft.com/en-us/linkedin/shared/integrations/people/connections-api" },
+    { title: "Profile API", url: "https://learn.microsoft.com/en-us/linkedin/shared/integrations/people/profile-api" },
+    // The self-serve surface, in full. It is small, and a visitor is entitled
+    // to see how small before anyone scopes a build.
+    { title: "Share on LinkedIn", url: "https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/share-on-linkedin" },
+    { title: "Sign In with LinkedIn using OpenID Connect", url: "https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/sign-in-with-linkedin-v2" },
+    { title: "LinkedIn Consumer Solutions Platform", url: "https://learn.microsoft.com/en-us/linkedin/consumer/" },
+    // Where programmatic access to messages, invitations and a member's
+    // network actually lives: a partner programme, an approval and a signed
+    // API agreement. Named so the agent can say what the route is instead of
+    // guessing whether there is one.
+    { title: "LinkedIn Compliance Solutions", url: "https://learn.microsoft.com/en-us/linkedin/compliance/" },
+    { title: "Compliance APIs Overview", url: "https://learn.microsoft.com/en-us/linkedin/compliance/compliance-api/overview" },
+    { title: "Compliance FAQ", url: "https://learn.microsoft.com/en-us/linkedin/compliance/compliance-api/compliance-faq" },
+    { title: "Compliance API Request Limits and Patterns", url: "https://learn.microsoft.com/en-us/linkedin/compliance/request-limits-and-patterns" },
+    { title: "Compliance Events API", url: "https://learn.microsoft.com/en-us/linkedin/compliance/integrations/compliance-events/" },
+    { title: "Messages Compliance Events", url: "https://learn.microsoft.com/en-us/linkedin/compliance/integrations/compliance-events/resource-references/messages" },
+    { title: "Invitations Compliance Events", url: "https://learn.microsoft.com/en-us/linkedin/compliance/integrations/compliance-events/resource-references/invitations" },
+    { title: "Sales Navigator Application Platform Documentation", url: "https://learn.microsoft.com/en-us/linkedin/sales/" },
+    // What an integration has to handle. This is the half that makes a scope a
+    // scope rather than a wish: paging, throttles, versions, errors, webhooks.
+    { title: "LinkedIn API Concepts", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/concepts" },
+    { title: "LinkedIn API Request Methods", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/concepts/methods" },
+    { title: "LinkedIn API Data Formats", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/concepts/data-formats" },
+    { title: "LinkedIn API URNs and IDs", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/concepts/urns" },
+    { title: "Field Projections", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/concepts/projections" },
+    { title: "LinkedIn API Pagination", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/concepts/pagination" },
+    { title: "LinkedIn API Rate Limiting", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/concepts/rate-limits" },
+    { title: "LinkedIn API Error Handling", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/concepts/error-handling" },
+    { title: "LinkedIn API Protocol Versions", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/concepts/protocol-version" },
+    { title: "LinkedIn API Response Decoration", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/concepts/decoration" },
+    { title: "LinkedIn API Query Tunneling", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/concepts/query-tunneling" },
+    { title: "Webhooks", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/webhook-validation" },
+    // What happens to the code after the client is operating it, which is the
+    // question a hand-over makes unavoidable.
+    { title: "Best Practices Overview", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/best-practices/overview" },
+    { title: "Best Practices for Application Development", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/best-practices/application-development" },
+    { title: "Best Practices for Secure Applications", url: "https://learn.microsoft.com/en-us/linkedin/shared/api-guide/best-practices/secure-applications" },
+    { title: "LinkedIn API Breaking Change Policy", url: "https://learn.microsoft.com/en-us/linkedin/shared/breaking-change-policy" },
+    { title: "LinkedIn API Partner Support", url: "https://learn.microsoft.com/en-us/linkedin/shared/linkedin-api-partner-support-guide" },
+  ],
+};
+
+const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS, LINKEDIN_AUTOMATION];
 /* -------------------------------- chunking -------------------------------- */
 
 const TARGET_CHARS = 1200;
