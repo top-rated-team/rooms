@@ -5,21 +5,21 @@
 
   This list is not written by hand. It is PUBLIC_DOORS — the white and
   light-grey rows, the rule in client/src/components/site/GatedOffers.tsx that
-  /work and the landing page already read — mapped to each row's `path`, plus
-  /work itself. A static file cannot import that rule, so the URLs are copied
+  /use-case and the landing page already read — mapped to each row's `path`, plus
+  /use-case itself. A static file cannot import that rule, so the URLs are copied
   out of it here; change a row's tier or its `path` in shared/doors.ts and this
   file has to be regenerated with it, which is why it should be generated rather
   than edited. See docs/DEPLOY.md for the domain, and the handoff about a
   build-time generator.
 
-  / is the index of every public door. /work/chatgpt-ads is the door itself —
+  / is the index of every public door. /use-case/chatgpt-ads is the door itself —
   the argument for conversion tracking that used to be the home page.
 
   Two kinds of address are absent on purpose.
 
-  - The gated doors, today /work/linkedin-growth. A sitemap is a public list of
+  - The gated doors, today /use-case/linkedin-growth. A sitemap is a public list of
     URLs handed to crawlers, so a gated offer listed here is a published offer:
-    the page /work asks for an email address before naming would be fetched,
+    the page /use-case asks for an email address before naming would be fetched,
     indexed, and shown in search results under the partner's name — and the
     file itself is readable by anyone who types /sitemap.xml. A robots.txt
     Disallow line would print the same address just as publicly. Leaving it out
@@ -36,37 +36,37 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://ai.top-rated.team/work</loc>
+    <loc>https://ai.top-rated.team/use-case</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ai.top-rated.team/work/chatgpt-ads</loc>
+    <loc>https://ai.top-rated.team/use-case/chatgpt-ads</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ai.top-rated.team/work/google-ads</loc>
+    <loc>https://ai.top-rated.team/use-case/google-ads</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ai.top-rated.team/work/ad-grants</loc>
+    <loc>https://ai.top-rated.team/use-case/ad-grants</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ai.top-rated.team/work/linkedin-ads</loc>
+    <loc>https://ai.top-rated.team/use-case/linkedin-ads</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ai.top-rated.team/work/linkedin-automation</loc>
+    <loc>https://ai.top-rated.team/use-case/linkedin-automation</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ai.top-rated.team/work/ai-builds</loc>
+    <loc>https://ai.top-rated.team/use-case/ai-builds</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>

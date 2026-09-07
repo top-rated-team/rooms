@@ -214,7 +214,7 @@ export function GatedOffers({ className }: GatedOffersProps) {
         body: JSON.stringify({
           email: address,
           intent: GATE_INTENT,
-          message: "Asked to see the LinkedIn engagement offers on /work.",
+          message: "Asked to see the LinkedIn engagement offers on /use-case.",
           source: { ...collectSource(), gate: "offers" },
         }),
       });

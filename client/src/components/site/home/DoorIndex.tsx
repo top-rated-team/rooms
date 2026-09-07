@@ -29,7 +29,7 @@ import { countWord, firstSentence } from "@/components/site/home/doorText";
  * It lists PUBLIC_DOORS, not DOORS. The tier rule in GatedOffers.tsx is the only
  * place the split may be decided, and this page is open to anyone: printing the
  * grey row here would name the partner and their offer on the front page, which
- * is exactly what the email step on /work exists to withhold — and what the
+ * is exactly what the email step on /use-case exists to withhold — and what the
  * noindex on that door page and its absence from sitemap.xml are also for.
  * ------------------------------------------------------------------------- */
 

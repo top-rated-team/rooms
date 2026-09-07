@@ -88,7 +88,7 @@ function DoorPage({ door }: { door: DoorDef }) {
   const panelIsOpen = door.status === "live" && agent !== undefined;
   const oursToAnswer = door.contract.legalName === OUR_LEGAL_NAME;
 
-  // Same approach as /work and the home page: no helmet dependency, and the
+  // Same approach as /use-case and the home page: no helmet dependency, and the
   // previous title and description are put back on the way out.
   useEffect(() => {
     const previousTitle = document.title;
@@ -116,7 +116,7 @@ function DoorPage({ door }: { door: DoorDef }) {
     };
   }, [door, oursToAnswer]);
 
-  /* A door that /work only names after the email step must not arrive from a
+  /* A door that /use-case only names after the email step must not arrive from a
    * search result instead. sitemap.xml leaves those rows out for the same
    * reason and says so; this is the other half of it, because a URL that is
    * merely unlisted is still indexable. The page keeps answering for anyone who
@@ -135,7 +135,7 @@ function DoorPage({ door }: { door: DoorDef }) {
     };
   }, [door]);
 
-  // Arriving from a row halfway down /work otherwise lands the visitor halfway
+  // Arriving from a row halfway down /use-case otherwise lands the visitor halfway
   // down the door, below the headline they just clicked.
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -149,7 +149,7 @@ function DoorPage({ door }: { door: DoorDef }) {
    * no address to show because there is no conversation yet.
    *
    * collectSource() reads the door off the path, which resolves correctly from
-   * /work/<slug> because that is what the row's `path` says. The door is
+   * /use-case/<slug> because that is what the row's `path` says. The door is
    * stamped again here anyway: this page already knows which row it rendered,
    * and a room carrying the wrong door prints the wrong company in its footer.
    */
@@ -259,7 +259,7 @@ function DoorPage({ door }: { door: DoorDef }) {
         {/* ------------------------- the first screen ------------------------ */}
         <div className={`${PAGE} pt-[var(--s5)]`}>
           <p className={META}>
-            <Link href="/work" data-testid="link-door-back" className="draw hover:text-foreground">
+            <Link href="/use-case" data-testid="link-door-back" className="draw hover:text-foreground">
               Index
             </Link>
             <span aria-hidden="true"> · </span>
@@ -572,20 +572,20 @@ function DoorPage({ door }: { door: DoorDef }) {
 }
 
 /**
- * /work/:slug — the address every door answers on, all seven of them.
+ * /use-case/:slug — the address every door answers on, all seven of them.
  *
  * The ChatGPT Ads row used to say `path: "/"` and this route redirected there.
  * It does not any more: the home page is the landing for every door, and this
- * one answers at /work/chatgpt-ads like its neighbours. The redirect stays for
+ * one answers at /use-case/chatgpt-ads like its neighbours. The redirect stays for
  * any row whose `path` is moved somewhere else in future, so no branch here
  * names a door.
  */
 export function Door() {
-  const [, params] = useRoute<{ slug: string }>("/work/:slug");
+  const [, params] = useRoute<{ slug: string }>("/use-case/:slug");
   const door = params ? DOOR_BY_SLUG[params.slug] : undefined;
 
   if (!door) return <NotFound />;
-  if (door.path !== `/work/${door.slug}`) return <Redirect to={door.path} replace />;
+  if (door.path !== `/use-case/${door.slug}`) return <Redirect to={door.path} replace />;
 
   // Keyed on the row, so moving between two doors remounts the panel instead of
   // carrying one door's conversation into the next.
