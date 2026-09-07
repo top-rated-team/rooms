@@ -209,7 +209,7 @@ function create(
 
 /* ------------------------------- the prompt ------------------------------- */
 
-function buildMessages(
+export function buildMessages(
   agent: AgentDef,
   question: string,
   history: Array<{ role: "user" | "assistant"; content: string }>,
@@ -217,7 +217,20 @@ function buildMessages(
 ): ChatCompletionMessageParam[] {
   const messages: ChatCompletionMessageParam[] = [{ role: "system", content: agent.systemPrompt }];
 
-  if (agent.useKb) {
+  /*
+   * Every agent gets a grounding message, and which one depends on what it
+   * actually has. The bug this replaces: `useKb: false` pushed nothing, so five
+   * of the nine agents ran on their system prompt alone with no instruction about
+   * what they may assert. One of them answered "what does your service cost?"
+   * with an invented four-tier price list under the heading "Our service pricing
+   * (transparent)" — on a door whose own row says it is not open yet.
+   *
+   * server/ai/grounding.test.ts holds this down: there is no branch here that
+   * sends a model the question without also telling it what it may not invent.
+   */
+  if (!agent.useKb) {
+    messages.push({ role: "system", content: UNGROUNDED_INSTRUCTION });
+  } else {
     messages.push({ role: "system", content: excerpts.length > 0 ? contextBlock(excerpts) : NO_EXCERPTS_INSTRUCTION });
   }
 
@@ -255,7 +268,32 @@ function contextBlock(excerpts: RetrievedChunk[]): string {
   ].join("\n");
 }
 
-const NO_EXCERPTS_INSTRUCTION = [
+/**
+ * For an agent with no corpus at all — `useKb: false`. It is not a degraded
+ * grounded agent, it is a different job: general practice, no product specifics,
+ * and nothing commercial. Without this it received no instruction of any kind
+ * beyond its own one-paragraph persona.
+ */
+export const UNGROUNDED_INSTRUCTION = [
+  "You have no documentation corpus for this subject. Nothing was retrieved because there is",
+  "nothing to retrieve, and you were deliberately given no neighbouring corpus to reach for.",
+  "",
+  "So you may answer general, durable practice — how a thing is normally approached, what the",
+  "trade-offs usually are, what question to ask next. You may not state product specifics:",
+  "no field names, no policy thresholds, no setting names, no limits, no interface labels, and",
+  "no current platform behaviour. Those change without notice and you cannot check them here.",
+  "",
+  "You may not state anything commercial. No price, no range, no minimum budget, no expected",
+  "cost per lead, no timeline, no guarantee, no list of deliverables. Pricing and scope come",
+  "from a person. If the visitor asks, say so in one sentence and point at the human — do not",
+  "produce a figure anyway, and do not confirm a figure the visitor suggests.",
+  "",
+  "Say what you cannot confirm rather than approximating it, and offer to bring in a human.",
+  "An admitted gap costs the visitor one message. A confident wrong answer costs them a",
+  "decision, and it is made in this company's name.",
+].join("\n");
+
+export const NO_EXCERPTS_INSTRUCTION = [
   "No documentation excerpts were retrieved for this question — your corpus is either unbuilt",
   "or has nothing matching. You were given no other corpus to fall back on, and that is",
   "deliberate: answering out of a neighbouring product's documentation would be confident and",
