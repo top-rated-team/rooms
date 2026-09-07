@@ -243,10 +243,28 @@
     inset: -1px;
   }
 
-  .hover-elevate:not(.no-default-hover-elevate),
-  .active-elevate:not(.no-default-active-elevate),
-  .hover-elevate-2:not(.no-default-hover-elevate),
-  .active-elevate-2:not(.no-default-active-elevate) {
+  /*
+   * IT MUST NOT TAKE POSITIONING AWAY FROM AN ELEMENT THAT HAS IT.
+   *
+   * `position: relative` here is only for the ::after overlay below, which needs
+   * a positioned ancestor. But `.hover-elevate:not(.no-default-hover-elevate)`
+   * is two classes to Tailwind's one, so it BEAT `.absolute` and quietly
+   * unpositioned anything that had both.
+   *
+   * The lead dialog's close button was `absolute right-4 top-4` and lost it:
+   * it fell back into a flex column, stretched to the full width, and its focus
+   * ring drew a box across the whole dialog with the title running underneath.
+   * That is what the owner saw and called crooked. The copy button on a code
+   * block in AnswerMarkdown.tsx had the same defect and nobody had opened one.
+   *
+   * The three exclusions fix it everywhere at once, including code not written
+   * yet. An element that is already absolute, fixed or sticky is a positioned
+   * ancestor, so the overlay still anchors correctly.
+   */
+  .hover-elevate:not(.no-default-hover-elevate):not(.absolute):not(.fixed):not(.sticky),
+  .active-elevate:not(.no-default-active-elevate):not(.absolute):not(.fixed):not(.sticky),
+  .hover-elevate-2:not(.no-default-hover-elevate):not(.absolute):not(.fixed):not(.sticky),
+  .active-elevate-2:not(.no-default-active-elevate):not(.absolute):not(.fixed):not(.sticky) {
     position: relative;
     z-index: 0;
   }

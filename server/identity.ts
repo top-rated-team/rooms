@@ -35,7 +35,7 @@
  */
 
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { nanoid } from "nanoid";
+import { customAlphabet, nanoid } from "nanoid";
 import type { RoomAccessLevel, RoomBindingProvider, RoomBindingState } from "@shared/api";
 import { storage } from "./storage";
 import { MAX_TURNS_PER_HOUR, monthlyBudgetUsd } from "./spend";
@@ -76,7 +76,30 @@ const CODE_PATTERNS: RegExp[] = [
   /^\s*(?:curl|GET|POST|PUT)\b/m,
 ];
 
-const BIND_CODE_RE = /\bRoom-bind ([0-9A-Za-z]{16})\b/;
+/*
+ * THE BIND CODE, and the alphabet is the whole of the fix.
+ *
+ * This was `nanoid(16)` matched against /Room-bind ([0-9A-Za-z]{16})/. nanoid's
+ * default alphabet includes `-` and `_`, so roughly two in five codes contained
+ * a character the pattern rejected — and the failure was silent on both sides:
+ * the visitor sent the message, the webhook found no match, and the room simply
+ * never bound. The parcel's own test caught it 40% of the time, which is worse
+ * than never: a test that fails two runs in five gets deleted rather than read.
+ *
+ * So the code is generated from an alphabet that has no `-`, no `_`, and none
+ * of I, O, 0 or 1 — because this string travels through a chat app and a person
+ * may retype it, and a code that cannot be dictated over the phone is a code
+ * that generates support messages. 32^12 is about 2^60, which is more than
+ * enough for something that expires in minutes.
+ *
+ * The generator and the pattern are declared next to each other on purpose:
+ * they are one decision, and separating them is how they drifted apart.
+ */
+const BIND_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const BIND_CODE_LENGTH = 12;
+const bindCode = customAlphabet(BIND_CODE_ALPHABET, BIND_CODE_LENGTH);
+/** Exported so the test reads the pattern the webhook uses, never a copy of it. */
+export const BIND_CODE_RE = new RegExp(`\\bRoom-bind ([${BIND_CODE_ALPHABET}]{${BIND_CODE_LENGTH}})\\b`);
 
 /** Per-process pepper so a stored WhatsApp id is not a reversible phone number. */
 const HASH_PEPPER = randomBytes(32);
@@ -387,7 +410,7 @@ export async function startWhatsApp(input: {
     pendingWhatsApp.delete(input.workspaceId);
   }
 
-  const nonce = nanoid(16);
+  const nonce = bindCode();
   pendingWhatsApp.set(input.workspaceId, {
     workspaceId: input.workspaceId,
     token: input.token,

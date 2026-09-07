@@ -29,6 +29,7 @@ import {
   startLinkedIn,
   startWhatsApp,
   storedBindingForTests,
+  BIND_CODE_RE,
 } from "./identity";
 import { WAHA_UNAVAILABLE_LINE, probeWaha, qrSvg, waMeUrl } from "./waha";
 
@@ -246,7 +247,12 @@ describe("what may be stored", () => {
     assert.equal(start.offer.warning, WHATSAPP_CHAT_WARNING);
     assert.match(start.offer.url, /^https:\/\/wa\.me\/15555550100\?text=/);
     const text = decodeURIComponent(new URL(start.offer.url).searchParams.get("text") ?? "");
-    const nonce = /Room-bind ([0-9A-Za-z]{16})/.exec(text)?.[1];
+    // Read through the SAME pattern the webhook uses, imported rather than
+    // retyped. This line used to carry its own copy of the regex, which is how
+    // it came to disagree with the generator: nanoid's alphabet has `-` and `_`
+    // in it, so two runs in five produced a code neither this nor the webhook
+    // would match, and a room that silently never bound.
+    const nonce = BIND_CODE_RE.exec(text)?.[1];
     assert.ok(nonce);
     assert.match(text, /tokIdentityTestToken12/, "the pre-filled message carries the room address");
 

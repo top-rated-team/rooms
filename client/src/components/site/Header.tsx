@@ -33,7 +33,15 @@ const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) =>
  * get the scale and the workspace does not.
  * ------------------------------------------------------------------------- */
 
-const LINK = "draw text-muted-foreground hover:text-foreground";
+/*
+ * `type-meta` is on every item explicitly rather than inherited from the <nav>.
+ * A <button> does not take the browser's font from its parent the way an <a>
+ * does, so the two buttons in this bar — the theme and "Leave a message" —
+ * rendered at the user-agent's own button size and in mixed case while the
+ * links beside them were small-caps. The owner spotted it; it is the same
+ * defect in both, and naming the class here fixes both and anything added next.
+ */
+const LINK = "type-meta draw text-muted-foreground hover:text-foreground";
 
 export function Header() {
   const { resolvedTheme, setTheme } = useTheme();
