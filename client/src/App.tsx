@@ -3,6 +3,7 @@ import { Route, Switch } from "wouter";
 
 import Door from "@/pages/door";
 import Doors from "@/pages/doors";
+import Pricing from "@/pages/pricing";
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 
@@ -10,7 +11,7 @@ import NotFound from "@/pages/not-found";
  * chat, websocket client, markdown renderer — is a separate chunk it never
  * downloads. Only /w/:token pays for it.
  *
- * /use-case and /use-case/:slug are not lazy: they are Header, Footer, DoorCard, the
+ * /services and /services/:slug are not lazy: they are Header, Footer, DoorCard, the
  * panel and the door table, and the doors table is what the panel already
  * reads. Splitting them would buy nothing and cost a round trip. Neither one
  * imports anything out of @/pages/workspace or @/components/workspace, so a
@@ -30,10 +31,11 @@ export default function App() {
     <Suspense fallback={<RouteFallback />}>
       <Switch>
         <Route path="/" component={Landing} />
-        <Route path="/use-case" component={Doors} />
+        <Route path="/services" component={Doors} />
+        <Route path="/pricing" component={Pricing} />
         {/* Every door answers here. Which one, and whether it has a panel at
             all, is read out of the row — see shared/doors.ts. */}
-        <Route path="/use-case/:slug" component={Door} />
+        <Route path="/services/:slug" component={Door} />
         <Route path="/w/:token" component={Workspace} />
         {/* /w with nothing after it: the rooms this browser remembers. */}
         <Route path="/w" component={Workspace} />

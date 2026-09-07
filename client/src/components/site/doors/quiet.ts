@@ -5,7 +5,7 @@
  * the warm-paper tokens, the six-step spacing scale, the three type classes
  * (`type-display`, `type-body`, `type-meta`, `type-note`) and the drawn
  * underline (`draw`, `draw-on`) — and this file is the doors' agreed way of
- * spelling those, so /use-case, a door page and the index row cannot each invent a
+ * spelling those, so /services, a door page and the index row cannot each invent a
  * fourth size or a fifth margin.
  *
  * Three rules are baked in, and they are the measured problems from the

@@ -28,7 +28,7 @@
  *   credential living in the URL, so writing one down publishes it. robots.txt
  *   disallows /w/ and those pages carry noindex; a text file at the root is
  *   exactly as public as robots.txt, so it gets the same treatment.
- * - The offers a stranger is not shown. /use-case names some of them only after
+ * - The offers a stranger is not shown. /services names some of them only after
  *   an email step, they are absent from sitemap.xml, and their pages are
  *   noindex. Naming them in a file at the root would publish precisely what
  *   that step withholds, so PUBLIC_TIERS below is the rule the pages use.
@@ -248,7 +248,7 @@ function sectionToText(html: string): string {
 
 /**
  * The summary both files open on. Every clause is checkable against a page: the
- * count is PUBLIC_DOORS, which is what the home page and /use-case count in
+ * count is PUBLIC_DOORS, which is what the home page and /services count in
  * words; the invoice sentence is on every row; and "no price" is the rule in
  * docs/doors.md that the agents' own prompts refuse to break.
  */
@@ -319,7 +319,7 @@ const NOT_HERE = [
    * public this sentence would be describing offers that do not exist. */
   DOORS.length > PUBLIC_DOORS.length
     ? bullet(
-        `More offers than the ${countWord(PUBLIC_DOORS.length)} listed. ${url("/use-case")} asks for an email ` +
+        `More offers than the ${countWord(PUBLIC_DOORS.length)} listed. ${url("/services")} asks for an email ` +
           "address before it names them, they are absent from sitemap.xml, and their pages are noindex — so a " +
           "file at the root does not name them either.",
       )
@@ -353,7 +353,7 @@ function shortIndex(): string {
     "## Pages",
     [
       `- [Home](${url("/")}): what the company does, the panel, and the index of the offers.`,
-      `- [The index](${url("/use-case")}): every offer above as one row, with the company that would invoice it.`,
+      `- [The index](${url("/services")}): every offer above as one row, with the company that would invoice it.`,
       `- [robots.txt](${url("/robots.txt")}): what crawlers are asked to leave alone.`,
       `- [sitemap.xml](${url("/sitemap.xml")}): the addresses handed to crawlers.`,
     ].join("\n"),

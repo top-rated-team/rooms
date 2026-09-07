@@ -102,7 +102,7 @@ export interface DoorTool {
 
 export interface DoorDef {
   id: string;
-  /** URL segment: /use-case/<slug>. Also the value handed to the room as its source door. */
+  /** URL segment: /services/<slug>. Also the value handed to the room as its source door. */
   slug: string;
   /** Where the door lives today. Only meaningful while `status` is "live". */
   path: string;
@@ -175,7 +175,7 @@ export const DOORS: DoorDef[] = [
      * The home page is now the landing for every door, so this one answers on
      * its own address like the other six and carries the conversion-tracking
      * pitch that used to be the home page. */
-    path: "/use-case/chatgpt-ads",
+    path: "/services/chatgpt-ads",
     initials: "CA",
     tone: "bg-primary/10 text-primary",
     headline: "Conversion tracking for ChatGPT Ads",
@@ -205,7 +205,7 @@ export const DOORS: DoorDef[] = [
   {
     id: "google-ads",
     slug: "google-ads",
-    path: "/use-case/google-ads",
+    path: "/services/google-ads",
     initials: "GA",
     tone: "bg-chart-1/10 text-chart-1",
     headline: "Google Ads management",
@@ -238,7 +238,7 @@ export const DOORS: DoorDef[] = [
   {
     id: "ad-grants",
     slug: "ad-grants",
-    path: "/use-case/ad-grants",
+    path: "/services/ad-grants",
     initials: "AG",
     tone: "bg-chart-2/10 text-chart-2",
     headline: "Google Ad Grants, set up through the official Google Ads API",
@@ -279,7 +279,7 @@ export const DOORS: DoorDef[] = [
   {
     id: "linkedin-ads",
     slug: "linkedin-ads",
-    path: "/use-case/linkedin-ads",
+    path: "/services/linkedin-ads",
     initials: "LA",
     tone: "bg-chart-5/10 text-chart-5",
     headline: "LinkedIn Ads for B2B",
@@ -310,7 +310,7 @@ export const DOORS: DoorDef[] = [
   {
     id: "linkedin-automation",
     slug: "linkedin-automation",
-    path: "/use-case/linkedin-automation",
+    path: "/services/linkedin-automation",
     initials: "LL",
     tone: "bg-chart-4/10 text-chart-4",
     headline: "LinkedIn automation — with a written legal assessment",
@@ -364,7 +364,7 @@ export const DOORS: DoorDef[] = [
   {
     id: "linkedin-growth",
     slug: "linkedin-growth",
-    path: "/use-case/linkedin-growth",
+    path: "/services/linkedin-growth",
     initials: "MK",
     // Deliberately not one of our brand tones: this row is not our company.
     tone: "bg-muted text-muted-foreground",
@@ -403,7 +403,7 @@ export const DOORS: DoorDef[] = [
   {
     id: "ai-builds",
     slug: "ai-builds",
-    path: "/use-case/ai-builds",
+    path: "/services/ai-builds",
     initials: "AB",
     tone: "bg-accent/10 text-accent",
     headline: "Custom AI builds",

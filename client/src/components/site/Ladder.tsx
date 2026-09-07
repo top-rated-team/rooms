@@ -140,7 +140,7 @@ export function BeforeYouBuy({ className = "" }: { className?: string }) {
  *
  * The partner row is in this list and carries no figure. It is a disclosure
  * rather than an offer — it names no company, so it withholds nothing the
- * email step on /use-case exists to withhold — and leaving it out would let the
+ * email step on /services exists to withhold — and leaving it out would let the
  * table imply that every row on the site is ours to price. It is not.
  */
 export function Ladder() {
