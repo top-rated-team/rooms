@@ -95,6 +95,7 @@ port, WebSockets on by default, deployed from a GitHub push.
    |---|---|
    | `NODE_ENV` | `production` |
    | `OPENAI_API_KEY` | the key |
+   | `ROOM_MONTHLY_BUDGET_USD` | `5` — dollars one room may spend on AI answers per month. Warned at 80%, stopped at 100%. Not optional: a value that is not a positive number falls back to 5 rather than removing the ceiling. |
    | `OPENAI_CHAT_MODEL` | `gpt-5-mini` |
    | `OPENAI_EMBED_MODEL` | `text-embedding-3-small` |
    | `DATABASE_URL` | the Neon connection string, or leave unset and accept in-memory |

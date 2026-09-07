@@ -43,7 +43,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">Twelve of them. Copy one, paste it into a fresh agent, and that is the whole job.
+  <p class="lede">14 of them. Copy one, paste it into a fresh agent, and that is the whole job.
   Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -459,7 +459,7 @@ WHEN YOU FINISH, report exactly this:
     </section>
     <section class="wave">
       <h2>Wave 3</h2>
-      <p class="waveNote">Start these 2 together. When all 2 have reported, run the two commands, then go to the next wave.</p>
+      <p class="waveNote">Start these 3 together. When all 3 have reported, run the two commands, then go to the next wave.</p>
       <article class="parcel">
         <header>
           <h3>door-ai-builds</h3>
@@ -579,9 +579,208 @@ WHEN YOU FINISH, report exactly this:
   3. Every handoff.
   4. The output of `npm run verify`.</pre>
       </article>
+      <article class="parcel">
+        <header>
+          <h3>identity-in-the-room</h3>
+          <button class="copy" data-target="p-identity-in-the-room">Copy this prompt</button>
+        </header>
+        <p class="what">The rail and the message list draw no mark of any kind today — only names.</p>
+        <pre id="p-identity-in-the-room">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "identity-in-the-room".
+
+Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  client/src/components/workspace/Avatar.tsx
+  client/src/components/workspace/MemberRail.tsx
+  client/src/components/workspace/MessageItem.tsx
+  client/src/components/workspace/AgentMark.tsx
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  shared/roster.ts
+      - an optional `photo?: string` on ExpertDef, set only for the people whose real photograph is in client/public/assets/people/
+      - an optional `mark?: string` on AgentDef naming this agent's glyph
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  TWO KINDS OF THING, drawn differently on purpose, so a person and a piece of software are
+  never mistaken for each other without a legend. PEOPLE. A real photograph or two letters of
+  ink, and NOTHING IN BETWEEN. Read the photographs from client/public/assets/people/&lt;id&gt;.jpg
+  for the four ids in EXPERTS (ihor, dan, julia, bohdan) and set `photo` only for the files that
+  are actually there. A person with no file keeps the monogram Avatar.tsx already draws. DO NOT
+  generate, source, illustrate or otherwise invent a likeness for anybody, and do not add a
+  silhouette placeholder that reads as a photograph of a person. The rail prints an
+  accountability line under each name saying who pays whom and who signs the contract; a face
+  beside that line is part of a record, and a face of somebody who does not exist makes it a
+  false one. A room showing two photographs and two monograms is honest, not unfinished — say so
+  in your report rather than filling the gap. AGENTS. A mark, not a logo. One geometric glyph
+  per agent, drawn as inline SVG in AgentMark.tsx at the same stroke weight as the door
+  illustration in components/site/home/Plate.tsx, monochrome, currentColor only. No fill, no
+  colour, no rounded chip, no gradient, nothing that reads as a brand: these nine are our own
+  software, and a logo implies a vendor you could buy separately. Nine coloured badges in one
+  rail would be the loudest object in the room, which is the badge row the redesign deleted.
+  Distinguish them by geometry rather than by hue — the difference between the Google Ads agent
+  and the Ad Grants agent has to survive being printed in one ink at 20 pixels. Fall back to the
+  agent's existing initials when it has no mark yet. WHERE THEY GO. The member rail, and the
+  message list beside each author. Keep everything the rail already says in words: the six
+  badges, the accountability lines, the sentence about nobody watching until somebody is asked.
+  A mark is added beside those, never instead of them. Presence is still not drawn and must stay
+  that way: every member is written 'online' at seed time and no code path ever changes it, so a
+  dot beside a face would claim four people are watching a room nobody has been told about. The
+  comment at the top of Avatar.tsx explains it — read it before you touch PresenceDot. EVIDENCE.
+  There is no client test runner, so this parcel owes a rendered check instead: open a room at
+  both widths and in both themes, and report what a person with a photo, a person without one,
+  and an agent each look like beside their accountability line. Say what the rail looks like
+  when NONE of the four photographs exist, because that is what it looks like today. THE
+  ACCOUNTABILITY LINE, on the owner's instruction: it is too heavy as a line under every single
+  name. Quieten it WITHOUT hiding what a person needs in order to know who they are dealing
+  with: - Keep it visible when it says something a reader would not assume — a member paid by a
+  different company, anyone on somebody else's door, any line naming a party other than us. That
+  is a disclosure, not furniture. - Collapse it to on demand for the ordinary case, our own
+  people in our own room, where it repeats what the room already says. - NOT hover-only. A hover
+  does not exist on a phone, and this is the one thing in the room a person may need on a phone.
+  Make it a press or a tap that stays open, reachable by keyboard, with the text in the DOM so
+  it can be selected and copied. Report what the rail looks like in both states, and confirm
+  that no line naming another company is behind an interaction.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  The rail and the message list draw no mark of any kind today — only names. The redesign
+  removed the coloured squares because their colour was a legend nobody had, and it removed them
+  everywhere rather than replacing them. The owner's reading is right: on the site a face is
+  decoration, but in a room who is present IS the content, because the room's whole argument is
+  about who is answerable for what. Identity is the one thing that has earned visual weight in
+  here.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
     </section>
     <section class="wave">
-      <h2>Wave 4 — this one runs alone</h2>
+      <h2>Wave 4</h2>
+      <p class="waveNote">Start these 1 together. When all 1 have reported, run the two commands, then go to the next wave.</p>
+      <article class="parcel">
+        <header>
+          <h3>rented-accounts-inventory</h3>
+          <button class="copy" data-target="p-rented-accounts-inventory">Copy this prompt</button>
+        </header>
+        <p class="what">Whoever runs a boosting engagement needs to know what capacity exists and what state each unit is in — live, restricted, under appeal, rental ending.</p>
+        <pre id="p-rented-accounts-inventory">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "rented-accounts-inventory".
+
+Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  server/flygen.ts
+  server/flygen.test.ts
+  client/src/components/workspace/AccountsPanel.tsx
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  server/routes.ts
+      - one read-only route serving the account list to a room
+  shared/api.ts
+      - one type for a rented account as the room sees it
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  THEY ARE CALLED BOOSTERS, AND THEY ARE CAPACITY, NOT PEOPLE. Never a room member: no avatar,
+  no badge, no presence, no entry in the member rail or the @mention list. A separate panel that
+  reads like an inventory. The reason is in our own contract — terms.tsx section 6 says a rented
+  account "is not your employee, your colleague, or a person endorsing you, and you should not
+  describe it as one" — and the member rail prints who pays whom under every name, so an account
+  listed there tells a client a person is on their team when none is. NAMING. A stable call sign
+  per booster, assigned from a fixed list and never regenerated: `Booster 03 · Basalt`. Numbers
+  for order, one call sign for recall. Draw the call signs from a register of THINGS — minerals,
+  stars, weather, rivers — and NOT from people's names, actors, or characters. Two reasons, and
+  the first is the load-bearing one. The API's `name` field is the real name of the real person
+  whose account is rented. It is third-party personal data and it must never reach a room, a log
+  or a client: this is the same rule Top-Voice's MEMBER_DATA_EXPORT switch exists to enforce. A
+  call sign is what makes that possible while keeping the unit recognisable. The second: a
+  human-sounding label recreates the exact confusion the panel exists to avoid. "Vito Corleone"
+  in a room reads as a colleague; "Booster 03 · Basalt" cannot. A famous person's name also
+  attaches a living individual to an account-rental operation without their knowledge. Map the
+  call sign from the account id deterministically, so the same booster keeps the same name
+  across restarts and no mapping has to be stored. WHAT MAY LEAVE THE SERVER — an allowlist, not
+  a blocklist, so a field flygen adds later cannot leak by default. The room sees exactly: the
+  call sign, the number, the state, the proxy's `location` (a country code, which is
+  operationally useful and identifies nobody), and the rental end date if the API ever exposes
+  one. Dropped in server/flygen.ts before anything else touches the object: `name`, `email`,
+  `password`, `twoFactorSecret`, `twoFactorSecretExpirationTime`, `description`, and the whole
+  `proxy` object except `location`. Build the projection by naming the fields you keep — never
+  by deleting the ones you don't. NEVER PERSIST THE RAW RESPONSE. Not to the database, not to a
+  file, not to a log, not in an error. The rate limit is 20 requests per minute, so a cache is
+  needed — cache the REDACTED projection only, and let the raw response go out of scope in the
+  same function that fetched it. A cached password is a stored password. READ-ONLY. Fetch and
+  display. This parcel does not rent, release, sign in, appeal, retry, or compute a TOTP code,
+  and it exposes no route that could. The docs explain how to generate 2FA codes; that is not
+  this parcel's business and no code for it belongs here. TESTS, server-side and therefore
+  mandatory: - the projection carries none of the seven dropped fields, asserted field by field
+  against a fixture shaped like the documented response, with obviously-fake credentials in it;
+  - a booster never appears in the members list or the mention list; - the same account id
+  always yields the same call sign; - a 401, a 429 and a timeout each render the panel as "not
+  available" rather than as an empty inventory — an empty list reads as "no boosters", which is
+  a different fact from "we could not ask"; - the API key appears in no response body and no
+  thrown error.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  Whoever runs a boosting engagement needs to know what capacity exists and what state each unit
+  is in — live, restricted, under appeal, rental ending. The Top-Voice contract now commits us
+  to appealing a restriction and replacing the account if the appeal fails, and the room is
+  where that sequence should be visible to the person managing it.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+    </section>
+    <section class="wave">
+      <h2>Wave 5 — this one runs alone</h2>
       <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
       <article class="parcel">
         <header>
@@ -597,13 +796,10 @@ Then read three files next to the ones you are about to change.
 WHAT YOU OWN. These files, and nothing else in the repository:
   client/src/pages/workspace.tsx
   client/src/components/workspace/AdGrantPanel.tsx
-  client/src/components/workspace/Avatar.tsx
   client/src/components/workspace/ChannelHeader.tsx
   client/src/components/workspace/Composer.tsx
   client/src/components/workspace/InviteExpertDialog.tsx
   client/src/components/workspace/Markdown.tsx
-  client/src/components/workspace/MemberRail.tsx
-  client/src/components/workspace/MessageItem.tsx
   client/src/components/workspace/MessageList.tsx
   client/src/components/workspace/NewChannelDialog.tsx
   client/src/components/workspace/RoomArrival.tsx
@@ -662,7 +858,7 @@ WHEN YOU FINISH, report exactly this:
       </article>
     </section>
     <section class="wave">
-      <h2>Wave 5 — this one runs alone</h2>
+      <h2>Wave 6 — this one runs alone</h2>
       <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
       <article class="parcel">
         <header>
@@ -727,7 +923,7 @@ WHEN YOU FINISH, report exactly this:
       </article>
     </section>
     <section class="wave">
-      <h2>Wave 6 — this one runs alone</h2>
+      <h2>Wave 7 — this one runs alone</h2>
       <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
       <article class="parcel">
         <header>
@@ -788,7 +984,7 @@ WHEN YOU FINISH, report exactly this:
       </article>
     </section>
     <section class="wave">
-      <h2>Wave 7 — this one runs alone</h2>
+      <h2>Wave 8 — this one runs alone</h2>
       <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
       <article class="parcel">
         <header>

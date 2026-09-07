@@ -4,10 +4,10 @@
 >
 > ```bash
 > node scripts/build-prompts.mjs        # writes docs/prompts.html — open it, press Copy
-> node scripts/build-prompts.mjs --text # or print all twelve to the terminal
+> node scripts/build-prompts.mjs --text # or print them all to the terminal
 > ```
 >
-> That gives you twelve finished prompts, one per parcel, each already naming the
+> That gives you one finished prompt per parcel, each already naming the
 > exact files that parcel owns. Copy one, paste it into a fresh agent, done.
 >
 > This file is the reasoning behind them. You do not need it to start a run.

@@ -15,11 +15,12 @@ const REPO = "~/Documents/ChatGPT Ads";
 const WAVES = [
   { n: 1, keys: ["spend-limits", "door-linkedin-ads", "favicon-and-social"] },
   { n: 2, keys: ["door-linkedin-automation", "llms-txt", "legal-name-display"] },
-  { n: 3, keys: ["door-ai-builds", "payment-link"] },
-  { n: 4, keys: ["room"], alone: true },
-  { n: 5, keys: ["outside-agent"], alone: true },
-  { n: 6, keys: ["approval-card"], alone: true },
-  { n: 7, keys: ["recurring-and-digest"], alone: true },
+  { n: 3, keys: ["door-ai-builds", "payment-link", "identity-in-the-room"] },
+  { n: 4, keys: ["rented-accounts-inventory"] },
+  { n: 5, keys: ["room"], alone: true },
+  { n: 6, keys: ["outside-agent"], alone: true },
+  { n: 7, keys: ["approval-card"], alone: true },
+  { n: 8, keys: ["recurring-and-digest"], alone: true },
 ];
 
 function prompt(key) {
@@ -140,6 +141,7 @@ fs.writeFileSync("docs/prompts.html", page(waveHtml));
 console.log(`docs/prompts.html — ${WAVES.reduce((n, w) => n + w.keys.length, 0)} prompts in ${WAVES.length} waves`);
 
 function page(body) {
+  const TOTAL = WAVES.reduce((n, w) => n + w.keys.length, 0);
   return `<title>Prompts to Paste</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -185,7 +187,7 @@ function page(body) {
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">Twelve of them. Copy one, paste it into a fresh agent, and that is the whole job.
+  <p class="lede">${TOTAL} of them. Copy one, paste it into a fresh agent, and that is the whole job.
   Nothing on this page needs reading twice.</p>
 
   <ol class="steps">

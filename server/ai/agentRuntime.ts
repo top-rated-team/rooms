@@ -40,6 +40,7 @@ export interface AgentStreamChunk {
   delta?: string;
   citations?: Citation[];
   error?: string;
+  usage?: { model: string; promptTokens: number; completionTokens: number };
 }
 
 export interface AgentTurn {
@@ -121,6 +122,7 @@ export async function* streamAgentAnswer(opts: AgentTurn): AsyncGenerator<AgentS
           yield { delta };
         }
         if (choice?.finish_reason) finishReason = choice.finish_reason;
+        if (chunk.usage) yield { usage: { model: opened.model, promptTokens: chunk.usage.prompt_tokens, completionTokens: chunk.usage.completion_tokens } };
       }
     } catch (err) {
       const failure = classifyLlmError(err, opened.model);
@@ -196,6 +198,7 @@ function create(
     model,
     messages,
     stream: true,
+    stream_options: { include_usage: true },
     // `max_tokens` is deprecated and gpt-5* rejects it outright.
     max_completion_tokens: MAX_COMPLETION_TOKENS,
   };
