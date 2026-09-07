@@ -146,7 +146,7 @@ export interface DoorDef {
 /** Doors 1-5 and 7. One company, one contract, one invoice. */
 const TOP_RATED_TEAM: DoorContract = {
   legalName: "Top-Rated Team (Danylo Burykin SZČO)",
-  entity: "The company that runs top-rated.team, with people in Prague, Kyiv and Madeira.",
+  entity: "The company that runs top-rated.team, with people in Prague, Madeira, Kyiv, Bratislava and Batumi.",
   termsUrl: `${MAIN_SITE_URL}/terms`,
   invoiceLine: "Top-Rated Team (Danylo Burykin SZČO) signs the contract and sends the invoice.",
   contact: `${MAIN_SITE_URL}/contact`,
@@ -166,7 +166,7 @@ export const DOORS: DoorDef[] = [
     tone: "bg-primary/10 text-primary",
     headline: "Conversion tracking for ChatGPT Ads",
     blurb:
-      "The one part of paid ads an API still can't finish for you. Pixel, Conversions API, deduplication and consent — installed on your real site, verified against live conversions, and documented before we hand it back.",
+      "The one part of paid ads any AI agent still can't finish for you. Pixel, Conversions API, deduplication and consent — installed on your real site, verified against live conversions, and documented before we hand it back.",
     firstAgentId: "chatgpt-ads",
     agentLine: "The ChatGPT Ads Agent answers first, from developers.openai.com/ads, and cites the page it used.",
     starters: [

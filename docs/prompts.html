@@ -43,7 +43,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">16 of them. Copy one, paste it into a fresh agent, and that is the whole job.
+  <p class="lede">17 of them. Copy one, paste it into a fresh agent, and that is the whole job.
   Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -610,25 +610,28 @@ WHEN YOU FINISH, report exactly this:
       </article>
       <article class="parcel">
         <header>
-          <h3>identity-in-the-room</h3>
-          <button class="copy" data-target="p-identity-in-the-room">Copy this prompt</button>
+          <h3>door-ad-grants-adgrant-ai</h3>
+          <button class="copy" data-target="p-door-ad-grants-adgrant-ai">Copy this prompt</button>
         </header>
-        <p class="what">The rail and the message list draw no mark of any kind today — only names.</p>
-        <pre id="p-identity-in-the-room">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "identity-in-the-room".
+        <p class="what">The owner asked for a variation of this site's style on the Ad Grants door, because AdGrant.AI exists today as a separate site with its own logo and 74 pages of its own material.</p>
+        <pre id="p-door-ad-grants-adgrant-ai">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "door-ad-grants-adgrant-ai".
 
 Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
 Then read three files next to the ones you are about to change.
 
 WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/components/workspace/Avatar.tsx
-  client/src/components/workspace/MemberRail.tsx
-  client/src/components/workspace/MessageItem.tsx
-  client/src/components/workspace/AgentMark.tsx
+  client/src/components/site/doors/AdGrantDoor.tsx
+  client/src/components/site/doors/adgrant-style.ts
+  data/kb/kb.adgrant-ai.json
+  server/ai/adgrant-corpus.test.ts
 
 SHARED FILES YOU MAY TOUCH, and only in the way described:
-  shared/roster.ts
-      - an optional `photo?: string` on ExpertDef, set only for the people whose real photograph is in client/public/assets/people/
-      - an optional `mark?: string` on AgentDef naming this agent's glyph
+  shared/doors.ts
+      - the ad-grants row: its own mark, and a second namespace for our own material
+  client/src/App.tsx
+      - routes for the library pages, if the owner chooses to fold adgrant.ai in
+  scripts/build-kb.ts
+      - one Corpus const for our own AdGrant material, and its name on the CORPORA line
 
 Add to those, never delete from them. Other agents are editing the same files right now.
 
@@ -639,53 +642,40 @@ NEVER EDIT THESE, whatever the reason:
   client/src/index.css
 
 WHAT DONE MEANS FOR THIS PARCEL:
-  TWO KINDS OF THING, drawn differently on purpose, so a person and a piece of software are
-  never mistaken for each other without a legend. PEOPLE. A real photograph or two letters of
-  ink, and NOTHING IN BETWEEN. Read the photographs from client/public/assets/people/&lt;id&gt;.jpg
-  for the four ids in EXPERTS (ihor, dan, julia, bohdan) and set `photo` only for the files that
-  are actually there. A person with no file keeps the monogram Avatar.tsx already draws. DO NOT
-  generate, source, illustrate or otherwise invent a likeness for anybody, and do not add a
-  silhouette placeholder that reads as a photograph of a person. The rail prints an
-  accountability line under each name saying who pays whom and who signs the contract; a face
-  beside that line is part of a record, and a face of somebody who does not exist makes it a
-  false one. A room showing two photographs and two monograms is honest, not unfinished — say so
-  in your report rather than filling the gap. AGENTS. A mark, not a logo. One geometric glyph
-  per agent, drawn as inline SVG in AgentMark.tsx at the same stroke weight as the door
-  illustration in components/site/home/Plate.tsx, monochrome, currentColor only. No fill, no
-  colour, no rounded chip, no gradient, nothing that reads as a brand: these nine are our own
-  software, and a logo implies a vendor you could buy separately. Nine coloured badges in one
-  rail would be the loudest object in the room, which is the badge row the redesign deleted.
-  Distinguish them by geometry rather than by hue — the difference between the Google Ads agent
-  and the Ad Grants agent has to survive being printed in one ink at 20 pixels. Fall back to the
-  agent's existing initials when it has no mark yet. WHERE THEY GO. The member rail, and the
-  message list beside each author. Keep everything the rail already says in words: the six
-  badges, the accountability lines, the sentence about nobody watching until somebody is asked.
-  A mark is added beside those, never instead of them. Presence is still not drawn and must stay
-  that way: every member is written 'online' at seed time and no code path ever changes it, so a
-  dot beside a face would claim four people are watching a room nobody has been told about. The
-  comment at the top of Avatar.tsx explains it — read it before you touch PresenceDot. EVIDENCE.
-  There is no client test runner, so this parcel owes a rendered check instead: open a room at
-  both widths and in both themes, and report what a person with a photo, a person without one,
-  and an agent each look like beside their accountability line. Say what the rail looks like
-  when NONE of the four photographs exist, because that is what it looks like today. THE
-  ACCOUNTABILITY LINE, on the owner's instruction: it is too heavy as a line under every single
-  name. Quieten it WITHOUT hiding what a person needs in order to know who they are dealing
-  with: - Keep it visible when it says something a reader would not assume — a member paid by a
-  different company, anyone on somebody else's door, any line naming a party other than us. That
-  is a disclosure, not furniture. - Collapse it to on demand for the ordinary case, our own
-  people in our own room, where it repeats what the room already says. - NOT hover-only. A hover
-  does not exist on a phone, and this is the one thing in the room a person may need on a phone.
-  Make it a press or a tap that stays open, reachable by keyboard, with the text in the DOM so
-  it can be selected and copied. Report what the rail looks like in both states, and confirm
-  that no line naming another company is behind an interaction.
+  ONE DECISION IS THE OWNER'S AND IS NOT YOURS TO MAKE. State it in your report and build the
+  half that does not depend on it. Does adgrant.ai stay a separate site, or fold into
+  /use-case/ad-grants? It matters because those 74 URLs are indexed. Copying the material to a
+  second domain creates two copies of the same pages competing with each other, which costs both
+  of them. Folding it in means 301s from 74 addresses and adgrant.ai becoming a redirect.
+  Leaving it means the door LINKS to the library rather than containing it. Do not guess: the
+  wrong answer loses search traffic that already exists. BUILD REGARDLESS OF THAT ANSWER: A
+  VARIATION OF THE STYLE, and variation has a precise meaning here. Keep the type scale, the
+  spacing scale, the layout and the token names exactly as they are. The variation is ONE accent
+  token, overridden on this door only, plus AdGrant.AI's own wordmark. That is how a sub-brand
+  signals itself inside a system without eroding it. Do NOT introduce a second font, a second
+  spacing scale, cards, gradients, or a second colour anywhere else on the page — a design whose
+  whole argument is that it has almost no colour cannot survive one page deciding otherwise. SAY
+  WHAT THE TOOL ACTUALLY DOES, in the door's own plain voice: it needs a Google Ad Grant the
+  nonprofit already holds (and says so, and offers help getting one if not), it takes a website
+  URL and a Customer ID, the LinkedIn sign-in exists ONLY to cap free generations and reads only
+  the profile URL — say that in those terms, because a sign-in that is not explained reads as a
+  data grab — and it writes a full account structure the nonprofit can review before anything
+  runs. OUR OWN MATERIAL GETS ITS OWN NAMESPACE, and this is the load-bearing constraint. The
+  ad-grants corpus is Google's own documentation, 257 chunks from support.google.com, and
+  docs/doors.md states the rule: put an agency's opinion in it and the agent cites the agency's
+  opinion AS GOOGLE'S RULE. Case studies, templates, tricks and vertical pages are our claims,
+  not Google's. So they go in kb.adgrant-ai.json under their own namespace, and the door's agent
+  must attribute them differently in its answers — Google's documentation is what the platform
+  requires, ours is what we have found works. A test asserts no chunk from our corpus carries a
+  support.google.com URL and no chunk from Google's carries an adgrant.ai one. THE TRADEMARK,
+  flagged and not fixed by you: adgrant.ai's page title is "Google® Ad Grant AI". Using another
+  company's registered mark in a product title is the owner's call and possibly his lawyer's. Do
+  not copy it into this door and do not remove it from adgrant.ai. Name it in your report.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
-  The rail and the message list draw no mark of any kind today — only names. The redesign
-  removed the coloured squares because their colour was a legend nobody had, and it removed them
-  everywhere rather than replacing them. The owner's reading is right: on the site a face is
-  decoration, but in a room who is present IS the content, because the room's whole argument is
-  about who is answerable for what. Identity is the one thing that has earned visual weight in
-  here.
+  The owner asked for a variation of this site's style on the Ad Grants door, because AdGrant.AI
+  exists today as a separate site with its own logo and 74 pages of its own material. The door
+  currently describes the tool in one sentence and shows none of it.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.
@@ -809,23 +799,25 @@ WHEN YOU FINISH, report exactly this:
       </article>
       <article class="parcel">
         <header>
-          <h3>payment-link</h3>
-          <button class="copy" data-target="p-payment-link">Copy this prompt</button>
+          <h3>identity-in-the-room</h3>
+          <button class="copy" data-target="p-identity-in-the-room">Copy this prompt</button>
         </header>
-        <p class="what">A client can be talked to, briefed and matched with a person, and then has to be invoiced by hand outside the site.</p>
-        <pre id="p-payment-link">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "payment-link".
+        <p class="what">The rail and the message list draw no mark of any kind today — only names.</p>
+        <pre id="p-identity-in-the-room">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "identity-in-the-room".
 
 Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
 Then read three files next to the ones you are about to change.
 
 WHAT YOU OWN. These files, and nothing else in the repository:
-  server/payments.ts
-  server/payments.test.ts
-  client/src/components/workspace/PriceCard.tsx
+  client/src/components/workspace/Avatar.tsx
+  client/src/components/workspace/MemberRail.tsx
+  client/src/components/workspace/MessageItem.tsx
+  client/src/components/workspace/AgentMark.tsx
 
 SHARED FILES YOU MAY TOUCH, and only in the way described:
-  shared/api.ts
-      - one price type
+  shared/roster.ts
+      - an optional `photo?: string` on ExpertDef, set only for the people whose real photograph is in client/public/assets/people/
+      - an optional `mark?: string` on AgentDef naming this agent's glyph
 
 Add to those, never delete from them. Other agents are editing the same files right now.
 
@@ -836,14 +828,53 @@ NEVER EDIT THESE, whatever the reason:
   client/src/index.css
 
 WHAT DONE MEANS FOR THIS PARCEL:
-  A price can be put in a thread and paid, and the room records that it was. No pricing page, no
-  plans, no subscription machinery. The money flow is the owner's: the expert invoices the
-  client for the work, and Top-Rated Team invoices its own fee separately — so a price card must
-  be able to say whose price it is.
+  TWO KINDS OF THING, drawn differently on purpose, so a person and a piece of software are
+  never mistaken for each other without a legend. PEOPLE. A real photograph or two letters of
+  ink, and NOTHING IN BETWEEN. Read the photographs from client/public/assets/people/&lt;id&gt;.jpg
+  for the four ids in EXPERTS (ihor, dan, julia, bohdan) and set `photo` only for the files that
+  are actually there. A person with no file keeps the monogram Avatar.tsx already draws. DO NOT
+  generate, source, illustrate or otherwise invent a likeness for anybody, and do not add a
+  silhouette placeholder that reads as a photograph of a person. The rail prints an
+  accountability line under each name saying who pays whom and who signs the contract; a face
+  beside that line is part of a record, and a face of somebody who does not exist makes it a
+  false one. A room showing two photographs and two monograms is honest, not unfinished — say so
+  in your report rather than filling the gap. AGENTS. A mark, not a logo. One geometric glyph
+  per agent, drawn as inline SVG in AgentMark.tsx at the same stroke weight as the door
+  illustration in components/site/home/Plate.tsx, monochrome, currentColor only. No fill, no
+  colour, no rounded chip, no gradient, nothing that reads as a brand: these nine are our own
+  software, and a logo implies a vendor you could buy separately. Nine coloured badges in one
+  rail would be the loudest object in the room, which is the badge row the redesign deleted.
+  Distinguish them by geometry rather than by hue — the difference between the Google Ads agent
+  and the Ad Grants agent has to survive being printed in one ink at 20 pixels. Fall back to the
+  agent's existing initials when it has no mark yet. WHERE THEY GO. The member rail, and the
+  message list beside each author. Keep everything the rail already says in words: the six
+  badges, the accountability lines, the sentence about nobody watching until somebody is asked.
+  A mark is added beside those, never instead of them. Presence is still not drawn and must stay
+  that way: every member is written 'online' at seed time and no code path ever changes it, so a
+  dot beside a face would claim four people are watching a room nobody has been told about. The
+  comment at the top of Avatar.tsx explains it — read it before you touch PresenceDot. EVIDENCE.
+  There is no client test runner, so this parcel owes a rendered check instead: open a room at
+  both widths and in both themes, and report what a person with a photo, a person without one,
+  and an agent each look like beside their accountability line. Say what the rail looks like
+  when NONE of the four photographs exist, because that is what it looks like today. THE
+  ACCOUNTABILITY LINE, on the owner's instruction: it is too heavy as a line under every single
+  name. Quieten it WITHOUT hiding what a person needs in order to know who they are dealing
+  with: - Keep it visible when it says something a reader would not assume — a member paid by a
+  different company, anyone on somebody else's door, any line naming a party other than us. That
+  is a disclosure, not furniture. - Collapse it to on demand for the ordinary case, our own
+  people in our own room, where it repeats what the room already says. - NOT hover-only. A hover
+  does not exist on a phone, and this is the one thing in the room a person may need on a phone.
+  Make it a press or a tap that stays open, reachable by keyboard, with the text in the DOM so
+  it can be selected and copied. Report what the rail looks like in both states, and confirm
+  that no line naming another company is behind an interaction.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
-  A client can be talked to, briefed and matched with a person, and then has to be invoiced by
-  hand outside the site.
+  The rail and the message list draw no mark of any kind today — only names. The redesign
+  removed the coloured squares because their colour was a legend nobody had, and it removed them
+  everywhere rather than replacing them. The owner's reading is right: on the site a face is
+  decoration, but in a room who is present IS the content, because the room's whole argument is
+  about who is answerable for what. Identity is the one thing that has earned visual weight in
+  here.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.
@@ -948,7 +979,69 @@ WHEN YOU FINISH, report exactly this:
       </article>
     </section>
     <section class="wave">
-      <h2>Wave 5 — this one runs alone</h2>
+      <h2>Wave 5</h2>
+      <p class="waveNote">Start these 1 together. When all 1 have reported, run the two commands, then go to the next wave.</p>
+      <article class="parcel">
+        <header>
+          <h3>payment-link</h3>
+          <button class="copy" data-target="p-payment-link">Copy this prompt</button>
+        </header>
+        <p class="what">A client can be talked to, briefed and matched with a person, and then has to be invoiced by hand outside the site.</p>
+        <pre id="p-payment-link">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "payment-link".
+
+Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  server/payments.ts
+  server/payments.test.ts
+  client/src/components/workspace/PriceCard.tsx
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  shared/api.ts
+      - one price type
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  A price can be put in a thread and paid, and the room records that it was. No pricing page, no
+  plans, no subscription machinery. The money flow is the owner's: the expert invoices the
+  client for the work, and Top-Rated Team invoices its own fee separately — so a price card must
+  be able to say whose price it is.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  A client can be talked to, briefed and matched with a person, and then has to be invoiced by
+  hand outside the site.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+    </section>
+    <section class="wave">
+      <h2>Wave 6 — this one runs alone</h2>
       <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
       <article class="parcel">
         <header>
@@ -1026,7 +1119,7 @@ WHEN YOU FINISH, report exactly this:
       </article>
     </section>
     <section class="wave">
-      <h2>Wave 6 — this one runs alone</h2>
+      <h2>Wave 7 — this one runs alone</h2>
       <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
       <article class="parcel">
         <header>
@@ -1091,7 +1184,7 @@ WHEN YOU FINISH, report exactly this:
       </article>
     </section>
     <section class="wave">
-      <h2>Wave 7 — this one runs alone</h2>
+      <h2>Wave 8 — this one runs alone</h2>
       <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
       <article class="parcel">
         <header>
@@ -1152,7 +1245,7 @@ WHEN YOU FINISH, report exactly this:
       </article>
     </section>
     <section class="wave">
-      <h2>Wave 8 — this one runs alone</h2>
+      <h2>Wave 9 — this one runs alone</h2>
       <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
       <article class="parcel">
         <header>
