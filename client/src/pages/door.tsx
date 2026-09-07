@@ -33,6 +33,7 @@ import { isPublicDoor } from "@/components/site/GatedOffers";
 import Header from "@/components/site/Header";
 import KeepStrip from "@/components/site/KeepStrip";
 import TalkToUs from "@/components/site/TalkToUs";
+import { DoorCases } from "@/components/site/Cases";
 import { DoorPrice } from "@/components/site/Ladder";
 import { collectSource } from "@/components/site/LeadDialog";
 import { usePanelState, type CreateRoomResult } from "@/hooks/use-panel-state";
@@ -611,6 +612,11 @@ function DoorPage({ door }: { door: DoorDef }) {
             filter somebody has to keep correct. It prints BeforeYouBuy itself —
             the call and the two Upwork profiles — so this page must not add a
             second one, which it briefly did. */}
+        {/* This door's own cases, derived from each case's text rather than
+            assigned — so a case cannot appear under a door it says nothing
+            about. Five doors have none and render nothing here. */}
+        <DoorCases doorId={door.id} />
+
         <DoorPrice door={door} />
       </main>
 

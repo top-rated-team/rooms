@@ -2,8 +2,9 @@ import { useEffect } from "react";
 
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
-import Results from "@/components/site/home/Results";
+import AllCases from "@/components/site/Cases";
 import TalkToUs from "@/components/site/TalkToUs";
+import { CASES } from "@shared/cases";
 import { MAIN_SITE_URL } from "@shared/roster";
 import { LINK, META, PAGE, READ_MUTED } from "@/components/site/doors/quiet";
 
@@ -27,7 +28,7 @@ import { LINK, META, PAGE, READ_MUTED } from "@/components/site/doors/quiet";
 
 const TITLE = "Cases — Top-Rated Team";
 const DESCRIPTION =
-  "Two paid ads accounts and what changed in them: +180% conversion growth on offline conversions only, and +477% with cost per conversion down 81% after the measurement was fixed.";
+  "Twenty-two paid ads accounts and what changed in them: the challenge, the objective, the work as it was listed, and the result metrics with their percentage changes.";
 
 export default function CaseStudies() {
   useEffect(() => {
@@ -48,19 +49,20 @@ export default function CaseStudies() {
         <section className={`${PAGE} pt-[var(--s5)]`}>
           <p className={META}>Cases</p>
           <h1 className="type-display m-0 mt-[var(--s2)]" data-testid="text-cases-headline">
-            Two accounts, and what the measurement did to them.
+            {CASES.length} accounts, and what was actually done in them.
           </h1>
           <p className={`mt-[var(--s3)] max-w-[62ch] ${READ_MUTED}`}>
-            Both are Google Ads accounts, and both moved because the measurement under them was wrong before anything
-            was optimised. That is the same order of work the free audit starts with.
+            Each one reads the same way: what was wrong, what it had to do, what was done — as the list it was — and
+            then the numbers. The list is the part worth reading. Percentages on their own only prove somebody is
+            willing to print percentages.
           </p>
         </section>
 
-        <Results />
+        <AllCases />
 
         <section className={`${PAGE} pt-[var(--s5)]`}>
           <p className={READ_MUTED}>
-            More of them, written up at length, are on{" "}
+            That is all of them, not a selection. They are also the ones published on{" "}
             <a
               href={`${MAIN_SITE_URL}/case-studies`}
               target="_blank"
@@ -70,7 +72,7 @@ export default function CaseStudies() {
             >
               top-rated.team
             </a>
-            , until that page moves here.
+            , which is where the figures come from — no case here was written for this page.
           </p>
         </section>
 
