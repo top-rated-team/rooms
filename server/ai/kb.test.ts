@@ -76,8 +76,8 @@ const PROBES: Record<string, string[]> = {
     "How do I upload offline conversions through the Google Ads API?",
   ],
   "ad-grants": [
-    "Our Ad Grants account was deactivated over the 5% click-through rate requirement.",
-    "What does the Ad Grants account management policy require for conversion tracking?",
+    "Our Ad Grant account was deactivated over the 5% click-through rate requirement.",
+    "What does the Ad Grant account management policy require for conversion tracking?",
     "What does a manager account link let an Ad Grants agency do, and can we remove it?",
   ],
   "linkedin-ads": [

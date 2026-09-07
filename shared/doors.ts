@@ -190,6 +190,46 @@ const TOP_RATED_TEAM: DoorContract = {
 
 export const DOORS: DoorDef[] = [
   {
+    /*
+     * THE FRONT DOOR, and it is free.
+     *
+     * The market's situation this year, in one sentence: advertisers handed
+     * their accounts to the platforms' own automation and to agents they added
+     * themselves, and are now living with what those did. Everybody credible is
+     * doing repair work, us included. So the first thing offered here is a look
+     * rather than a sale — and it is free with no condition, because a condition
+     * on a free audit is what makes people distrust free audits.
+     *
+     * It has no corpus and no agent of its own on purpose. An audit is a person
+     * opening an account they can see, and there is no documentation that
+     * answers "what did the automation do to yours". The agent question here
+     * would be the one thing this door must not do: guess at an account it
+     * cannot open.
+     */
+    id: "paid-ads-audit",
+    slug: "paid-ads-audit",
+    path: "/services/paid-ads-audit",
+    initials: "AU",
+    tone: "bg-primary/10 text-primary",
+    headline: "Free expert audit of your paid ads accounts",
+    blurb:
+      "A person reads your Google Ads, LinkedIn Ads or Meta account and tells you what the automation in it has actually been doing. Most accounts we open have been run by the platform's own bidding and by agents somebody added, and are now optimising against something nobody chose. You get what we found either way, and there is nothing to sign to get it.",
+    firstAgentId: null,
+    agentLine:
+      "No agent answers first in this door, and that is the point: an audit is a person opening an account they can see. No documentation can say what the automation did to yours, so nothing here will guess at it.",
+    starters: [
+      "We turned on Performance Max and conversions went up while revenue did not. What happened?",
+      "An agent has been changing our bids for months. How do we find out what it optimised for?",
+      "Our conversion count doubled after a tracking change. Is that real?",
+      "What would you look at first in an account you have never seen?",
+    ],
+    contract: TOP_RATED_TEAM,
+    tier: "white",
+    priceTier: "audit",
+    status: "live",
+    kbNamespace: null,
+  },
+  {
     id: "chatgpt-ads",
     slug: "chatgpt-ads",
     /* This row used to say "/" — it was the landing page the site was built as.
@@ -248,13 +288,44 @@ export const DOORS: DoorDef[] = [
     tool: {
       name: "AdGrant.AI",
       href: "https://adgrant.ai",
-      line: "Our own tool, and it is for Google Ad Grants accounts rather than paid ones. It reads a nonprofit's website and writes campaigns, ad groups, keywords, ads and extensions into their own Google Ads account through the official Google Ads API. On a paid account it has no part to play: a paid account is bid on, not generated. If you are a nonprofit, the Ad Grants door is the one to read.",
+      line: "Our own tool, and it is for Google Ad Grant accounts rather than paid ones. It reads a nonprofit's website and writes campaigns, ad groups, keywords, ads and extensions into their own Google Ads account through the official Google Ads API. On a paid account it has no part to play: a paid account is bid on, not generated. If you are a nonprofit, the Ad Grants door is the one to read.",
     },
     contract: TOP_RATED_TEAM,
     tier: "white",
     priceTier: "management",
     status: "live",
     kbNamespace: "google-ads",
+  },
+  {
+    id: "linkedin-ads",
+    slug: "linkedin-ads",
+    path: "/services/linkedin-ads",
+    initials: "LA",
+    tone: "bg-chart-5/10 text-chart-5",
+    headline: "LinkedIn Ads for B2B",
+    blurb:
+      "Account-based targeting, lead gen forms, the Insight Tag, and a closed loop from spend to pipeline in your CRM — so the report says revenue rather than form fills.",
+    firstAgentId: "linkedin-ads",
+    agentLine:
+      "The LinkedIn Ads Agent answers first, from LinkedIn's own advertising documentation, and cites the page it used: campaign objectives, audience targeting including company and contact lists, Lead Gen Forms, the Insight Tag and the Conversions API, and the CRM sync the closed loop runs on. It does not give a cost per lead, a budget or a price — a person does that — and where LinkedIn's own documentation is silent it says so rather than filling the gap.",
+    starters: [
+      /* The first slot used to ask "What's a realistic CPL for enterprise ABM on
+       * LinkedIn?", which is the one question this agent may never answer: the
+       * house style forbids an expected cost per lead, and the live answer to a
+       * question of exactly that shape is why server/ai/grounding.test.ts exists.
+       * A starter the agent has to refuse is a question printed for a visitor to
+       * be let down by, so the slot now asks the account-based question the
+       * blurb leads with — and the corpus answers it. */
+      "Can we upload our target account list, or only target by job title and industry?",
+      "Lead gen forms vs landing pages for a $200 ACV product?",
+      "Our LinkedIn leads never become opportunities. Is that the targeting or the offer?",
+      "How do we get LinkedIn spend and CRM pipeline into one report?",
+    ],
+    contract: TOP_RATED_TEAM,
+    tier: "white",
+    priceTier: "management",
+    status: "live",
+    kbNamespace: "linkedin-ads",
   },
   {
     id: "ad-grants",
@@ -298,37 +369,6 @@ export const DOORS: DoorDef[] = [
     status: "live",
     kbNamespace: "ad-grants",
     ownKbNamespace: "adgrant-ai",
-  },
-  {
-    id: "linkedin-ads",
-    slug: "linkedin-ads",
-    path: "/services/linkedin-ads",
-    initials: "LA",
-    tone: "bg-chart-5/10 text-chart-5",
-    headline: "LinkedIn Ads for B2B",
-    blurb:
-      "Account-based targeting, lead gen forms, the Insight Tag, and a closed loop from spend to pipeline in your CRM — so the report says revenue rather than form fills.",
-    firstAgentId: "linkedin-ads",
-    agentLine:
-      "The LinkedIn Ads Agent answers first, from LinkedIn's own advertising documentation, and cites the page it used: campaign objectives, audience targeting including company and contact lists, Lead Gen Forms, the Insight Tag and the Conversions API, and the CRM sync the closed loop runs on. It does not give a cost per lead, a budget or a price — a person does that — and where LinkedIn's own documentation is silent it says so rather than filling the gap.",
-    starters: [
-      /* The first slot used to ask "What's a realistic CPL for enterprise ABM on
-       * LinkedIn?", which is the one question this agent may never answer: the
-       * house style forbids an expected cost per lead, and the live answer to a
-       * question of exactly that shape is why server/ai/grounding.test.ts exists.
-       * A starter the agent has to refuse is a question printed for a visitor to
-       * be let down by, so the slot now asks the account-based question the
-       * blurb leads with — and the corpus answers it. */
-      "Can we upload our target account list, or only target by job title and industry?",
-      "Lead gen forms vs landing pages for a $200 ACV product?",
-      "Our LinkedIn leads never become opportunities. Is that the targeting or the offer?",
-      "How do we get LinkedIn spend and CRM pipeline into one report?",
-    ],
-    contract: TOP_RATED_TEAM,
-    tier: "white",
-    priceTier: "management",
-    status: "live",
-    kbNamespace: "linkedin-ads",
   },
   {
     id: "linkedin-automation",
@@ -384,46 +424,6 @@ export const DOORS: DoorDef[] = [
      * goes back to "coming" with that sentence and nothing else changes. */
     status: "live",
     kbNamespace: "linkedin-automation",
-  },
-  {
-    id: "linkedin-growth",
-    slug: "linkedin-growth",
-    path: "/services/linkedin-growth",
-    initials: "MK",
-    // Deliberately not one of our brand tones: this row is not our company.
-    tone: "bg-muted text-muted-foreground",
-    headline: "LinkedIn growth — run by Maksymenko LinkedIn Growth",
-    blurb:
-      "A separate company, a separate contract, a separate invoice. Not Top-Rated Team. If you buy this and something of ours, you get two of everything: two contracts, two invoices, two support addresses.",
-    firstAgentId: null,
-    agentLine: "No agent of ours answers in this door. Maksymenko's own people do, in their own room.",
-    starters: [
-      "Who exactly is the company doing this work, and where is it registered?",
-      "What does Maksymenko's team do on my behalf, and what do they never touch?",
-      "If this goes wrong, who am I complaining to, and under whose terms?",
-      "I already work with Top-Rated Team. What changes if I add this?",
-    ],
-    contract: {
-      legalName: "Maksymenko LinkedIn Growth",
-      displayName: "Maksymenko LinkedIn Growth",
-      entity: "A different company. Its own contract, its own invoice, its own support address.",
-      // No fallback here on purpose: a room opened from this door must show the
-      // partner's terms or say it has none, never quietly borrow ours.
-      termsUrl: null,
-      invoiceLine:
-        "Maksymenko LinkedIn Growth invoices you directly. Top-Rated Team does not invoice for this work and takes no share of it.",
-      // Same rule as the terms: their address or none, never ours.
-      contact: null,
-    },
-    tier: "grey",
-    // Not "custom": custom is still us quoting. Maksymenko sets this price and
-    // invoices it, so this site publishes no figure for it — docs/doors.md,
-    // "whoever sets the price is the seller of that work".
-    priceTier: "partner",
-    status: "coming",
-    comingLine:
-      "This door opens when Maksymenko's registered name and terms are on the page, because the room has to show theirs and it has none to show yet.",
-    kbNamespace: null,
   },
   {
     id: "ai-builds",
@@ -499,6 +499,46 @@ export const DOORS: DoorDef[] = [
     // No corpus, and not because one is missing: what a white-label arrangement
     // looks like is not documented by any platform. It is our own commercial
     // terms, and a person states those.
+    kbNamespace: null,
+  },
+  {
+    id: "linkedin-growth",
+    slug: "linkedin-growth",
+    path: "/services/linkedin-growth",
+    initials: "MK",
+    // Deliberately not one of our brand tones: this row is not our company.
+    tone: "bg-muted text-muted-foreground",
+    headline: "LinkedIn growth — run by Maksymenko LinkedIn Growth",
+    blurb:
+      "A separate company, a separate contract, a separate invoice. Not Top-Rated Team. If you buy this and something of ours, you get two of everything: two contracts, two invoices, two support addresses.",
+    firstAgentId: null,
+    agentLine: "No agent of ours answers in this door. Maksymenko's own people do, in their own room.",
+    starters: [
+      "Who exactly is the company doing this work, and where is it registered?",
+      "What does Maksymenko's team do on my behalf, and what do they never touch?",
+      "If this goes wrong, who am I complaining to, and under whose terms?",
+      "I already work with Top-Rated Team. What changes if I add this?",
+    ],
+    contract: {
+      legalName: "Maksymenko LinkedIn Growth",
+      displayName: "Maksymenko LinkedIn Growth",
+      entity: "A different company. Its own contract, its own invoice, its own support address.",
+      // No fallback here on purpose: a room opened from this door must show the
+      // partner's terms or say it has none, never quietly borrow ours.
+      termsUrl: null,
+      invoiceLine:
+        "Maksymenko LinkedIn Growth invoices you directly. Top-Rated Team does not invoice for this work and takes no share of it.",
+      // Same rule as the terms: their address or none, never ours.
+      contact: null,
+    },
+    tier: "grey",
+    // Not "custom": custom is still us quoting. Maksymenko sets this price and
+    // invoices it, so this site publishes no figure for it — docs/doors.md,
+    // "whoever sets the price is the seller of that work".
+    priceTier: "partner",
+    status: "coming",
+    comingLine:
+      "This door opens when Maksymenko's registered name and terms are on the page, because the room has to show theirs and it has none to show yet.",
     kbNamespace: null,
   },
 ];

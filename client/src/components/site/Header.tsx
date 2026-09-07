@@ -63,7 +63,7 @@ export function Header() {
         <Link
           href="/"
           data-testid="link-logo"
-          className="type-meta flex items-baseline gap-2 font-medium tracking-[0.13em] text-foreground"
+          className="type-meta flex items-baseline gap-2 text-[1.0625rem] font-medium tracking-[0.13em] text-foreground"
         >
           {/*
             ALIGNED TO THE CAP, NOT THE MIDDLE. The mark is taller than the line
@@ -77,15 +77,27 @@ export function Header() {
             under the line. Both numbers are in em, so the alignment survives the
             type scale changing; a px nudge would not.
 
-            1.55em is the mark's height (20px at this 13px size, unchanged), and
-            0.72em is the cap height of the sans face. Verified by measuring both
-            top edges in a browser rather than by eye.
+            AND IT IS THE MARK'S STRAIGHT EDGE THAT MATCHES, not its full
+            height. The mark is a chevron: its sides run straight for about the
+            first 65% and then come to a point. Matching the T to the whole
+            image left the T looking short beside a shape whose bottom two
+            thirds are empty space narrowing to nothing. So the T is set against
+            the straight part.
+
+            That is why the wordmark grew: cap height has to reach 0.65 of the
+            mark's height, and at 13px against a 20px mark it reached 0.47. The
+            wordmark is now 17px, the mark 1.11em of that (about 19px), and the
+            translate is the mark's height minus the cap — which also lifts it
+            the couple of pixels the owner asked for, because a shorter mark
+            hanging from the same baseline sits higher.
+
+            Verified on a 4x screenshot, not by eye.
           */}
           <img
             src="/assets/top-rated-logo.png"
             alt=""
             aria-hidden="true"
-            className="h-[1.55em] w-[1.55em] shrink-0 translate-y-[0.83em]"
+            className="h-[1.11em] w-[1.11em] shrink-0 translate-y-[0.36em]"
           />
           Top-Rated Team
         </Link>
