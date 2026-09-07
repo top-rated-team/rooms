@@ -43,7 +43,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">17 of them. Copy one, paste it into a fresh agent, and that is the whole job.
+  <p class="lede">19 of them. Copy one, paste it into a fresh agent, and that is the whole job.
   Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -1130,7 +1130,91 @@ WHEN YOU FINISH, report exactly this:
       </article>
     </section>
     <section class="wave">
-      <h2>Wave 7 — this one runs alone</h2>
+      <h2>Wave 7</h2>
+      <p class="waveNote">Start these 1 together. When all 1 have reported, run the two commands, then go to the next wave.</p>
+      <article class="parcel">
+        <header>
+          <h3>home-room</h3>
+          <button class="copy" data-target="p-home-room">Copy this prompt</button>
+        </header>
+        <p class="what">The home page had a panel that was one door's agent — the ChatGPT Ads chat, with its starter questions — standing in as the house voice.</p>
+        <pre id="p-home-room">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "home-room".
+
+Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  client/src/components/site/home/HouseAsk.tsx
+  server/ai/route-question.ts
+  server/ai/route-question.test.ts
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  client/src/pages/landing.tsx
+      - one section, where the panel used to be
+  server/routes.ts
+      - one route that routes a question to a door
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  A QUESTION ASKED ON THE HOME PAGE DOES NOT KNOW WHICH DOOR IT BELONGS TO, and that is the
+  whole problem to solve. Nine agents each read one corpus and there is no fallback,
+  deliberately — server/ai/kb.ts returns nothing rather than answering out of a neighbour's
+  documentation. So route the question, and SHOW THE ROUTING. Read it, pick the door whose
+  subject it is, say which one you picked and why in one line, and let that door's agent answer.
+  A visitor who sees "this looks like a conversion-tracking question, so the measurement agent
+  is answering" has learned something about how the site is organised. A visitor who gets an
+  unexplained answer from an agent they did not choose has met the same defect in a new costume.
+  WHEN IT CANNOT TELL, IT ASKS. Do not guess a door on a thin question. Offer the two or three
+  it might be, in the reader's own words, and let them pick. Guessing wrong is worse than one
+  extra click, because the answer arrives with citations from documentation that has nothing to
+  do with what they asked. SOME QUESTIONS BELONG TO NO DOOR — what does this cost, who are you,
+  can I talk to somebody. Those are answered by the page, not by a model: the price is on
+  /pricing and in every agent's prompt, and the two ways to reach a person are already on the
+  first screen. Route to those rather than sending them to an agent that will decline. IT MUST
+  CLAIM THROUGH server/spend.ts like every other agent turn. The public panel shipped unguarded
+  once and a stale polling loop of ours ran on it for five hours; a new public ask endpoint is
+  the same hole. TESTS, server-side and mandatory: a question with an unmistakable subject
+  routes to that door; a thin question routes to nothing and returns choices; a question about
+  price or contact routes to the page rather than to an agent; and the router never returns a
+  door whose status is not live.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  The home page had a panel that was one door's agent — the ChatGPT Ads chat, with its starter
+  questions — standing in as the house voice. The owner said twice it made no sense there, and
+  he was right: a general button gave a specific door's answer. The panel has been removed
+  rather than relabelled, so the home page currently has no way to ask anything, and that is the
+  gap this closes.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+    </section>
+    <section class="wave">
+      <h2>Wave 8 — this one runs alone</h2>
       <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
       <article class="parcel">
         <header>
@@ -1195,7 +1279,7 @@ WHEN YOU FINISH, report exactly this:
       </article>
     </section>
     <section class="wave">
-      <h2>Wave 8 — this one runs alone</h2>
+      <h2>Wave 9 — this one runs alone</h2>
       <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
       <article class="parcel">
         <header>
@@ -1256,7 +1340,7 @@ WHEN YOU FINISH, report exactly this:
       </article>
     </section>
     <section class="wave">
-      <h2>Wave 9 — this one runs alone</h2>
+      <h2>Wave 10 — this one runs alone</h2>
       <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
       <article class="parcel">
         <header>
@@ -1296,6 +1380,106 @@ WHAT DONE MEANS FOR THIS PARCEL:
 WHY IT EXISTS, so you can judge the edge cases yourself:
   Rooms are working chats for one-off, ongoing and recurring work. Four of the seven doors are
   retainers. The method has to live in the room without adding a screen.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+    </section>
+    <section class="wave">
+      <h2>Wave 11 — this one runs alone</h2>
+      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
+      <article class="parcel">
+        <header>
+          <h3>room-bridge-whatsapp-chatwoot</h3>
+          <button class="copy" data-target="p-room-bridge-whatsapp-chatwoot">Copy this prompt</button>
+        </header>
+        <p class="what">The people doing the work need to answer from a phone, and the client should not have to install anything.</p>
+        <pre id="p-room-bridge-whatsapp-chatwoot">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "room-bridge-whatsapp-chatwoot".
+
+Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  server/bridge/index.ts
+  server/bridge/attribution.ts
+  server/bridge/attribution.test.ts
+  server/bridge/chatwoot.ts
+  server/bridge/waha.ts
+  server/bridge/bridge.test.ts
+  client/src/components/workspace/BridgePanel.tsx
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  server/routes.ts
+      - the inbound webhook and one route to connect or disconnect a bridge
+  shared/api.ts
+      - one type for a room's bridges
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  ATTRIBUTION IS THE WHOLE PARCEL. Everything else here is plumbing. One WhatsApp number and one
+  ChatWoot inbox carry many speakers: Dan, each contractor, and any AI agent either side has
+  added. WhatsApp shows the client one sender for all of them. So every outbound message MUST
+  name who is speaking before it says anything else, and the name has to come from the room's
+  member record rather than from whoever typed it — a convention a human has to remember is a
+  convention that fails on a Friday. Use the room's own vocabulary, which already exists and is
+  already held to: the six badges in MemberRail.tsx. A person is a person and an agent says it
+  is an agent. NEVER let an agent's message arrive looking like a person's — that is the same
+  rule as the room itself, where an agent message reads as the company speaking, and it matters
+  more here because WhatsApp strips every other cue. Inbound is the mirror problem and is
+  harder: a WhatsApp group tells you a phone number, not which of three people on the client's
+  side wrote. Map what you can, and where you cannot, say so in the room rather than guessing an
+  author. A wrongly attributed client message is worse than an unattributed one. SPEND. A
+  bridged room is a way to trigger an agent from outside this site, so it must claim through
+  server/spend.ts exactly as /api/ask and the room path do. This is not hypothetical: the panel
+  endpoint shipped unguarded and a stale polling loop of ours ran on it for five hours before
+  anyone noticed. A WhatsApp group with an agent in it is the same hole with a friendlier face.
+  WHAT MAY CROSS, and it is not everything. A bridge is a door into a room that holds a client's
+  accounts and numbers. Decide and write down what does NOT go out over WhatsApp — at minimum
+  the room token itself, because a link in a group chat is the account. And say in the panel,
+  plainly, that a message sent to a WhatsApp group is readable by everyone in that group and
+  stored on their phones. SLACK AND CLICKUP are the client's own, connected by them and
+  revocable by them. Read-and-write into one channel or one list, never a mirror of everything:
+  a bridge that copies a whole workspace is a privacy problem wearing the clothes of a feature.
+  Same attribution rule. DEGRADE HONESTLY. WAHA is on another host and ChatWoot is a third
+  party; both will be down sometimes. A bridge that cannot deliver must say so in the room, on
+  the message that failed, and never silently drop it. A person believing they answered a client
+  when they did not is the worst outcome available. TESTS, all server-side and therefore
+  mandatory: every outbound message carries an attribution derived from the member record; an
+  agent's message can never be attributed as a person's; an unmappable inbound sender is marked
+  unattributed rather than guessed; a bridged agent turn goes through the spend claim; the room
+  token never appears in an outbound payload; and a delivery failure surfaces on the message
+  rather than in a log.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  The people doing the work need to answer from a phone, and the client should not have to
+  install anything. So contractors work through ChatWoot's app on one shared inbox and one
+  WhatsApp number, and the client is in WhatsApp. For more than one person on the client's side,
+  a WhatsApp group. The client can also connect their own Slack and ClickUp so the room reaches
+  where their team already is.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.

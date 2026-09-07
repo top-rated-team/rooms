@@ -19,9 +19,17 @@ const WAVES = [
   { n: 4, keys: ["rented-accounts-inventory", "identity-in-the-room", "room-identity-binding"] },
   { n: 5, keys: ["payment-link"] },
   { n: 6, keys: ["room"], alone: true },
-  { n: 7, keys: ["outside-agent"], alone: true },
-  { n: 8, keys: ["approval-card"], alone: true },
-  { n: 9, keys: ["recurring-and-digest"], alone: true },
+  // Its own wave. It does not touch the room, but `room` is runAlone and that
+  // means alone — I put them together for a moment and check-parcels now
+  // refuses that, which is why the rule is in the tool rather than in a comment.
+  { n: 7, keys: ["home-room"] },
+  { n: 8, keys: ["outside-agent"], alone: true },
+  { n: 9, keys: ["approval-card"], alone: true },
+  { n: 10, keys: ["recurring-and-digest"], alone: true },
+  // Last, and alone: it is the only parcel that opens a two-way path into a
+  // room from outside this site, and it reuses room-identity-binding's WAHA
+  // client rather than writing a second one.
+  { n: 11, keys: ["room-bridge-whatsapp-chatwoot"], alone: true },
 ];
 
 function prompt(key) {
