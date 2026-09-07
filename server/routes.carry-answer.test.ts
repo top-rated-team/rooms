@@ -128,10 +128,13 @@ test("a room opened with nothing asked is unchanged by any of this", async () =>
     const { status, messages } = await openRoom(app.origin, { source: { door: "chatgpt-ads" } });
     assert.equal(status, 201);
     assert.equal(carried(messages).length, 0, "nothing was asked, so there is nothing to carry");
-    assert.ok(
-      messages.some((m) => m.authorKind === "system"),
-      "the welcome is still there — this is the empty room a visitor gets from pressing Keep",
-    );
+    // And NOTHING else either. This asserted the seeded welcome was still here
+    // until the copy audit found the room was telling a visitor the same three
+    // facts three times before showing them anything working: the address strip,
+    // the arrival panel, and then four more paragraphs repeating both. The
+    // welcome went; the arrival panel, which knows whether a question came in
+    // with the visitor, is what a person actually reads.
+    assert.deepEqual(messages, [], "a room opened with nothing asked starts empty");
   } finally {
     await app.close();
   }

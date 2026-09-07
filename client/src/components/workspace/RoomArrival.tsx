@@ -44,8 +44,7 @@ export function RoomArrival({ hasQuestion, onStart, onDismiss, className }: Room
       <p className={cn(READ, "mt-3 text-foreground")}>
         {hasQuestion
           ? "The question you asked on the way in is here, with the answer and the pages it came from."
-          : "This room is empty, and it is yours."}{" "}
-        The link in the address bar is the whole account. There is no password, and no copy of it is sent to you.
+          : "This room is empty, and it is yours."}
       </p>
 
       <p className={cn(READ, "mt-3 text-muted-foreground")}>

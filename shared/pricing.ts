@@ -146,7 +146,7 @@ export const PRICES: PriceRow[] = [
     id: "custom",
     price: "custom",
     buys: "Everything else.",
-    condition: "A figure comes from a person after the call. No agent here will estimate one.",
+    condition: "A figure comes from a person after the call.",
     ours: true,
   },
   {

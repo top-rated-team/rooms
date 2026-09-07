@@ -234,8 +234,7 @@ export function ChatGptAdsBody() {
         <div className="grid gap-[var(--s4)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)]">
           <h2 className={HEADING}>Four steps, and the first two are free.</h2>
           <p className={READ_MUTED}>
-            Nothing here needs a contract before you know whether we are useful. The work starts when you have seen the
-            answer and still want hands on it.
+            The work starts when you have seen the answer and still want hands on it.
           </p>
         </div>
 

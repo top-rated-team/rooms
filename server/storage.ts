@@ -20,7 +20,7 @@ import {
 } from "@shared/schema";
 import type { WorkspaceState } from "@shared/api";
 import { AGENT_BY_ID, EXPERTS } from "@shared/roster";
-import { CONVERSION_TRACKING_TASKS, SEED_CHANNELS, WELCOME_MESSAGE } from "@shared/playbook";
+import { CONVERSION_TRACKING_TASKS, SEED_CHANNELS } from "@shared/playbook";
 import { getDb, hasDb, type AppDatabase } from "./db";
 
 /* ------------------------------ input shapes ------------------------------ */
@@ -214,22 +214,18 @@ function buildSeed(workspaceId: string, input: CreateWorkspaceInput, now: Date):
     createdAt: now,
   }));
 
-  const home = channelRows.find((channel) => channel.slug === "conversion-tracking") ?? channelRows[0];
-  const messageRows: Message[] = home
-    ? [
-        {
-          id: nanoid(),
-          workspaceId,
-          channelId: home.id,
-          authorKey: "system",
-          authorKind: "system",
-          body: WELCOME_MESSAGE,
-          parentId: null,
-          meta: { event: "workspace_created" },
-          createdAt: now,
-        },
-      ]
-    : [];
+  /*
+   * NO SEEDED WELCOME. RoomArrival.tsx says in its own header comment that it
+   * exists to replace "a seeded welcome message four paragraphs long" — and this
+   * function kept posting it, so a visitor got both. Rendered at 1440 the first
+   * screen was five blocks of the room narrating itself before anything worked:
+   * the address strip, two arrival paragraphs, the model banner, then four more
+   * paragraphs repeating the first two.
+   *
+   * The arrival panel is the one that survives, because it is the one that knows
+   * whether a question came in with the visitor.
+   */
+  const messageRows: Message[] = [];
 
   return { channels: channelRows, members: memberRows, tasks: taskRows, messages: messageRows };
 }

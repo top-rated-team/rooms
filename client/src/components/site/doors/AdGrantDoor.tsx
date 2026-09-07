@@ -1,5 +1,5 @@
 import { ADGRANT_ACCENT_WRAP, ADGRANT_HREF, ADGRANT_LIBRARY, ADGRANT_MARK } from "@/components/site/doors/adgrant-style";
-import { HEADING, LINK, META, META_PLAIN, NUMERAL, PAGE, READ_MUTED } from "@/components/site/doors/quiet";
+import { HEADING, LINK, META_PLAIN, NUMERAL, PAGE, READ_MUTED } from "@/components/site/doors/quiet";
 
 /* ---------------------------------------------------------------------------
  * THE AD GRANTS DOOR'S OWN PAGE.
@@ -71,7 +71,7 @@ export function AdGrantDoor() {
       <section className={`${PAGE} pt-[var(--s6)]`}>
         <div className="grid gap-[var(--s4)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)]">
           <div>
-            <h2 className={`mt-[var(--s2)] ${HEADING}`}>
+            <h2 className={HEADING}>
               <a
                 href={ADGRANT_HREF}
                 target="_blank"
@@ -166,8 +166,8 @@ export function AdGrantDoor() {
         </ol>
 
         <p className={`mt-[var(--s4)] max-w-[46ch] ${META_PLAIN}`}>
-          Google&rsquo;s own Ad Grants policies are what the agent above cites. Ours is what we have found works, and
-          those pages say so.
+          Google&rsquo;s own Ad Grants policies are what the agent above cites. The library on adgrant.ai is our
+          claims about what has worked, and those pages say so.
         </p>
       </section>
     </div>

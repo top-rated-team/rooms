@@ -85,15 +85,14 @@ export const CONVERSION_TRACKING_TASKS: SeedTask[] = [
   },
 ];
 
-/** Opening message posted by the system into #conversion-tracking. */
-export const WELCOME_MESSAGE = `**Welcome — this workspace is yours.**
-
-No signup: the link in your address bar *is* your account. Bookmark it, or send it to a colleague to pull them in.
-
-Here's how it works:
-
-- **Ask the agents anything.** \`@chatgpt-ads\` reads the official [ChatGPT Ads developer docs](https://developers.openai.com/ads/) and cites the page it used. \`@tracking\` designs the measurement setup around your stack.
-- **Pull in a human** when it gets real — the checklist on the right is the actual conversion-tracking engagement, and every line on it needs a person.
-- **Add channels** for anything else: Google Ads, Meta, SEO, a landing page build.
-
-Start by telling us what you're running ads for, and what counts as a conversion.`;
+/*
+ * WELCOME_MESSAGE is gone, not moved. It was posted into the project channel at
+ * seed time and said, in four paragraphs, what client/src/components/workspace/
+ * RoomArrival.tsx now says in two — including the link-is-your-account fact,
+ * which the address strip above it also states. Three tellings of one thing, in
+ * one viewport, before the room had shown a visitor anything working.
+ *
+ * It was also the last place the seed hard-coded conversion tracking into every
+ * room regardless of the door: it told a charity arriving through Ad Grants that
+ * "the checklist on the right is the actual conversion-tracking engagement".
+ */

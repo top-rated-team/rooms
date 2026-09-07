@@ -349,9 +349,9 @@ export function recordTurnCost(workspaceId: string, agentId: string, usage: Toke
  * sooner than any sentence here implies. */
 
 const HUMAN_ROUTE =
-  "The checklist beside this channel is the engagement itself, and you can ask for someone from the team to join and answer this properly.";
+  "A person on the team can answer the same question, and that route does not run through the model.";
 
-const BUDGET_MESSAGE = `This room has used its allowance for AI answers this month, so this question was not sent to the model and nothing has been written in place of an answer.
+const BUDGET_MESSAGE = `AI answers here are capped for the month, and the cap has been reached, so this question was not sent to the model.
 
 The rest of the room is unaffected. ${HUMAN_ROUTE}`;
 

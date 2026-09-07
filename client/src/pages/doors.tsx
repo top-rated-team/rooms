@@ -20,7 +20,7 @@ const PAGE_TITLE = `${WAYS_IN.charAt(0).toUpperCase() + WAYS_IN.slice(1)} | Top-
  * on which row is a data decision, and a description that lists them by name
  * would keep naming a row the day it moves out of the public list. */
 const PAGE_DESCRIPTION =
-  "Paid ads, measurement and custom AI builds, as one offer per row and one workspace behind all of them. Each row says which company signs the contract and sends the invoice, and each one starts a conversation rather than a form.";
+  "Paid ads, measurement and custom AI builds — one offer per row, one workspace behind all of them, and each one opens a conversation rather than a form.";
 
 /** The count, in the index's own words, so the heading cannot outlive the list. */
 const INDEX_HEADLINE = `${countWord(PUBLIC_DOORS.length).charAt(0).toUpperCase()}${countWord(
