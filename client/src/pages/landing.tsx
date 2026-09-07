@@ -34,7 +34,7 @@ const PAGE_TITLE = "Top-Rated Team — paid ads, measurement, and the AI around 
 /* No offer is named. Which rows exist and what they are called is data, and a
  * description that lists them would keep naming a row the day it changes. */
 const PAGE_DESCRIPTION =
-  "Seven kinds of work and one workspace behind all of them. Ask an agent a question and get an answer from documentation, with the page it used, for free and without giving a name. Every offer says which company signs the contract and sends the invoice.";
+  "Paid advertising, the measurement under it, and the custom AI around both — one workspace behind all of them. Ask an agent a question and get an answer from documentation, with the page it used, for free and without giving a name. Every offer says which company signs the contract and sends the invoice.";
 
 export function Landing() {
   // No helmet dependency: each route sets its own and puts back what it found.

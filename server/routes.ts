@@ -17,6 +17,7 @@ import {
   type MessageMeta,
 } from "@shared/schema";
 import type { AskEvent, CreateWorkspaceResponse, WorkspaceState } from "@shared/api";
+import { signAnswer, verifyAnswer } from "./answer-receipt";
 import { AGENTS, AGENT_BY_ID, BOOK_A_CALL_URL, DEFAULT_AGENT_ID, EXPERTS, EXPERT_BY_KEY } from "@shared/roster";
 import { storage } from "./storage";
 import { broadcast } from "./ws";
@@ -440,6 +441,21 @@ export function registerRoutes(app: Express): void {
       });
 
       const firstMessage = input.firstMessage?.trim();
+
+      /*
+       * An answer the visitor already read on the door page. Carried so the room
+       * opens with the exchange they had rather than the agent answering the same
+       * question a second time, differently, at our expense.
+       *
+       * The receipt is the whole reason this is allowed. Without it, a POST to
+       * this endpoint could put any words in an agent's mouth in a room at a real
+       * address on this domain — and an agent message in a room reads as the
+       * company speaking. An unsigned or stale body is dropped in silence and the
+       * agent answers as before, which is a working room rather than an error.
+       */
+      const carried = input.firstAnswer;
+      const carriedBody = carried && verifyAnswer(carried.body, carried.receipt) ? carried.body.trim() : null;
+
       let state: WorkspaceState = created;
       let reply: AgentReply | null = null;
 
@@ -454,15 +470,29 @@ export function registerRoutes(app: Express): void {
           authorKind: "visitor",
           body: firstMessage,
         });
+        if (carriedBody) {
+          // The answer they already have. Written as the agent, because the agent
+          // wrote it — the receipt is what proves that — and no reply is started.
+          await storage.addMessage(created.workspace.id, {
+            channelId: channel.id,
+            authorKey: `agent:${agentId}`,
+            authorKind: "agent",
+            body: carriedBody,
+          });
+        }
+
         state = (await storage.getWorkspaceByToken(created.token)) ?? created;
-        reply = {
-          token: created.token,
-          workspaceId: created.workspace.id,
-          channelId: channel.id,
-          agentId,
-          question: firstMessage,
-          history,
-        };
+
+        if (!carriedBody) {
+          reply = {
+            token: created.token,
+            workspaceId: created.workspace.id,
+            channelId: channel.id,
+            agentId,
+            question: firstMessage,
+            history,
+          };
+        }
       }
 
       const response: CreateWorkspaceResponse = { ...state, url: `${publicBaseUrl(req)}/w/${created.token}` };
@@ -844,6 +874,7 @@ export function registerRoutes(app: Express): void {
 
       try {
         let citations: Citation[] | undefined;
+        let answer = "";
         let waitingForFirst = true;
 
         for (;;) {
@@ -879,10 +910,16 @@ export function registerRoutes(app: Express): void {
             continue;
           }
           if (chunk.citations && chunk.citations.length > 0) citations = chunk.citations;
-          if (chunk.delta) send({ type: "delta", delta: chunk.delta });
+          if (chunk.delta) {
+            // Kept so the finished answer can be signed. The visitor may hand it
+            // back when keeping the conversation, and the receipt is what lets the
+            // room trust it — see server/answer-receipt.ts.
+            answer += chunk.delta;
+            send({ type: "delta", delta: chunk.delta });
+          }
         }
 
-        if (!expired) send({ type: "done", citations });
+        if (!expired) send({ type: "done", citations, receipt: answer ? signAnswer(answer) : undefined });
       } catch (error) {
         console.error("[ask] stream failed:", error);
         send({ type: "error", message: STREAM_INTERRUPTED });

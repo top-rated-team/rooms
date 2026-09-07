@@ -116,7 +116,7 @@ export function Footer() {
 
         <div className="flex flex-wrap items-baseline justify-between gap-x-[var(--s4)] gap-y-[var(--s2)]">
           <p className="type-meta text-muted-foreground" data-testid="text-footer-operator">
-            &copy; {year} {OURS.legalName} &mdash; Prague, Kyiv, Madeira
+            &copy; {year} {OURS.legalName} &mdash; Kyiv, Bratislava, Prague, Batumi, Madeira
           </p>
           <nav className="type-meta flex items-baseline gap-[var(--s3)]">
             {/* The way back to a room you already kept. One place, in words, at

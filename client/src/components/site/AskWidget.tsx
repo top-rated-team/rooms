@@ -72,7 +72,11 @@ function hostOf(url: string): string {
 
 export interface AskWidgetProps {
   /** Creates a workspace seeded with this conversation. Resolves to an error message, or null on success. */
-  onStartWorkspace: (opts?: { agentId?: string; firstMessage?: string }) => Promise<string | null>;
+  onStartWorkspace: (opts?: {
+    agentId?: string;
+    firstMessage?: string;
+    firstAnswer?: { body: string; receipt: string };
+  }) => Promise<string | null>;
   /**
    * Which offer this panel is answering for: the agent that speaks first, the
    * four questions it opens with, and the row a kept conversation is stamped
@@ -103,6 +107,13 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
   const [asked, setAsked] = useState<string | null>(null);
   const [answer, setAnswer] = useState("");
   const [citations, setCitations] = useState<Citation[]>([]);
+  /**
+   * Proof that this server wrote the answer above. Handed back when keeping the
+   * conversation so the room can show this exchange rather than asking the agent
+   * the same question again. Cleared with every new question, so a stale receipt
+   * can never travel with fresh text.
+   */
+  const [receipt, setReceipt] = useState<string | null>(null);
   const [status, setStatus] = useState<AskStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [showAllStarters, setShowAllStarters] = useState(false);
@@ -169,6 +180,7 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
     setAsked(text);
     setQuestion("");
     setAnswer("");
+    setReceipt(null);
     setCitations([]);
     setError(null);
     setStatus("streaming");
@@ -243,6 +255,7 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
             setAnswer((prev) => prev + event.delta);
           } else if (event.type === "done") {
             setCitations(event.citations ?? []);
+            setReceipt(event.receipt ?? null);
             setStatus("done");
             finished = true;
           } else if (event.type === "error") {
@@ -278,6 +291,10 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
     const failure = await onStartWorkspace({
       agentId: agentId ?? undefined,
       firstMessage: asked ?? undefined,
+      // The answer they have just read, so the room opens with it rather than
+      // asking again and possibly saying something else. Only sent whole and
+      // only with its receipt: the server drops anything it did not sign.
+      firstAnswer: receipt && answer && status === "done" ? { body: answer, receipt } : undefined,
     });
     setStartingWorkspace(false);
     if (failure) setError(failure);
@@ -555,6 +572,7 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
                 onClick={() => {
                   setAsked(null);
                   setAnswer("");
+                  setReceipt(null);
                   setCitations([]);
                   setError(null);
                   setStatus("idle");
