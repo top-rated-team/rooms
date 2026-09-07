@@ -60,9 +60,9 @@ export function FirstScreen() {
             the first screen's text, which is the complaint this rewrite began
             with. Panel.tsx carries it. */}
         <p className="type-body m-0">
-          Paid advertising, the measurement under it, and the custom AI around both. Each one opens with a question: an
-          agent answers it from documentation and prints the page it used, and a named contractor can join the same
-          thread to scope the work.
+          Paid advertising, the measurement under it, and the custom AI around both. Each opens with a question: an
+          agent answers from documentation and prints the page it used, and a named contractor can join the thread to
+          scope the work.
         </p>
         <dl
           data-testid="list-record"

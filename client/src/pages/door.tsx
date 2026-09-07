@@ -44,6 +44,8 @@ import NotFound from "@/pages/not-found";
  */
 const OUR_LEGAL_NAME = DOOR_BY_ID[DEFAULT_DOOR_ID].contract.legalName;
 
+
+
 /** `contact` is either an email address or the address of a page, and a link has to know which. */
 function contactHref(contact: string): string {
   return /^(https?:\/\/|mailto:|\/)/i.test(contact) ? contact : `mailto:${contact}`;
@@ -471,21 +473,42 @@ function DoorPage({ door }: { door: DoorDef }) {
           </section>
         ) : null}
 
-        {/* -------------------- who you would be buying from ------------------ */}
-        {/* Whoever is named here is who the room names. It is set by the row,
-            not by a person remembering. */}
+        {/* ------------------------- who does this work ---------------------- */}
+        {/*
+          THE INVOICE LINE IS GONE FROM OUR OWN DOORS, and the owner's reason for
+          that is better than the reason it was there.
+
+          It used to print "… signs the contract and sends the invoice" on all
+          seven pages. On our six that tells the reader nothing they would not
+          assume — they are on our site — and it puts money and paperwork in
+          front of a person who has not yet seen the room, which is the thing
+          they are actually buying. Read cold it suggests either "payment up
+          front" or a supplier braced for a dispute. Neither is true and neither
+          helps.
+
+          It survives on somebody ELSE's door, where "a different company
+          contracts, delivers and invoices this" is a fact a person choosing a
+          supplier would not otherwise know — and in the footer of the room,
+          which is where an invoice is actually about to arrive.
+
+          The heading changed with it: "Who you would be buying from" was already
+          asking the reader to think about the transaction. "Who does this work"
+          asks them to think about the work.
+        */}
         <section className={`${PAGE} pt-[var(--s6)]`} data-testid="block-door-contract">
           <div className="grid gap-[var(--s3)] border-t border-border pt-[var(--s3)] lg:grid-cols-[minmax(0,32ch)_minmax(0,1fr)] lg:gap-[var(--s5)]">
             <div>
-              <p className={META}>Who you would be buying from</p>
+              <p className={META}>{!oursToAnswer ? "Who you would be buying from" : "Who does this work"}</p>
               <p className={`mt-[var(--s2)] ${HEADING}`} data-testid="text-door-legal-name">
-                {door.contract.legalName}
+                {!oursToAnswer ? door.contract.legalName : (door.contract.displayName ?? door.contract.legalName)}
               </p>
             </div>
 
             <div>
               <p className={READ_MUTED}>{door.contract.entity}</p>
-              <p className={`mt-[var(--s2)] ${READ_MUTED}`}>{door.contract.invoiceLine}</p>
+              {!oursToAnswer ? (
+                <p className={`mt-[var(--s2)] ${READ_MUTED}`}>{door.contract.invoiceLine}</p>
+              ) : null}
               <p className={`mt-[var(--s2)] ${READ_MUTED}`}>{tier.meaning}</p>
 
               <p className={`mt-[var(--s4)] ${META_PLAIN}`}>

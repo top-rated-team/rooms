@@ -15,7 +15,8 @@ A door is not a separate website and not a separate product. It decides five thi
 1. **What the page says it does** — the headline and the two sentences under it.
 2. **Which agent answers first** — and what that agent will and will not touch.
 3. **What the four starter questions are** — the questions printed before anyone types.
-4. **Whose name the room carries** — on the footer, the contract and the invoice.
+4. **Whose name the room carries** — the trading name on chrome, the legal name
+   on the footer, the contract and the invoice.
 5. **How much of the work is ours** — one of three tiers, shown to the buyer as a chip.
 
 Everything else — the panel, the streaming answer, the citations, the "nothing is saved
@@ -110,16 +111,23 @@ has no match.** Verified on the live site: the ChatGPT Ads agent cites
 `developers.openai.com`, the Google Ads and Ad Grants agents cite `support.google.com`,
 and an agent with no corpus returns no citations at all.
 
-**`contract`** — five fields and an optional sixth, and they are the ones that cost
+**`contract`** — six fields and an optional seventh, and they are the ones that cost
 money to get wrong.
 
 ## The block that matters: `contract`
 
+- **`displayName`** — the trading name, for chrome and body copy:
+  `Top-Rated Team`. A window frame, a tab title, a sentence about the work. It
+  is not the name a person copies into their accounts.
 - **`legalName`** — the company the client is buying from, in full, including the legal
-  form: `Top-Rated Team (Danylo Burykin SZČO)`. The plain `Top-Rated Team` is the
-  trading name and belongs in chrome and body copy; the full form belongs where
-  somebody is deciding who they are dealing with — the footer's identification
-  line, the Terms, the room footer, and every invoice.
+  form: `Top-Rated Team (Danylo Burykin SZČO)`. This is the name that belongs
+  where somebody is deciding who they are dealing with — the footer's
+  identification line, the Terms, the room footer, and every invoice. Plain
+  selectable text in those places, not an image and not behind a hover: a hover
+  does not exist on a phone, and somebody copying the name into their own
+  accounting has to be able to select it. A hover or a quiet small line is fine
+  as presentation on top of that, never instead of it. Two fields, because the
+  answer differs by surface rather than being one setting.
 - **`entity`** — what kind of body that is, in a client's words.
 - **`termsUrl`** — the terms *that company* publishes. It may be empty, and where it is
   empty the room says so out loud. It must never quietly fall back to ours: borrowing
@@ -132,10 +140,12 @@ money to get wrong.
 - **`contactLabel`** — optional link text, for when `contact` is a page rather than an
   address.
 
-Every room remembers the door it was opened through and prints that door's name in its
-footer. A visitor who came in through the partner door sees the partner's name in the
-room, on the contract and on the invoice, and never sees Top-Rated Team's. The door
-sets it once; nobody downstream has to remember.
+Every room remembers the door it was opened through and prints that door's
+`legalName` in its footer, as plain selectable text. A visitor who came in through the
+partner door sees the partner's name in the room, on the contract and on the invoice,
+and never sees Top-Rated Team's. The door sets it once; nobody downstream has to
+remember. The trading name belongs in chrome and body copy, so the owner's personal
+name is not sitting in every window frame.
 
 **If the name is wrong, the client has been told the wrong thing about who they are
 buying from.** Three things decide who the seller actually is, and none of them is what
@@ -264,8 +274,8 @@ Four things, and `node scripts/check-parcels.mjs` plus `npm run verify` between 
 answering them badly is what makes a door useless:
 
 1. What is the work, in one sentence a client would recognise?
-2. Which company signs and invoices for it, in its registered form, and where are its
-   terms published?
+2. Which company signs and invoices for it, in its registered form, what trading
+   name chrome should use, and where are its terms published?
 3. Which tier is it — ours end to end, lawyer first, or a different company?
 4. Who or what answers the first question, and what does that agent refuse?
 5. What can it read? If there is no body of knowledge for the subject yet, the door
@@ -295,9 +305,9 @@ answering them badly is what makes a door useless:
    real page, and the only thing that gives it away is that the page is about somebody
    else's product.
 3. Press Keep. The room opens with that conversation already in it.
-4. Scroll to the bottom of the room and **read the company name aloud**. If it is not
+4. Scroll to the bottom of the room and **read the legal name aloud**. If it is not
    the company that will send the invoice, stop and fix the row before anyone else sees
-   the page.
+   the page. It has to be selectable text, not an image and not only behind a hover.
 
 ## Rules that apply to every door
 
@@ -308,6 +318,10 @@ answering them badly is what makes a door useless:
   attached to a named client and a real number.
 - **Four starters, not eight.** Eight questions is a menu, and a menu is read by nobody.
 - **One terms page per legal name.** Never point two companies at one page.
+- **Trading name in chrome, legal name where it counts.** `displayName` on the
+  window frame and in body copy. `legalName` on the footer's identification
+  line, the Terms, the room footer, and any invoice — as plain selectable text,
+  never as an image and never only behind a hover.
 - **Nothing that decides for the client.** Doors do not rank, score, match or assign
   anyone automatically. A door presents work and starts a conversation; a person picks
   up the other end.
