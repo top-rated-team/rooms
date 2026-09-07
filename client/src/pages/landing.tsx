@@ -4,7 +4,6 @@ import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import DoorIndex from "@/components/site/home/DoorIndex";
 import FirstScreen from "@/components/site/home/FirstScreen";
-import Panel from "@/components/site/home/Panel";
 import Plate from "@/components/site/home/Plate";
 import Results from "@/components/site/home/Results";
 import Ladder from "@/components/site/Ladder";
@@ -75,10 +74,13 @@ export function Landing() {
             anything invites a question. */}
         <DoorIndex />
         <Plate />
-        {/* Before the panel, not after it. Somebody who came wanting a person
-            should not have to work out that the box is not the only door. */}
+        {/* THE PANEL HAS LEFT THIS PAGE. It defaulted to one door's agent and
+            its starter questions, so a visitor pressing a general button on the
+            home page got the ChatGPT Ads chat — which the owner has now said
+            twice makes no sense here. The doors each carry their own, where the
+            agent matches the page. The unified room this page should have
+            instead is queued as the `home-room` parcel. */}
         <TalkToUs className="pt-[var(--s5)]" />
-        <Panel />
         <Results />
         {/* Low, and after the work: a price means nothing until the reader
             knows what it buys. Every figure here is read off shared/pricing.ts,

@@ -14,29 +14,21 @@
  * The headline is the argument, not a benefit claim: seven offers, and one room
  * behind all of them. That is what this company actually is.
  * ------------------------------------------------------------------------- */
-import { Fragment } from "react";
+import { Fragment, lazy, Suspense, useState } from "react";
 
 import { Link } from "wouter";
 
-import { PROOF } from "@shared/roster";
+import { BOOK_A_CALL_URL, PROOF } from "@shared/roster";
 
 
-/** The panel's own textarea. Owned by AskWidget; this is the id it renders. */
-const PANEL_FIELD_ID = "ask-question";
-
-/** The agency profile the record above is drawn from. */
+/** The agency profile the record below is drawn from. */
 const UPWORK_AGENCY_URL = "https://www.upwork.com/agencies/google/";
 
-function toPanel() {
-  const field = document.getElementById(PANEL_FIELD_ID);
-  const target = field ?? document.getElementById("panel");
-  if (!target) return;
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  target.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
-  if (field instanceof HTMLTextAreaElement) field.focus({ preventScroll: true });
-}
+const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) => ({ default: m.LeadDialog })));
 
 export function FirstScreen() {
+  const [messageOpen, setMessageOpen] = useState(false);
+
   return (
     <section className="mx-auto grid max-w-[var(--page)] grid-cols-1 items-end gap-[var(--s4)] px-[var(--s3)] py-[var(--s5)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)] lg:py-[var(--s6)]">
       {/*
@@ -47,26 +39,34 @@ export function FirstScreen() {
         the market asks for. A headline that says "seven" has to be edited every
         time that happens, and will not be.
 
-        His own phrasing was "any expert digital services". I have not used
-        "any": it reads as a promise to do anything, and we do not do anything —
-        the honest version drops the quantity rather than making it infinite.
-        The list immediately below says how many there are today, generated, so
+        The owner asked twice for a word of totality, first "any" and then
+        "all", and "all" is the one that works. "Any expert digital services"
+        reads as a promise to do anything asked; "all expert digital services"
+        claims his own list is complete, which is a positioning claim rather
+        than a deliverable — and White Label is what makes it defensible, since
+        a partner can put their own set on this platform. Still no number: the
+        list immediately below says how many there are today, generated, so
         nobody has to remember.
 
-        AI-HUMAN HYBRID, also his, and it answers the objection I had to "One AI
-        room": that named the software and left out the contractor, which is the
-        half he had just asked to bring forward. This names both, which is what
-        the room actually is and what nobody else is selling.
+        THE SECOND SENTENCE IS THE OWNER'S OWN SHORTER ONE. He tried three:
+        "One AI room", then "One AI-human hybrid room behind all of them", then
+        "One room with people and AI agents to save time, costs and deliver
+        more", and then cut it himself to this. The last is the best of them and
+        it is the shortest, which is usually how that goes.
+
+        It keeps the thing that mattered through all four attempts: BOTH sides
+        are named. "One AI room" named the software and left out the contractor,
+        which is the half he had just asked to bring forward.
       */}
       <h1 className="type-display m-0" data-testid="text-home-headline">
         <Link
           href="/services"
           data-testid="link-headline-services"
-          className="underline decoration-1 underline-offset-[0.14em] decoration-border hover:decoration-foreground"
+          className="underline decoration-[3px] underline-offset-[0.16em] decoration-line hover:decoration-foreground"
         >
-          Expert digital services
+          All expert digital services
         </Link>
-        . One <span className="whitespace-nowrap">AI-human</span> hybrid room behind all of them.
+        . One room for people and AI agents to deliver.
       </h1>
 
       <div>
@@ -86,9 +86,9 @@ export function FirstScreen() {
             the first screen's text, which is the complaint this rewrite began
             with. Panel.tsx carries it. */}
         <p className="type-body m-0">
-          Paid advertising, the measurement under it, inbound LinkedIn on the official API, and custom AI around it —
-          yours or your clients&rsquo;. Each opens with a question: an agent answers from documentation, and a named
-          contractor joins to scope the work.
+          Start with a free audit of what the automation in your ads accounts has been doing. Then the work it turns
+          up: paid advertising and the measurement under it, Google Ad Grants, inbound LinkedIn on the official API,
+          and custom AI around all of it &mdash; for your clients as readily as for you.
         </p>
         <dl
           data-testid="list-record"
@@ -120,15 +120,45 @@ export function FirstScreen() {
         <p className="type-meta mt-[var(--s1)] text-muted-foreground">
           Prague, Madeira, Kyiv, Bratislava, Batumi. In the global paid ads and martech markets since 2017.
         </p>
-        <button
-          type="button"
-          data-testid="button-home-ask"
-          onClick={toPanel}
-          className="type-meta mt-[var(--s3)] border-b border-primary pb-[var(--s1)] font-medium text-primary hover:border-foreground hover:text-foreground"
-        >
-          Put a question to the agent
-        </button>
+        {/*
+          IT USED TO SCROLL TO THE PANEL, and the panel was one door's agent.
+          The owner has said twice that the ChatGPT Ads chat has no business
+          being the house voice on the home page, and he is right: a visitor
+          pressing a general button got a specific door's agent and its starter
+          questions. Rather than relabel that, the panel has left the home page
+          and the unified room it should be is queued as its own parcel.
+
+          What replaces it is the two things that always work: a person on a
+          call, or a message in an inbox. On a phone these are also the actions
+          the header no longer shows, which is why they are here rather than
+          only lower down the page.
+        */}
+        <p className="type-meta mt-[var(--s3)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]">
+          <a
+            href={BOOK_A_CALL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="link-home-book-a-call"
+            className="border-b border-primary pb-[var(--s1)] font-medium text-primary hover:border-foreground hover:text-foreground"
+          >
+            Book a call
+          </a>
+          <button
+            type="button"
+            onClick={() => setMessageOpen(true)}
+            data-testid="button-home-leave-a-message"
+            className="border-b border-border pb-[var(--s1)] text-muted-foreground hover:border-foreground hover:text-foreground"
+          >
+            Leave a message
+          </button>
+        </p>
       </div>
+
+      {messageOpen ? (
+        <Suspense fallback={null}>
+          <LeadDialog open={messageOpen} onOpenChange={setMessageOpen} prefill={null} />
+        </Suspense>
+      ) : null}
     </section>
   );
 }

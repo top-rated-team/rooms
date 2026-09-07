@@ -46,6 +46,8 @@ const LINK = "type-meta draw text-muted-foreground hover:text-foreground";
 export function Header() {
   const { resolvedTheme, setTheme } = useTheme();
   const [messageOpen, setMessageOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const close = () => setMenuOpen(false);
   /* Two states rather than three. "System" is still what a visitor who never
      presses this gets, because that is what the theme starts as; pressing it is
      the moment they have an opinion, and an opinion is not a menu. */
@@ -117,22 +119,29 @@ export function Header() {
           Top-Rated Team
         </Link>
 
-        <nav className="type-meta flex items-center gap-[var(--s3)]">
+        {/*
+          SIX ITEMS DO NOT FIT A PHONE, and until now they were asked to.
+
+          There was no breakpoint in this file at all. On a 390px screen the bar
+          put the wordmark, Services, Pricing, Book a call, Leave a message and
+          the theme on one row, so "BOOK A CALL" broke onto three lines and
+          "LEAVE A MESSAGE" onto two, and the whole header grew to a third of
+          the screen. That is what the owner photographed.
+
+          So the row is the desktop layout and the phone gets a sheet. A burger
+          is still the standard on a phone in 2026 — what changed is that it
+          should open a panel with room to breathe, not a cramped dropdown, and
+          that the actions worth taking should also exist somewhere a thumb can
+          reach without opening anything. The first screen carries Book a call
+          and Leave a message on a phone for exactly that reason.
+        */}
+        <nav className="type-meta hidden items-center gap-[var(--s3)] sm:flex">
           <Link href="/services" data-testid="link-nav-services" className={LINK}>
             Services
           </Link>
           <Link href="/pricing" data-testid="link-nav-pricing" className={LINK}>
             Pricing
           </Link>
-          {/*
-            THE TWO WAYS TO REACH A PERSON, in a bar that is now on every screen
-            of every page. The owner's reason: a visitor may be old-school and
-            want a human or an address, and a header offering only navigation
-            tells that visitor nothing about how to get one.
-
-            "Leave a message" opens the same LeadDialog the block lower down
-            opens, so there is one form and one inbox rather than two.
-          */}
           <a
             href={BOOK_A_CALL_URL}
             target="_blank"
@@ -150,17 +159,75 @@ export function Header() {
           >
             Leave a message
           </button>
-          <button
-            type="button"
-            data-testid="button-theme-toggle"
-            onClick={() => setTheme(next)}
-            className={LINK}
-          >
+          <button type="button" data-testid="button-theme-toggle" onClick={() => setTheme(next)} className={LINK}>
             {next === "dark" ? "Dark" : "Light"}
             <span className="sr-only"> theme</span>
           </button>
         </nav>
+
+        {/* The phone: one control, and it says what it is to a screen reader. */}
+        <button
+          type="button"
+          data-testid="button-nav-menu"
+          aria-expanded={menuOpen}
+          aria-controls="site-menu"
+          onClick={() => setMenuOpen((was) => !was)}
+          className="type-meta -mr-[var(--s1)] p-[var(--s1)] text-muted-foreground hover:text-foreground sm:hidden"
+        >
+          {menuOpen ? "Close" : "Menu"}
+        </button>
       </div>
+
+      {menuOpen ? (
+        <div
+          id="site-menu"
+          data-testid="nav-menu-sheet"
+          className="mx-auto flex max-w-[var(--page)] flex-col gap-[var(--s2)] border-t border-border px-[var(--s3)] py-[var(--s3)] sm:hidden"
+        >
+          <Link href="/services" onClick={close} data-testid="link-menu-services" className={LINK}>
+            Services
+          </Link>
+          <Link href="/pricing" onClick={close} data-testid="link-menu-pricing" className={LINK}>
+            Pricing
+          </Link>
+          <Link href="/case-studies" onClick={close} data-testid="link-menu-cases" className={LINK}>
+            Cases
+          </Link>
+          <a
+            href={BOOK_A_CALL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={close}
+            data-testid="link-menu-book-a-call"
+            className={LINK}
+          >
+            Book a call
+          </a>
+          <button
+            type="button"
+            onClick={() => {
+              close();
+              setMessageOpen(true);
+            }}
+            data-testid="button-menu-leave-a-message"
+            className={`${LINK} text-left`}
+          >
+            Leave a message
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setTheme(next);
+              close();
+            }}
+            data-testid="button-menu-theme"
+            className={`${LINK} text-left`}
+          >
+            {next === "dark" ? "Dark" : "Light"}
+            <span className="sr-only"> theme</span>
+          </button>
+        </div>
+      ) : null}
 
       {messageOpen ? (
         <Suspense fallback={null}>

@@ -47,6 +47,40 @@ for (const [name, parcel] of Object.entries(j.parcels)) {
   }
 }
 
+/*
+ * THE WAVES, checked against runAlone.
+ *
+ * A parcel marked runAlone writes into the room, the panel or the shell, which
+ * everything reads — so it goes alone. That rule lived only in a comment until
+ * I put `room` and `home-room` in one wave myself, thirty seconds after writing
+ * the comment. The wave list is in scripts/build-prompts.mjs because that is
+ * what generates the prompts; this reads it back and holds it to the manifest.
+ */
+const waveSource = fs.readFileSync("scripts/build-prompts.mjs", "utf8");
+const waveStart = waveSource.indexOf("const WAVES");
+/* To the array's own closing bracket, not the first one — the first `]` in the
+ * source is inside wave one's `keys`, which is how this parsed nothing at all
+ * on its first run and reported every parcel as unscheduled. */
+const waveBlock = waveSource.slice(waveStart, waveSource.indexOf("\n]", waveStart));
+const waves = [...waveBlock.matchAll(/\{\s*n:\s*(\d+),\s*keys:\s*\[([^\]]*)\]/g)].map((m) => ({
+  n: Number(m[1]),
+  keys: [...m[2].matchAll(/"([a-z0-9-]+)"/g)].map((k) => k[1]),
+}));
+
+const inAWave = new Set(waves.flatMap((w) => w.keys));
+for (const name of Object.keys(j.parcels))
+  if (!inAWave.has(name)) problems.push(`${name} is in no wave, so nobody will be told to run it`);
+
+for (const wave of waves) {
+  for (const key of wave.keys) {
+    if (!j.parcels[key]) problems.push(`wave ${wave.n} names ${key}, which is not a parcel`);
+    else if (j.parcels[key].runAlone && wave.keys.length > 1)
+      problems.push(
+        `wave ${wave.n} puts ${key} with ${wave.keys.filter((k) => k !== key).join(", ")} — it is runAlone, which means alone`,
+      );
+  }
+}
+
 if (problems.length) {
   console.error(`parcels.json: ${problems.length} problem${problems.length === 1 ? "" : "s"}`);
   for (const line of problems) console.error(`  - ${line}`);
