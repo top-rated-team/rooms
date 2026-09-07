@@ -16,9 +16,9 @@
  * ------------------------------------------------------------------------- */
 import { Fragment } from "react";
 
+import { Link } from "wouter";
+
 import { PROOF } from "@shared/roster";
-import { PUBLIC_DOORS } from "@/components/site/GatedOffers";
-import { countWord } from "@/components/site/home/doorText";
 
 
 /** The panel's own textarea. Owned by AskWidget; this is the id it renders. */
@@ -39,8 +39,34 @@ function toPanel() {
 export function FirstScreen() {
   return (
     <section className="mx-auto grid max-w-[var(--page)] grid-cols-1 items-end gap-[var(--s4)] px-[var(--s3)] py-[var(--s5)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)] lg:py-[var(--s6)]">
+      {/*
+        NO NUMBER, on the owner's reasoning, and it is better than the reasoning
+        for having one. A count is a ceiling, and White Label is the door that
+        breaks it: a partner can put their own set of services on this platform,
+        so the catalogue is not fixed and the scope of each one moves with what
+        the market asks for. A headline that says "seven" has to be edited every
+        time that happens, and will not be.
+
+        His own phrasing was "any expert digital services". I have not used
+        "any": it reads as a promise to do anything, and we do not do anything —
+        the honest version drops the quantity rather than making it infinite.
+        The list immediately below says how many there are today, generated, so
+        nobody has to remember.
+
+        AI-HUMAN HYBRID, also his, and it answers the objection I had to "One AI
+        room": that named the software and left out the contractor, which is the
+        half he had just asked to bring forward. This names both, which is what
+        the room actually is and what nobody else is selling.
+      */}
       <h1 className="type-display m-0" data-testid="text-home-headline">
-        {countWord(PUBLIC_DOORS.length).replace(/^./, (c) => c.toUpperCase())} services. One room behind all of them.
+        <Link
+          href="/services"
+          data-testid="link-headline-services"
+          className="underline decoration-1 underline-offset-[0.14em] decoration-border hover:decoration-foreground"
+        >
+          Expert digital services
+        </Link>
+        . One <span className="whitespace-nowrap">AI-human</span> hybrid room behind all of them.
       </h1>
 
       <div>
@@ -60,9 +86,9 @@ export function FirstScreen() {
             the first screen's text, which is the complaint this rewrite began
             with. Panel.tsx carries it. */}
         <p className="type-body m-0">
-          Paid advertising, the measurement under it, and the custom AI around both. Each opens with a question: an
-          agent answers from documentation and prints the page it used, and a named contractor can join the thread to
-          scope the work.
+          Paid advertising, the measurement under it, inbound LinkedIn on the official API, and custom AI around it —
+          yours or your clients&rsquo;. Each opens with a question: an agent answers from documentation, and a named
+          contractor joins to scope the work.
         </p>
         <dl
           data-testid="list-record"

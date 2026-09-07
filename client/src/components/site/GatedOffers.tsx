@@ -37,18 +37,55 @@ const FIELD =
 
 /* ------------------------------- the split -------------------------------- */
 
-/** The tiers a stranger reads without telling us anything. */
+/* THE PARTNER ROW IS NO LONGER WITHHELD, and the reason is the owner's.
+ *
+ * It used to sit behind the email step, on his earlier instruction, so that a
+ * stranger saw only the white and light-grey rows. Then two things came out.
+ *
+ * First, the gate was never a gate. shared/doors.ts is imported by the client,
+ * so the whole table — the partner's name included — ships in the JavaScript
+ * bundle whatever the page chooses to render. Withholding it in the browser
+ * kept it off the page and out of search, and kept it from nobody who opened
+ * the bundle. Making that real would mean serving that row from an API after
+ * the step, which is a structural change.
+ *
+ * Second, and better: the owner decided it does not need to be secret. It is
+ * not "non-public", it is a PARTNER service — so it is listed like the rest and
+ * labelled for what it is. A visible label is a stronger disclosure than a
+ * hidden row, and it is honest about a thing the bundle was telling anyway.
+ *
+ * So `isPublicDoor` now answers a different question — whose service is this,
+ * not may you see it — and the split below is between what WE sell and what a
+ * partner sells. Both are listed.
+ */
+
+/** Every row a stranger sees, which is now all of them. */
+export const LISTED_DOORS: DoorDef[] = DOORS;
+
+/** Tiers we contract and invoice ourselves. */
 export const PUBLIC_TIERS: DoorTier[] = ["white", "light-grey"];
 
+/** True when this is our own service rather than a partner's. */
 export function isPublicDoor(door: DoorDef): boolean {
   return PUBLIC_TIERS.includes(door.tier);
 }
 
-/** The list on the open page. */
+/**
+ * Ours, and therefore what a count of OUR services means. A partner row is
+ * listed and reachable but is not one of the services Top-Rated Team sells, so
+ * it is not counted in a sentence that says how many we have.
+ */
 export const PUBLIC_DOORS: DoorDef[] = DOORS.filter(isPublicDoor);
 
-/** The doors that are somebody else's business, shown after the email step. */
-export const GATED_DOORS: DoorDef[] = DOORS.filter((door) => !isPublicDoor(door));
+/** A partner's. Listed, labelled, and not counted as ours. */
+export const PARTNER_DOORS: DoorDef[] = DOORS.filter((door) => !isPublicDoor(door));
+
+/**
+ * Kept so the email step below still compiles and still guards the two products
+ * on other domains, which the owner has not asked to open. It is empty of doors
+ * now, and the step's own copy no longer promises any.
+ */
+export const GATED_DOORS: DoorDef[] = [];
 
 /** Counts written out, so a sentence about how many offers there are cannot go stale. */
 export function countWord(count: number): string {

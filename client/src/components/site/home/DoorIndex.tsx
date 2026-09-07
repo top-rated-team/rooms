@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 
-import type { DoorDef } from "@shared/doors";
-import { PUBLIC_DOORS } from "@/components/site/GatedOffers";
+import { DOOR_TIERS, type DoorDef } from "@shared/doors";
+import { LISTED_DOORS, PUBLIC_DOORS, isPublicDoor } from "@/components/site/GatedOffers";
 import { countWord, firstSentence } from "@/components/site/home/doorText";
 
 /* ---------------------------------------------------------------------------
@@ -24,13 +24,10 @@ import { countWord, firstSentence } from "@/components/site/home/doorText";
  *
  * A row links to its door only when the row says that door has a page.
  *
- * It lists PUBLIC_DOORS, not DOORS — which is also why the paragraph above the
- * table cannot claim that one of these rows belongs to another company. Every
- * public row is invoiced by us; the only row that is not is the gated one, and
- * it is not on this page. Saying otherwise here would be a disclosure about
- * something the visitor cannot see.
- *
- * It lists PUBLIC_DOORS, not DOORS. The tier rule in GatedOffers.tsx is the only
+ * It lists LISTED_DOORS — all of them — and counts PUBLIC_DOORS, which is the
+ * ones we sell. A partner's row is on the page, labelled Partner, and is not
+ * counted in a sentence about how many services Top-Rated Team has. Both facts
+ * are true at once and the page says both. The tier rule in GatedOffers.tsx is the only
  * place the split may be decided, and this page is open to anyone: printing the
  * grey row here would name the partner and their offer on the front page, which
  * is exactly what the email step on /services exists to withhold — and what the
@@ -60,7 +57,7 @@ export function DoorIndex() {
       </div>
 
       <div className="mt-[var(--s4)]">
-        {PUBLIC_DOORS.map((door, index) => {
+        {LISTED_DOORS.map((door, index) => {
           const href = doorHref(door);
           const shut = door.status !== "live";
           const name = <span className="type-body font-display font-medium leading-tight">{door.headline}</span>;
@@ -90,6 +87,22 @@ export function DoorIndex() {
                 </span>
               </p>
 
+              {/* The fourth column, back — but carrying a relationship rather
+                  than an invoice, and only on the rows where there is one to
+                  name. A partner's row says Partner and whose it is; ours say
+                  nothing, because "Top-Rated Team" on our own site is not
+                  information. */}
+              <span
+                data-testid="text-door-partner"
+                className={`type-meta col-start-2 lg:col-start-4 ${shut ? "opacity-60" : ""}`}
+              >
+                {isPublicDoor(door) ? null : (
+                  <>
+                    <span className="text-primary">{DOOR_TIERS[door.tier].label}</span>
+                    <span className="text-muted-foreground"> · {door.contract.displayName ?? door.contract.legalName}</span>
+                  </>
+                )}
+              </span>
             </div>
           );
         })}
