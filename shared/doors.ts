@@ -268,17 +268,23 @@ export const DOORS: DoorDef[] = [
       "Account-based targeting, lead gen forms, the Insight Tag, and a closed loop from spend to pipeline in your CRM — so the report says revenue rather than form fills.",
     firstAgentId: "linkedin-ads",
     agentLine:
-      "The LinkedIn Ads Agent answers first: targeting, lead gen forms, the Insight Tag and the CRM loop.",
+      "The LinkedIn Ads Agent answers first, from LinkedIn's own advertising documentation, and cites the page it used: campaign objectives, audience targeting including company and contact lists, Lead Gen Forms, the Insight Tag and the Conversions API, and the CRM sync the closed loop runs on. It does not give a cost per lead, a budget or a price — a person does that — and where LinkedIn's own documentation is silent it says so rather than filling the gap.",
     starters: [
-      "What's a realistic CPL for enterprise ABM on LinkedIn?",
+      /* The first slot used to ask "What's a realistic CPL for enterprise ABM on
+       * LinkedIn?", which is the one question this agent may never answer: the
+       * house style forbids an expected cost per lead, and the live answer to a
+       * question of exactly that shape is why server/ai/grounding.test.ts exists.
+       * A starter the agent has to refuse is a question printed for a visitor to
+       * be let down by, so the slot now asks the account-based question the
+       * blurb leads with — and the corpus answers it. */
+      "Can we upload our target account list, or only target by job title and industry?",
       "Lead gen forms vs landing pages for a $200 ACV product?",
       "Our LinkedIn leads never become opportunities. Is that the targeting or the offer?",
       "How do we get LinkedIn spend and CRM pipeline into one report?",
     ],
     contract: TOP_RATED_TEAM,
     tier: "white",
-    status: "coming",
-    comingLine: "This door has no panel yet. Until it does, a call covers the same ground.",
+    status: "live",
     kbNamespace: "linkedin-ads",
   },
   {

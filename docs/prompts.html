@@ -43,7 +43,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">14 of them. Copy one, paste it into a fresh agent, and that is the whole job.
+  <p class="lede">16 of them. Copy one, paste it into a fresh agent, and that is the whole job.
   Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -396,21 +396,25 @@ WHEN YOU FINISH, report exactly this:
       </article>
       <article class="parcel">
         <header>
-          <h3>legal-name-display</h3>
-          <button class="copy" data-target="p-legal-name-display">Copy this prompt</button>
+          <h3>pricing-and-packaging</h3>
+          <button class="copy" data-target="p-pricing-and-packaging">Copy this prompt</button>
         </header>
-        <p class="what">The owner does not want his personal name set in every page's chrome.</p>
-        <pre id="p-legal-name-display">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "legal-name-display".
+        <p class="what">This is the first thing on the site that makes a commercial promise, so it is the first thing that has to be one number in one place.</p>
+        <pre id="p-pricing-and-packaging">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "pricing-and-packaging".
 
 Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
 Then read three files next to the ones you are about to change.
 
 WHAT YOU OWN. These files, and nothing else in the repository:
-  docs/doors.md
+  shared/pricing.ts
+  server/pricing.test.ts
+  client/src/components/site/Ladder.tsx
 
 SHARED FILES YOU MAY TOUCH, and only in the way described:
+  shared/roster.ts
+      - one import of the published prices into HOUSE_STYLE, replacing the blanket prohibition with the narrower rule described below
   shared/doors.ts
-      - a displayName beside legalName
+      - a `tier` reference on each door row pointing at its row in shared/pricing.ts
 
 Add to those, never delete from them. Other agents are editing the same files right now.
 
@@ -421,20 +425,41 @@ NEVER EDIT THESE, whatever the reason:
   client/src/index.css
 
 WHAT DONE MEANS FOR THIS PARCEL:
-  Two fields instead of one: displayName "Top-Rated Team" for chrome and body copy, legalName
-  "Top-Rated Team (Danylo Burykin SZČO)" for the places where a person is deciding who they are
-  dealing with — the footer's identification line, the Terms, the room footer, and any invoice.
-  Plain selectable text in those places, NOT an image and NOT behind a hover: a hover does not
-  exist on a phone, and somebody copying the name into their own accounting needs to be able to
-  select it. A hover or a quiet small line is fine as presentation on top of that, never instead
-  of it. Then delete the hard-coded OUR_DISPLAY_NAME constant in client/src/pages/workspace.tsx
-  and read contract.displayName instead — that file belongs to the room parcel, so hand it over
-  rather than editing it. The "Top-Rated Team s.r.o." strings are already gone: do not go
-  looking for them.
+  READ docs/pricing-spec.md FIRST, INCLUDING ITS LAST SECTION. It names three places where this
+  specification contradicts code that is already deployed, and getting those wrong makes the
+  site untrue rather than merely unfinished. ONE SOURCE. shared/pricing.ts holds the ladder as
+  data — from $49 a task, $49/month, $99, from $499/month, +$49/month for boosters, free on the
+  client's own keys, custom for the rest. The page renders it and the agents read the same rows.
+  A price that exists in two places is a price that will disagree with itself. THE AGENT RULE
+  CHANGES, and it becomes a different rule rather than a weaker one. Today HOUSE_STYLE forbids
+  an agent from stating any price at all, because the LinkedIn Ads agent invented a four-tier
+  price list on the live site. Replace that with: AN AGENT MAY STATE A PUBLISHED PRICE VERBATIM
+  AND MAY NEVER STATE ANY OTHER NUMBER. No arithmetic, no proration, no "roughly", no discount,
+  no estimate for a custom door. Feed the prices into the prompt from shared/pricing.ts so an
+  agent cannot quote a figure the page does not show. server/ai/grounding.test.ts currently
+  asserts that no agent prompt contains a currency figure. That case has to change with the rule
+  — but it must NOT simply be deleted. Replace it with the assertion that every currency figure
+  in every prompt appears verbatim in shared/pricing.ts, which is the same guarantee expressed
+  against the new rule. If you weaken that test instead of re-aiming it, you have reopened the
+  exact hole it was written to close. WHERE IT GOES. A section low on the home page, and the
+  relevant rows on each door page — a door shows its own tier, not the whole ladder. Set in the
+  type scale that exists: no cards, no ring around the recommended one, no monthly/annual
+  toggle, no crossed-out prices. The design has three type sizes and one accent; a pricing table
+  is where that discipline is most likely to be abandoned. TWO SLOGANS DO NOT SHIP AS WRITTEN,
+  and the reasons are in the spec: "All Google Ads experts are fired today" asserts something
+  false about other people's employment, and "Never pay for AI tokens! Unlimited vibe coding for
+  $99/mo" contradicts both the bring-your-own-keys condition and the spend limits that went live
+  today. The spec gives a true version of each. Use the rest as given. WHAT A BUYER SEES BEFORE
+  PAYING, because the owner asked for it explicitly and it is the trust half of the offer: a
+  link to book a free introductory call with Dan Burykin AND the assigned contractor, and both
+  Upwork profiles for reference. Visible before buying and again inside the room. TESTS,
+  server-side and mandatory: every price rendered anywhere traces to a row in shared/pricing.ts;
+  the re-aimed grounding case above; and no door page shows a tier that is not its own.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
-  The owner does not want his personal name set in every page's chrome. It is a trading-name
-  question, and the answer differs by surface rather than being one setting.
+  This is the first thing on the site that makes a commercial promise, so it is the first thing
+  that has to be one number in one place. The owner's specification is written out in
+  docs/pricing-spec.md — read that before this parcel, all of it, including the last section.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.
@@ -523,23 +548,21 @@ WHEN YOU FINISH, report exactly this:
       </article>
       <article class="parcel">
         <header>
-          <h3>payment-link</h3>
-          <button class="copy" data-target="p-payment-link">Copy this prompt</button>
+          <h3>legal-name-display</h3>
+          <button class="copy" data-target="p-legal-name-display">Copy this prompt</button>
         </header>
-        <p class="what">A client can be talked to, briefed and matched with a person, and then has to be invoiced by hand outside the site.</p>
-        <pre id="p-payment-link">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "payment-link".
+        <p class="what">The owner does not want his personal name set in every page's chrome.</p>
+        <pre id="p-legal-name-display">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "legal-name-display".
 
 Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
 Then read three files next to the ones you are about to change.
 
 WHAT YOU OWN. These files, and nothing else in the repository:
-  server/payments.ts
-  server/payments.test.ts
-  client/src/components/workspace/PriceCard.tsx
+  docs/doors.md
 
 SHARED FILES YOU MAY TOUCH, and only in the way described:
-  shared/api.ts
-      - one price type
+  shared/doors.ts
+      - a displayName beside legalName
 
 Add to those, never delete from them. Other agents are editing the same files right now.
 
@@ -550,14 +573,20 @@ NEVER EDIT THESE, whatever the reason:
   client/src/index.css
 
 WHAT DONE MEANS FOR THIS PARCEL:
-  A price can be put in a thread and paid, and the room records that it was. No pricing page, no
-  plans, no subscription machinery. The money flow is the owner's: the expert invoices the
-  client for the work, and Top-Rated Team invoices its own fee separately — so a price card must
-  be able to say whose price it is.
+  Two fields instead of one: displayName "Top-Rated Team" for chrome and body copy, legalName
+  "Top-Rated Team (Danylo Burykin SZČO)" for the places where a person is deciding who they are
+  dealing with — the footer's identification line, the Terms, the room footer, and any invoice.
+  Plain selectable text in those places, NOT an image and NOT behind a hover: a hover does not
+  exist on a phone, and somebody copying the name into their own accounting needs to be able to
+  select it. A hover or a quiet small line is fine as presentation on top of that, never instead
+  of it. Then delete the hard-coded OUR_DISPLAY_NAME constant in client/src/pages/workspace.tsx
+  and read contract.displayName instead — that file belongs to the room parcel, so hand it over
+  rather than editing it. The "Top-Rated Team s.r.o." strings are already gone: do not go
+  looking for them.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
-  A client can be talked to, briefed and matched with a person, and then has to be invoiced by
-  hand outside the site.
+  The owner does not want his personal name set in every page's chrome. It is a trading-name
+  question, and the answer differs by surface rather than being one setting.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.
@@ -681,7 +710,7 @@ WHEN YOU FINISH, report exactly this:
     </section>
     <section class="wave">
       <h2>Wave 4</h2>
-      <p class="waveNote">Start these 1 together. When all 1 have reported, run the two commands, then go to the next wave.</p>
+      <p class="waveNote">Start these 3 together. When all 3 have reported, run the two commands, then go to the next wave.</p>
       <article class="parcel">
         <header>
           <h3>rented-accounts-inventory</h3>
@@ -757,6 +786,145 @@ WHY IT EXISTS, so you can judge the edge cases yourself:
   is in — live, restricted, under appeal, rental ending. The Top-Voice contract now commits us
   to appealing a restriction and replacing the account if the appeal fails, and the room is
   where that sequence should be visible to the person managing it.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+      <article class="parcel">
+        <header>
+          <h3>payment-link</h3>
+          <button class="copy" data-target="p-payment-link">Copy this prompt</button>
+        </header>
+        <p class="what">A client can be talked to, briefed and matched with a person, and then has to be invoiced by hand outside the site.</p>
+        <pre id="p-payment-link">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "payment-link".
+
+Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  server/payments.ts
+  server/payments.test.ts
+  client/src/components/workspace/PriceCard.tsx
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  shared/api.ts
+      - one price type
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  A price can be put in a thread and paid, and the room records that it was. No pricing page, no
+  plans, no subscription machinery. The money flow is the owner's: the expert invoices the
+  client for the work, and Top-Rated Team invoices its own fee separately — so a price card must
+  be able to say whose price it is.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  A client can be talked to, briefed and matched with a person, and then has to be invoiced by
+  hand outside the site.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+      <article class="parcel">
+        <header>
+          <h3>room-identity-binding</h3>
+          <button class="copy" data-target="p-room-identity-binding">Copy this prompt</button>
+        </header>
+        <p class="what">Three levels of access to the agents: a sold allowance with nobody signed in, more when signed in, and — the moment a visitor starts pasting links to their own accounts — a request to identify themselves for confidentiality.</p>
+        <pre id="p-room-identity-binding">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "room-identity-binding".
+
+Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  server/identity.ts
+  server/identity.test.ts
+  server/waha.ts
+  client/src/components/workspace/IdentifyStrip.tsx
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  server/routes.ts
+      - the routes for the two identification paths
+  shared/api.ts
+      - one type for a room's binding state
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  THREE LEVELS, and the third is the only one that asks for anything. Anonymous gets a bounded
+  allowance. Signed in gets more. When the visitor pastes a link to something of their own, the
+  agent asks them to identify themselves FOR CONFIDENTIALITY — because from that point the room
+  contains their account, their site, their numbers. TWO ROUTES, and neither may be the only
+  one: - LinkedIn, through the OFFICIAL API and its own consent screen. Nothing scraped, nothing
+  session-based. - WhatsApp, through WAHA (https://waha.devlike.pro/), already running on
+  another host: a link or a QR code opens WhatsApp with a pre-filled message carrying the
+  address of their room, sent to us. SAY WHAT IT IS FOR, in the strip itself, in one sentence:
+  the room is bound to them so nobody else who finds the link can read it, and the link lands in
+  a place they will still have next week. Do not dress a convenience as a security requirement,
+  and do not imply LinkedIn endorses anything. THE ROOM LINK IS A BEARER CREDENTIAL. It is
+  already treated as one — robots.txt disallows /w/, the pages carry noindex, and sitemap.xml
+  leaves them out. Binding must NOT weaken that: identifying someone adds a second fact about
+  the room, it does not turn the token into a password. And a WhatsApp message carrying the
+  address means the credential now sits in a chat log, so say so plainly where the visitor
+  chooses it. WHAT MAY BE STORED. The minimum that answers "is this the same person": an opaque
+  provider id and the display name they chose to give. No phone number in a log, no LinkedIn
+  access token beyond what the binding needs, no contact list, nothing about anyone who is not
+  the visitor. TESTS: an unbound room keeps working at the anonymous allowance; a failed or
+  abandoned identification leaves the room exactly as it was rather than half-bound; the stored
+  shape carries no token and no phone number; and the WAHA host being down degrades to the
+  LinkedIn route with a sentence saying so, never to a dead button.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  Three levels of access to the agents: a sold allowance with nobody signed in, more when signed
+  in, and — the moment a visitor starts pasting links to their own accounts — a request to
+  identify themselves for confidentiality. What is being offered is a convenience, not a gate:
+  bind the room to their LinkedIn, or keep the link to it in WhatsApp so they can find it again.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.

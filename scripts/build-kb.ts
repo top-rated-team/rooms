@@ -240,7 +240,103 @@ const AD_GRANTS: Corpus = {
   ],
 };
 
-const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS];
+/**
+ * Door 4. LinkedIn's own Marketing Solutions help centre, which is where
+ * LinkedIn documents its advertising product, and nothing else: no blog, no
+ * agency write-up, nothing behind a login. Every URL here was fetched and read
+ * before it was written down.
+ *
+ * `?lang=en` for the same reason Google's pages carry `hl=en`: this host
+ * negotiates the language of a help article from the caller, and an excerpt has
+ * to be readable in the language the agent is answering in.
+ *
+ * The corpus is scoped to what the door actually sells — objectives, audience
+ * targeting including the account-based kind, Lead Gen Forms, the Insight Tag,
+ * conversion tracking and the CRM loop that turns spend into pipeline. LinkedIn
+ * publishes its chargeability and objective-based pricing pages in the same help
+ * centre and they are deliberately absent: this agent already invented a price
+ * list once (see server/ai/grounding.test.ts), and a corpus is what an agent is
+ * allowed to say. Nothing about money is in it.
+ */
+const LINKEDIN_ADS: Corpus = {
+  namespace: "linkedin-ads",
+  file: "kb.linkedin-ads.json",
+  label: "LinkedIn Ads — linkedin.com/help/lms (LinkedIn Marketing Solutions Help)",
+  htmlPages: [
+    // What the platform can be told to do
+    { title: "Marketing objectives available for your ad campaigns", url: "https://www.linkedin.com/help/lms/answer/a424570?lang=en" },
+    { title: "Lead generation ad objective", url: "https://www.linkedin.com/help/lms/answer/a422440?lang=en" },
+    { title: "Ad formats for objective-based advertising", url: "https://www.linkedin.com/help/lms/answer/a422880?lang=en" },
+    // The two formats the agent's own prompt names, so its remit is retrievable
+    // rather than a claim with nothing behind it.
+    { title: "Create document ads in Campaign Manager", url: "https://www.linkedin.com/help/lms/answer/a733950?lang=en" },
+    { title: "Create an article and newsletter ad using a thought leader ad", url: "https://www.linkedin.com/help/lms/answer/a6841255?lang=en" },
+    // Targeting, and the account-based half of it
+    { title: "Targeting options for LinkedIn Ads", url: "https://www.linkedin.com/help/lms/answer/a424655?lang=en" },
+    { title: "Best practices for LinkedIn Ads audience targeting", url: "https://www.linkedin.com/help/lms/answer/a417950?lang=en" },
+    { title: "Use AND-OR targeting to set up your LinkedIn Ads audience", url: "https://www.linkedin.com/help/lms/answer/a420879?lang=en" },
+    { title: "Get started with LinkedIn Matched Audiences", url: "https://www.linkedin.com/help/lms/answer/a420552?lang=en" },
+    { title: "Company list targeting in Campaign Manager", url: "https://www.linkedin.com/help/lms/answer/a423102?lang=en" },
+    { title: "Contact list targeting in Campaign Manager", url: "https://www.linkedin.com/help/lms/answer/a1489764?lang=en" },
+    { title: "Matched Audiences match rates", url: "https://www.linkedin.com/help/lms/answer/a420595?lang=en" },
+    { title: "Matched Audiences best practices", url: "https://www.linkedin.com/help/lms/answer/a424450?lang=en" },
+    { title: "Retargeting with Matched Audiences", url: "https://www.linkedin.com/help/lms/answer/a427551?lang=en" },
+    { title: "Data collection and storage for LinkedIn Matched Audiences", url: "https://www.linkedin.com/help/lms/answer/a420297?lang=en" },
+    { title: "LinkedIn buyer groups", url: "https://www.linkedin.com/help/lms/answer/a7437052?lang=en" },
+    // Lead Gen Forms, and where the leads go afterwards
+    { title: "Lead Gen Forms", url: "https://www.linkedin.com/help/lms/answer/a423447?lang=en" },
+    { title: "Create Lead Gen Forms in Campaign Manager", url: "https://www.linkedin.com/help/lms/answer/a427102?lang=en" },
+    { title: "Create a Lead Gen Form – Best Practices", url: "https://www.linkedin.com/help/lms/answer/a421181?lang=en" },
+    { title: "Lead Gen Form fields", url: "https://www.linkedin.com/help/lms/answer/a425337?lang=en" },
+    { title: "Lead Gen Form hidden fields", url: "https://www.linkedin.com/help/lms/answer/a421421?lang=en" },
+    { title: "Integrate Lead Gen Forms with your marketing automation or CRM platform", url: "https://www.linkedin.com/help/lms/answer/a425316?lang=en" },
+    { title: "Troubleshoot Lead Gen Form third-party integrations", url: "https://www.linkedin.com/help/lms/answer/a426297?lang=en" },
+    { title: "View and download leads, metrics, and analytics for Lead Gen Form ad sets", url: "https://www.linkedin.com/help/lms/answer/a425750?lang=en" },
+    { title: "Qualified leads optimization goal", url: "https://www.linkedin.com/help/lms/answer/a6553958?lang=en" },
+    { title: "Lead Gen Forms Privacy Policy", url: "https://www.linkedin.com/help/lms/answer/a420012?lang=en" },
+    { title: "Create a Lead Gen Form audience with Matched Audiences", url: "https://www.linkedin.com/help/lms/answer/a422179?lang=en" },
+    // The Insight Tag, which is the part that gets installed on a real site
+    { title: "LinkedIn Insight Tag", url: "https://www.linkedin.com/help/lms/answer/a489169?lang=en" },
+    { title: "Create and manage your Insight Tag", url: "https://www.linkedin.com/help/lms/answer/a415868?lang=en" },
+    { title: "Add the LinkedIn Insight Tag to your website", url: "https://www.linkedin.com/help/lms/answer/a418880?lang=en" },
+    { title: "Add the LinkedIn site-wide Insight Tag to Google Tag Manager", url: "https://www.linkedin.com/help/lms/answer/a416960?lang=en" },
+    { title: "Enable first-party cookies on your LinkedIn Insight Tag", url: "https://www.linkedin.com/help/lms/answer/a423304?lang=en" },
+    { title: "Troubleshoot the LinkedIn Insight Tag", url: "https://www.linkedin.com/help/lms/answer/a425696?lang=en" },
+    // Conversion tracking
+    { title: "Get started with LinkedIn Conversion Tracking", url: "https://www.linkedin.com/help/lms/answer/a420536?lang=en" },
+    { title: "Conversion tracking event types on LinkedIn", url: "https://www.linkedin.com/help/lms/answer/a528686?lang=en" },
+    { title: "Set up Conversion Tracking for Insight Tag conversions", url: "https://www.linkedin.com/help/lms/answer/a425606?lang=en" },
+    { title: "Understanding Website Actions", url: "https://www.linkedin.com/help/lms/answer/a1377941?lang=en" },
+    { title: "Deduplication for Conversion Tracking", url: "https://www.linkedin.com/help/lms/answer/a5967630?lang=en" },
+    { title: "LinkedIn conversion values", url: "https://www.linkedin.com/help/lms/answer/a7494346?lang=en" },
+    { title: "Using modeled conversions to measure conversions for LinkedIn Ads", url: "https://www.linkedin.com/help/lms/answer/a546228?lang=en" },
+    { title: "Troubleshoot Insight Tag conversions", url: "https://www.linkedin.com/help/lms/answer/a422796?lang=en" },
+    // The Conversions API and the CRM loop — the claim the door's blurb makes
+    { title: "LinkedIn Conversions API", url: "https://www.linkedin.com/help/lms/answer/a1655394?lang=en" },
+    { title: "Set up a Conversions API integration in Campaign Manager", url: "https://www.linkedin.com/help/lms/answer/a1657171?lang=en" },
+    { title: "Conversions API setup in Campaign Manager best practices", url: "https://www.linkedin.com/help/lms/answer/a5538676?lang=en" },
+    { title: "Troubleshoot Conversions API signal quality", url: "https://www.linkedin.com/help/lms/answer/a5938392?lang=en" },
+    { title: "Create conversions with Conversions API and Google Tag Manager", url: "https://www.linkedin.com/help/lms/answer/a1718034?lang=en" },
+    { title: "Set up and create conversions using Direct API", url: "https://www.linkedin.com/help/lms/answer/a1711116?lang=en" },
+    { title: "Create a conversion with a CSV file upload", url: "https://www.linkedin.com/help/lms/answer/a1716039?lang=en" },
+    { title: "Set up HubSpot integration to send conversion data to Campaign Manager", url: "https://www.linkedin.com/help/lms/answer/a6888207?lang=en" },
+    { title: "Connect Salesforce CRM to Business Manager", url: "https://www.linkedin.com/help/lms/answer/a7480664?lang=en" },
+    { title: "Connect HubSpot CRM to Business Manager", url: "https://www.linkedin.com/help/lms/answer/a7479660?lang=en" },
+    { title: "Use CRM Sync to share CRM data from Business Manager for use in Campaign Manager", url: "https://www.linkedin.com/help/lms/answer/a7477297?lang=en" },
+    // Attribution and reporting — where the closed loop is read back
+    { title: "LinkedIn conversion attribution model", url: "https://www.linkedin.com/help/lms/answer/a426349?lang=en" },
+    { title: "LinkedIn conversion window", url: "https://www.linkedin.com/help/lms/answer/a426359?lang=en" },
+    { title: "LinkedIn Conversion Tracking reporting and metrics", url: "https://www.linkedin.com/help/lms/answer/a422513?lang=en" },
+    { title: "Attribution Model metrics for leads and conversions in Campaign Manager", url: "https://www.linkedin.com/help/lms/answer/a7132084?lang=en" },
+    { title: "Conversions and leads metrics in Campaign Manager", url: "https://www.linkedin.com/help/lms/answer/a420212?lang=en" },
+    { title: "Lead Funnel metrics in Campaign Manager", url: "https://www.linkedin.com/help/lms/answer/a7134581?lang=en" },
+    { title: "Campaign Manager reporting dashboard", url: "https://www.linkedin.com/help/lms/answer/a447152?lang=en" },
+    { title: "Compare Campaign Manager conversions with third-party reporting", url: "https://www.linkedin.com/help/lms/answer/a420207?lang=en" },
+    { title: "Revenue Attribution Report in Business Manager", url: "https://www.linkedin.com/help/lms/answer/a1459789?lang=en" },
+  ],
+};
+
+const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS];
 /* -------------------------------- chunking -------------------------------- */
 
 const TARGET_CHARS = 1200;
