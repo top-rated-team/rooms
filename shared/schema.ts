@@ -141,8 +141,21 @@ export interface MessageMeta {
 
 export const insertLeadSchema = createInsertSchema(leads).omit({ id: true, createdAt: true, notifiedAt: true });
 
+/**
+ * An answer the visitor already read on a door page, handed back so the room
+ * opens with the exchange they had rather than asking the agent the same
+ * question again. `receipt` is required: an unsigned or wrongly-signed body is
+ * discarded and the room falls back to asking, because an agent message in a
+ * room reads as the company speaking and a browser may not put words there.
+ */
+export const carriedAnswerSchema = z.object({
+  body: z.string().min(1).max(20000),
+  receipt: z.string().min(16).max(64),
+});
+
 export const createWorkspaceSchema = z.object({
   firstMessage: z.string().min(1).max(4000).optional(),
+  firstAnswer: carriedAnswerSchema.optional(),
   agentId: z.string().max(64).optional(),
   name: z.string().max(120).optional(),
   visitorName: z.string().max(120).optional(),

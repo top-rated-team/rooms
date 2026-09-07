@@ -60,7 +60,11 @@ export function Panel() {
    * the two moments it makes sense, rather than two designs competing.
    */
   const openRoom = useCallback(
-    async (opts?: { agentId?: string; firstMessage?: string }): Promise<string | null> => {
+    async (opts?: {
+      agentId?: string;
+      firstMessage?: string;
+      firstAnswer?: { body: string; receipt: string };
+    }): Promise<string | null> => {
       setOpening(true);
       setError(null);
       try {
@@ -70,6 +74,11 @@ export function Panel() {
           body: JSON.stringify({
             agentId: opts?.agentId ?? door.firstAgentId ?? undefined,
             firstMessage: opts?.firstMessage ?? firstMessage ?? undefined,
+            // Passed through untouched. The room shows the exchange the visitor
+            // already had instead of asking the agent again; the server discards
+            // anything it did not sign, so this cannot put words in an agent's
+            // mouth. Absent when they press Keep without having asked anything.
+            firstAnswer: opts?.firstAnswer,
             source: roomSource(door.id),
           }),
         });
