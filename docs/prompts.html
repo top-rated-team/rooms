@@ -45,7 +45,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">4 still to run, 9 landed. Copy one, paste
+  <p class="lede">3 still to run, 10 landed. Copy one, paste
   it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -72,72 +72,9 @@
       <h2>Wave 3 — landed</h2>
       <p class="waveNote">page-roi-calculator, door-partner, connector-gpt — reported, reviewed and committed. Nothing to run here.</p>
     </section>
-    <section class="wave">
-      <h2>Wave 4</h2>
-      <p class="waveNote">Start these 1 together. When all 1 have reported, run the two commands, then go to the next wave.</p>
-      <article class="parcel">
-        <header>
-          <h3>door-ai-builds-body</h3>
-          <button class="copy" data-target="p-door-ai-builds-body">Copy this prompt</button>
-        </header>
-        <p class="what">The custom-AI door is sold on 'we build these' and shows nothing we have built.</p>
-        <pre id="p-door-ai-builds-body">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "door-ai-builds-body".
-
-Read these first, before you write anything: README.md, private/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/components/site/doors/AiBuildsBody.tsx
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  client/src/components/site/doors/bodies.tsx
-      - one entry in DOOR_BODIES
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  A body for /services/ai-builds that shows the six builds in shared/builds.ts: this
-  application, AdGrant.AI, Top Voice, WarmLike, the Upwork proposal agent and the
-  Being.Marketing existential coach. THEY ARE A PORTFOLIO, NOT CASE STUDIES — there is no client
-  and no metric, and inventing either is the one thing this repository has a test for. Show what
-  each is, what we built in it, and a link where there is one; two have no public page and must
-  not be given one. Read `unverifiedClaims` on each build and print nothing listed there: it is
-  what a second agent could not confirm against the live product. Being.Marketing renders as
-  'Being.' plus 'Marketing' struck through, in real markup, linking to https://being.marketing
-  and not to the /l/being path. External links open in a new tab. Follow ChatGptAdsBody.tsx for
-  restraint.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  The custom-AI door is sold on 'we build these' and shows nothing we have built. Six of them
-  exist, and shared/cases.ts records that this door has no client case — which is true, and is
-  why the portfolio is the evidence it can actually offer.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
+    <section class="wave" data-landed>
+      <h2>Wave 4 — landed</h2>
+      <p class="waveNote">door-ai-builds-body — reported, reviewed and committed. Nothing to run here.</p>
     </section>
     <section class="wave">
       <h2>Wave 5</h2>

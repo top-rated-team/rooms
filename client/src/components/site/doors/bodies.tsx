@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 
 import AdGrantDoor from "@/components/site/doors/AdGrantDoor";
+import AiBuildsBody from "@/components/site/doors/AiBuildsBody";
 import ChatGptAdsBody from "@/components/site/doors/ChatGptAdsBody";
 import PartnerBody from "@/components/site/doors/PartnerBody";
 import WhiteLabelBody from "@/components/site/doors/WhiteLabelBody";
@@ -51,6 +52,12 @@ export const DOOR_BODIES: Record<string, ComponentType> = {
    * no figure is printed.
    */
   "linkedin-growth": PartnerBody,
+  /*
+   * Custom AI earns a body because the row is sold on 'we build these' and
+   * the door has no client case. The six in shared/builds.ts are the
+   * evidence it can actually offer — a portfolio, not case studies.
+   */
+  "ai-builds": AiBuildsBody,
 };
 
 export function doorBody(doorId: string): ComponentType | undefined {
