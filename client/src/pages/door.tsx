@@ -312,7 +312,13 @@ function DoorPage({ door }: { door: DoorDef }) {
         </div>
 
         {/* --------------------------- the panel band ------------------------ */}
-        <div className="border-y border-border bg-card py-[var(--s5)] lg:py-[var(--s6)]">
+        {/* id="panel" is the header's "Open a room" target, and it is the same
+            id the home page's section uses so one handler serves both. The
+            scroll margin keeps the heading clear of the sticky bar. */}
+        <div
+          id="panel"
+          className="scroll-mt-[var(--s4)] border-y border-border bg-card py-[var(--s5)] lg:py-[var(--s6)]"
+        >
           <div className={`${PAGE} grid gap-[var(--s4)] lg:grid-cols-[minmax(0,32ch)_minmax(0,1fr)] lg:gap-[var(--s5)]`}>
             <div>
               {panelIsOpen ? (

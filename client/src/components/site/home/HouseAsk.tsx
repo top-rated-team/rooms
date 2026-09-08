@@ -4,7 +4,7 @@ import { Link, useLocation } from "wouter";
 import type { AskEvent, CreateWorkspaceResponse, KbStatus } from "@shared/api";
 import type { Citation } from "@shared/schema";
 import { BOOK_A_CALL_URL } from "@shared/roster";
-import { DOOR_BY_ID } from "@shared/doors";
+import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
 import { ANSWERING_DOORS, roomSource, shortName } from "@/components/site/home/doorText";
 import { useBooking } from "@/hooks/use-booking";
 
@@ -102,8 +102,28 @@ export function HouseAsk() {
   const routedAgentId = route?.kind === "door" ? route.agentId : null;
   const routedDoor = routedDoorId ? DOOR_BY_ID[routedDoorId] : undefined;
 
-  const openRoom = useCallback(async () => {
-    if (!routedDoor) return;
+  /**
+   * Open a room. `carry` says whether the conversation on screen comes with it.
+   *
+   * IT NO LONGER NEEDS A ROUTED DOOR, and that is the whole change. It used to
+   * return immediately unless a question had already been asked and routed,
+   * which made asking the toll for getting in — the owner: "нет по прежнему на
+   * єтой секции именно кнопку войти в комнату, без того чтобі сначала играться
+   * с чат ботом и вопросами". He is right, and it was the wrong way round in a
+   * second way too: the room is the part of this that nobody else sells, so
+   * putting a chat bot in front of it hid the product behind the demo.
+   *
+   * With no door routed it opens on the default agent — the server resolves
+   * that from DEFAULT_AGENT_ID when agentId is absent — and the room's own
+   * roster is editable from inside, so arriving on a default costs nothing.
+   * `entered` records which way somebody came in, because "opened a room
+   * without asking anything" and "kept an answer" are different intents and
+   * the lead inbox should not have to guess.
+   */
+  const openRoom = useCallback(async (options?: { carry?: boolean }) => {
+    const carry = options?.carry ?? false;
+    if (carry && !routedDoor) return;
+
     setOpening(true);
     setRoomError(null);
     try {
@@ -111,10 +131,13 @@ export function HouseAsk() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          agentId: routedAgentId ?? undefined,
-          firstMessage: asked ?? undefined,
-          firstAnswer: receipt && answer && status === "done" ? { body: answer, receipt } : undefined,
-          source: roomSource(routedDoor.id),
+          agentId: carry ? (routedAgentId ?? undefined) : undefined,
+          firstMessage: carry ? (asked ?? undefined) : undefined,
+          firstAnswer: carry && receipt && answer && status === "done" ? { body: answer, receipt } : undefined,
+          source: {
+            ...roomSource(routedDoor?.id ?? DEFAULT_DOOR_ID),
+            entered: carry ? "kept" : "direct",
+          },
         }),
       });
       if (!res.ok) {
@@ -285,7 +308,11 @@ export function HouseAsk() {
     !routing;
 
   return (
-    <section id="panel" data-testid="section-house-ask" className="mt-[var(--s5)] bg-card py-[var(--s5)] lg:mt-[var(--s6)]">
+    <section
+      id="panel"
+      data-testid="section-house-ask"
+      className="mt-[var(--s5)] scroll-mt-[var(--s4)] bg-card py-[var(--s5)] lg:mt-[var(--s6)]"
+    >
       <div className="mx-auto grid max-w-[var(--page)] grid-cols-1 items-start gap-[var(--s4)] px-[var(--s3)] lg:grid-cols-[minmax(0,32ch)_minmax(0,1fr)] lg:gap-[var(--s5)]">
         <div>
           <h2 className="type-body m-0 font-display font-medium">Ask before you pick a door.</h2>
@@ -498,7 +525,7 @@ export function HouseAsk() {
               <button
                 type="button"
                 data-testid="button-house-ask-keep"
-                onClick={() => void openRoom()}
+                onClick={() => void openRoom({ carry: true })}
                 disabled={opening}
                 className="draw draw-on font-medium text-foreground disabled:opacity-50"
               >
@@ -509,10 +536,39 @@ export function HouseAsk() {
             </p>
           ) : (
             <p className="type-note mt-[var(--s3)] text-muted-foreground">
-              Nothing is saved. Close this tab and it is gone. A conversation worth keeping can become a room after you
-              ask.
+              Nothing is saved. Close this tab and it is gone.
             </p>
           )}
+
+          {/*
+            THE DOOR THAT IS NOT A QUESTION.
+            
+            This block is on the page unconditionally, and it is the second half
+            of the same correction as openRoom above: the sentence that used to
+            sit here said a conversation "can become a room after you ask",
+            which told a reader the only way in was through the chat. It is not,
+            and it never was — the API takes no question.
+            
+            It is a border and a heading rather than a link in a paragraph
+            because it is the more valuable of the two actions in this section.
+            The panel demonstrates; the room is the thing being sold.
+          */}
+          <div className="mt-[var(--s4)] border-t border-border pt-[var(--s3)]">
+            <p className="type-body m-0 font-display font-medium">Or go straight in.</p>
+            <p className="type-body mt-[var(--s2)]">
+              A room of your own with no question first: its own address, an agent and our people already in it, and
+              the work written out as a checklist. No signup — the link in your browser is the account.
+            </p>
+            <button
+              type="button"
+              data-testid="button-house-open-room"
+              onClick={() => void openRoom()}
+              disabled={opening}
+              className="mt-[var(--s3)] border-b border-primary pb-[var(--s1)] type-meta font-medium text-primary hover:border-foreground hover:text-foreground disabled:opacity-50"
+            >
+              {opening ? "Opening a room…" : "Open a room"}
+            </button>
+          </div>
 
           {roomError ? (
             <p role="alert" className="type-note mt-[var(--s1)] text-destructive">

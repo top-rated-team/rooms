@@ -63,6 +63,31 @@ export function Landing() {
     };
   }, []);
 
+  /*
+   * ARRIVING AT AN ANCHOR THAT DID NOT EXIST YET.
+   *
+   * "Open a room" in the header points at /#panel. From a page that has no
+   * panel — /pricing, /case-studies — the browser loads this page and then
+   * looks for #panel, which at that instant is inside a lazily-loaded chunk
+   * that has not rendered. So the fragment finds nothing and the reader lands
+   * at the top of the home page instead of at the section they asked for.
+   *
+   * One frame is enough: the sections below are in this page's own chunk, so
+   * they are in the document by the time an effect after paint runs.
+   */
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+
+    const frame = requestAnimationFrame(() => {
+      const target = document.getElementById(id);
+      if (!target) return;
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      target.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
