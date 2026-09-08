@@ -72,13 +72,38 @@
                   color:var(--muted); }
   dl.casemeta dd{ margin:.6mm 0 0; font-size:9.5pt; font-variant-numeric:tabular-nums; }
 
-  .shots{ margin-top:7mm; }
-  .shots figure{ margin:3mm 0 0; }
-  .shotfirst{ break-inside:avoid; }
+  .shots{ margin-top:6mm; }
+  /* Floated into the text column. The clear on a case keeps the next one from
+     starting beside a leftover float. */
+  .shots.aside{ float:right; width:44%; margin:0 0 4mm 5mm; }
+  .shots.aside .label{ margin-bottom:1.5mm; }
+  .shots.aside figure{ width:100%; margin:0 0 2mm 0; }
+  .shots.aside img{ max-height:none; }
+  .case{ clear:both; }
+  /*
+    INLINE-BLOCK, NOT FLEX, and the difference is 29 pages. A flex container
+    does not fragment across printed sheets in Chrome: with flex it put one
+    screenshot on each page and left 29 of 69 pages carrying an image and no
+    text at all, which is the thing the owner asked to stop. Inline-block flows
+    like text, so a row fills, wraps, and breaks between rows.
+  */
+  .shots .grid{ margin-top:2.5mm; font-size:0; }
+  .shots figure{ margin:0 2mm 2mm 0; display:inline-block; vertical-align:top; }
+  .shots figure.full{ width:100%; margin-right:0; }
+  .shots figure.half{ width:calc(50% - 2mm); }
+  .shots figure.third{ width:calc(33.333% - 2mm); }
+  /* Whichever constraint binds first, and the aspect ratio survives both: a
+     wide table hits the width, a tall dashboard hits the height, and neither
+     is allowed to own a page. */
+  /* A ceiling per class, so a narrow-and-tall screenshot in a three-up row
+     cannot be taller than the row it shares. */
+  .shots img{ max-width:100%; width:auto; height:auto;
+              border:.4pt solid var(--line); display:block; }
+  .shots figure.full img{ max-height:48mm; }
+  .shots figure.half img{ max-height:48mm; }
+  .shots figure.third img{ max-height:34mm; }
   .period{ font-weight:400; letter-spacing:.04em; text-transform:none;
            font-family:var(--read); font-size:8.5pt; }
-  .shots img{ width:100%; height:auto; display:block;
-              border:.4pt solid var(--line); }
 
   /* ---- the drawing ---- */
   svg.plate{ width:100%; height:auto; display:block; color:var(--ink); }
@@ -128,7 +153,11 @@
   .who{ font-size:10pt; font-weight:500; }
   .what{ font-family:var(--read); font-size:8.5pt; color:var(--muted); text-align:right; }
 
-  .build{ margin-top:6mm; }
+  .build{ margin-top:6mm; break-inside:avoid; }
+  /* The product's own front page. Captured in a real browser with the consent
+     banners and chat bubbles removed first — furniture is not product. */
+  .buildshot{ margin:3mm 0 0; }
+  .buildshot img{ width:100%; height:auto; border:.4pt solid var(--line); }
   .closing{ break-before:page; }
   .closing .read{ max-width:46em; }
   .identify{ margin-top:8mm; padding-top:2.5mm; border-top:.4pt solid var(--line);
@@ -211,7 +240,13 @@
   <section class="case">
     <p class="eyebrow">Case 01</p>
     <h2>B2B/B2C SaaS, Live Proxies</h2>
-    <dl class="casemeta"><div><dt>Category</dt><dd>B2C/B2B SaaS, commercial proxies</dd></div><div><dt>Website</dt><dd>liveproxies.io</dd></div><div><dt>Country</dt><dd>US</dd></div><div><dt>Budget</dt><dd>₪470 / day</dd></div></dl>
+    <dl class="casemeta"><div><dt>Category</dt><dd>B2C/B2B SaaS, commercial proxies</dd></div><div><dt>Website</dt><dd>liveproxies.io</dd></div><div><dt>Country</dt><dd>US</dd></div><div><dt>Budget</dt><dd>$470 / day</dd></div></dl>
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p04-o25.jpg" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     <p class="label">Challenges</p>
     
@@ -234,22 +269,22 @@
     <ul class="items"><li>Conversions 5,477.86 (+180.26%)</li><li>CTR 7.22% (+94.60%)</li><li>Cost/conv. $8.98 (-31.17%)</li></ul>
   </div><div class="block">
     <p class="label">Account Total Jan ‘26 - Apr ‘26 vs Sep ‘25 - Dec ‘25</p>
-    
-    <ul class="items"><li>Clicks 74,482 (+60.00%)</li><li>Conv. value/cost 4.12 (+101.48%)</li><li>Impressions 1,773,216 (-8.49%) Despite a slight decrease in impressions, clicks grew by 60% and conv. value/cost doubled (+101%), demonstrating continued efficiency improvements. Ongoing account expansion, bid strategy refinement and campaign structure optimization drive consistent conversion growth.</li></ul>
+    <p class="read">Despite a slight decrease in impressions, clicks grew by 60% and conv. value/cost doubled (+101%), demonstrating continued efficiency improvements. Ongoing account expansion, bid strategy refinement and campaign structure optimization drive consistent conversion growth.</p>
+    <ul class="items"><li>Clicks 74,482 (+60.00%)</li><li>Conv. value/cost 4.12 (+101.48%)</li><li>Impressions 1,773,216 (-8.49%)</li></ul>
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p04-o25.jpg" alt=""></figure>
-            </div>
-            
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 02</p>
     <h2>Local lead gen, Personal Injury Law, KRW Lawyers</h2>
     <dl class="casemeta"><div><dt>Category</dt><dd>Local B2C lead gen, personal injury law firm</dd></div><div><dt>Website</dt><dd>krwlawyers.net</dd></div><div><dt>Country</dt><dd>United States (Texas)</dd></div><div><dt>Budget</dt><dd>$1,350 / day</dd></div></dl>
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p05-o28.jpg" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     <p class="label">Challenges</p>
     
@@ -264,22 +299,22 @@
     <ul class="items"><li>Full account audit and rebuild from scratch;</li><li>Competitors research and website audit;</li><li>Semantic core development: category-based and product-based search for Texas;</li><li>Performance Max campaign launch with dedicated audience signals;</li><li>Bidding strategy overhaul: switched to Maximize Conversions with Target CPA;</li><li>Conversion tracking setup for both calls and form submissions;</li><li>Negative keywords lists, bid adjustments by location, device and schedule.</li></ul>
   </div><div class="block">
     <p class="label">Results Apr 1 – May 26, 2026 vs Feb 4 – Mar 31, 2026</p>
-    
-    <ul class="items"><li>Conversions 837.98 (+329.70%)</li><li>Cost/conv. $104.84 (-66.91%)</li><li>Conv. rate 5.75% (+38.37%)</li><li>Clicks 14,571 (+291.85%)</li><li>Avg. CPC $6.03 (+26.65%) After a full account rebuild from scratch — new campaign structure, Performance Max and updated bidding strategies — conversions grew by 330% and cost per conversion dropped by 67%, despite operating in one of the most competitive legal niches in the US.</li></ul>
+    <p class="read">After a full account rebuild from scratch — new campaign structure, Performance Max and updated bidding strategies — conversions grew by 330% and cost per conversion dropped by 67%, despite operating in one of the most competitive legal niches in the US.</p>
+    <ul class="items"><li>Conversions 837.98 (+329.70%)</li><li>Cost/conv. $104.84 (-66.91%)</li><li>Conv. rate 5.75% (+38.37%)</li><li>Clicks 14,571 (+291.85%)</li><li>Avg. CPC $6.03 (+26.65%)</li></ul>
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p05-o28.jpg" alt=""></figure>
-            </div>
-            
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 03</p>
     <h2>B2B/B2C lead gen, Legal Services, JuridConsult</h2>
     <dl class="casemeta"><div><dt>Category</dt><dd>B2B/B2C lead gen, sworn translations, legalisation &amp; apostille services</dd></div><div><dt>Website</dt><dd>juridconsult.nl</dd></div><div><dt>Country</dt><dd>Netherlands (serving international markets)</dd></div><div><dt>Budget</dt><dd>€30 / day</dd></div></dl>
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p06-o31.jpg" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     <p class="label">Challenges</p>
     
@@ -294,22 +329,22 @@
     <ul class="items"><li>Full account and conversion tracking audit;</li><li>Conversion tracking rebuild: calls, form submissions and chat enquiries;</li><li>Complete account rebuild from scratch with campaign structure aligned to website services (Generic, Legalisation by Country, Apostille by Country);</li><li>Semantic core built from website content covering all service categories and countries;</li><li>Bid adjustments by location, device and schedule; negative keyword lists.</li></ul>
   </div><div class="block">
     <p class="label">Results Apr 26 – May 26, 2026 vs Mar 26 – Apr 25, 2026</p>
-    
-    <ul class="items"><li>Conversions 76.85 (+476.70%)</li><li>Cost/conv. €10.62 (-81.09%)</li><li>CTR 10.35% (+10.53%)</li><li>Clicks 562</li><li>Avg. CPC €1.45 A full account rebuild with correct conversion tracking and campaign structure aligned to website services delivered a 477% growth in conversions and an 81% drop in cost per conversion — all within a limited €30/day budget.</li></ul>
+    <p class="read">A full account rebuild with correct conversion tracking and campaign structure aligned to website services delivered a 477% growth in conversions and an 81% drop in cost per conversion — all within a limited €30/day budget.</p>
+    <ul class="items"><li>Conversions 76.85 (+476.70%)</li><li>Cost/conv. €10.62 (-81.09%)</li><li>CTR 10.35% (+10.53%)</li><li>Clicks 562</li><li>Avg. CPC €1.45</li></ul>
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p06-o31.jpg" alt=""></figure>
-            </div>
-            
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 04</p>
     <h2>B2B SaaS, Enterprise AI Platform, Fundamental</h2>
     <dl class="casemeta"><div><dt>Category</dt><dd>B2B SaaS, enterprise AI/ML predictive analytics platform</dd></div><div><dt>Website</dt><dd>fundamental.tech</dd></div><div><dt>Country</dt><dd>USA, UK, EU (tier-1 markets)</dd></div><div><dt>Budget</dt><dd>$110 / day</dd></div></dl>
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p07-o34.jpg" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     <p class="label">Challenges</p>
     
@@ -324,25 +359,25 @@
     <ul class="items"><li>Full account setup from scratch: GA4, GTM, conversion tracking for website signups;</li><li>Competitor and market research for enterprise AI/ML niche;</li><li>Performance Max campaign for broad reach and lead generation;</li><li>Search split by product and brand coverage for USA and UK+EU separately;</li><li>YouTube Shorts campaigns for brand awareness testing;</li><li>Bid strategy: Maximize Conversions with Target CPA; bids, budgets and audience signals.</li></ul>
   </div><div class="block">
     <p class="label">Results Mar 1 – Apr 30, 2026 vs Feb 2 – 28, 2026</p>
-    
-    <ul class="items"><li>Conversions (signups) 19 (+171.43%)</li><li>Interactions 117,996 (+171.43%)</li><li>Interaction rate 39.16% (+62.22%)</li><li>Avg. cost $0.05 (-82.57%) Launching a new enterprise AI brand from zero in tier-1 markets, a full-funnel campaign structure — PMax, Search and YouTube Shorts — delivered 171% growth in signups and a 10x increase in impressions within the first two months.</li></ul>
+    <p class="read">Launching a new enterprise AI brand from zero in tier-1 markets, a full-funnel campaign structure — PMax, Search and YouTube Shorts — delivered 171% growth in signups and a 10x increase in impressions within the first two months.</p>
+    <ul class="items"><li>Conversions (signups) 19 (+171.43%)</li><li>Interactions 117,996 (+171.43%)</li><li>Interaction rate 39.16% (+62.22%)</li><li>Avg. cost $0.05 (-82.57%)</li></ul>
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p07-o34.jpg" alt=""></figure>
-            </div>
-            
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 05</p>
     <h2>B2C &amp; B2B SaaS, Vehicle History Reports, VinDocs</h2>
     <dl class="casemeta"><div><dt>Category</dt><dd>B2C &amp; B2B SaaS, vehicle history reports</dd></div><div><dt>Website</dt><dd>vindocs.com</dd></div></dl>
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p08-o37.jpg" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     
-    <p class="read">Countries: South Africa, Romania, New Zealand, Australia Budget: $325 / day</p>
+    <p class="read">Countries: South Africa, Romania, New Zealand, Australia</p><p class="read">Budget: $325 / day</p>
     
   </div><div class="block">
     <p class="label">Challenges</p>
@@ -358,26 +393,26 @@
     <ul class="items"><li>Full account audit and complete rebuild from scratch;</li><li>Separate Search campaigns per country with dedicated ad copies, keywords and budgets;</li><li>Separate B2B landing page campaigns (SA) targeting dealerships and fleet businesses;</li><li>Competitors campaigns per market;</li><li>Bidding strategies: Target ROAS for high-volume markets, TCPA for developing ones;</li><li>Ongoing bid, budget and keyword optimization across all markets.</li></ul>
   </div><div class="block">
     <p class="label">Results Mar 1 – Apr 30, 2026 vs Dec 30, 2025 – Feb 28, 2026</p>
-    
-    <ul class="items"><li>Conversions (purchases) 511.86 (+25.77%)</li><li>Cost/conv. €14.09 (-10.24%)</li><li>Conv. value/cost 1.24 (+11.05%)</li><li>Clicks 14,723 (+14.75%)</li><li>CTR 9.58% (+15.13%) After a full account rebuild with country-specific campaign structure and tailored bidding</li></ul>
+    <p class="read">After a full account rebuild with country-specific campaign structure and tailored bidding</p>
+    <ul class="items"><li>Conversions (purchases) 511.86 (+25.77%)</li><li>Cost/conv. €14.09 (-10.24%)</li><li>Conv. value/cost 1.24 (+11.05%)</li><li>Clicks 14,723 (+14.75%)</li><li>CTR 9.58% (+15.13%)</li></ul>
   </div><div class="block">
     <p class="label">strategies, purchases grew by 26%, cost per conversion dropped by 10% and ROAS improved</p>
     <p class="read">across all 4 markets simultaneously.</p>
     
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p08-o37.jpg" alt=""></figure>
-            </div>
-            
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 06</p>
     <h2>B2C SaaS, Tech Mock Interview</h2>
     <dl class="casemeta"><div><dt>Category</dt><dd>B2C SaaS, mentorship and recruiting</dd></div><div><dt>Website</dt><dd>techmockinterview.com</dd></div><div><dt>Country</dt><dd>Canada</dd></div><div><dt>Budget</dt><dd>CA$1,500 / mo</dd></div></dl>
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p12-o49.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p13-o53.png" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     <p class="label">Challenges</p>
     
@@ -396,8 +431,8 @@
     <ul class="items"><li>Conversions grew by 94.62%</li></ul>
   </div><div class="block">
     <p class="label">Results Jan ‘22 – Jul ‘22 vs Jan ‘23 – Jul ‘23 (year-over-year)</p>
-    
-    <ul class="items"><li>Conversions grew by 53.15%</li><li>Conversion rate grew by 297.43% Seasonality barely affected KPIs due to proper ongoing optimization. Budget remained the same throughout.</li></ul>
+    <p class="read">Seasonality barely affected KPIs due to proper ongoing optimization. Budget remained the same throughout.</p>
+    <ul class="items"><li>Conversions grew by 53.15%</li><li>Conversion rate grew by 297.43%</li></ul>
   </div><div class="block">
     <p class="label">Challenges</p>
     
@@ -420,22 +455,22 @@
     <ul class="items"><li>Conversions grew by 94.62%</li></ul>
   </div><div class="block">
     <p class="label">Results January ‘22 - July ‘22 vs. January ‘23 - July ‘23 (prior Universal GA data)</p>
-    <p class="read">Important: Budget remained the same.</p>
-    <ul class="items"><li>Conversions grew by 53.15%</li><li>Conversion rate grew by 297.43% Seasonality almost didn’t affect the KPIs much, because of the proper ongoing optimization.</li></ul>
+    <p class="read">Seasonality almost didn’t affect the KPIs much, because of the proper ongoing optimization.</p><p class="read">Important: Budget remained the same.</p>
+    <ul class="items"><li>Conversions grew by 53.15%</li><li>Conversion rate grew by 297.43%</li></ul>
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p12-o49.png" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p13-o53.png" alt=""></figure>
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 07</p>
     <h2>Google Grants, Nonprofit App, Pfotenpiloten / DogMap</h2>
     <dl class="casemeta"><div><dt>Category</dt><dd>Google Grants for nonprofits, dog-friendly places app</dd></div><div><dt>Website</dt><dd>map.pfotenpiloten.org</dd></div><div><dt>Budget</dt><dd>Google Grants ($10,000/mo limit) — ~$9,900/mo fully utilized</dd></div></dl>
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p10-o42.jpg" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     <p class="label">Challenges</p>
     <p class="read">International audience across 23 languages with multilingual campaign needs;</p><p class="read">Maximizing the full $10,000/mo grant spend while maintaining quality score and CTR.</p>
@@ -450,25 +485,25 @@
     <ul class="items"><li>Full account audit and complete rebuild of all campaigns;</li><li>New Performance Max campaigns launched alongside rebuilt Search campaigns;</li><li>All ad copies rewritten to meet Google Grants quality and CTR requirements;</li><li>Campaigns for bookings, app downloads, brand &amp; niche keyword assistance categories;</li><li>Ongoing monitoring CTR above 5% threshold and keep the account compliant with policy.</li></ul>
   </div><div class="block">
     <p class="label">Results Jan 1 – Mar 31, 2026 vs Oct 3 – Dec 31, 2025</p>
-    
-    <ul class="items"><li>Conversions (registrations &amp; downloads) 116 (+33.33%)</li><li>Cost/conv. $256.41 (-25.21%)</li><li>CTR 10.04% (+11.49%)</li><li>Conv. rate 3.68% (+36.38%)</li><li>Grant budget ~$9,900/mo fully utilized (vs partial spend previously) A full Google Grants account rebuild — new PMax and Search campaigns, rewritten ad copies — delivered 33% more conversions, 25% lower cost per conversion and CTR above 10%, while fully utilizing the grant budget.</li></ul>
+    <p class="read">A full Google Grants account rebuild — new PMax and Search campaigns, rewritten ad copies — delivered 33% more conversions, 25% lower cost per conversion and CTR above 10%, while fully utilizing the grant budget.</p>
+    <ul class="items"><li>Conversions (registrations &amp; downloads) 116 (+33.33%)</li><li>Cost/conv. $256.41 (-25.21%)</li><li>CTR 10.04% (+11.49%)</li><li>Conv. rate 3.68% (+36.38%)</li><li>Grant budget ~$9,900/mo fully utilized (vs partial spend previously)</li></ul>
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p10-o42.jpg" alt=""></figure>
-            </div>
-            
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 08</p>
     <h2>B2B SaaS, subscription payments platform, AppHud</h2>
     <dl class="casemeta"><div><dt>Client</dt><dd>Skyrocket your app growth with a revenue data suite. Covers every aspect when it comes</dd></div></dl>
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p11-o46.png" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     
-    <p class="read">to in-app subscriptions from integration to analytics on iOS and Android Location: США</p>
+    <p class="read">to in-app subscriptions from integration to analytics on iOS and Android</p><p class="read">Location: США</p>
     
   </div><div class="block">
     <p class="label">Objective: More registrations for less CAC</p>
@@ -479,70 +514,65 @@
     <p class="read">1. Competitors ads review 2. Worked on the semantics from website content 3. Developed campaigns according to product categories 4. Competitor campaign 5. DSA campaign with all possible dynamic targets.</p><p class="read">6. Bids adjustment according to locations, demographics and devices 7. Regular stat monitoring, traffic changes and other metrics 8. Account structure:</p><p class="read">First month performance data 19.05.2022 - 18.06.2022:</p>
     <ul class="items"><li>Search campaigns;</li><li>DSA campaigns;</li><li>Display campaigns to increase reach and brand awareness.</li><li>User created account 18</li><li>Cost $247.60</li><li>СРА $13.76</li></ul>
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p11-o46.png" alt=""></figure>
-            </div>
-            
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 09</p>
     <h2>B2B lead gen, HR training for IT</h2>
     
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p14-o57.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p15-o60.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p15-o61.png" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     <p class="label">Optimization tasks</p>
     <p class="read">1. Detailed semantics for Search Ad campaigns 2. TA profiles analysis and campaigns launch through Google Display Network 3. Remarketing campaigns development 4. Creatives for cold audiences</p>
     
   </div><div class="block">
     <p class="label">Results</p>
-    <p class="read">KPIs performance from 26/05 - 19/06 in comparison to 26/04 - 19/05 - Conversions growth of 30% - CPC decrease of 57.53% - Average position improvement of 49% This led to significant target traffic growth - Clicks increased by +651%</p>
+    <p class="read">KPIs performance from 26/05 - 19/06 in comparison to 26/04 - 19/05 - Conversions growth of 30% - CPC decrease of 57.53% - Average position improvement of 49%</p><p class="read">This led to significant target traffic growth - Clicks increased by +651%</p>
     
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p14-o57.png" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p15-o60.png" alt=""></figure><figure><img src="../data/case-shots/p15-o61.png" alt=""></figure>
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 10</p>
     <h2>Local lead gen, Divorce &amp; Family Law</h2>
     <dl class="casemeta"><div><dt>Client</dt><dd>Lawyer group from Colorado.</dd></div><div><dt>Location</dt><dd>Colorado, United States.</dd></div><div><dt>Account</dt><dd>Active since December 2017</dd></div><div><dt>Start</dt><dd>March 2020</dd></div></dl>
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p16-o64.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p17-o67.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p17-o68.png" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     <p class="label">Initial state</p>
     <p class="read">According to the account analysis, the decision of developing from scratch was resolved:</p>
     <ul class="items"><li>broader and more detailed semantics;</li><li>website and landing page content;</li><li>specific URLs for every location and service.</li></ul>
   </div><div class="block">
     <p class="label">Campaigns development</p>
-    <p class="read">1. Semantics were collected according to website services and TA.</p><p class="read">2. Redistributed semantics to separate search campaigns with dedicated ad copies.</p><p class="read">3. Separate URL for every location + service (28 total).</p><p class="read">4. Separate budgets according to semantics and demand.</p><p class="read">5. Bid adjustments according to age, gender and household income.</p><p class="read">6. Observations for interest audiences to every campaign.</p><p class="read">We’ve continuously delivered monitoring and analysis of search queries / keywords, bid adjustments and budgets, and demand changes according to all the KPIs in Google Ads and Google Analytics.</p><p class="read">The COVID 19 factor wasn’t definitely “beneficial” for the divorce growth, so the comparison to the previous period performance does reflect the actual optimization case.</p><p class="read">Campaign performance for Mar 2020 - Dec 2020 vs Feb 2019 - Nov 2019</p>
+    <p class="read">1. Semantics were collected according to website services and TA.</p><p class="read">2. Redistributed semantics to separate search campaigns with dedicated ad copies.</p><p class="read">3. Separate URL for every location + service (28 total).</p><p class="read">4. Separate budgets according to semantics and demand.</p><p class="read">5. Bid adjustments according to age, gender and household income.</p><p class="read">6. Observations for interest audiences to every campaign.</p><p class="read">We’ve continuously delivered monitoring and analysis of search queries / keywords, bid adjustments and budgets, and demand changes according to all the KPIs in Google Ads and</p><p class="read">Google Analytics.</p><p class="read">The COVID 19 factor wasn’t definitely “beneficial” for the divorce growth, so the comparison to the previous period performance does reflect the actual optimization case.</p><p class="read">Campaign performance for Mar 2020 - Dec 2020 vs Feb 2019 - Nov 2019</p>
     
   </div><div class="block">
     <p class="label">Results</p>
-    <p class="read">Despite impressions/click decrease, calls from website conversion grew by 76%.</p><p class="read">Bounce Rate 70.27% (-21.24%) Pages/Session 1.82 (+37.36%) Avg. Session Duration 01:01 (+104.05%)</p>
-    <ul class="items"><li>Clicks 1,096 (-25%) Impression 25,770 (-93%) CTR 4.25 (+995.25%) Conversions 44 (+76%) Bounce Rate 70.27% (-21.24%) Pages / Session 1.82 (+37.36%) Avg. Session Duration 01:01 (+104.05%) Number of impressions/clicks decreased - this is because we assembled TA and semantic core fully corresponding to website services, and potential clients searches with service name in every query. Thus, irrelevant and general search queries were cut off. However, this grew CTR by 995.25%, which means the TA was reached.</li></ul>
+    <p class="read">Impression 25,770 (-93%)</p><p class="read">CTR 4.25 (+995.25%)</p><p class="read">Conversions 44 (+76%)</p><p class="read">Bounce Rate 70.27% (-21.24%)</p><p class="read">Pages / Session 1.82 (+37.36%)</p><p class="read">Avg. Session Duration 01:01 (+104.05%)</p><p class="read">Number of impressions/clicks decreased - this is because we assembled TA and semantic core fully corresponding to website services, and potential clients searches with service name in every query. Thus, irrelevant and general search queries were cut off. However, this grew CTR by 995.25%, which means the TA was reached.</p><p class="read">Despite impressions/click decrease, calls from website conversion grew by 76%.</p><p class="read">Bounce Rate 70.27% (-21.24%)</p><p class="read">Pages/Session 1.82 (+37.36%)</p><p class="read">Avg. Session Duration 01:01 (+104.05%)</p>
+    <ul class="items"><li>Clicks 1,096 (-25%)</li></ul>
   </div><div class="block">
     <p class="label">Conclusions</p>
     
     <ul class="items"><li>The most crucial task is to create TA and focus on it.</li><li>The next steps after search campaigns development:</li><li>Branding via GDN;</li><li>YouTube for interest categories;</li><li>Local campaign;</li><li>Competitors’ campaigns (search; GDN).</li><li>Google My Business account improvement (+maps),</li><li>Facebook, Instagram, LinkedIn</li></ul>
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p16-o64.png" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p17-o67.png" alt=""></figure><figure><img src="../data/case-shots/p17-o68.png" alt=""></figure>
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 11</p>
     <h2>Local lead gen: 2 Pest Controls</h2>
+    
     
     <div class="block">
     <p class="label">Optimization tasks</p>
@@ -550,19 +580,19 @@
     <ul class="items"><li>Current campaigns analysis. a. Upon analysis we’ve decided to partially retain the previous campaigns. b. Priority channels:</li><li>Search network</li><li>Remarketing</li><li>Video campaigns</li></ul>
   </div><div class="block">
     <p class="label">Campaigns development</p>
-    <p class="read">b. Redistributed the semantics according to brand, insect types and services.</p><p class="read">Performance during first two months:</p><p class="read">Impression: 44,819 (+23.40%) CTR 4.56 % (+3.27%) CPC $9.85 (-14.55%) Call Rail Phone Call Conversions: 288 (+26%)</p>
+    <p class="read">b. Redistributed the semantics according to brand, insect types and services.</p><p class="read">Performance during first two months:</p><p class="read">Impression: 44,819 (+23.40%)</p><p class="read">CTR 4.56 % (+3.27%)</p><p class="read">CPC $9.85 (-14.55%)</p><p class="read">Call Rail Phone Call Conversions: 288 (+26%)</p>
     <ul class="items"><li>Clicks: 2,044 (+27.43%) a. Semantics was collected with regards to the website content as well as from the previous campaigns data.</li></ul>
   </div><div class="block">
     <p class="label">Results were satisfactory, but a significant part of optimization tasks still require completion</p>
-    <p class="read">Primarily this consists of the ongoing work to increase semantic core growth as well as adjustment of current keywords and negative keywords. Bids were also adjusted according to demographics, household income, devices, geo locations and season.</p><p class="read">Performance data for the period 06/03 - 05/05 vs previous period</p>
-    <ul class="items"><li>Clicks 4,630 (+125%) Impression 524,397 (+1 060.30%) CTR 6.22 % (+20%) CPC $7.18 (-27%) Call Rail Phone Call Conversions 519 (+80%) Assisted conversions:</li><li>Call Rail Phone Call Conversions 71 (+7.60%)</li></ul>
+    <p class="read">Primarily this consists of the ongoing work to increase semantic core growth as well as adjustment of current keywords and negative keywords. Bids were also adjusted according to demographics, household income, devices, geo locations and season.</p><p class="read">Performance data for the period 06/03 - 05/05 vs previous period</p><p class="read">Impression 524,397 (+1 060.30%)</p><p class="read">CTR 6.22 % (+20%)</p><p class="read">CPC $7.18 (-27%)</p><p class="read">Call Rail Phone Call Conversions 519 (+80%)</p><p class="read">Assisted conversions:</p>
+    <ul class="items"><li>Clicks 4,630 (+125%)</li><li>Call Rail Phone Call Conversions 71 (+7.60%)</li></ul>
   </div><div class="block">
     <p class="label">Conclusions</p>
     <p class="read">The challenge was to beat a large number of aggressive competitors with a limited daily budget.</p><p class="read">We committed a huge number of hours for the initial development of keywords and semantics, taking into account the large repertoire of insects. In particular, it was important to create a proper account structure in particular, and to categorize campaigns according to locations and insects, for better performance analysis. We also prepared engaging ads and ad extensions. Bids were adjusted according to location, gender, age, devices and household incomes. The objective was also to scale, so we were monitoring everything on a daily basis.</p><p class="read">Main reasons for jump in KPIs:</p><p class="read">1. Keywords. We’ve collated all possible targeted keywords and have kept monitoring search queries, for continual semantics growth, suspension of non-converters and keywords optimization, according to CTR, CPC and CPA.</p><p class="read">2. Negative keywords. Continual exclusion of traffic relating to irrelevant search queries, and initial preparation of negative keyword lists on a daily basis.</p>
     
   </div><div class="block">
     <p class="label">Strategies. Experimenting with bidding strategies, to maximize KPIs</p>
-    <p class="read">A growth in call conversion growth by +300% is a result that has undoubtedly exceeded expectations. The seasonal demand of the business is a sensitive factor for further account adjustment, strategy experimentation and semantics development.</p><p class="read">Local lead gen: Pest Control #2 Contract from 2021 till November 2023 SEM platforms: Google Ads; Microsoft Ads.</p>
+    <p class="read">A growth in call conversion growth by +300% is a result that has undoubtedly exceeded expectations. The seasonal demand of the business is a sensitive factor for further account adjustment, strategy experimentation and semantics development.</p><p class="read">Local lead gen: Pest Control #2</p><p class="read">Contract from 2021 till November 2023</p><p class="read">SEM platforms: Google Ads; Microsoft Ads.</p>
     
   </div><div class="block">
     <p class="label">Goal: Receive calls and form submissions at minimum CPA</p>
@@ -570,26 +600,31 @@
     
   </div><div class="block">
     <p class="label">Work done</p>
-    <p class="read">Important: Budgets were limited for both Google Ads and Bing Ads, so we launched different campaigns by location, paying attention to demand and seasonality.</p><p class="read">Bing Ads August 2023 - November 2023 vs April 2023 - July 2023</p>
-    <ul class="items"><li>Competitors’ activity review;</li><li>Website audit and recommendations;</li><li>Detailed semantics for all the website offers;</li><li>Negative keyword lists;</li><li>Proper keyword split between campaigns and ad groups;</li><li>Custom ads and call to actions for every ad group;</li><li>All ad assets possible;</li><li>Goals.</li><li>Conversions increased by 82.74% January 2022-July 2022 vs January 2023-July 2023 (the previous version of analytics, data was recorded only until July 2023) Conversions grew by 403.83% Conversion rate grew by 342.76% google/cpc August 2023 - November 2023 vs April 2023 - July 2023</li><li>Conversions grew to 94.62% January 2022-July 2022 vs January 2023-July 2023 (the previous version of analytics, data was recorded only until July 2023) Conversions grew to 53.15% Conversion rate grew by 297.43%</li></ul>
+    <p class="read">Important: Budgets were limited for both Google Ads and Bing Ads, so we launched different campaigns by location, paying attention to demand and seasonality.</p><p class="read">Bing Ads August 2023 - November 2023 vs April 2023 - July 2023</p><p class="read">January 2022-July 2022 vs January 2023-July 2023 (the previous version of analytics, data was recorded only until July 2023)</p><p class="read">Conversions grew by 403.83%</p><p class="read">Conversion rate grew by 342.76% google/cpc August 2023 - November 2023 vs April 2023 - July 2023</p><p class="read">January 2022-July 2022 vs January 2023-July 2023 (the previous version of analytics, data was recorded only until July 2023)</p><p class="read">Conversions grew to 53.15%</p><p class="read">Conversion rate grew by 297.43%</p>
+    <ul class="items"><li>Competitors’ activity review;</li><li>Website audit and recommendations;</li><li>Detailed semantics for all the website offers;</li><li>Negative keyword lists;</li><li>Proper keyword split between campaigns and ad groups;</li><li>Custom ads and call to actions for every ad group;</li><li>All ad assets possible;</li><li>Goals.</li><li>Conversions increased by 82.74%</li><li>Conversions grew to 94.62%</li></ul>
   </div><div class="block">
     <p class="label">Results summary</p>
     <p class="read">The total number of conversions has been increasing even during the winter period, when demand was low. We were able to increase the number of conversions by delivering ongoing optimization, CPC and categories based on seasonality.</p><p class="read">All this time, the work was aimed at increasing the number of conversions within the existing budget.</p><p class="read">Important:The size of the budget has not changed all this time.</p>
     
   </div>
     <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p18-o71.png" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p18-o72.png" alt=""></figure><figure><img src="../data/case-shots/p19-o75.png" alt=""></figure><figure><img src="../data/case-shots/p19-o76.png" alt=""></figure><figure><img src="../data/case-shots/p19-o77.png" alt=""></figure><figure><img src="../data/case-shots/p20-o80.png" alt=""></figure><figure><img src="../data/case-shots/p21-o83.png" alt=""></figure><figure><img src="../data/case-shots/p21-o84.png" alt=""></figure><figure><img src="../data/case-shots/p21-o85.png" alt=""></figure>
-          </div>
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="third"><img src="../data/case-shots/p18-o71.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p18-o72.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p19-o75.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p19-o76.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p19-o77.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p20-o80.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p21-o83.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p21-o84.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p21-o85.png" alt=""></figure>
+  </div>
+  </div>
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 12</p>
     <h2>B2B Mobile app, MyOpportunity</h2>
     <dl class="casemeta"><div><dt>Category</dt><dd>Business and social networking app</dd></div><div><dt>Website</dt><dd>myopportunity.com</dd></div><div><dt>Country</dt><dd>US</dd></div><div><dt>Budget</dt><dd>$25,000 / mo - obviously not enough to compete with LinkedIn or Bumble</dd></div></dl>
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p23-o91.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p23-o92.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p24-o95.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p24-o96.png" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     <p class="label">Challenges</p>
     <p class="read">Previous SEO team apparently used a lot of bot traffic to deceive the client.</p>
@@ -608,26 +643,21 @@
     <ul class="items"><li>semantic core, only targeted search queries;</li><li>campaigns split according to search queries and devices;</li><li>DSA, Pmax, video campaigns for reach; brand, competitors ones - for brand awareness;</li><li>Budget - according to devices demand and CPC;</li><li>Budgets and bids / bedding strategy adjustment after first crucial month;</li><li>Custom ad copies with custom callouts for every ad group;</li></ul>
   </div><div class="block">
     <p class="label">Results: July ‘23</p>
-    
-    <ul class="items"><li>Signups 235</li><li>СРА $106.38</li><li>Installs 1,513 СРА $16.52</li></ul>
+    <p class="read">СРА $16.52</p>
+    <ul class="items"><li>Signups 235</li><li>СРА $106.38</li><li>Installs 1,513</li></ul>
   </div><div class="block">
     <p class="label">Results September-October ‘23 vs July-August ‘23 (same budget)</p>
     
     <ul class="items"><li>Installs 5,167 (+63.31%)</li><li>Signups 702 (+42.68%)</li></ul>
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p23-o91.png" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p23-o92.png" alt=""></figure><figure><img src="../data/case-shots/p24-o95.png" alt=""></figure><figure><img src="../data/case-shots/p24-o96.png" alt=""></figure>
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 13</p>
     <h2>B2C Mobile Game App: Scorpion War Robot Transform</h2>
     <dl class="casemeta"><div><dt>Category</dt><dd>Mobile games</dd></div><div><dt>Country</dt><dd>US, UK, AUS, NZ, CA, APAC</dd></div></dl>
+    
     <div class="block">
     
     <p class="read">App: https://apps.apple.com/app/id1580364578?mt=8</p>
@@ -642,25 +672,30 @@
     
   </div><div class="block">
     <p class="label">Work done - different locations split</p>
-    <p class="read">US Campaign New Daily Budget: $70 Initial Daily Budget: $7 New CPI: $0.31 Targeted CPI: $0.41 UK, NZ, CA, AUS Campaign New Daily Budget: $15 Initial Daily Budget: $5 New CPI: $0.19 Targeted CPI: $0.26 Asia Campaign New Daily Budget: $18 Initial Daily Budget: $7 New CPI: $0.06 Targeted CPI: $0.08 From these 3 campaigns we got 10,611 installs by spending $1806 and the source of revenue is AdMob. Google Ads helped us to boost organic downloads in the App Store as we got 10611 installs from Google Ads but 29000+ install in firebase.</p><p class="read">We didn’t earn from admob but from in-app-purchase 29000+ installs in firebase Google Ads brought more installs for games on the App Store, but it also boosted revenue as well as organic ranking inside the store for up to 2X more installs than from Google Ads.</p>
+    <p class="read">US Campaign</p><p class="read">New Daily Budget: $70 Initial Daily Budget: $7</p><p class="read">New CPI: $0.31 Targeted CPI: $0.41</p><p class="read">UK, NZ, CA, AUS Campaign</p><p class="read">New Daily Budget: $15 Initial Daily Budget: $5</p><p class="read">New CPI: $0.19 Targeted CPI: $0.26</p><p class="read">Asia Campaign</p><p class="read">New Daily Budget: $18 Initial Daily Budget: $7</p><p class="read">New CPI: $0.06 Targeted CPI: $0.08</p><p class="read">From these 3 campaigns we got 10,611 installs by spending $1806 and the source of revenue is</p><p class="read">AdMob. Google Ads helped us to boost organic downloads in the App Store as we got 10611 installs from Google Ads but 29000+ install in firebase.</p><p class="read">We didn’t earn from admob but from in-app-purchase 29000+ installs in firebase</p><p class="read">Google Ads brought more installs for games on the App Store, but it also boosted revenue as well as organic ranking inside the store for up to 2X more installs than from Google Ads.</p>
     
   </div>
     <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p25-o99.png" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p26-o103.png" alt=""></figure><figure><img src="../data/case-shots/p26-o104.png" alt=""></figure><figure><img src="../data/case-shots/p27-o107.png" alt=""></figure><figure><img src="../data/case-shots/p27-o108.png" alt=""></figure><figure><img src="../data/case-shots/p27-o109.png" alt=""></figure><figure><img src="../data/case-shots/p28-o112.png" alt=""></figure>
-          </div>
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="third"><img src="../data/case-shots/p25-o99.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p26-o103.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p26-o104.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p27-o107.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p27-o108.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p27-o109.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p28-o112.png" alt=""></figure>
+  </div>
+  </div>
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 14</p>
     <h2>Google Ad Grant for Nonprofit: Orphanage</h2>
     <dl class="casemeta"><div><dt>Client</dt><dd>Orphanage (Nonprofit)</dd></div></dl>
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p29-o116.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p30-o119.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p30-o120.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p31-o123.png" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     
-    <p class="read">orphans Account: Active since June 2023</p>
+    <p class="read">orphans</p><p class="read">Account: Active since June 2023</p>
     
   </div><div class="block">
     <p class="label">Task: Develop and launch Google Ad Grant account</p>
@@ -672,8 +707,8 @@
     <ul class="items"><li>The competition in this niche is very high.</li><li>Targeting selected countries with high standard of living to start with.</li><li>Grant accounts are limited to a maximum price per click of up to $2.</li><li>Competitive keywords in this niche cost more than $2, so it is necessary to make a shift of bidding strategy to maximum conversions to be able to bid for expensive keywords.</li></ul>
   </div><div class="block">
     <p class="label">Campaign development</p>
-    
-    <ul class="items"><li>Gathering semantics in the given niche.</li><li>Creating search campaigns and ad groups based on site content and with different targeting for each country.</li><li>Creating Responsive Search Ads.</li><li>DSA Campaign Creation.</li><li>Created various audiences in Google Analytics 4.</li><li>Configured conversion goals in Google Analytics 4.</li><li>Overview June 2023</li><li>Conversions</li><li>Clicks 404 Impression 4180 CTR 9.67 Conversions 9 Avg CPC $1.6 Bounce Rate 12.85% Session 358 Av. Session Duration 05:07</li><li>Overview July 2023</li><li>Conversions</li><li>Clicks 1120 Impression 12000 CTR 9.67 Conversions 847 Avg CPC $6.46 Bounce Rate 28.85% Session 1234 Av. Session Duration 03:22</li></ul>
+    <p class="read">Impression 4180</p><p class="read">CTR 9.67</p><p class="read">Conversions 9</p><p class="read">Avg CPC $1.6</p><p class="read">Bounce Rate 12.85%</p><p class="read">Session 358</p><p class="read">Av. Session Duration 05:07</p><p class="read">Impression 12000</p><p class="read">CTR 9.67</p><p class="read">Conversions 847</p><p class="read">Avg CPC $6.46</p><p class="read">Bounce Rate 28.85%</p><p class="read">Session 1234</p><p class="read">Av. Session Duration 03:22</p>
+    <ul class="items"><li>Gathering semantics in the given niche.</li><li>Creating search campaigns and ad groups based on site content and with different targeting for each country.</li><li>Creating Responsive Search Ads.</li><li>DSA Campaign Creation.</li><li>Created various audiences in Google Analytics 4.</li><li>Configured conversion goals in Google Analytics 4.</li><li>Overview June 2023</li><li>Conversions</li><li>Clicks 404</li><li>Overview July 2023</li><li>Conversions</li><li>Clicks 1120</li></ul>
   </div><div class="block">
     <p class="label">Results</p>
     <p class="read">491 submit lead _ _ form, 356 assisted conversions.</p><p class="read">In a month and a half, we got enough conversions to switch to the account bidding strategy to maximize conversions. This gave us the opportunity to bid for more relevant and more expensive keywords in the Google Ads auction: as a result, conversions increased.</p><p class="read">Completed tasks:</p>
@@ -683,19 +718,19 @@
     <p class="read">We’ve grown this project from zero and delivered results almost from the start. Currently, we deliver optimization for increasing KPIs and quality scores in the account.</p>
     
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p29-o116.png" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p30-o119.png" alt=""></figure><figure><img src="../data/case-shots/p30-o120.png" alt=""></figure><figure><img src="../data/case-shots/p31-o123.png" alt=""></figure>
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 15</p>
     <h2>eCom, nutraceuticals, Solv Wellness</h2>
     <dl class="casemeta"><div><dt>Category</dt><dd>nutraceuticals for women’s health</dd></div><div><dt>Country</dt><dd>US</dd></div><div><dt>Budget</dt><dd>$16.000.00/mo</dd></div></dl>
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p32-o126.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p32-o127.png" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     <p class="label">Challenges</p>
     
@@ -706,47 +741,42 @@
     <ul class="items"><li>Account settings audit;</li><li>Campaigns setup audit;</li><li>Previous performance review, improvement areas;</li><li>Competitors research.</li></ul>
   </div><div class="block">
     <p class="label">Work done</p>
-    <p class="read">3. 01.05 - 01.07.2023 vs 01.0.</p><p class="read">- 30.04.2023</p>
-    <ul class="items"><li>Keywords review and semantics core restructuring and expansion;</li><li>Ad copies were reviewed and customized to every add group;</li><li>Sales audit to optimize and regroup Shopping campaign;</li><li>Ad assets expansion and improvement.</li><li>Transaction increase by 45.23%</li><li>СРА decrease by 31.7%</li><li>Conversion rate increase by 2.86%</li><li>ROAS increase by 49% Assisted Conversions</li><li>Transaction +49.78%</li><li>Assisted Conversion Value +45.42%</li></ul>
+    <p class="read">3. 01.05 - 01.07.2023 vs 01.0.</p><p class="read">- 30.04.2023</p><p class="read">Assisted Conversions</p>
+    <ul class="items"><li>Keywords review and semantics core restructuring and expansion;</li><li>Ad copies were reviewed and customized to every add group;</li><li>Sales audit to optimize and regroup Shopping campaign;</li><li>Ad assets expansion and improvement.</li><li>Transaction increase by 45.23%</li><li>СРА decrease by 31.7%</li><li>Conversion rate increase by 2.86%</li><li>ROAS increase by 49%</li><li>Transaction +49.78%</li><li>Assisted Conversion Value +45.42%</li></ul>
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p32-o126.png" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p32-o127.png" alt=""></figure>
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 16</p>
     <h2>eCom, Matcha Outlet</h2>
     <dl class="casemeta"><div><dt>Category</dt><dd>Matcha tea wholesale.</dd></div><div><dt>Country</dt><dd>US</dd></div></dl>
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p33-o130.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p33-o131.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p34-o135.png" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     <p class="label">Objective: Grow sales, decrease CPA</p>
     <p class="read">2. Audits and strategy:</p><p class="read">1. Campaigns performance audit, new campaigns plan as well as keep current performance.</p><p class="read">2. Campaigns split according to categories, each brand separate ad groups.</p><p class="read">3. Setup and optimization work done:</p><p class="read">1. Detailed and expanded semantics.</p><p class="read">2. Campaigns split according to categories, each brand separate ad groups.</p><p class="read">3. Campaigns performance audit, new campaigns plan as well as keep current performance.</p><p class="read">4. DSA campaigns with all possible dynamic targets.</p><p class="read">5. Smart Campaign optimization: a. Paused low performers; b. CTA improvement; c. Bidding strategy adjustment from max. conversions to max. ROAS 250%.</p><p class="read">6. Bids adjustments according to locations, demographics and devices.</p><p class="read">7. Ongoing monitoring and adjustment.</p><p class="read">18.03 - 07.05.2020 vs 18.01 - 07.03.2020:</p>
     
   </div><div class="block">
     <p class="label">Results</p>
-    <p class="read">1. Transactions grew by 60.26% 2. Revenue grew by 88.09% 3. Clicks and Impression grew by 101.36% and 77,92% accordingly 4. CTR increase by 13,18%.</p><p class="read">5. New users +54,86% Campaigns data:</p>
+    <p class="read">1. Transactions grew by 60.26% 2. Revenue grew by 88.09% 3. Clicks and Impression grew by 101.36% and 77,92% accordingly 4. CTR increase by 13,18%.</p><p class="read">5. New users +54,86%</p><p class="read">Campaigns data:</p>
     
   </div><div class="block">
     <p class="label">Conclusion</p>
     <p class="read">Initially the account had too broad semantics and so was a waste of budget. Smart campaign wasn’t performing well as the most of the spent went on non convertible products.</p><p class="read">We filtered most of the keywords and kept as well as expanded more of brands related. This let us reach a more warmed audience.</p><p class="read">Initial ad copies didn’t have a compelling CTA as well as custom enough headlines and descriptions. All possible ad assets were also added.</p>
     
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p33-o130.png" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p33-o131.png" alt=""></figure><figure><img src="../data/case-shots/p34-o135.png" alt=""></figure>
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 17</p>
     <h2>eCom, apparel, 8x ROAS (Ace Vestiti)</h2>
+    
     
     <div class="block">
     <p class="label">Optimization tasks</p>
@@ -754,22 +784,22 @@
     
   </div><div class="block">
     <p class="label">Results</p>
-    <p class="read">Data from Google Analytics for the period 16/10 to 31/10 vs the previous period:</p><p class="read">Transaction rate: 4,03% (+ 73.31%);</p><p class="read">Revenue: +203.6%;</p><p class="read">Assisted conversions* (transactions) 39:</p><p class="read">* Assisted conversions - reached goals, which had Google Ads step in their paths NB. Due to campaigns’ overall efficiency, the direct traffic transactions have also grown:</p><p class="read">(this means that users have visited the website through Google Ads, but then visited again via organic search or by directly typing the website URL)</p><p class="read">Transaction rate: 1.94% (+ 32.12%);</p><p class="read">Revenue: +62.39%;</p>
+    <p class="read">Data from Google Analytics for the period 16/10 to 31/10 vs the previous period:</p><p class="read">Transaction rate: 4,03% (+ 73.31%);</p><p class="read">Revenue: +203.6%;</p><p class="read">Assisted conversions* (transactions) 39:</p><p class="read">* Assisted conversions - reached goals, which had Google Ads step in their paths</p><p class="read">NB. Due to campaigns’ overall efficiency, the direct traffic transactions have also grown:</p><p class="read">(this means that users have visited the website through Google Ads, but then visited again via organic search or by directly typing the website URL)</p><p class="read">Transaction rate: 1.94% (+ 32.12%);</p><p class="read">Revenue: +62.39%;</p>
     <ul class="items"><li>Transactions: 60 (+185.71%);</li><li>Assisted conversions path: (unique interaction chains, which triggered conversions):</li><li>Path length (last click steps):</li><li>Transactions: 65 (+58.54%);</li></ul>
   </div>
     <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p35-o138.jpg" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p36-o141.jpg" alt=""></figure><figure><img src="../data/case-shots/p36-o142.jpg" alt=""></figure><figure><img src="../data/case-shots/p36-o143.png" alt=""></figure><figure><img src="../data/case-shots/p37-o146.jpg" alt=""></figure><figure><img src="../data/case-shots/p37-o147.jpg" alt=""></figure>
-          </div>
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="third"><img src="../data/case-shots/p35-o138.jpg" alt=""></figure><figure class="third"><img src="../data/case-shots/p36-o141.jpg" alt=""></figure><figure class="third"><img src="../data/case-shots/p36-o142.jpg" alt=""></figure><figure class="third"><img src="../data/case-shots/p36-o143.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p37-o146.jpg" alt=""></figure><figure class="third"><img src="../data/case-shots/p37-o147.jpg" alt=""></figure>
+  </div>
+  </div>
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 18</p>
     <h2>Giant eCom: 300+ categories</h2>
     <dl class="casemeta"><div><dt>Client</dt><dd>LeBoutique eCom of apparel and housewares</dd></div></dl>
+    
     <div class="block">
     <p class="label">Objective: grow customers, decrease CPA</p>
     <p class="read">Account: since 2011</p>
@@ -780,25 +810,25 @@
     
   </div><div class="block">
     <p class="label">Work done</p>
-    <p class="read">Important requirement also was the fact that campaigns from different accounts shouldn’t have gotten into the same audition according to Google Policies.</p><p class="read">Here is the step by step data: 17/11/2021 - 16/12/2021 vs 18/10/2021 - 16/11/2021</p>
-    <ul class="items"><li>Paused underperforming and high spending campaigns, taking in account both direct and assisted transactions (and registrations) Improved ad copies and created alternatives to split test Improved ad assets and created new ad asset types Adjusted bidding strategies and bids Redistributed budgets Paused certain ad groups and keywords and added other ones Some of the campaigns were splitted according to seasonality Campaigns were also splitted according to demographics, product categories and language Dedicated shopping campaigns for housewares was created (weren’t advertised before) Overall delivered optimization took up to three weeks of our dedicated team to review and adjust literally every keyword and dynamic URL after thorough performance review. Worth to mention that prior to our management there were plant of remarketing audiences in the account as well and targets, that weren’t properly tracked</li><li>transactions were set as secondary(!), but not primary conversions</li><li>most of remarketing audiences weren’t added to campaigns, but interest audiences were added as observations We have agreed target KPIs, we had to reach in just one month.</li></ul>
+    <p class="read">Improved ad copies and created alternatives to split test</p><p class="read">Improved ad assets and created new ad asset types</p><p class="read">Adjusted bidding strategies and bids</p><p class="read">Redistributed budgets</p><p class="read">Paused certain ad groups and keywords and added other ones</p><p class="read">Some of the campaigns were splitted according to seasonality</p><p class="read">Campaigns were also splitted according to demographics, product categories and language</p><p class="read">Dedicated shopping campaigns for housewares was created (weren’t advertised before)</p><p class="read">Overall delivered optimization took up to three weeks of our dedicated team to review and adjust literally every keyword and dynamic URL after thorough performance review. Worth to mention that prior to our management there were plant of remarketing audiences in the account as well and targets, that weren’t properly tracked</p><p class="read">We have agreed target KPIs, we had to reach in just one month.</p><p class="read">Important requirement also was the fact that campaigns from different accounts shouldn’t have gotten into the same audition according to Google Policies.</p><p class="read">Here is the step by step data: 17/11/2021 - 16/12/2021 vs 18/10/2021 - 16/11/2021</p>
+    <ul class="items"><li>Paused underperforming and high spending campaigns, taking in account both direct and assisted transactions (and registrations)</li><li>transactions were set as secondary(!), but not primary conversions</li><li>most of remarketing audiences weren’t added to campaigns, but interest audiences were added as observations</li></ul>
   </div><div class="block">
     <p class="label">Results</p>
-    <p class="read">Main Google Ads account:</p><p class="read">Second Google Ads account:</p><p class="read">Next period: 01/12/2021 - 31/12/2021 vs 01/11/2021 - 30/11/2021 Main Google Ads account. Because of the proper performance and settings review of Google Ads and Google Analytics accounts, delivered optimization Transaction grew by 30.34% and CPA Transaction decreased by 19.20% Second Google Ads account</p>
-    <ul class="items"><li>Transaction grew by 62.76%, CPA Transaction decreased by 32.94%</li><li>We planned to decrease CPA up to 5-15%:</li><li>According to the stat of 17.11.2021 - 16.12.2021 vs previous period of 18.10.2021 - 16.11.2021), we shifted the promised KPI improvement by 200%.</li><li>Transaction grew by 7%, CPA Transaction decreased by 76.78%</li><li>We planned to decrease CPA up to 5-15%</li><li>According to the stat of 17.11.2021 - 16.12.2021 vs previous period of 18.10.2021 - 16.11.2021), we shifted the promised KPI improvement by 500%.</li><li>Same optimization approach led to Transactions increase by 37,44% and CPA Transaction decrease by 64.07%</li></ul>
+    <p class="read">Main Google Ads account:</p><p class="read">Second Google Ads account:</p><p class="read">Next period: 01/12/2021 - 31/12/2021 vs 01/11/2021 - 30/11/2021</p><p class="read">Main Google Ads account. Because of the proper performance and settings review of Google</p><p class="read">Ads and Google Analytics accounts, delivered optimization Transaction grew by 30.34% and CPA</p><p class="read">Transaction decreased by 19.20%</p><p class="read">Second Google Ads account</p><p class="read">Transaction decrease by 64.07%</p>
+    <ul class="items"><li>Transaction grew by 62.76%, CPA Transaction decreased by 32.94%</li><li>We planned to decrease CPA up to 5-15%:</li><li>According to the stat of 17.11.2021 - 16.12.2021 vs previous period of 18.10.2021 - 16.11.2021), we shifted the promised KPI improvement by 200%.</li><li>Transaction grew by 7%, CPA Transaction decreased by 76.78%</li><li>We planned to decrease CPA up to 5-15%</li><li>According to the stat of 17.11.2021 - 16.12.2021 vs previous period of 18.10.2021 - 16.11.2021), we shifted the promised KPI improvement by 500%.</li><li>Same optimization approach led to Transactions increase by 37,44% and CPA</li></ul>
   </div>
     <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p39-o152.png" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p39-o153.png" alt=""></figure><figure><img src="../data/case-shots/p40-o156.png" alt=""></figure><figure><img src="../data/case-shots/p40-o157.png" alt=""></figure><figure><img src="../data/case-shots/p41-o160.png" alt=""></figure>
-          </div>
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="half"><img src="../data/case-shots/p39-o152.png" alt=""></figure><figure class="half"><img src="../data/case-shots/p39-o153.png" alt=""></figure><figure class="half"><img src="../data/case-shots/p40-o156.png" alt=""></figure><figure class="half"><img src="../data/case-shots/p40-o157.png" alt=""></figure><figure class="half"><img src="../data/case-shots/p41-o160.png" alt=""></figure>
+  </div>
+  </div>
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 19</p>
     <h2>eCom, yoga accessories &amp; apparel</h2>
+    
     
     <div class="block">
     <p class="label">Optimization tasks</p>
@@ -806,22 +836,27 @@
     
   </div><div class="block">
     <p class="label">Results</p>
-    <p class="read">Ad campaigns were launched on 13.03.</p><p class="read">30 transactions and 40K UAH revenue from 13.03 to 13.07 via PPC channel 9000 UAH of ad budget 1046 assisted conversions for the same period:</p><p class="read">Client previously spent 4000 UAH and got only 4 conversions No actual revenue via PPC channel</p>
+    <p class="read">Ad campaigns were launched on 13.03.</p><p class="read">30 transactions and 40K UAH revenue from 13.03 to 13.07 via PPC channel 9000 UAH of ad budget 1046 assisted conversions for the same period:</p><p class="read">Client previously spent 4000 UAH and got only 4 conversions</p><p class="read">No actual revenue via PPC channel</p>
     
   </div>
     <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p42-o163.png" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p43-o166.png" alt=""></figure><figure><img src="../data/case-shots/p43-o167.png" alt=""></figure><figure><img src="../data/case-shots/p44-o170.png" alt=""></figure><figure><img src="../data/case-shots/p44-o171.png" alt=""></figure>
-          </div>
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="half"><img src="../data/case-shots/p42-o163.png" alt=""></figure><figure class="half"><img src="../data/case-shots/p43-o166.png" alt=""></figure><figure class="half"><img src="../data/case-shots/p43-o167.png" alt=""></figure><figure class="half"><img src="../data/case-shots/p44-o170.png" alt=""></figure><figure class="half"><img src="../data/case-shots/p44-o171.png" alt=""></figure>
+  </div>
+  </div>
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 20</p>
     <h2>B2C &amp; B2B Marketplace, luxury tile &amp; plumbing, Laterem</h2>
     
+    <div class="shots aside">
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="full"><img src="../data/case-shots/p45-o174.png" alt=""></figure><figure class="full"><img src="../data/case-shots/p46-o177.png" alt=""></figure>
+  </div>
+  </div>
     <div class="block">
     
     <p class="read">Niche: luxury tile &amp; plumbing supplier</p>
@@ -832,25 +867,20 @@
     
   </div><div class="block">
     <p class="label">Challenge: 95% of orders are done via call, but not online purchase</p>
-    <p class="read">Setup &amp; optimization:</p><p class="read">1. Separate campaigns for every brand, product category and language:</p><p class="read">5. Kept watching traffic, spent, demand and purchasing power changes 6. Call tracking and GA4 eCommerce were set up Calls 01.09.2023 - 31.01.2024 vs. 01.04.2023 - 01.08.2024</p>
-    <ul class="items"><li>Search</li><li>DSA &amp; DSA page URL (two languages)</li><li>Shopping</li><li>Display remarketing</li><li>pMax (once they appeared): different audiences, search topics, with and w/o products 2. Analyzed competitors strategies and ad copies 3. Semantic was build with every website product and piece of content + competitors 4. Once we had some data we set bid adjustments for locations, demographics and devices according to the performance stat.</li><li>Calls (+136%) Orders (+100%) Revenue grew by 871% Calls 01.02.2024 - 30.04.2024 vs. 03.11.2023 - 31.01.2024</li><li>Calls 193 (+14,66%) СРА 1200 UAH (including of the bulk orders)</li></ul>
+    <p class="read">Setup &amp; optimization:</p><p class="read">1. Separate campaigns for every brand, product category and language:</p><p class="read">5. Kept watching traffic, spent, demand and purchasing power changes 6. Call tracking and GA4 eCommerce were set up</p><p class="read">Calls 01.09.2023 - 31.01.2024 vs. 01.04.2023 - 01.08.2024</p><p class="read">Orders (+100%)</p><p class="read">Revenue grew by 871%</p><p class="read">Calls 01.02.2024 - 30.04.2024 vs. 03.11.2023 - 31.01.2024</p><p class="read">СРА 1200 UAH (including of the bulk orders)</p>
+    <ul class="items"><li>Search</li><li>DSA &amp; DSA page URL (two languages)</li><li>Shopping</li><li>Display remarketing</li><li>pMax (once they appeared): different audiences, search topics, with and w/o products 2. Analyzed competitors strategies and ad copies 3. Semantic was build with every website product and piece of content + competitors 4. Once we had some data we set bid adjustments for locations, demographics and devices according to the performance stat.</li><li>Calls (+136%)</li><li>Calls 193 (+14,66%)</li></ul>
   </div><div class="block">
     <p class="label">Conclusions</p>
-    
-    <ul class="items"><li>We have been with this client since the very beginning in 2021. We keep watching the market changes, redistribute budgets and bids, adjust all the account aspects Still using shopping campaigns, but only for most popular Watching auction stat as well as top positions impression share Staying in touch with the clients about every product category and best sellers.</li></ul>
+    <p class="read">Still using shopping campaigns, but only for most popular</p><p class="read">Watching auction stat as well as top positions impression share</p><p class="read">Staying in touch with the clients about every product category and best sellers.</p>
+    <ul class="items"><li>We have been with this client since the very beginning in 2021. We keep watching the market changes, redistribute budgets and bids, adjust all the account aspects</li></ul>
   </div>
-    <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p45-o174.png" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p46-o177.png" alt=""></figure>
-          </div>
+    
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 21</p>
     <h2>B2C lead gen, dental clinic</h2>
+    
     
     <div class="block">
     <p class="label">Objective: grow clients from website traffic without call tracking implementation (company brand</p>
@@ -866,17 +896,17 @@
     
   </div>
     <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p47-o180.png" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p47-o181.png" alt=""></figure><figure><img src="../data/case-shots/p48-o184.png" alt=""></figure><figure><img src="../data/case-shots/p48-o185.png" alt=""></figure><figure><img src="../data/case-shots/p49-o188.png" alt=""></figure><figure><img src="../data/case-shots/p49-o189.png" alt=""></figure>
-          </div>
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="third"><img src="../data/case-shots/p47-o180.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p47-o181.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p48-o184.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p48-o185.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p49-o188.png" alt=""></figure><figure class="third"><img src="../data/case-shots/p49-o189.png" alt=""></figure>
+  </div>
+  </div>
   </section>
 
   <section class="case">
     <p class="eyebrow">Case 22</p>
     <h2>B2B/B2C lead gen, Translation agency</h2>
+    
     
     <div class="block">
     <p class="label">Objective: grow number of leads and decrease cost per lead for the translation agency (a highly</p>
@@ -892,12 +922,11 @@
     
   </div>
     <div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/p50-o192.png" alt=""></figure>
-            </div>
-            <figure><img src="../data/case-shots/p50-o193.png" alt=""></figure><figure><img src="../data/case-shots/p51-o196.png" alt=""></figure><figure><img src="../data/case-shots/p51-o197.png" alt=""></figure><figure><img src="../data/case-shots/p52-o200.png" alt=""></figure>
-          </div>
+    <p class="label">From the account</p>
+    <div class="grid">
+      <figure class="half"><img src="../data/case-shots/p50-o192.png" alt=""></figure><figure class="half"><img src="../data/case-shots/p50-o193.png" alt=""></figure><figure class="half"><img src="../data/case-shots/p51-o196.png" alt=""></figure><figure class="half"><img src="../data/case-shots/p51-o197.png" alt=""></figure><figure class="half"><img src="../data/case-shots/p52-o200.png" alt=""></figure>
+  </div>
+  </div>
   </section>
 
   <section class="case builds">
@@ -912,31 +941,37 @@
       <h3>Top-Rated Team <span class="url">top-rated.team</span></h3>
       <p class="read">Several service doors sit in front of one workspace. A visitor asks a question on the door that matches their problem, and when the conversation turns out to be worth keeping it becomes a room at an address of its own, where the client, our people and subject-matter AI agents talk in the same channels. Each agent answers only from the corpus it was given and never from another agent's, so it cites the page it used or says plainly that it cannot answer. What one room can spend on agent answers is bounded three separate ways, and an answer carried from a door page into a room is signed by the server that produced it, so text handed back by a browser cannot be passed off as ours. This is the same application we build for clients on the custom-AI-builds door — which is why the panel on that door is the demonstration rather than a picture of one.</p>
       <ul class="items"><li>Offers as data, not pages: nine rows in shared/doors.ts, seven of them live today. The row decides which agent opens the conversation, which corpus that agent reads, and whose legal name, terms, invoice line and contact the resulting room prints — so a visitor who came in through a partner's door never sees our invoice.</li><li>A no-signup room at /w/:token where the URL is the entire credential: channels, a message column, a task panel, a member rail of people and agents, and a share bar. It is a separate JavaScript chunk the door pages never download.</li><li>Per-agent grounding with no fallback. server/ai/kb.ts retrieves from the one namespace named on the agent and can reach no other; with no API key, no corpus, or nothing matching, the agent says what it is missing instead of answering from memory. Eleven agent rows are defined and seven of them read a corpus, across six distinct namespaces.</li><li>Three bounds on what one room may spend on agent answers, in server/spend.ts, checked before the model is called: a count of 30 agent turns per room per rolling hour, a 20-minute clock on one unbroken run of activity that starts over after 10 minutes of quiet, and a monthly dollar budget per room that warns the operator at 80% and pauses the room at 100%. They fail in different ways on purpose — the count catches a fast loop, the clock catches a slow one pacing itself under the count, the budget catches few turns each enormous.</li><li>A second, separate monthly ceiling for the public panel at /api/ask — counted both in total and per calling address — because that endpoint is on every door, needs no token, and belongs to the internet rather than to a client.</li><li>Answer receipts. An answer streamed to a door page is HMAC-signed with a key generated per process, and a carried answer is dropped unless the signature matches that exact text, so nobody can POST an invented 'agent' message and get a real room at a real address on our domain to show as evidence of a promise. A restart simply makes the room ask the agent again.</li><li>A room that cannot say which company is answerable for it says so: with no door stamped on it, the footer and the member rail report the fault rather than defaulting to the house name.</li><li>Degradation as a feature: the whole thing runs with an empty .env. No OpenAI key and the agents say live answers are not configured while the human routes keep working; no DATABASE_URL and storage is in-memory with the same interface; no embeddings file and retrieval drops to keyword scoring. Nothing is faked in any of those states.</li><li>One Node process serving the JSON API, the WebSocket at /ws and the built client — React 18, Vite, TypeScript, Tailwind, Radix / shadcn-ui, wouter, TanStack Query, Express, ws, Drizzle over Postgres (optional) and the OpenAI SDK. The workspace token is kept out of stdout and out of the outbound lead webhook, /w/ is disallowed in robots.txt and served with X-Robots-Tag noindex, the agents' house rules forbid accepting passwords, API keys or ad-account credentials pasted into chat, and workspace creation, lead capture, invites, messages and /api/ask each carry their own per-IP rate limit.</li></ul>
+      <figure class="buildshot"><img src="../data/build-shots/top-rated-team.png" alt=""></figure>
     </div>
     <div class="build">
       <h3>AdGrant.AI <span class="url">adgrant.ai</span></h3>
       <p class="read">AdGrant.AI is a free web tool for nonprofits that already hold a Google Ad Grant: it takes the nonprofit's website URL, the 10-digit Google Ads Customer ID and the target languages and locations, analyses the website, and generates a full account structure — campaigns, ad groups, keywords, responsive ads, sitelinks, callouts and structured snippets. The generated structure can be reviewed and downloaded as one CSV per type, or written straight into the nonprofit's own Google Ads account by what the page calls &quot;Automated API Upload&quot; — &quot;Upload everything directly to your Google Ads account via API. No manual work required.&quot; — which requires the account to be connected to the Top-Rated Team manager account (MCC), a connection the Terms say &quot;can be revoked at any time through your Google Ads settings&quot;. Free use is capped at 3 verified Customer IDs and 3 total generations, gated either by LinkedIn sign-in (the page says it uses only the profile URL, to limit free generations) or by sending the Customer ID as a LinkedIn message; the site directs anyone needing more capacity or premium service to contact it on LinkedIn. Alongside the tool the same domain runs a content library — an Ad Grant glossary, case studies, tips and tricks, starter templates, and nonprofit guides by vertical and by city — plus a four-item Stripe checkout list and a 20% lifetime affiliate program paid out by PayPal.</p>
       <ul class="items"><li>React single-page app served as a static build (react-dom in the bundle; /assets/index-&lt;hash&gt;.js as an ES module, the standard Vite output shape, and 'vite' appears as a string in the bundle)</li><li>wouter for client-side routing — live routes seen in the bundle: /, /resources, /templates, /templates/:slug, /nonprofits, /nonprofits/:niche, /nonprofits/:niche/:location, /nonprofits/locations/:location, /privacy-policy, /terms-of-service, /admin, /affiliate, /affiliate-admin</li><li>Tailwind CSS with shadcn/ui on Radix UI primitives (a 'shadcn-card' class, and Radix component names such as Dialog and Switch, appear in the bundle)</li><li>lucide-react icon set</li><li>zod schemas for the generator form (website URL validated as a URL; Customer ID validated against /^\d{3}-\d{3}-\d{4}$/)</li><li>A query-cache data layer over its own JSON API (/api/generate, /api/upload/:id, /api/export/:id, /api/csv/:id/&lt;type&gt;.csv, /api/locations/search, /api/content/pages, /api/templates, /api/auth/linkedin, /api/auth/session)</li><li>Google Ads API — the Privacy Policy lists it as a third party the service shares information with, &quot;To validate keywords and upload account structures&quot;</li><li>Google Ads manager account (MCC) named 'Top-Rated Team' as the link the automated upload runs under</li><li>LinkedIn OAuth sign-in (/api/auth/linkedin), used per the page only to cap free generations</li><li>Stripe Payment Links for the paid services (buy.stripe.com checkout URLs)</li><li>PayPal for affiliate payouts</li><li>Google Tag Manager (container GTM-K9PQW2ZM)</li><li>Google Translate website widget, auto-selected from navigator.language, offering ru, uk, cs, en, de, fr, es, it, pt, pl, zh-CN, ja, ko</li><li>Google Fonts</li><li>An admin panel and a separate affiliate-admin dashboard, both token-gated, shipped in the same bundle</li></ul>
+      <figure class="buildshot"><img src="../data/build-shots/adgrant-ai.png" alt=""></figure>
     </div>
     <div class="build">
       <h3>Top Voice <span class="url">top-voice.ai</span></h3>
       <p class="read">Top Voice is a LinkedIn visibility platform built around reactions rather than outreach: you describe your business and who you sell to, and it generates a Signal Flow of boolean searches that assembles a feed of your target prospects' posts, then reacts to those posts on behalf of your profile or company page with natural, human-like timing. Because LinkedIn resurfaces posts you have reacted to in the feeds and notifications of the author and the author's own connections, the profile or page earns inbound visits instead of sending cold messages. The app is organised in three sections: Research (Influence Flows built from real influencer voices), Appear (Content Studio and Autopilot publishing) and Grow (LinkedIn Boosting). The page is equally explicit about what it refuses to do: no bulk cold outreach or DMs, no engagement pods, and no AI comments.</p>
       <ul class="items"><li>Instant AI Setup: four fields generate an Influence Flow, a content campaign and a boosting campaign</li><li>Influence Flows - synthesised influencer voices, including custom ones from any LinkedIn profile URL</li><li>Content Studio with Autopilot: post copy, images, carousel PDFs and video, published to profiles or company pages on a schedule</li><li>LinkedIn Booster: AI-generated Signal Flow boolean searches that assemble a targeted posts feed</li><li>Reaction engine with human-like pacing - randomised 5-60 second delays and selectable reaction types</li><li>Rented-account pool: dedicated in-house LinkedIn accounts, blocking-free with a replacement guarantee</li><li>Performance Plan billing on Stripe: own and rented account slots, campaign slots, proration, auto top-up</li><li>Engager and profile-viewer tracking with webhook and Google Sheets delivery</li><li>AI Optimize plus an approve-before-apply queue, so no AI suggestion changes a campaign unreviewed</li><li>MCP connectors - Add to ChatGPT and Add to Claude - alongside in-app, web-chat and LinkedIn DM entry points</li><li>Guided in-app walkthrough for each section, plus referral and three-level affiliate program</li></ul>
+      <figure class="buildshot"><img src="../data/build-shots/top-voice.png" alt=""></figure>
     </div>
     <div class="build">
       <h3>WarmLike <span class="url">warmlike.com</span></h3>
       <p class="read">WarmLike is a done-for-you LinkedIn visibility service built around a second, managed page rather than your own account. The site describes the mechanism in four steps, in its own words: you “Tell us your profile &amp; niche” over a LinkedIn message or a short call (“That's the whole setup — no dashboards, no login, no password”); WarmLike then “spin[s] up a polished LinkedIn company page from your business — on-brand name, logo, and description”, called a pre-lander and described as “a warm front door that points target prospects to your profile”; that page “proactively engages the posts of your exact target prospects — reactions and comments that ramp up gradually”; and the prospects it engaged “get notified, check it out, and find your reshared post — with you as its author”, then “click straight through to your personal LinkedIn profile, hands-off”. Content is part of the service: “Every day we write a fresh, niche-tuned post and suggest it to you”, reviewed and approved from a private link, published to your own profile, and then reshared by the managed page. The positioning is explicitly compliance-first — the headline reads “Boost your LinkedIn Profile, without linking it anywhere. 100% secured &amp; compliant.”, and the copy states “We share access, not you. No pods, bots, spam, AI comments. Your LinkedIn account is untouchable: violations and ban free.” The FAQ answers “No. We never log into or post from your personal profile” and “There's no login to create and no password to share.” “Warming” is defined on the page as building the page's presence gradually “so growth looks organic and stays healthy, never a suspicious overnight spike.” Four summary stats run across the page as labels, not measurements: Daily / on-brand posts, Zero / logins to share, Gradual / natural warming, 24/7 / hands-off growth.</p>
       <ul class="items"><li>A single-page marketing and onboarding site at warmlike.com. It is a client-rendered React/Vite application: the served HTML is a 13 KB shell with an empty &lt;div id=&quot;root&quot;&gt; and no prerendered body, so all visible copy is delivered by JavaScript. The bundle is shared with Top Voice and switches to the WarmLike app by hostname, matching warmlike.com, warmliker.com and warmlikes.com. Beyond the landing route the WarmLike app registers routes for /message, /hub/:token, /preview/:token, /post/:token and /demo — consistent with the “review everything from a private link” flow the copy promises, though those token routes were not exercised. The landing page itself carries a hero with a 2-week-free-trial badge, a numbered explanation of the mechanism, a four-step “You / We build / We boost / You grow” walkthrough with illustrated LinkedIn mockups, an explainer video block (“A 60-second look at how WarmLike grows your LinkedIn presence — fully managed”), an interactive pricing and projection widget driven by a “boosters” slider, a five-question FAQ, and CTAs that all resolve to either a LinkedIn message or a booked call. HubSpot chat and a Replit analytics script are loaded on the page.</li></ul>
+      <figure class="buildshot"><img src="../data/build-shots/warmlike.png" alt=""></figure>
     </div>
     <div class="build">
       <h3>Upwork Proposal Agent</h3>
       <p class="read">Runs inside Claude Code as the /upwork-apply skill and drives the user's own logged-in Upwork session through the Claude in Chrome browser tools — there is no cloud browser and no shared Upwork account. A round opens the search URLs from the user's own profile config, checks each listing against a seen.md watermark and an applied.md log so nothing is triaged or applied to twice, drops anything that fails the profile's reject rules or any of the client's stated Preferred qualifications, and writes an English cover letter plus screening answers built only from the evidence bank in that user's config. It then fills the Upwork proposal form field by field — rate or milestones, letter, each screening question, case-study attachment — and stops: pressing &quot;Send for X Connects&quot; requires the user to have confirmed that specific proposal in that session, a rule the skill states outranks the auto-reply setting. Scheduled and background runs are stricter again — they never open the proposal form at all and leave drafts as files for review.</p>
       <ul class="items"><li>Claude Code skill: SKILL.md plus references/ (upwork-pages.md page-and-form map, inbox-flow.md, onboarding.md) at ~/.claude/skills/upwork-apply</li><li>Modes as skill arguments: setup (in-chat onboarding), a default interactive round, duty (turns the live session into the scheduler), background (drafts only), inbox, sync</li><li>Browser control via the Claude in Chrome MCP tools (mcp__claude-in-chrome__*) against the user's own signed-in Chrome; CAPTCHA, logins, payments, identity verification and Connects purchases hand control back to the human</li><li>Markdown state kept deliberately outside the skill folder, because a plugin update overwrites that folder: a personal profile config (rates, tone, reject rules, evidence bank), a case library, and an upwork-logs/ directory holding applied.md, seen.md, drafts-&lt;date&gt;.md, slots.txt and last-run-epoch</li><li>Incremental scanning: results are read newest-first and matched by job ID against seen.md; two consecutive already-seen listings stop that URL, and a catch-up after downtime pages deeper so nothing new is missed between sessions</li><li>Rate-limit and anti-bot guards written into the skill: daily proposal and Connects limits, minutes of spacing between sends, a cap of 3 drafts per background run and 5 per day, and a skip if the previous round ran under 20 minutes ago and found nothing new</li><li>Optional Google Sheet sync (Profile / Evidence / Answers / Schedule tabs) for editing settings away from the machine, last-write-wins by timestamp, off by default; the chat/GPT/Grok settings front ends can only edit the Sheet and take no Upwork actions</li><li>Scheduling: duty mode reads slots.txt and creates one recurring Claude Code cron task per slot; an optional launchd job is offered as a macOS safety net, and a self-paced /loop is offered as an alternative because cron slots can bunch up</li><li>Experimental Node stdio MCP server (mcp/upwork-agent/server.js) exposing local profile, drafts, inbox-pending, run-status and schedule tools; its own file header states the tools touch local profile/logs only and never Upwork Send</li><li>Distribution as a Claude Code plugin for other people to install: a Stop hook runs sync.sh after each session, which mirrors the live skill folder into a git repo, bumps the plugin.json patch version, commits and pushes; each user runs it on their own machine with their own config and logs</li></ul>
+      
     </div>
     <div class="build">
       <h3>Being.Marketing: Your Existential Coach <span class="url">being.marketing</span></h3>
       <p class="read">A quiet companion for rest from anxious purpose-hunting, tasks, and roles, and a clear mirror for your inner language — the listing invites you to lay down a concern or identity like a stone. It is offered two ways: as a custom ChatGPT, or reached from the web without logging in to ChatGPT, which the page describes as being for ultimate privacy. The page also says your dialogue can seed your GPT's training data or AI prompt to share as a custom ChatGPT, so others can quietly sit beside it as well. It is published and listed free on the being.marketing storefront.</p>
       <ul class="items"><li>Custom ChatGPT — offered as the &quot;Custom ChatGPT&quot; option on the listing</li><li>A web version usable without a ChatGPT login — the &quot;W/o login to ChatGPT&quot; option, described on the page as being for ultimate privacy</li><li>Published through a Gumroad storefront served on the being.marketing custom domain (product permalink /l/being)</li></ul>
+      
     </div>
   </section>
 

@@ -103,8 +103,17 @@ for i, start in enumerate(starts):
             # lower case, or where the line above stopped without terminal
             # punctuation. The second half caught "67%, despite operating in one
             # of the most competitive legal niches" after "...dropped by".
-            unfinished = bool(out) and not out[-1].rstrip().endswith((";", ".", "!", "?", ":"))
-            if not l.startswith("\u2022 ") and (l[:1].islower() or unfinished):
+            # "Unfinished" is not enough on its own. A metric line ends
+            # "(-8.49%)", which is not terminal punctuation, and the next line
+            # was a whole new paragraph — so the first version of this rule
+            # printed "Impressions 1,773,216 (-8.49%) Despite a slight decrease
+            # in impressions, clicks grew by 60%..." as one bullet. A sentence
+            # that starts with a capital after a closing bracket is a new
+            # sentence, whatever the character before it was.
+            prev = out[-1].rstrip() if out else ""
+            unfinished = bool(prev) and not prev.endswith((";", ".", "!", "?", ":", ")"))
+            starts_new = l[:1].isupper()
+            if not l.startswith("\u2022 ") and (l[:1].islower() or (unfinished and not starts_new)):
                 if out:
                     out[-1] = out[-1].rstrip() + " " + l
                     continue
@@ -148,17 +157,3 @@ print(f"cases: {len(merged)}  (from {len(cases)} title pages)\n")
 for c in merged:
     print(f"  p{c['pages'][0]:>2}-{c['pages'][-1]:<2} {len(c['shots']):>2} shots  "
           f"{len(c['sections']):>2} sections  {c['title'][:64]}")
-
-# ---------------------------------------------------------------------------
-# WHY THIS IS PYTHON IN A TYPESCRIPT REPOSITORY, and it is the only one.
-#
-# It reads a PDF the owner sent once. Its companion, extract-case-shots.py,
-# pulls the 73 screenshots out of the same file — which needs zlib to inflate
-# the streams and enough struct to write a PNG header, both of which are in
-# Python's standard library and neither of which is in this project's
-# dependencies. Adding a PDF library to a web application's package.json to
-# read one document once is the worse trade.
-#
-# Neither script runs in the build. They produced data/cases-detailed.json and
-# data/case-shots/, both committed, and they are kept so that those files can
-# be regenerated rather than trusted.

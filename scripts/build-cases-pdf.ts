@@ -49,6 +49,59 @@ const detailed = JSON.parse(readFileSync("data/cases-detailed.json", "utf8")) as
   cases: DetailedCase[];
 };
 
+/**
+ * The natural size of every screenshot, so a small one is not blown up to the
+ * width of the page. A 803x156 slice of a table stretched to 170mm is a blurry
+ * claim; at its own size beside its neighbour it is legible and honest.
+ */
+const shotSize = new Map<string, { width: number; height: number }>(
+  (
+    JSON.parse(readFileSync("data/case-shots/manifest.json", "utf8")) as {
+      images: { file: string; width: number; height: number }[];
+    }
+  ).images.map((i) => [i.file, { width: i.width, height: i.height }]),
+);
+
+/**
+ * How wide to set a screenshot, as a share of the text column.
+ *
+ * Three buckets rather than a formula: a formula gives every image its own
+ * width and the page stops having a grid. Wide screens (a full Google Ads table)
+ * take the column; middling ones pair; narrow ones go three to a row. The
+ * container wraps, so a row fills with whatever fits.
+ */
+/**
+ * How wide a screenshot is set, from its own size AND from how many the case
+ * has — and the second half is what actually does the work.
+ *
+ * THE MEASUREMENT THAT SETTLED IT. The owner asked for no page carrying a
+ * screenshot and no text. Sizing by image width alone got that from 29 pages
+ * of 69 to 15 of 55 and then stopped improving, because the binding constraint
+ * is not how wide one image is — it is that a case with nine of them has more
+ * picture than text however small each one is. So the count decides the ceiling:
+ * six or more go three to a row and everything else pairs. Nothing takes the
+ * full column any more: the four earliest offenders were cases with ONE
+ * screenshot, where the text filled its page and a column-wide image had
+ * nowhere to go but the next one. At half width it fits under the text.
+ *
+ * Re-measure after changing any of this. The build prints the count.
+ */
+function span(file: string, count: number): "full" | "half" | "third" {
+  const w = shotSize.get(file)?.width ?? 2000;
+  const ceiling = count >= 6 ? "third" : "half";
+  const byWidth = w >= 900 ? "half" : "third";
+  const rank = { full: 2, half: 1, third: 0 } as const;
+  return rank[byWidth] <= rank[ceiling] ? byWidth : ceiling;
+}
+
+/** A build's own screenshot, where there is one. */
+const BUILD_SHOTS: Record<string, string> = {
+  "adgrant-ai": "adgrant-ai.png",
+  "top-voice": "top-voice.png",
+  warmlike: "warmlike.png",
+  "top-rated-team": "top-rated-team.png",
+};
+
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -119,33 +172,50 @@ function section(s: Section): string {
   </div>`;
 }
 
+function shotsBlock(c: DetailedCase, aside: boolean): string {
+  if (c.shots.length === 0) return "";
+  return `<div class="shots${aside ? " aside" : ""}">
+    <p class="label">From the account</p>
+    <div class="grid">
+      ${c.shots
+        .map(
+          (f) =>
+            `<figure class="${aside ? "full" : span(f, c.shots.length)}"><img src="../data/case-shots/${esc(
+              f,
+            )}" alt=""></figure>`,
+        )
+        .join("")}
+  </div>
+  </div>`;
+}
+
 const casePages = detailed.cases
-  .map(
-    (c, i) => `
+  .map((c, i) => {
+    /*
+     * ONE OR TWO SCREENSHOTS GO BESIDE THE TEXT, not after it.
+     *
+     * Four pages carrying an image and nothing else survived every reduction in
+     * image size, and they were all cases with a single screenshot: the text
+     * filled its sheet exactly, so any image at all had nowhere to go but the
+     * next one. Making it smaller does not help — the page was already full.
+     *
+     * Floated into the column it fills the space the text leaves, which is
+     * where the evidence for a claim belongs anyway. Up to four go this way;
+     * five or more keep the grid at the end, because a float that long runs
+     * past the text it is supposed to sit beside and the wrap stops reading.
+     */
+    const aside = c.shots.length > 0 && c.shots.length <= 4;
+
+    return `
   <section class="case">
     <p class="eyebrow">Case ${String(i + 1).padStart(2, "0")}</p>
     <h2>${esc(c.title)}</h2>
     ${metaRow(c)}
+    ${aside ? shotsBlock(c, true) : ""}
     ${c.sections.map(section).join("")}
-    ${
-      c.shots.length > 0
-        ? /* The label travels with the first image. On its own it was left at
-             the bottom of a page announcing a screenshot that had broken to the
-             next one, which is a caption for nothing. */
-          `<div class="shots">
-            <div class="shotfirst">
-              <p class="label">From the account</p>
-              <figure><img src="../data/case-shots/${esc(c.shots[0])}" alt=""></figure>
-            </div>
-            ${c.shots
-              .slice(1)
-              .map((f) => `<figure><img src="../data/case-shots/${esc(f)}" alt=""></figure>`)
-              .join("")}
-          </div>`
-        : ""
-    }
-  </section>`,
-  )
+    ${aside ? "" : shotsBlock(c, false)}
+  </section>`;
+  })
   .join("\n");
 
 const buildPages = `
@@ -162,6 +232,11 @@ const buildPages = `
       <h3>${esc(b.name)}${b.url ? ` <span class="url">${esc(b.url.replace(/^https?:\/\//, ""))}</span>` : ""}</h3>
       <p class="read">${esc(b.what)}</p>
       ${b.built.length > 0 ? `<ul class="items">${b.built.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      ${
+        BUILD_SHOTS[b.slug]
+          ? `<figure class="buildshot"><img src="../data/build-shots/${BUILD_SHOTS[b.slug]}" alt=""></figure>`
+          : ""
+      }
     </div>`,
     ).join("")}
   </section>`;
@@ -249,13 +324,38 @@ const html = `<!doctype html>
                   color:var(--muted); }
   dl.casemeta dd{ margin:.6mm 0 0; font-size:9.5pt; font-variant-numeric:tabular-nums; }
 
-  .shots{ margin-top:7mm; }
-  .shots figure{ margin:3mm 0 0; }
-  .shotfirst{ break-inside:avoid; }
+  .shots{ margin-top:6mm; }
+  /* Floated into the text column. The clear on a case keeps the next one from
+     starting beside a leftover float. */
+  .shots.aside{ float:right; width:44%; margin:0 0 4mm 5mm; }
+  .shots.aside .label{ margin-bottom:1.5mm; }
+  .shots.aside figure{ width:100%; margin:0 0 2mm 0; }
+  .shots.aside img{ max-height:none; }
+  .case{ clear:both; }
+  /*
+    INLINE-BLOCK, NOT FLEX, and the difference is 29 pages. A flex container
+    does not fragment across printed sheets in Chrome: with flex it put one
+    screenshot on each page and left 29 of 69 pages carrying an image and no
+    text at all, which is the thing the owner asked to stop. Inline-block flows
+    like text, so a row fills, wraps, and breaks between rows.
+  */
+  .shots .grid{ margin-top:2.5mm; font-size:0; }
+  .shots figure{ margin:0 2mm 2mm 0; display:inline-block; vertical-align:top; }
+  .shots figure.full{ width:100%; margin-right:0; }
+  .shots figure.half{ width:calc(50% - 2mm); }
+  .shots figure.third{ width:calc(33.333% - 2mm); }
+  /* Whichever constraint binds first, and the aspect ratio survives both: a
+     wide table hits the width, a tall dashboard hits the height, and neither
+     is allowed to own a page. */
+  /* A ceiling per class, so a narrow-and-tall screenshot in a three-up row
+     cannot be taller than the row it shares. */
+  .shots img{ max-width:100%; width:auto; height:auto;
+              border:.4pt solid var(--line); display:block; }
+  .shots figure.full img{ max-height:48mm; }
+  .shots figure.half img{ max-height:48mm; }
+  .shots figure.third img{ max-height:34mm; }
   .period{ font-weight:400; letter-spacing:.04em; text-transform:none;
            font-family:var(--read); font-size:8.5pt; }
-  .shots img{ width:100%; height:auto; display:block;
-              border:.4pt solid var(--line); }
 
   /* ---- the drawing ---- */
   svg.plate{ width:100%; height:auto; display:block; color:var(--ink); }
@@ -305,7 +405,11 @@ const html = `<!doctype html>
   .who{ font-size:10pt; font-weight:500; }
   .what{ font-family:var(--read); font-size:8.5pt; color:var(--muted); text-align:right; }
 
-  .build{ margin-top:6mm; }
+  .build{ margin-top:6mm; break-inside:avoid; }
+  /* The product's own front page. Captured in a real browser with the consent
+     banners and chat bubbles removed first — furniture is not product. */
+  .buildshot{ margin:3mm 0 0; }
+  .buildshot img{ width:100%; height:auto; border:.4pt solid var(--line); }
   .closing{ break-before:page; }
   .closing .read{ max-width:46em; }
   .identify{ margin-top:8mm; padding-top:2.5mm; border-top:.4pt solid var(--line);
@@ -377,3 +481,8 @@ ${buildPages}
 writeFileSync(OUT, html);
 const shots = detailed.cases.reduce((n, c) => n + c.shots.length, 0);
 console.log(`${OUT}: ${detailed.cases.length} cases, ${shots} screens, ${BUILDS.length} builds`);
+console.log(
+  "After printing, count the pages with no text on them — that is what the\n" +
+    "screenshot sizing above is tuned against, and it is the one thing about\n" +
+    "this layout that cannot be judged from the HTML.",
+);
