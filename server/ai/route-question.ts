@@ -233,8 +233,29 @@ function scoreDoors(question: string): Scored[] {
     });
     if (starterHit) score += 20;
 
+    /*
+     * MATCHED ON WORD BOUNDARIES, and the version without them sent the wrong
+     * people to the wrong door for as long as this file has existed.
+     *
+     * `q.includes(phrase)` is a raw substring test. The Ad Grants headline is
+     * "Google Ad Grant AI setup through the official Google Ads API", whose
+     * n-grams include BOTH "google ad" and "google ads" — and "google ad" is a
+     * substring of "google ads". So "Can you manage our Google Ads?" paid that
+     * door twice, 5 points for a phrase the visitor never wrote, and it beat
+     * the Google Ads door 11.20 to 6.20.
+     *
+     * Measured, not reasoned: three plain management questions — "Can you
+     * manage our Google Ads?", "We need help managing our Google Ads account",
+     * "Who runs Google Ads campaigns?" — all routed to the charity product.
+     * That is the highest-intent question this business gets, landing on a page
+     * about grants for nonprofits.
+     *
+     * normalize() leaves single-space-separated words, so padding both sides is
+     * the whole fix: " google ad " is not inside " ... google ads ".
+     */
+    const padded = ` ${q} `;
     for (const phrase of phrases) {
-      if (phrase.length < 4 || !q.includes(phrase)) continue;
+      if (phrase.length < 4 || !padded.includes(` ${phrase} `)) continue;
       const words = phrase.split(" ").filter((w) => !STOP.has(w));
       if (words.length === 0) continue;
       score += words.length >= 3 ? 8 : 5;

@@ -149,3 +149,45 @@ test("the router never returns a door whose status is not live", () => {
     assert.equal(DOOR_BY_ID[honoured.doorId].status, "live");
   }
 });
+
+test("a phrase only counts when the question contains it as words", () => {
+  /*
+   * THE BUG THIS PINS DOWN was live and it sent the wrong people to the wrong
+   * door. Phrases were matched with q.includes(phrase), a raw substring test.
+   * The Ad Grants headline — "Google Ad Grant AI setup through the official
+   * Google Ads API" — yields both "google ad" and "google ads" as n-grams, and
+   * "google ad" is a substring of "google ads". So a business asking to have
+   * its Google Ads managed paid the charity door twice and landed on a page
+   * about grants for nonprofits.
+   *
+   * Three plain management questions all routed to ad-grants before the fix.
+   * They are here verbatim rather than as one representative case, because
+   * that is what was actually measured going wrong.
+   */
+  for (const question of [
+    "Can you manage our Google Ads?",
+    "We need help managing our Google Ads account",
+    "Who runs Google Ads campaigns?",
+  ]) {
+    const result = routeQuestion(question);
+    const landed = result.kind === "door" ? result.doorId : null;
+    assert.notEqual(
+      landed,
+      "ad-grants",
+      `"${question}" routed to the nonprofit grant door. The phrase match has lost its word boundary.`,
+    );
+  }
+
+  /* And the fix must not cost Ad Grants the questions that ARE its own. */
+  for (const question of [
+    "Can you set up a Google Ad Grant for our charity?",
+    "Our nonprofit needs Google Ad Grants help",
+  ]) {
+    const result = routeQuestion(question);
+    assert.equal(
+      result.kind === "door" ? result.doorId : null,
+      "ad-grants",
+      `"${question}" no longer reaches the Ad Grants door`,
+    );
+  }
+});
