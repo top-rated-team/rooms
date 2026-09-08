@@ -9,6 +9,7 @@ import BlogPost from "@/pages/blog-post";
 import Pricing from "@/pages/pricing";
 import Landing from "@/pages/landing";
 import Team from "@/pages/team";
+import RoiCalculator from "@/pages/roi-calculator";
 import NotFound from "@/pages/not-found";
 
 /* The landing page is paid traffic and bounces on latency, so the workspace —
@@ -39,6 +40,7 @@ export default function App() {
         <Route path="/pricing" component={Pricing} />
         <Route path="/case-studies" component={CaseStudies} />
         <Route path="/team" component={Team} />
+        <Route path="/roi-calculator" component={RoiCalculator} />
         <Route path="/blog" component={Blog} />
         <Route path="/blog/:slug" component={BlogPost} />
         {/* Every door answers here. Which one, and whether it has a panel at

@@ -48,6 +48,7 @@ import {
   listBridgesForToken,
 } from "./bridge";
 import { startDigestSchedule } from "./schedule";
+import { connectorMcp, connectorRouter } from "./connector";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -477,7 +478,7 @@ export function registerRoutes(app: Express): void {
    * TWO ADDRESSES FROM THE OLD SITE, ANSWERED EARLY.
    *
    * These are top-rated.team's, not this application's, and they answer here
-   * only once the apex moves — see docs/apex-migration.md, which lists all
+   * only once the apex moves — see private/apex-migration.md, which lists all
    * fourteen. They are registered now because both destinations have stopped
    * being decisions:
    *
@@ -1229,6 +1230,9 @@ export function registerRoutes(app: Express): void {
       res.status(200).json({ ok: true });
     }),
   );
+
+  app.use("/api/connector/mcp", connectorMcp);
+  app.use("/api/connector", connectorRouter);
 
   // Anything else under /api is a missing endpoint, not a client route: without
   // this it would fall through to the SPA and answer HTML to a fetch().

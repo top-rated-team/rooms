@@ -46,6 +46,8 @@ import NotFound from "@/pages/not-found";
  * where our booking link has to say whose calendar it is.
  */
 const OUR_LEGAL_NAME = DOOR_BY_ID[DEFAULT_DOOR_ID].contract.legalName;
+/** For body copy. See the note where it is used. */
+const OUR_DISPLAY_NAME = DOOR_BY_ID[DEFAULT_DOOR_ID].contract.displayName ?? OUR_LEGAL_NAME;
 
 
 
@@ -525,7 +527,10 @@ function DoorPage({ door }: { door: DoorDef }) {
                     // Our calendar on somebody else's door has to say whose
                     // calendar it is.
                     <p className={`mt-[var(--s3)] ${META_PLAIN}`}>
-                      That call is with {OUR_LEGAL_NAME}, not with {door.contract.legalName}.
+                      {/* The trading name in running copy: the legal form belongs
+                          to the footer's identification line, the Terms, the room
+                          footer and an invoice, and this is none of those. */}
+                      That call is with {OUR_DISPLAY_NAME}, not with {door.contract.legalName}.
                     </p>
                   ) : null}
                 </div>
@@ -606,10 +611,26 @@ function DoorPage({ door }: { door: DoorDef }) {
 
             <div>
               <p className={READ_MUTED}>{door.contract.entity}</p>
+              {/*
+                ONE SENTENCE ABOUT WHO INVOICES, NOT THREE. On a partner's door
+                `entity`, `invoiceLine` and `tier.meaning` were all printed here
+                and all say the same thing in different words — "a different
+                company", "they invoice you directly, we take no share", "another
+                company contracts with you and invoices you, we are not in that
+                chain". Rendered together that is a page insisting on its own
+                innocence, which is the tone the owner has objected to twice.
+
+                Each field was written to stand alone somewhere, and they do:
+                `entity` names what kind of company it is, `invoiceLine` says who
+                sends the bill, and `tier.meaning` is what the INDEX shows beside
+                a row where neither of the others appears. So the tier line goes
+                here only on our own doors, where it is not a repeat.
+              */}
               {!oursToAnswer ? (
                 <p className={`mt-[var(--s2)] ${READ_MUTED}`}>{door.contract.invoiceLine}</p>
-              ) : null}
-              <p className={`mt-[var(--s2)] ${READ_MUTED}`}>{tier.meaning}</p>
+              ) : (
+                <p className={`mt-[var(--s2)] ${READ_MUTED}`}>{tier.meaning}</p>
+              )}
 
               <p className={`mt-[var(--s4)] ${META_PLAIN}`}>
                 {door.contract.termsUrl ? (
@@ -624,8 +645,7 @@ function DoorPage({ door }: { door: DoorDef }) {
                 ) : (
                   // Never offer the terms of the company next door.
                   <span>
-                    {door.contract.legalName} has not published terms for this work yet, and this page will not show
-                    anybody else&rsquo;s.
+                    {door.contract.legalName} has not published terms for this work yet.
                   </span>
                 )}
                 <span aria-hidden="true"> · </span>
@@ -641,8 +661,8 @@ function DoorPage({ door }: { door: DoorDef }) {
                 ) : (
                   // Same rule as the terms: their address or none, never ours.
                   <span>
-                    {door.contract.legalName} has not given an address for this door yet, and this page will not show
-                    anybody else&rsquo;s.
+                    {door.contract.legalName} has not given an address for this door yet. This page will not
+                    show anybody else&rsquo;s.
                   </span>
                 )}
               </p>

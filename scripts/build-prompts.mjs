@@ -32,7 +32,7 @@ const WAVES = [
      and a re-run of a landed parcel is an agent rewriting a finished file. */
   { n: 1, keys: ["page-blog", "cases-filter", "footer-links"], landed: true },
   { n: 2, keys: ["page-team", "door-white-label", "digest-trigger"], landed: true },
-  { n: 3, keys: ["page-roi-calculator", "door-partner", "connector-gpt"] },
+  { n: 3, keys: ["page-roi-calculator", "door-partner", "connector-gpt"], landed: true },
   // Alone because it is last of the site work, not because it is dangerous. If
   // wave 3 finishes early, this can be pulled forward into it — it adds no route.
   { n: 4, keys: ["door-ai-builds-body"] },

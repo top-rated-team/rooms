@@ -1,0 +1,14 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Top-Rated Team",
+  "name_for_model": "top_rated_team",
+  "description_for_human": "Services, published prices and case studies from Top-Rated Team, a grounded question, and a room address for the person you are talking to.",
+  "description_for_model": "Use list_services to explain the offers and who invoices each one. Use list_prices to quote the published price rows verbatim — never invent a figure or a range. Use list_cases for the published case studies. Use ask_question only with a service that has a firstAgentId; it goes through the same spend ceiling as the site's ask panel. Use create_room to invite someone into a room and give them only the url that comes back; that address is the credential. Do not claim a coming door's panel is open. Do not invent a price for a partner service.",
+  "auth": { "type": "none" },
+  "api": {
+    "type": "openapi",
+    "url": "https://ai.top-rated.team/api/connector/openapi.json"
+  },
+  "logo_url": "https://ai.top-rated.team/assets/top-rated-logo.png",
+  "legal_info_url": "https://top-rated.team/terms"
+}

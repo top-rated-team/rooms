@@ -45,7 +45,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">7 still to run, 6 landed. Copy one, paste
+  <p class="lede">4 still to run, 9 landed. Copy one, paste
   it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -68,206 +68,9 @@
       <h2>Wave 2 — landed</h2>
       <p class="waveNote">page-team, door-white-label, digest-trigger — reported, reviewed and committed. Nothing to run here.</p>
     </section>
-    <section class="wave">
-      <h2>Wave 3</h2>
-      <p class="waveNote">Start these 3 together. When all 3 have reported, run the two commands, then go to the next wave.</p>
-      <article class="parcel">
-        <header>
-          <h3>page-roi-calculator</h3>
-          <button class="copy" data-target="p-page-roi-calculator">Copy this prompt</button>
-        </header>
-        <p class="what">A working tool on the old site and the third of the four addresses blocking the apex.</p>
-        <pre id="p-page-roi-calculator">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "page-roi-calculator".
-
-Read these first, before you write anything: README.md, private/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/pages/roi-calculator.tsx
-  shared/roi.ts
-  server/roi.test.ts
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  client/src/App.tsx
-      - a route for /roi-calculator
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  /roi-calculator, same URL, new design. docs/specs/roi-calculator.md carries the inputs, the
-  outputs and the exact arithmetic recovered from the original's own JavaScript. THE ARITHMETIC
-  IS THE DELIVERABLE: put every formula in shared/roi.ts as pure functions and test them in
-  server/roi.test.ts against the worked examples in the spec — a calculator whose numbers nobody
-  checked is worse than no calculator, because a visitor will quote them back. If the spec marks
-  a formula as unrecovered, do not guess: leave that output out and say in a comment which one
-  and why. Compute in the browser and submit nothing anywhere. Carry over the original's own
-  assumption and disclaimer wording, and print it where the numbers are, not in a footnote.
-  tabular-nums on every figure.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  A working tool on the old site and the third of the four addresses blocking the apex. It also
-  prints money, which makes it the one page on this list where being approximately right is the
-  same as being wrong.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-      <article class="parcel">
-        <header>
-          <h3>door-partner</h3>
-          <button class="copy" data-target="p-door-partner">Copy this prompt</button>
-        </header>
-        <p class="what">The partner door currently says, three separate times on one page, that another company invoices it and we take no share.</p>
-        <pre id="p-door-partner">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "door-partner".
-
-Read these first, before you write anything: README.md, private/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/components/site/doors/PartnerBody.tsx
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  client/src/components/site/doors/bodies.tsx
-      - one entry in DOOR_BODIES
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  A body for /services/linkedin-growth. It describes top-voice.ai and warmlike.com —
-  shared/builds.ts has both, generated and verified, and PARTNER_BUILDS is exactly those two in
-  order; use the `forPartner` field, which was written for this page. Both links open in a new
-  tab with rel="noopener noreferrer", on the owner's instruction. THE TONE IS THE POINT: the
-  page repeats the same disclosure three times ('Maksymenko LinkedIn Growth invoices you
-  directly…', 'Another company contracts with you…', and again under 'Who you would be buying
-  from'). Say it ONCE, plainly, where a buyer needs it — which is next to the money — and delete
-  the other two. Also fix a real slip: the body prints 'Top-Rated Team (Danylo Burykin SZČO)' in
-  running copy, and the legal form belongs only in the footer identification line, Terms, the
-  room footer and invoices. Body copy says 'Top-Rated Team'. Do not print a price:
-  shared/pricing.ts resolves this door to no row at all and that is deliberate.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  The partner door currently says, three separate times on one page, that another company
-  invoices it and we take no share. The owner has twice asked for that tone to stop, and the
-  page still has no description of the two products the partner actually runs.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-      <article class="parcel">
-        <header>
-          <h3>connector-gpt</h3>
-          <button class="copy" data-target="p-connector-gpt">Copy this prompt</button>
-        </header>
-        <p class="what">The owner's first priority for a custom GPT and a Claude connector is a general Top-Rated Team one: it should be able to explain the company and its services and invite somebody into a room.</p>
-        <pre id="p-connector-gpt">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "connector-gpt".
-
-Read these first, before you write anything: README.md, private/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  server/connector
-  client/public/.well-known
-  docs/connector.md
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  server/routes.ts
-      - one import
-      - two mount lines
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  A read-mostly public surface plus the two manifests that let a custom GPT and an MCP client
-  use it. Endpoints, all under /api/connector: the services (from shared/doors.ts), the
-  published price rows (from shared/pricing.ts, EXACTLY as written — no arithmetic, no ranges),
-  the case studies (from shared/cases.ts), and a grounded question that reuses the same path
-  /api/ask uses. Room creation is the one write, and it goes through the same POST
-  /api/workspaces the site uses, so the room-creation rate limit applies unchanged. Serve an
-  OpenAPI 3.1 document for the GPT and an MCP server for Claude over the same handlers — one
-  implementation, two front doors, or the two will drift. THE SPEND GUARD IS NOT OPTIONAL:
-  server/spend.ts already bounds /api/ask per IP and globally, and the connector must go through
-  it rather than around it, or the monthly budget becomes a suggestion. Nothing here exposes a
-  room token, a lead, a member or anything under /w/. Write docs/connector.md with the exact
-  steps to install it in a custom GPT and in Claude.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  The owner's first priority for a custom GPT and a Claude connector is a general Top-Rated Team
-  one: it should be able to explain the company and its services and invite somebody into a
-  room. Everything it needs already exists — the doors, the pricing rows, the cases, the
-  grounded ask endpoint and room creation — and none of it is reachable from outside a browser.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
+    <section class="wave" data-landed>
+      <h2>Wave 3 — landed</h2>
+      <p class="waveNote">page-roi-calculator, door-partner, connector-gpt — reported, reviewed and committed. Nothing to run here.</p>
     </section>
     <section class="wave">
       <h2>Wave 4</h2>
@@ -521,8 +324,8 @@ NEVER EDIT THESE, whatever the reason:
   client/src/index.css
 
 WHAT DONE MEANS FOR THIS PARCEL:
-  ONE PAGE, and it is one page — read private/fork-and-partners.md's install section and do not add
-  a step to it. With no operator configured every route redirects to /setup. It asks for:
+  ONE PAGE, and it is one page — read private/fork-and-partners.md's install section and do not
+  add a step to it. With no operator configured every route redirects to /setup. It asks for:
   display name, legal name, entity, terms URL and contact address; a model key or ours; which of
   our services to offer and whether each is referral or white label; prices in the operator's
   own words on the same ladder shape — theirs to set, and never sent anywhere; and the address

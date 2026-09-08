@@ -1,0 +1,11 @@
+{
+  "name": "Top-Rated Team",
+  "description": "Services, published prices and case studies from Top-Rated Team, a grounded question, and a room address for the person you are talking to.",
+  "version": "1.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://ai.top-rated.team/api/connector/mcp"
+    }
+  ]
+}

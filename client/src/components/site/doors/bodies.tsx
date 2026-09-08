@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 
 import AdGrantDoor from "@/components/site/doors/AdGrantDoor";
 import ChatGptAdsBody from "@/components/site/doors/ChatGptAdsBody";
+import PartnerBody from "@/components/site/doors/PartnerBody";
 import WhiteLabelBody from "@/components/site/doors/WhiteLabelBody";
 
 /**
@@ -42,6 +43,14 @@ export const DOOR_BODIES: Record<string, ComponentType> = {
    * yourself — and it has to be linked, not summarised.
    */
   "white-label": WhiteLabelBody,
+  /*
+   * LinkedIn growth earns a body because the row names a partner and a
+   * disclosure, and a buyer still cannot tell what the partner actually runs.
+   * The two products are PARTNER_BUILDS, in that order, described from
+   * `forPartner`. The invoice sentence is said once, next to the money, and
+   * no figure is printed.
+   */
+  "linkedin-growth": PartnerBody,
 };
 
 export function doorBody(doorId: string): ComponentType | undefined {
