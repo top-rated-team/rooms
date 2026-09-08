@@ -9,6 +9,18 @@ export interface ChannelHeaderProps {
   memberCount: number;
   doneCount: number;
   taskCount: number;
+  /**
+   * What the room is doing now and who it is waiting on, from
+   * roomNowLine(tasks, members) in server/digest.ts. The third primitive of the
+   * recurring-and-digest parcel: it built the sentence and could not mount it,
+   * because this file was not its to edit.
+   *
+   * It replaces the channel's static purpose on a project channel — the purpose
+   * says what the channel is FOR, which a reader learns once, where this says
+   * what is happening, which changes. On an agent channel the purpose stays,
+   * because an agent channel has no tasks and nothing to be waiting on.
+   */
+  nowLine?: string | null;
   railOpen: boolean;
   mobileView: MobileView;
   onMobileView: (view: MobileView) => void;
@@ -26,6 +38,7 @@ export function ChannelHeader({
   memberCount,
   doneCount,
   taskCount,
+  nowLine,
   railOpen,
   mobileView,
   onMobileView,
@@ -42,7 +55,15 @@ export function ChannelHeader({
         {channel ? (channel.kind === "project" ? `#${channel.name}` : channel.name) : "This room"}
       </h1>
 
-      {channel?.purpose ? (
+      {nowLine && channel?.kind === "project" ? (
+        <p
+          className={cn(META, "hidden min-w-0 flex-1 truncate text-muted-foreground md:block")}
+          data-testid="text-channel-now"
+          title={nowLine}
+        >
+          {nowLine}
+        </p>
+      ) : channel?.purpose ? (
         <p className={cn(META, "hidden min-w-0 flex-1 truncate text-muted-foreground md:block")}>{channel.purpose}</p>
       ) : null}
 

@@ -118,6 +118,8 @@ export type ChannelKind = "project" | "dm" | "agent";
 export type MemberKind = "visitor" | "expert" | "agent" | "system";
 export type Presence = "online" | "away" | "offline";
 export type TaskStatus = "todo" | "in_progress" | "blocked" | "done";
+/** A repeating line. Checking it off brings it back next week. Absent means it does not repeat. */
+export type TaskRepeat = "weekly";
 
 export const TASK_STATUSES: TaskStatus[] = ["todo", "in_progress", "blocked", "done"];
 
@@ -185,6 +187,7 @@ export const createTaskSchema = z.object({
   detail: z.string().max(2000).optional(),
   assigneeKey: z.string().max(80).optional(),
   status: z.enum(["todo", "in_progress", "blocked", "done"]).optional(),
+  repeat: z.enum(["weekly"]).nullable().optional(),
 });
 
 export const updateTaskSchema = z.object({
@@ -192,6 +195,7 @@ export const updateTaskSchema = z.object({
   detail: z.string().max(2000).optional(),
   status: z.enum(["todo", "in_progress", "blocked", "done"]).optional(),
   assigneeKey: z.string().max(80).nullable().optional(),
+  repeat: z.enum(["weekly"]).nullable().optional(),
 });
 
 export const inviteMemberSchema = z.object({
@@ -214,5 +218,5 @@ export type Workspace = typeof workspaces.$inferSelect;
 export type Channel = typeof channels.$inferSelect;
 export type Member = typeof members.$inferSelect;
 export type Message = typeof messages.$inferSelect;
-export type Task = typeof tasks.$inferSelect;
+export type Task = typeof tasks.$inferSelect & { repeat?: TaskRepeat | null };
 export type Lead = typeof leads.$inferSelect;

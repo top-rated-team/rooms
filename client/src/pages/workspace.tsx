@@ -7,6 +7,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { listStoredWorkspaces, useWorkspace } from "@/hooks/use-workspace";
 import { AccountsPanel } from "@/components/workspace/AccountsPanel";
 import { AdGrantPanel, AD_GRANT_SETUP, type SetupLine } from "@/components/workspace/AdGrantPanel";
+import { roomNowLine } from "@shared/room-now";
 import { ChannelHeader, type MobileView } from "@/components/workspace/ChannelHeader";
 import { Composer } from "@/components/workspace/Composer";
 import { IdentifyStrip } from "@/components/workspace/IdentifyStrip";
@@ -616,6 +617,16 @@ export default function WorkspacePage() {
 
   const shareUrl = `${window.location.origin}/w/${state.workspace.token}`;
   const doneCount = tasks.filter((t) => t.status === "done").length;
+  /*
+   * NOT a useMemo, and that is the fix rather than a style choice. I put one
+   * here first and it sat AFTER the early returns above — so on a render that
+   * bailed out early the hook count differed, and React threw "Rendered more
+   * hooks than during the previous render". The room went blank.
+   *
+   * roomNowLine is a pure pass over a handful of tasks. Memoising it was never
+   * worth a hook; calling it is cheaper than the bug.
+   */
+  const nowLine = roomNowLine(tasks, members);
 
   const sidebar = (onClose?: () => void) => (
     <WorkspaceSidebar
@@ -670,6 +681,7 @@ export default function WorkspacePage() {
             memberCount={members.length}
             doneCount={doneCount}
             taskCount={tasks.length}
+            nowLine={nowLine}
             railOpen={railOpen}
             mobileView={mobileView}
             onMobileView={setMobileView}

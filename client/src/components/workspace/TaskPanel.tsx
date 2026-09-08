@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, type KeyboardEvent } from "react";
 import { AGENT_BY_ID, EXPERT_BY_KEY, type AgentDef, type ExpertDef } from "@shared/roster";
-import { TASK_STATUSES, type Member, type Task, type TaskStatus } from "@shared/schema";
+import { TASK_STATUSES, type Member, type Task, type TaskRepeat, type TaskStatus } from "@shared/schema";
 import { Avatar, initialsFor, toneFor } from "@/components/workspace/Avatar";
 import { cn } from "@/lib/utils";
 import { ACTION_QUIET, CHROME, FOCUS, LABEL, META } from "@/components/workspace/room-style";
@@ -17,6 +17,10 @@ import { ACTION_QUIET, CHROME, FOCUS, LABEL, META } from "@/components/workspace
  * The progress bar is gone. In its place the count is written out and the rule
  * under the heading is inked as far as the work has got — a rule, not a box,
  * and it carries no colour of its own.
+ *
+ * A line can be set to repeat every week. That setting lives on the card.
+ * Checking it off is still a person; putting it back on the list is the
+ * weekly note in server/digest.ts, which does not promise the work.
  * ------------------------------------------------------------------------- */
 
 const STATUS_LABEL: Record<TaskStatus, string> = {
@@ -29,6 +33,71 @@ const STATUS_LABEL: Record<TaskStatus, string> = {
 function nextStatus(status: TaskStatus): TaskStatus {
   const index = TASK_STATUSES.indexOf(status);
   return TASK_STATUSES[(index + 1) % TASK_STATUSES.length];
+}
+
+export function repeatOf(task: Task): TaskRepeat | null {
+  return task.repeat === "weekly" ? "weekly" : null;
+}
+
+function isVisitorKey(key: string | null, members: Member[]): boolean {
+  if (!key) return false;
+  if (key === "visitor") return true;
+  return members.some((member) => member.memberKey === key && member.kind === "visitor");
+}
+
+function waitingOnName(key: string | null, members: Member[]): string {
+  if (!key) return "nobody";
+  if (isVisitorKey(key, members)) {
+    const member = members.find((row) => row.memberKey === key);
+    const name = member?.displayName?.trim();
+    if (!name || name === "You") return "the client";
+    return name;
+  }
+  const member = members.find((row) => row.memberKey === key);
+  const name = member?.displayName?.trim();
+  return name && name.length > 0 ? name : "somebody";
+}
+
+function isWaitingOnClient(task: Task, members: Member[]): boolean {
+  if (task.status === "done") return false;
+  return isVisitorKey(task.assigneeKey, members);
+}
+
+function withPeriod(line: string): string {
+  return /[.?!]$/.test(line) ? line : `${line}.`;
+}
+
+/**
+ * What the room is doing now, and who it is waiting on. One line. Keep in
+ * step with `roomNowLine` in server/digest.ts — that copy is the one the
+ * tests hold. ChannelHeader already prints a line in this spot.
+ */
+export function roomNowLine(tasks: Task[], members: Member[]): string {
+  if (tasks.length === 0) return "Nothing on the list yet.";
+  const open = tasks.filter((row) => row.status !== "done");
+  if (open.length === 0) return "The list is clear.";
+
+  const waiting = open.filter((row) => isWaitingOnClient(row, members));
+  const blockedOther = open.filter((row) => row.status === "blocked" && !isWaitingOnClient(row, members));
+  const moving = open.filter((row) => row.status === "in_progress" && !isWaitingOnClient(row, members));
+
+  const parts: string[] = [];
+
+  if (waiting.length > 0) {
+    const extra = waiting.length > 1 ? `, and ${waiting.length - 1} more` : "";
+    parts.push(`Waiting on the client: ${waiting[0].title}${extra}`);
+  } else if (blockedOther.length > 0) {
+    const who = waitingOnName(blockedOther[0].assigneeKey, members);
+    parts.push(`Waiting on ${who}: ${blockedOther[0].title}`);
+  }
+
+  if (moving.length > 0) {
+    const who = waitingOnName(moving[0].assigneeKey, members);
+    parts.push(who === "nobody" ? `Still moving: ${moving[0].title}` : `Still moving: ${moving[0].title}, with ${who}`);
+  }
+
+  if (parts.length === 0) return withPeriod(`Next: ${open[0].title}`);
+  return withPeriod(parts.join(". "));
 }
 
 interface Assignee {
@@ -52,16 +121,22 @@ function assigneeFor(key: string | null, members: Member[]): Assignee | null {
   return { initials: initialsFor(key), tone: toneFor(key, "system"), name: key };
 }
 
+interface TaskPatch {
+  status?: TaskStatus;
+  repeat?: TaskRepeat | null;
+}
+
 interface TaskRowProps {
   task: Task;
   members: Member[];
-  onUpdate: (id: string, patch: { status?: TaskStatus }) => void;
+  onUpdate(id: string, patch: TaskPatch): void;
 }
 
 function TaskRow({ task, members, onUpdate }: TaskRowProps) {
   const [open, setOpen] = useState(false);
   const assignee = assigneeFor(task.assigneeKey, members);
   const started = task.status !== "todo";
+  const weekly = repeatOf(task);
 
   return (
     <li className="border-t border-border py-3" data-testid={`task-${task.id}`}>
@@ -109,6 +184,17 @@ function TaskRow({ task, members, onUpdate }: TaskRowProps) {
       ) : null}
 
       {open && task.detail ? <p className={cn(META, "mt-1.5 text-muted-foreground")}>{task.detail}</p> : null}
+
+      <button
+        type="button"
+        onClick={() => onUpdate(task.id, { repeat: weekly ? null : "weekly" })}
+        aria-pressed={weekly === "weekly"}
+        title={weekly ? "Repeats every week. Click to stop." : "Set this line to repeat every week."}
+        className={cn(ACTION_QUIET, "mt-1.5 normal-case tracking-normal")}
+        data-testid={`button-task-repeat-${task.id}`}
+      >
+        {weekly ? "Every week" : "Repeat every week"}
+      </button>
     </li>
   );
 }
@@ -123,7 +209,7 @@ export interface TaskPanelProps {
    */
   title?: string;
   onCreate: (title: string) => void;
-  onUpdate: (id: string, patch: { status?: TaskStatus }) => void;
+  onUpdate(id: string, patch: { status?: TaskStatus; repeat?: TaskRepeat | null }): void;
   className?: string;
 }
 
