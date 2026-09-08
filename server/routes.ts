@@ -40,6 +40,13 @@ import { routeQuestion } from "./ai/route-question";
 import { ASK_LEDGER_KEY, askBudgetUsd, askLedgerKey, claimAgentTurn, guardAgentTurn, recordTurnCost } from "./spend";
 import { acceptWhatsAppInbound, bindingStateForToken, completeLinkedIn, startLinkedIn, startWhatsApp } from "./identity";
 import { listBoosters } from "./flygen";
+import {
+  acceptBridgeInbound,
+  connectBridgeSchema,
+  connectOrDisconnectBridge,
+  fanOutIfBridged,
+  listBridgesForToken,
+} from "./bridge";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -243,6 +250,9 @@ async function runAgentReply(reply: AgentReply): Promise<void> {
       meta: { error: "llm_not_configured" },
     });
     broadcast(reply.token, { type: "message", message: honest });
+    void fanOutIfBridged(reply.token, honest).catch((error: unknown) => {
+      console.error("[bridge] fan-out failed:", error);
+    });
     return;
   }
 
@@ -292,6 +302,9 @@ async function runAgentReply(reply: AgentReply): Promise<void> {
     body: finalBody,
     citations,
     error,
+  });
+  void fanOutIfBridged(reply.token, { ...placeholder, body: finalBody, meta }).catch((error: unknown) => {
+    console.error("[bridge] fan-out failed:", error);
   });
 }
 
@@ -1111,6 +1124,54 @@ export function registerRoutes(app: Express): void {
     identityWebhookLimit,
     route(async (req, res) => {
       const result = acceptWhatsAppInbound(req.body, req.get("x-webhook-secret") ?? undefined);
+      if (!result.accepted) {
+        res.status(401).json({ error: "Not found" });
+        return;
+      }
+      res.status(200).json({ ok: true });
+    }),
+  );
+
+  /* ---------------------- room bridges (WhatsApp, ChatWoot, Slack, ClickUp) ---------------------- */
+  /*
+   * One route to connect or disconnect, and the inbound webhook from the other
+   * hosts. GET is the same path so the panel can tell the truth about what is
+   * connected without a second resource.
+   */
+
+  app.get(
+    "/api/workspaces/:token/bridges",
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const bridges = await listBridgesForToken(state.workspace.token);
+      if (!bridges) return notFound(res, "Workspace not found");
+      res.json(bridges);
+    }),
+  );
+
+  app.post(
+    "/api/workspaces/:token/bridges",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const parsed = connectBridgeSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const result = await connectOrDisconnectBridge(state.workspace.token, parsed.data);
+      if (!result.ok) {
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.json(result.bridges);
+    }),
+  );
+
+  app.post(
+    "/api/bridge/inbound",
+    identityWebhookLimit,
+    route(async (req, res) => {
+      const result = await acceptBridgeInbound(req.body, req.get("x-webhook-secret") ?? undefined);
       if (!result.accepted) {
         res.status(401).json({ error: "Not found" });
         return;

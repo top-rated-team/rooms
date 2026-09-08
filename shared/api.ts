@@ -267,3 +267,22 @@ export interface ThreadApproval {
   /** Thread root, when this sits under a specific turn. */
   parentId: string | null;
 }
+
+/* ----------------------------- room bridges ------------------------------- */
+/* One WhatsApp chat, one ChatWoot conversation, one Slack channel or one
+ * ClickUp list, connected to a room. Secrets and the room token are not in
+ * this shape. A restart forgets the connections; the panel says so. */
+
+export type BridgeKind = "whatsapp" | "chatwoot" | "slack" | "clickup";
+
+/**
+ * A bridge as the room is allowed to see it. The destination is a label the
+ * visitor typed, never a chat id, never a webhook URL, never the room token.
+ */
+export interface RoomBridge {
+  kind: BridgeKind;
+  connected: boolean;
+  /** What it writes into, in the visitor's words. */
+  targetLabel: string;
+  connectedAt: string | null;
+}
