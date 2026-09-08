@@ -52,6 +52,16 @@ const AGENT_GLYPHS: Record<string, () => ReactNode> = {
     </>
   ),
   bracket: () => <polyline points="7,4 14,10 7,16" />,
+  /* A balance: a stem, a beam, and the two pans as short drops. Reads at 20px,
+     which is the only test a mark on this roster has to pass. */
+  scales: () => (
+    <>
+      <line x1="10" y1="4" x2="10" y2="16" />
+      <line x1="4" y1="7" x2="16" y2="7" />
+      <line x1="4" y1="7" x2="4" y2="11" />
+      <line x1="16" y1="7" x2="16" y2="11" />
+    </>
+  ),
   cycle: () => <polyline points="15,5 5,5 5,15 15,15" />,
   nest: () => (
     <>

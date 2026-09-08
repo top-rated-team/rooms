@@ -142,7 +142,7 @@ export function FirstScreen() {
         <p className="type-body m-0">
           Start with a free expert audit of what the AI agents and automations in your ad accounts have been doing.
           Then the work it turns up: paid advertising and the measurement under it, Google Ad Grants, inbound LinkedIn
-          on the official API, and custom AI around all of it &mdash; for your clients as readily as for you.
+          on the official API, custom AI around all of it &mdash; for you and/or your clients.
         </p>
         <dl
           data-testid="list-record"

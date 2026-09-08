@@ -28,6 +28,12 @@
  * It is one <svg>, so it costs no request, scales to any width, and inverts
  * with the theme because every stroke is currentColor.
  *
+ * THE CAPTION NO LONGER MENTIONS THE DRAG, on the owner's instruction, and the
+ * affordance stays. It is not a hidden feature: the handle takes the ew-resize
+ * cursor, which is the same signal a column divider gives, and it is reachable
+ * from the keyboard. A caption explaining a control is a caption apologising
+ * for it.
+ *
  * THE POINT MOVES, and the owner asked whether that would cost anything.
  *
  * MEASURED, not asserted. A 240-move drag sweeping the full travel and back,
@@ -239,10 +245,9 @@ export function Plate() {
       </div>
       <figcaption className="mx-auto max-w-[var(--page)] px-[var(--s3)] pt-[var(--s2)]">
         <span className="type-note text-muted-foreground">
-          What the lines are: one per service, and every one of them ends in the same place. Ask a question at any
-          of them, and if the answer turns out to be worth keeping it becomes a room — an address of its own, the work
-          written out as a checklist, and somewhere to put a person. The line leaving on the right is the work
-          starting. Drag the point to move where they meet.
+          What the lines are: one per service + AI agents, and every one of them ends in the same place. Ask a
+          question at any of them, and if the answer turns out to be worth keeping it becomes a room — an address of
+          its own, the work written out as a checklist, and somewhere to put a person.
         </span>
       </figcaption>
     </figure>

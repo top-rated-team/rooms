@@ -156,6 +156,30 @@ export function seedFor(door: DoorSeedInput): DoorSeed {
   }
 
   /*
+   * THE LAWYER IS IN EVERY ROOM OF OURS, on the owner's instruction, and it is
+   * the one agent on the roster that is not tied to a door.
+   *
+   * The reason it belongs everywhere is that the question belongs everywhere.
+   * "Are we allowed to do this" arrives in a paid-ads room about a competitor's
+   * trademark, in an Ad Grants room about the policy that keeps the grant, and
+   * in a LinkedIn room about automated invitations. Putting it only on the door
+   * whose tier is named after it would mean the client with the question has to
+   * already know which door their question is behind.
+   *
+   * Not in a partner's room, and that is the same rule as everything else
+   * above: nothing of ours is seeded into a room another company invoices. The
+   * return above has already left with one channel by the time this runs.
+   */
+  channels.push({
+    slug: "ask-legal",
+    name: "ask-legal",
+    purpose:
+      "What the platforms and regulators actually publish about automation, outreach, consent and advertising — and which tier a piece of work falls in.",
+    kind: "agent",
+    counterpartKey: "agent:legal",
+  });
+
+  /*
    * ONE DOOR HAS A WRITTEN CHECKLIST, and the others get none rather than that
    * one. An empty checklist is a room waiting to be filled; a checklist about
    * somebody else's engagement is a room telling the client the wrong thing.

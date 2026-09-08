@@ -82,6 +82,21 @@ test("every channel in a room has its own slug", () => {
   }
 });
 
+test("every room of ours can reach the lawyer, and no partner's room can", () => {
+  for (const door of DOORS) {
+    const plan = planFor(door.id);
+    const hasLawyer = plan.channels.some((channel) => channel.counterpartKey === "agent:legal");
+
+    if (door.contract.legalName === OURS) {
+      assert.ok(hasLawyer, `${door.id} is ours and has no channel to the lawyer in it`);
+    } else {
+      /* Nothing of ours is seeded into a room another company invoices, and an
+         agent of ours answering in it is the most visible version of that. */
+      assert.ok(!hasLawyer, `${door.id} is invoiced by ${door.contract.legalName} and our lawyer is seeded into it`);
+    }
+  }
+});
+
 test("a room on one of our doors names that door, not the flagship", () => {
   for (const door of DOORS) {
     if (door.contract.legalName !== OURS) continue;
@@ -93,11 +108,28 @@ test("a room on one of our doors names that door, not the flagship", () => {
         `${door.id} has an agent and no channel to reach it in`,
       );
     }
+    /*
+     * ONE HOUSE-WIDE AGENT IS ALLOWED, and it is named here rather than left as
+     * a loophole. The AI Lawyer Agent is seeded into every room of ours because
+     * "are we allowed to do this" arrives in all of them — a trademark question
+     * in a paid-ads room, the policy that keeps a grant in an Ad Grants room,
+     * automated invitations in a LinkedIn room.
+     *
+     * Everything else this assertion was written to stop still stands: it was
+     * written because the seed used to put the flagship's agent into every
+     * room regardless of the door, so a charity arriving through Ad Grants got
+     * the ChatGPT Ads agent. A second name added to this list without a reason
+     * as good as the first is that bug coming back.
+     */
+    const HOUSE_WIDE = ["agent:legal"];
     assert.ok(
       plan.channels.every(
-        (channel) => channel.kind !== "agent" || channel.counterpartKey === `agent:${door.firstAgentId}`,
+        (channel) =>
+          channel.kind !== "agent" ||
+          channel.counterpartKey === `agent:${door.firstAgentId}` ||
+          HOUSE_WIDE.includes(channel.counterpartKey ?? ""),
       ),
-      `${door.id} seeds a channel for an agent that is not its own`,
+      `${door.id} seeds a channel for an agent that is neither its own nor house-wide`,
     );
   }
 });

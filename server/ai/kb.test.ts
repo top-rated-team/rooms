@@ -223,12 +223,25 @@ test("the LinkedIn Ads door's printed questions reach LinkedIn's own pages", asy
     { question: "Lead gen forms vs landing pages for a $200 ACV product?", expects: /lead gen form/i },
   ];
 
-  // Read off the other corpora rather than typed out, so a corpus added after this
-  // is covered without anybody remembering to come back here.
+  /*
+   * BY URL, NOT BY HOST, and the difference is not academic — this assertion
+   * went red the day a `legal` corpus was added, because it holds LinkedIn's
+   * User Agreement and Professional Community Policies, which are also on
+   * www.linkedin.com. Nothing had leaked. Two corpora simply share a host and
+   * read different parts of it: /help/lms/… here, /legal/… there.
+   *
+   * Comparing addresses says what this test always meant — a retrieval from
+   * this namespace returns this namespace's own documents — and it says it more
+   * strictly than the host check did, since it would also catch a leak between
+   * two corpora on the SAME host, which the old form could not see at all.
+   *
+   * Still read off the other corpora rather than typed out, so a corpus added
+   * after this is covered without anybody remembering to come back here.
+   */
   const foreign = new Set<string>();
   for (const [namespace, keys] of corpora) {
     if (namespace === "linkedin-ads") continue;
-    for (const key of keys) foreign.add(new URL(key.split("\u0000")[0]).host);
+    for (const key of keys) foreign.add(key.split("\u0000")[0]);
   }
   assert.ok(foreign.size > 0, "no other corpus is on disk, so this test cannot show a leak");
 
@@ -244,8 +257,8 @@ test("the LinkedIn Ads door's printed questions reach LinkedIn's own pages", asy
       const host = new URL(hit.url).host;
       assert.equal(host, "www.linkedin.com", `"${question}" cited ${host}, which is not LinkedIn's own documentation`);
       assert.ok(
-        !foreign.has(host),
-        `"${question}" cited ${host}, a host that belongs to another door's corpus: ${hit.url}`,
+        !foreign.has(hit.url),
+        `"${question}" cited a page that belongs to another corpus: ${hit.url}`,
       );
     }
   }

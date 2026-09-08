@@ -46,9 +46,14 @@ export const DOOR_TIERS: Record<DoorTier, DoorTierDef> = {
   },
   "light-grey": {
     id: "light-grey",
-    label: "Lawyer first",
+    // "Lawyer or our AI lawyer agent: end to end", on the owner's instruction,
+    // replacing "Lawyer first". The old label made the legal step a gate a
+    // buyer had to get through before anything could start, and priced in a
+    // delay before they knew whether there was anything to delay. There are
+    // two ways to get that answer now and one of them is in the room already.
+    label: "Lawyer or our AI lawyer agent: end to end",
     meaning:
-      "A qualified lawyer writes down what is allowed where you are before anything is built, and bills that part separately.",
+      "What is allowed where you are gets written down before anything is built. Our AI lawyer agent does it end to end from the platforms' own published rules and cites every page it used; a qualified lawyer does it where you need an opinion signed in your jurisdiction, and bills that part separately.",
   },
   grey: {
     id: "grey",

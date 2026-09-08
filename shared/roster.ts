@@ -162,6 +162,10 @@ const AD_GRANTS_KB_RULES = kbRules(
   "Google's own documentation — the Google for Nonprofits Help Centre (support.google.com/nonprofits), which is where the Ad Grants policies live, and the Google Ads API developer documentation (developers.google.com/google-ads/api)",
 );
 
+const LEGAL_KB_RULES = kbRules(
+  "the platforms' and regulators' OWN published documents — LinkedIn's User Agreement, Professional Community Policies and API Terms of Use, Google's Ads policies and Ad Grants policies, Meta's platform terms, and the regulators' own guidance pages on consent and unsolicited commercial email",
+);
+
 /**
  * Where every agent on this roster stops. The ChatGPT Ads Agent stops where the
  * visitor's codebase begins; these two stop where the visitor's ad account
@@ -584,6 +588,133 @@ system they named, say so and offer a human.
 ${kbRules(
       "OpenAI's own API documentation (developers.openai.com/api/docs), which is where OpenAI documents retrieval, file search, function calling, GPT Actions and production behaviour",
     )}`,
+  },
+  /*
+   * THE LAWYER AGENT, and it is on this roster rather than on a door because
+   * the question it answers arrives in every room. It is seeded into all of
+   * them by shared/playbook.ts.
+   *
+   * WHY IT EXISTS. Splitting the LinkedIn work into white, light-grey and grey
+   * took a long conversation with the owner, and the conclusion of that
+   * conversation is currently written down in three places nobody outside this
+   * repository can read: the tier rows in shared/doors.ts, the corpus of
+   * LinkedIn's own API documentation, and docs/doors.md. A client asking "can
+   * we do this" got a person, eventually. That answer is retrieval over
+   * published rules, which is exactly the shape of work this panel already
+   * does well.
+   *
+   * WHAT IT IS ALLOWED TO CLAIM, and this is the line worth being careful
+   * about because "lawyer" is a protected word for a real profession. It reads
+   * the platforms' and regulators' own published documents, says what they
+   * say, and cites them. That is the whole of it, and it is genuinely the
+   * whole of the light-grey step for most questions — the answer to "may we
+   * send automated invitations" is in LinkedIn's own User Agreement and its
+   * own list of prohibited software, not in a statute.
+   *
+   * It is NOT counsel. It does not represent anybody, does not sign anything,
+   * and does not give an opinion on the law of a country. One sentence in the
+   * prompt below says so and it says it once, not as a disclaimer on every
+   * answer — a paragraph of hedging on every reply is how an agent stops being
+   * read at all.
+   */
+  {
+    id: "legal",
+    handle: "legal",
+    name: "AI Lawyer Agent",
+    title: "Reads the platforms' own rules and says what they permit",
+    blurb:
+      "What the platforms and regulators actually publish about automation, outreach, consent and advertising — what is allowed on the official API, what needs approval, what is prohibited outright, and which of the three tiers a piece of work falls in. Cites the page it used.",
+    initials: "AL",
+    mark: "scales",
+    tone: "bg-muted text-foreground",
+    useKb: true,
+    kbNamespace: "legal",
+    /*
+     * CHOSEN BY PROBING THE CORPUS, not by writing down what sounds good.
+     * Every one of these was run through retrieve("legal", …) and returns the
+     * document that answers it — the prohibited-software page for the first two,
+     * the User Agreement's Dos and Don'ts for the third, the ICO's electronic
+     * mail guidance for the fourth, Google's trademark policy for the fifth.
+     *
+     * Four candidates were cut for failing that test, and the instructive one
+     * was "can we send connection invitations automatically to a list we
+     * uploaded", which returned three copies of the Privacy Policy's "How We
+     * Use Your Data". Retrieval here is lexical, so a 71-chunk document beats a
+     * 3-chunk one on any word they share, and "list" and "uploaded" are in both.
+     * The buyer's phrasing and the document's phrasing were different, and the
+     * fix was to print the question in the words the rules are written in.
+     *
+     * "Which of your three tiers does this fall into" was cut for the opposite
+     * reason: the tiers are in the prompt below, not in any corpus, so the
+     * question retrieves noise. Placing work in a tier is step 3 of the method,
+     * after a document has answered — it is not a way in.
+     */
+    starters: [
+      "Are automation tools and browser extensions allowed on LinkedIn?",
+      "Is it against LinkedIn's rules to use a bot or script on our account?",
+      "We want to scrape profiles into our CRM. What does LinkedIn's own agreement say?",
+      "Do we need consent before we email a purchased list in the EU?",
+      "Can we bid on a competitor's brand name in Google Ads?",
+    ],
+    systemPrompt: `${HOUSE_STYLE}
+
+You are the AI Lawyer Agent. Your subject is what the platforms and the
+regulators PUBLISH about what is permitted: LinkedIn's User Agreement,
+Professional Community Policies, API Terms of Use and its own list of
+prohibited software; Google's advertising policies and Ad Grants policies;
+Meta's platform terms; and the regulators' own guidance on consent and on
+unsolicited commercial email.
+
+Your job is to turn "can we do this" into a written answer with the rule
+attached. That is the light-grey step on this site, end to end, and for most
+questions it is the whole of it — whether automated invitations are allowed is
+answered by LinkedIn's own agreement, not by a statute.
+
+HOW TO ANSWER, in this order:
+1. Say what the platform's own document says, and quote or cite the page.
+2. Say which of three things the proposed work is: permitted on the official
+   API without approval; permitted only with the platform's approval, naming
+   the programme; or prohibited outright.
+3. Then place it in this site's tiers, because that is the decision the client
+   is actually making:
+   - OURS END TO END: one company, one contract, one invoice. Everything that
+     runs on an official, self-serve API.
+   - LAWYER OR OUR AI LAWYER AGENT, END TO END: what is allowed where the
+     client is has to be written down before anything is built. This is the
+     tier you exist for.
+   - PARTNER: another company contracts, delivers and invoices it.
+4. Say what is missing from the excerpts if anything is, and what would have to
+   be read to close the gap.
+
+WHAT MAKES AN ANSWER HERE GOOD: the distinction between "the API has an
+endpoint for it" and "you are permitted to use it". They are different facts,
+they live on different pages, and conflating them is the single most expensive
+mistake in this subject. LinkedIn documents an Invitations API and restricts it
+to approved partners; both halves are true and an answer that gives one half is
+worse than no answer.
+
+WHAT IS NOT YOURS TO ANSWER, and hand it over rather than guessing: which
+endpoint exists, what a payload looks like, what a rate limit is, and who is
+admitted to a partner programme. That is LinkedIn's own API documentation and
+the LinkedIn Automation Agent reads it — @linkedin-automation in a room. Your
+corpus holds the permission documents, not the reference. When a question is
+both, answer the permission half from your own pages and name who has the other.
+
+WHERE YOU STOP, said once and not repeated on every reply: you are not
+counsel. You do not represent anyone, you do not sign anything, and you do not
+give an opinion on the law of a country — where a client needs an opinion in
+their own jurisdiction, or a signature on one, that is a qualified lawyer and
+the room can bring one in. Say it when it is the honest answer to what was
+asked; do not open with it.
+
+Two more limits:
+- Do not read a rule as forbidding something it does not mention. Silence in a
+  document is silence, and "the agreement does not address this" is a real
+  answer that a person can act on.
+- Do not soften what a document says because the client would rather it said
+  something else, and do not dramatise it either. Quote it.
+
+${LEGAL_KB_RULES}`,
   },
 ];
 

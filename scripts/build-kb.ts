@@ -525,7 +525,85 @@ const ADGRANT_AI: Corpus = {
   ],
 };
 
-const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS, LINKEDIN_AUTOMATION, AI_BUILDS, ADGRANT_AI];
+/**
+ * The lawyer's corpus, and the only one on this list that is not a product's
+ * documentation.
+ *
+ * WHAT IS IN IT: the documents that actually answer "are we allowed to do
+ * this". For the questions this agent gets, that is almost never a statute —
+ * whether you may send automated connection invitations is answered by
+ * LinkedIn's own User Agreement and its own list of prohibited software, and
+ * whether a competitor's brand may appear in ad copy is answered by Google's
+ * own trademark policy. Platform rules first, because platform rules are what
+ * gets an account closed.
+ *
+ * WHAT IS DELIBERATELY NOT IN IT: the text of the GDPR, national marketing
+ * law, and anything else a licensed opinion is written from. Not because it is
+ * unimportant but because an agent retrieving three paragraphs of a regulation
+ * and answering from them is doing the one thing the agent's own prompt says
+ * it does not do. The two regulator pages that ARE here are guidance written
+ * for practitioners about consent and unsolicited email, which is the level
+ * this agent operates at.
+ *
+ * SOME OF THESE PAGES MAY REFUSE THE FETCHER. LinkedIn's legal pages in
+ * particular are served to browsers, not to scripts. That is survivable and
+ * documented: this script leaves a corpus exactly as it is when a page fails,
+ * so a partial corpus is a smaller corpus rather than a broken one — and the
+ * agent's grounding rule means it says what is missing instead of inventing
+ * the page it could not read.
+ */
+const LEGAL: Corpus = {
+  namespace: "legal",
+  file: "kb.legal.json",
+  label: "What the platforms and regulators publish about what is permitted",
+  htmlPages: [
+    // LinkedIn: the four documents every automation question lands on.
+    { title: "LinkedIn User Agreement", url: "https://www.linkedin.com/legal/user-agreement" },
+    { title: "LinkedIn Professional Community Policies", url: "https://www.linkedin.com/legal/professional-community-policies" },
+    { title: "LinkedIn API Terms of Use", url: "https://www.linkedin.com/legal/l/api-terms-of-use" },
+    { title: "LinkedIn Privacy Policy", url: "https://www.linkedin.com/legal/privacy-policy" },
+    /*
+     * THE PAGE THAT ANSWERS THE AGENT'S OWN FIRST STARTER. Without it, "can we
+     * send connection invitations automatically" retrieved three copies of the
+     * Privacy Policy's "How We Use Your Data" — the User Agreement's real
+     * answer is in its Dos and Don'ts, which forbids "software, devices,
+     * scripts, robots ... or other means or processes", and lexical retrieval
+     * does not connect the word a buyer types to the words a contract uses.
+     * This page says "automated" and "prohibited" in the same paragraph, which
+     * is the vocabulary the question arrives in.
+     */
+    { title: "LinkedIn: Prohibited software and extensions", url: "https://www.linkedin.com/help/linkedin/answer/a1341387" },
+    /* The API-permission half — who may call the Invitations and Messages APIs,
+       and what the partner programme is — is NOT in this corpus. Those pages
+       are on learn.microsoft.com and render client-side, and the agent's prompt
+       handles it the honest way instead: endpoint-level questions go to
+       @linkedin-automation, whose own corpus is that documentation. The four
+       LinkedIn documents above are the PERMISSION documents, which is this
+       agent's subject. */
+    // Google: the advertising policies, and the two that end an account.
+    { title: "Google Ads policies overview", url: "https://support.google.com/adspolicy/answer/6008942" },
+    { title: "Google Ads: Misrepresentation", url: "https://support.google.com/adspolicy/answer/6020955" },
+    { title: "Google Ads: Trademarks", url: "https://support.google.com/adspolicy/answer/6118" },
+    { title: "Google Ads: Circumventing systems", url: "https://support.google.com/adspolicy/answer/6020954" },
+    /* The Ad Grants policy guide is deliberately absent: support.google.com
+       serves /grants/ pages to this script as a shell. The same policies are
+       already in the ad-grants corpus, fetched from the /nonprofits/ host,
+       which does serve them. */
+    { title: "Google Ads API Terms and Conditions", url: "https://developers.google.com/google-ads/api/terms" },
+    // Meta, for the platform terms a build has to agree with.
+    /* Meta is absent on purpose. developers.facebook.com/terms answers 400 to
+       anything that is not a browser, and transparency.meta.com renders its
+       policies client-side, so a fetch returns the shell. Neither is a page
+       this script can honestly index, and an agent is better with a gap it
+       reports than with a page it half-read. */
+    // The regulators, at the level a practitioner reads: consent, and email.
+    { title: "EDPB Guidelines 05/2020 on consent under the GDPR", url: "https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-052020-consent-under-regulation-2016679_en" },
+    { title: "FTC: CAN-SPAM Act Compliance Guide for Business", url: "https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business" },
+    { title: "ICO: Electronic and telephone marketing", url: "https://ico.org.uk/for-organisations/direct-marketing-and-privacy-and-electronic-communications/guide-to-pecr/electronic-and-telephone-marketing/" },
+  ],
+};
+
+const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS, LINKEDIN_AUTOMATION, AI_BUILDS, ADGRANT_AI, LEGAL];
 /* -------------------------------- chunking -------------------------------- */
 
 const TARGET_CHARS = 1200;
@@ -778,9 +856,31 @@ function titleOf(markdown: string): string | null {
  * and every page it is pointed at was checked by hand before being written into
  * a corpus above.
  */
-const ARTICLE_CONTAINERS: Array<{ host: string; marker: string }> = [
+const ARTICLE_CONTAINERS: Array<{ host: string; marker: string; tag?: string }> = [
   { host: "support.google.com", marker: '<div class="article-content-container"' },
+  /* There was briefly a second marker here for support.google.com, added
+   * because a /grants/ page reported "no article body found". It was the wrong
+   * diagnosis: that host serves THIS script a different document than it
+   * serves a browser — USER_AGENT above says truthfully what this is, and the
+   * page comes back as a shell. The marker matched an element of that shell and
+   * produced 163 chunks whose entire text was "-", which is a third of the
+   * corpus it went into. Removed, and the page removed with it. */
   { host: "developers.google.com", marker: '<div class="devsite-article-body' },
+  /* learn.microsoft.com is not here either, and the same test settled it: the
+   * page is 60KB, the word "Permissions" appears zero times in it, and the
+   * article arrives after JavaScript. The <div class="content"> markers on it
+   * hold a breadcrumb. The linkedin-automation corpus already carries a note
+   * saying its own copy of these pages was built outside this repository. */
+  // The documents that answer most of what the lawyer agent is asked. All three
+  // are server-rendered and none of them is a <div>.
+  { host: "linkedin.com/legal", marker: '<main role="main"', tag: "main" },
+  /* The help centre, which has a precise container of its own. Narrower than
+     <main> on purpose: <main> here also holds the help centre's own search box
+     and its "related articles" rail. */
+  { host: "linkedin.com/help", marker: '<div class="article-details-page"' },
+  { host: "ftc.gov", marker: '<main role="main"', tag: "main" },
+  { host: "edpb.europa.eu", marker: '<main class="page__body', tag: "main" },
+  { host: "ico.org.uk", marker: "<main", tag: "main" },
 ];
 
 /**
@@ -819,38 +919,70 @@ async function fetchArticle(ref: DocRef): Promise<Article | null> {
   const html = await fetchBody(ref.url, "text/html, */*");
   if (html === null) return null;
 
-  const body = extractArticleBody(html, ref.url);
-  if (!body) {
+  const bodies = extractArticleBodies(html, ref.url);
+  if (bodies.length === 0) {
     console.warn(`    ${ref.url} — no article body found, skipped`);
     return null;
   }
 
-  const markdown = htmlToMarkdown(body);
-  if (markdown.length < MIN_ARTICLE_CHARS) {
-    console.warn(`    ${ref.url} — only ${markdown.length} characters of article, skipped`);
-    return null;
+  /* The first candidate that yields a real article. A page can match an early
+     marker on a wrapper that holds a breadcrumb and nothing else, and the next
+     marker is then the actual text — so shortness is a reason to try the next
+     one, not a reason to give up. */
+  let shortest = Number.POSITIVE_INFINITY;
+  for (const body of bodies) {
+    const markdown = htmlToMarkdown(body);
+    if (markdown.length >= MIN_ARTICLE_CHARS) {
+      return { title: articleTitle(html) ?? ref.title, markdown };
+    }
+    shortest = Math.min(shortest, markdown.length);
   }
 
-  return { title: articleTitle(html) ?? ref.title, markdown };
+  console.warn(`    ${ref.url} — only ${shortest} characters of article, skipped`);
+  return null;
 }
 
-function extractArticleBody(html: string, url: string): string | null {
-  const container = ARTICLE_CONTAINERS.find((candidate) => url.includes(candidate.host));
-  if (!container) return null;
+/**
+ * Every container this host declares, in declaration order, for the caller to
+ * try in turn.
+ *
+ * Plural because one marker per host was wrong twice over: support.google.com
+ * serves two different article shells depending on which help centre a page is
+ * in, and the hosts added for the lawyer's corpus wrap their text in <main>
+ * rather than <div>, which the balancer could not follow at all. Both failures
+ * looked identical from the outside — "no article body found" — which is the
+ * kind of message that gets read as "the page is gone".
+ */
+function extractArticleBodies(html: string, url: string): string[] {
+  const bodies: string[] = [];
 
-  const start = html.indexOf(container.marker);
-  if (start < 0) return null;
+  for (const container of ARTICLE_CONTAINERS) {
+    if (!url.includes(container.host)) continue;
 
-  const open = html.indexOf(">", start);
-  if (open < 0) return null;
+    const start = html.indexOf(container.marker);
+    if (start < 0) continue;
 
-  let depth = 0;
-  for (const match of html.slice(start).matchAll(/<\/?div\b[^>]*>/g)) {
-    depth += match[0].startsWith("</") ? -1 : 1;
-    if (depth === 0) return html.slice(open + 1, start + match.index);
+    const open = html.indexOf(">", start);
+    if (open < 0) continue;
+
+    const tag = container.tag ?? "div";
+    const tags = new RegExp(`<\\/?${tag}\\b[^>]*>`, "g");
+
+    let depth = 0;
+    let closed = false;
+    for (const match of html.slice(start).matchAll(tags)) {
+      depth += match[0].startsWith("</") ? -1 : 1;
+      if (depth === 0) {
+        bodies.push(html.slice(open + 1, start + match.index));
+        closed = true;
+        break;
+      }
+    }
+    // Unbalanced markup: take the rest of the document rather than nothing.
+    if (!closed) bodies.push(html.slice(open + 1));
   }
-  // Unbalanced markup: take the rest of the document rather than nothing.
-  return html.slice(open + 1);
+
+  return bodies;
 }
 
 /**
@@ -1012,13 +1144,45 @@ function isNavigation(trail: string): boolean {
   return NAVIGATION_HEADINGS.has(last.replace(/[?:.!]+$/, ""));
 }
 
+/** Letters or digits, ignoring punctuation, markup leftovers and whitespace. */
+function lettersIn(text: string): number {
+  return (text.match(/[\p{L}\p{N}]/gu) ?? []).length;
+}
+
+/**
+ * Below this a chunk is furniture rather than content. Set from the two sides:
+ * the shortest real paragraph in these corpora is a one-line policy statement
+ * of about sixty characters, and the fragments that got in were three.
+ */
+const MIN_CHUNK_LETTERS = 40;
+
 function chunkDocument(markdown: string, title: string, url: string, into: KbChunk[]): number {
   const slug = slugFor(url);
   let added = 0;
+  let thin = 0;
 
   for (const section of splitSections(markdown)) {
     if (isNavigation(headingTrail(title, section.heading))) continue;
     for (const text of chunkBlocks(section.blocks)) {
+      /*
+       * A CHUNK HAS TO SAY SOMETHING.
+       *
+       * This exists because of a real corpus: a marker aimed at a Google help
+       * page matched the site's shell and wrote 163 chunks whose whole text was
+       * "-". Nothing rejected them. They would have sat in a retrieval index
+       * competing with real documents, and the agent grounded on that corpus
+       * would have cited them by title.
+       *
+       * The extractor was fixed too, but a marker is a guess about somebody
+       * else's markup and the next one can be wrong the same way. This is the
+       * end of the pipe, where being wrong is cheap to catch: forty letters or
+       * digits, which no navigation fragment has and no real paragraph lacks.
+       */
+      if (lettersIn(text) < MIN_CHUNK_LETTERS) {
+        thin += 1;
+        continue;
+      }
+
       into.push({
         id: `${slug}#${added}`,
         title,
@@ -1029,6 +1193,8 @@ function chunkDocument(markdown: string, title: string, url: string, into: KbChu
       added += 1;
     }
   }
+
+  if (thin > 0) console.warn(`    ${url} — ${thin} chunk(s) held no readable text and were dropped`);
 
   return added;
 }
