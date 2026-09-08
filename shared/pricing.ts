@@ -30,12 +30,25 @@
  */
 
 /**
- * The rows, by name. `partner` is the one that is not in the owner's table, and
- * the reason it exists is the rule in docs/doors.md: whoever sets the price is
- * the seller of the work. "Custom for every other door" would have this site
- * quoting for a door another company contracts and invoices, which makes us the
- * seller of it in fact whatever the footer says — so that door gets a row
- * carrying no figure instead of being swept into `custom`.
+ * The rows, by name — except `partner`, WHICH NAMES NO ROW.
+ *
+ * The rule from docs/doors.md still holds: whoever sets the price is the seller
+ * of the work, so this site cannot publish a figure for a door another company
+ * contracts and invoices. What changed is how that is honoured. It used to be a
+ * row carrying no figure, which said out loud that we take no share and publish
+ * nothing — and the owner cut it: "вот єту строку я бі тоже вообще убрал".
+ *
+ * He is right, and the version without it is the stronger one. That row was a
+ * pre-emptive answer to an accusation nobody had made, on a page a visitor
+ * reaches before they have seen anything. The offer it sat next to is another
+ * company's; a buyer who wants its price asks that company, the way they would
+ * anywhere else. Explaining the absence drew a line under it.
+ *
+ * So `partner` stays in this union — the door is really sold on a tier, and
+ * typing it as one keeps doors.ts honest about which — and PRICE_BY_ID simply
+ * has no entry for it. `priceForDoor` returns null there and the door page
+ * renders no price section at all. That is a structural guarantee rather than a
+ * sentence: there is no figure to leak because there is no row to hold one.
  */
 export type PriceTierId =
   | "audit"
@@ -43,7 +56,6 @@ export type PriceTierId =
   | "support"
   | "setup"
   | "management"
-  | "booster"
   | "ownKeys"
   | "custom"
   | "partner";
@@ -77,6 +89,21 @@ export interface PriceRow {
 /**
  * The ladder, in the order the owner's specification writes it. Order is a
  * presentation decision the owner already made; this file does not re-make it.
+ */
+/*
+ * TWO ROWS WERE CUT ON THE OWNER'S INSTRUCTION, and both cuts made the ladder
+ * say more rather than less.
+ *
+ * "+$49 / month" was an add-on for boosters on top-voice.ai or warmlike.com,
+ * and it could not be bought alone — the plus sign said so and the condition
+ * line said so again. A rung nobody can stand on is not a rung. "from $49 per
+ * task" already tells a reader what the cheapest real commitment here is, which
+ * is the only job the row was doing. Its tier is gone from PriceTierId too: no
+ * door was ever sold on it.
+ *
+ * The partner row is the other one, and the note on PriceTierId has that story.
+ *
+ * What is left is seven rows a buyer can actually be on.
  */
 export const PRICES: PriceRow[] = [
   {
@@ -134,14 +161,6 @@ export const PRICES: PriceRow[] = [
     ours: true,
   },
   {
-    id: "booster",
-    price: "+$49 / month",
-    buys: "Boosters for top-voice.ai or warmlike.com running on your own account or Pages.",
-    // The plus sign is load-bearing: this is not a row somebody can buy alone.
-    condition: "Added to one of the rows above rather than bought on its own.",
-    ours: true,
-  },
-  {
     id: "ownKeys",
     price: "free",
     buys: "Content campaigns, autopilot and the AI agents.",
@@ -170,20 +189,12 @@ export const PRICES: PriceRow[] = [
     condition: "A figure comes from a person after the call.",
     ours: true,
   },
-  {
-    id: "partner",
-    // Not a figure, and not "custom" either — see the note on PriceTierId.
-    price: "set by the company that invoices it",
-    buys: "The work another company contracts, delivers and invoices.",
-    condition:
-      "Whoever sets the price is the seller. On this row that is not us, so this site publishes no figure for it and takes no share of it.",
-    ours: false,
-  },
 ];
 
-export const PRICE_BY_ID: Record<PriceTierId, PriceRow> = Object.fromEntries(
+/** Partial on purpose: `partner` has no row. See the note on PriceTierId. */
+export const PRICE_BY_ID: Partial<Record<PriceTierId, PriceRow>> = Object.fromEntries(
   PRICES.map((row) => [row.id, row]),
-) as Record<PriceTierId, PriceRow>;
+) as Partial<Record<PriceTierId, PriceRow>>;
 
 /**
  * The row a door shows, and it shows this one only.
@@ -194,8 +205,8 @@ export const PRICE_BY_ID: Record<PriceTierId, PriceRow> = Object.fromEntries(
  * of "a door shows its own tier" — a door page that calls it cannot render a
  * neighbour's row, because it never has more than one row in its hands.
  */
-export function priceForDoor(door: { priceTier: PriceTierId }): PriceRow {
-  return PRICE_BY_ID[door.priceTier];
+export function priceForDoor(door: { priceTier: PriceTierId }): PriceRow | null {
+  return PRICE_BY_ID[door.priceTier] ?? null;
 }
 
 /* -------------------------------------------------------------------------- */

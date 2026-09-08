@@ -93,11 +93,15 @@ export function FirstScreen() {
         THE MECHANISM DROPS TO READING SIZE, and that is the answer to "make it
         fit one line" rather than shrinking the title.
         
-        The arithmetic: "People + AI agents in one room." is 31 characters, which
-        at the 68px display size is about 1,050px of line. The left column at
-        1440 is about 730px. Fitting it would have meant roughly 48px — a third
-        off the whole headline, which is not the small adjustment that was asked
-        for and would have cost the first line its weight.
+        The arithmetic was done on the shorter version of this line, "People +
+        AI agents in one room.": 31 characters, which at the 68px display size
+        is about 1,050px against a 730px column. Fitting it meant about 48px, a
+        third off the headline. Once the line dropped to reading size the owner
+        immediately made it longer and more precise — SUBJECT MATTER EXPERTS
+        rather than "people", which is the actual claim, since what a client
+        buys here is somebody who knows a trade — and at 19px it still sets on
+        one line with room to spare. That is the argument for the demotion
+        rather than the shrink: the sentence got free to say what it meant.
         
         So the sentence keeps its words and changes its rank. The claim is the
         headline; this is what the claim means, and it belongs at the size
@@ -113,7 +117,7 @@ export function FirstScreen() {
         paragraph down with it.
       */}
         <p className="type-body mt-[var(--s2)] font-display font-medium" data-testid="text-home-mechanism">
-          People + AI agents in one room.
+          Subject Matter Experts and AI agents in one room.
         </p>
       </div>
 

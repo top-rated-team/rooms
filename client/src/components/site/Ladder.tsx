@@ -138,10 +138,11 @@ export function BeforeYouBuy({ className = "" }: { className?: string }) {
 /**
  * The whole ladder, low on the home page.
  *
- * The partner row is in this list and carries no figure. It is a disclosure
- * rather than an offer — it names no company, so it withholds nothing the
- * email step on /services exists to withhold — and leaving it out would let the
- * table imply that every row on the site is ours to price. It is not.
+ * Every row in this list is ours to price, because that is now the only kind of
+ * row there is. The partner door used to appear here carrying no figure and a
+ * sentence explaining that we take no share of it; the owner cut it, and the
+ * table is better for it. A ladder of what we sell does not need a rung for
+ * what somebody else sells.
  */
 export function Ladder() {
   return (
@@ -184,6 +185,17 @@ export function Ladder() {
  */
 export function DoorPrice({ door }: { door: DoorDef }) {
   const row = priceForDoor(door);
+
+  /*
+   * NO ROW, NO SECTION. The partner door is the only door that lands here, and
+   * it renders nothing at all rather than a heading over an explanation of why
+   * there is no number. Whoever wants that price asks the company that sets it.
+   *
+   * This is also why the guarantee is now structural: a door with no row has no
+   * figure available to print, so no future edit to this component can publish
+   * one for work we do not invoice.
+   */
+  if (!row) return null;
 
   return (
     <section className={`${PAGE} pt-[var(--s6)]`} data-testid="block-door-price">

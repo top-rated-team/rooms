@@ -300,9 +300,25 @@ describe("every currency figure an agent is given is a price this site publishes
 /* -------------------------------------------------------------------------- */
 
 describe("a door is sold on one row of the ladder, and it is its own", () => {
-  it("gives every door a row that exists", () => {
+  it("gives every door of ours a row that exists, and the partner door none", () => {
     for (const door of DOORS) {
-      assert.ok(door.priceTier, `the ${door.id} door has no priceTier, so its page has no price to show`);
+      assert.ok(door.priceTier, `the ${door.id} door has no priceTier, so nothing decides what its page shows`);
+
+      if (door.priceTier === "partner") {
+        /*
+         * The one tier with no row. Asserted rather than skipped, because "the
+         * partner door shows no price" is the guarantee and an accidental row
+         * for it would restore exactly the sentence the owner cut.
+         */
+        assert.equal(
+          PRICE_BY_ID.partner,
+          undefined,
+          `shared/pricing.ts has grown a "partner" row again, so the ${door.id} door will print a price section ` +
+            `for work another company invoices`,
+        );
+        continue;
+      }
+
       assert.ok(
         PRICE_BY_ID[door.priceTier],
         `the ${door.id} door points at the "${door.priceTier}" row, which shared/pricing.ts does not have`,
@@ -313,6 +329,14 @@ describe("a door is sold on one row of the ladder, and it is its own", () => {
   it("resolves a door to the one row the door names, and never to a second", () => {
     for (const door of DOORS) {
       const row = priceForDoor(door);
+      if (!row) {
+        assert.equal(
+          door.priceTier,
+          "partner",
+          `the ${door.id} door resolved to no price row at all, and "partner" is the only tier allowed to`,
+        );
+        continue;
+      }
       assert.equal(row.id, door.priceTier, `the ${door.id} door resolved to the "${row.id}" row`);
       assert.equal(
         PRICES.filter((candidate) => candidate.id === row.id).length,
@@ -347,9 +371,14 @@ describe("a door is sold on one row of the ladder, and it is its own", () => {
      * docs/doors.md, and it costs money to get wrong: "whoever sets the price is
      * the seller of that work. On a door that is not Top-Rated Team's own,
      * publishing a price makes Top-Rated Team the seller in fact, whatever the
-     * footer says." So the partner door carries a row with no figure in it, and
-     * this is the assertion that keeps it that way when somebody tidies the
-     * ladder and sweeps that door into "custom".
+     * footer says."
+     *
+     * This used to assert that such a door sat on a row with no figure in it.
+     * It now asserts something stronger and simpler: such a door resolves to NO
+     * ROW, so there is nothing for a page to print and nothing for a later edit
+     * to start printing. The row that used to carry the disclosure was removed
+     * on the owner's instruction, and the guarantee survived the removal by
+     * becoming structural instead of textual.
      */
     const ourLegalName = DOOR_BY_ID[DEFAULT_DOOR_ID].contract.legalName;
 
@@ -357,21 +386,22 @@ describe("a door is sold on one row of the ladder, and it is its own", () => {
       const row = priceForDoor(door);
       const ours = door.contract.legalName === ourLegalName;
 
+      if (!ours) {
+        assert.equal(
+          row,
+          null,
+          `the ${door.id} door is invoiced by ${door.contract.legalName}, and this site resolves a price row ` +
+            `for it. Publishing anything of ours for work we do not invoice makes us the seller of it.`,
+        );
+        continue;
+      }
+
+      assert.ok(row, `the ${door.id} door is ours and resolves to no price row, so its page shows no price`);
       assert.equal(
         row.ours,
-        ours,
-        `the ${door.id} door is invoiced by ${door.contract.legalName} but sits on the "${row.id}" row, ` +
-          `which ${row.ours ? "is" : "is not"} priced by us`,
+        true,
+        `the ${door.id} door is invoiced by us but sits on the "${row.id}" row, which is not priced by us`,
       );
-
-      if (!ours) {
-        assert.deepEqual(
-          currencyFigures(row.price),
-          [],
-          `the ${door.id} door is invoiced by ${door.contract.legalName}, and this site publishes ` +
-            `"${row.price}" for it. Publishing a figure for work we do not invoice makes us the seller of it.`,
-        );
-      }
     }
   });
 });
