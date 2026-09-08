@@ -19,6 +19,7 @@ import { Fragment, lazy, Suspense, useState } from "react";
 import { Link } from "wouter";
 
 import { BOOK_A_CALL_URL, PROOF } from "@shared/roster";
+import { useBooking } from "@/hooks/use-booking";
 
 
 /** The agency profile the record below is drawn from. */
@@ -28,6 +29,7 @@ const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) =>
 
 export function FirstScreen() {
   const [messageOpen, setMessageOpen] = useState(false);
+  const booking = useBooking();
 
   return (
     <section className="mx-auto grid max-w-[var(--page)] grid-cols-1 items-end gap-[var(--s4)] px-[var(--s3)] py-[var(--s5)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)] lg:py-[var(--s6)]">
@@ -139,6 +141,7 @@ export function FirstScreen() {
             target="_blank"
             rel="noopener noreferrer"
             data-testid="link-home-book-a-call"
+            {...booking}
             className="border-b border-primary pb-[var(--s1)] font-medium text-primary hover:border-foreground hover:text-foreground"
           >
             Book a call

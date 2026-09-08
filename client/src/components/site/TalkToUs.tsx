@@ -3,6 +3,7 @@ import { Link } from "wouter";
 
 import { BOOK_A_CALL_URL } from "@shared/roster";
 import { LINK, META, PAGE, READ_MUTED } from "@/components/site/doors/quiet";
+import { useBooking } from "@/hooks/use-booking";
 
 /* ---------------------------------------------------------------------------
  * THREE WAYS THAT ARE NOT THE PANEL
@@ -41,6 +42,7 @@ export interface TalkToUsProps {
 
 export function TalkToUs({ className = "" }: TalkToUsProps) {
   const [messageOpen, setMessageOpen] = useState(false);
+  const booking = useBooking();
 
   return (
     <section className={`${PAGE} ${className}`} data-testid="block-talk-to-us">
@@ -55,7 +57,14 @@ export function TalkToUs({ className = "" }: TalkToUsProps) {
 
         <div className="flex flex-col gap-[var(--s2)]">
           <p className={ACTION_LINE}>
-            <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" data-testid="link-book-a-call" className={LINK}>
+            <a
+              href={BOOK_A_CALL_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="link-book-a-call"
+              className={LINK}
+              {...booking}
+            >
               Book a call
             </a>
             <span className={`ml-[var(--s2)] ${META}`}>20 minutes, free, with a person who does the work</span>
