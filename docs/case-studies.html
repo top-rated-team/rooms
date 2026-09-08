@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Top-Rated Team — Case studies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Outfit:wght@400;500;600&display=swap">
+<style>
+  /* The site's own tokens, converted from HSL once so this file has no build
+     step of its own and can be opened on any machine. */
+  :root{
+    --paper:#F0EBE1;      /* 40 38% 92% */
+    --ink:#1A1611;        /* 33 19% 9%  */
+    --muted:#6D655B;      /* 33 11% 38% */
+    --line:#CFC3AE;       /* 38 23% 77% */
+    --hair:#DCD3C4;       /* 38 26% 84% */
+    --clay:#9C4318;       /* 16 70% 36% */
+    --sans:"Outfit","Avenir Next",system-ui,sans-serif;
+    --read:"Newsreader",Georgia,"Times New Roman",serif;
+  }
+
+  @page { size: A4; margin: 18mm 16mm 16mm; }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:var(--sans); font-size:10.5pt; line-height:1.5;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+
+  /* One case per sheet. break-inside on the blocks as well, because a "what
+     changed" grid split across two pages is the one thing a reader will
+     misread — half the metrics on one page look like all of them. */
+  .case{ break-before:page; break-inside:avoid; }
+  .block{ break-inside:avoid; margin-top:7mm; }
+
+  .eyebrow, .label{
+    font-family:var(--sans); font-size:7.5pt; font-weight:500;
+    letter-spacing:.09em; text-transform:uppercase; color:var(--muted);
+    margin:0;
+  }
+  h1{ font-family:var(--sans); font-weight:500; font-size:34pt; line-height:.98;
+      letter-spacing:-.035em; margin:0; }
+  h2{ font-family:var(--sans); font-weight:500; font-size:21pt; line-height:1.05;
+      letter-spacing:-.03em; margin:2mm 0 0; }
+  .meta{ font-family:var(--sans); font-size:8pt; letter-spacing:.06em;
+         text-transform:uppercase; color:var(--muted); margin:2.5mm 0 0; }
+  .read{ font-family:var(--read); font-size:11pt; line-height:1.6; margin:2mm 0 0;
+         max-width:62em; }
+
+  ul.work{ font-family:var(--read); font-size:10.5pt; line-height:1.55;
+           margin:2mm 0 0; padding:0; list-style:none; }
+  ul.work li{ padding:1.6mm 0; border-top:.4pt solid var(--hair); }
+  ul.work li:last-child{ border-bottom:.4pt solid var(--hair); }
+
+  dl.metrics{ margin:2.5mm 0 0; padding:0; display:grid;
+              grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 8mm; }
+  .metric{ display:grid; grid-template-columns:1fr auto auto; align-items:baseline;
+           gap:0 3mm; padding:2mm 0; border-top:.4pt solid var(--hair); break-inside:avoid; }
+  .metric dt{ font-family:var(--sans); font-size:8.5pt; color:var(--muted); }
+  .metric dd{ margin:0; font-variant-numeric:tabular-nums; }
+  .figure{ font-family:var(--sans); font-weight:500; font-size:11pt; }
+  .change{ font-family:var(--sans); font-size:8.5pt; }
+  .change.up{ color:var(--clay); }
+  .change.down{ color:var(--muted); }
+  .change.flat{ color:var(--muted); }
+
+  /* ---- cover ---- */
+  .cover{ height:calc(297mm - 34mm); display:flex; flex-direction:column;
+          justify-content:space-between; }
+  .wordmark{ font-family:var(--sans); font-weight:500; font-size:10pt;
+             letter-spacing:.13em; text-transform:uppercase; }
+  .cover .lede{ font-family:var(--read); font-size:12pt; line-height:1.6;
+                max-width:34em; margin:5mm 0 0; color:var(--ink); }
+  .record{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+           gap:1mm 8mm; margin:8mm 0 0; }
+  .record div{ display:flex; gap:3mm; align-items:baseline;
+               border-top:.4pt solid var(--line); padding-top:1.6mm; }
+  .record b{ font-family:var(--sans); font-weight:500; font-size:12pt;
+             font-variant-numeric:tabular-nums; }
+  .record span{ font-family:var(--sans); font-size:7.5pt; letter-spacing:.09em;
+                text-transform:uppercase; color:var(--muted); }
+  .where{ font-family:var(--sans); font-size:7.5pt; letter-spacing:.09em;
+          text-transform:uppercase; color:var(--muted); margin:0; }
+
+  /* ---- contents ---- */
+  .toc{ break-before:page; }
+  ol.toc-list{ list-style:none; margin:6mm 0 0; padding:0; }
+  ol.toc-list li{ display:grid; grid-template-columns:9mm 1fr auto; gap:0 3mm;
+                  align-items:baseline; padding:1.9mm 0;
+                  border-top:.4pt solid var(--hair); }
+  .n{ font-family:var(--sans); font-size:8pt; color:var(--muted);
+      font-variant-numeric:tabular-nums; }
+  .who{ font-family:var(--sans); font-size:10.5pt; font-weight:500; }
+  .what{ font-family:var(--read); font-size:9.5pt; color:var(--muted); text-align:right; }
+
+  /* ---- closing ---- */
+  .closing{ break-before:page; }
+  .closing .read{ max-width:44em; }
+  .identify{ margin-top:10mm; padding-top:3mm; border-top:.4pt solid var(--line);
+             font-family:var(--sans); font-size:8pt; color:var(--muted); line-height:1.7; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div>
+    <p class="wordmark">Top-Rated Team</p>
+  </div>
+
+  <div>
+    <h1>Case studies</h1>
+    <p class="lede">22 paid-advertising engagements, with the figures as they
+      were published — the account's own numbers over the period named on each page, and
+      nothing rounded to make a point.</p>
+
+    <div class="record">
+      <div><b>5,872</b><span>Hours on Upwork</span></div><div><b>100%</b><span>Job success score</span></div><div><b>$2M+</b><span>Budgets optimized</span></div><div><b>15+</b><span>Years in paid ads</span></div>
+    </div>
+  </div>
+
+  <p class="where">Prague, Madeira, Kyiv, Bratislava, Batumi · In the global paid ads and IT dev markets since 2017</p>
+</section>
+
+<section class="toc">
+  <p class="eyebrow">Contents</p>
+  <h2>What is in here</h2>
+  <ol class="toc-list"><li><span class="n">01</span><span class="who">Live Proxies</span><span class="what">Commercial Proxies</span></li><li><span class="n">02</span><span class="who">KRW Lawyers — Personal Injury</span><span class="what">Legal Services</span></li><li><span class="n">03</span><span class="who">JuridConsult — Legal Translations</span><span class="what">Legal Services</span></li><li><span class="n">04</span><span class="who">Fundamental — Enterprise AI Platform</span><span class="what">AI / Predictive Analytics</span></li><li><span class="n">05</span><span class="who">VinDocs — Vehicle History Reports</span><span class="what">Automotive Data</span></li><li><span class="n">06</span><span class="who">Pfotenpiloten / DogMap (Google Ad Grant)</span><span class="what">Nonprofit App</span></li><li><span class="n">07</span><span class="who">Solv Wellness — Nutraceuticals</span><span class="what">Health &amp; Nutraceuticals</span></li><li><span class="n">08</span><span class="who">Matcha Outlet — Tea Wholesale</span><span class="what">Food &amp; Beverage</span></li><li><span class="n">09</span><span class="who">Ace Vestiti — Apparel (8x ROAS)</span><span class="what">Fashion &amp; Apparel</span></li><li><span class="n">10</span><span class="who">LeBoutique — Giant eCom (300+ Categories)</span><span class="what">Apparel &amp; Housewares</span></li><li><span class="n">11</span><span class="who">Laterem — Luxury Tile &amp; Plumbing</span><span class="what">Home &amp; Building Supplies</span></li><li><span class="n">12</span><span class="who">Translation Agency — Lead Gen</span><span class="what">Translation Services</span></li><li><span class="n">13</span><span class="who">Yoga Accessories &amp; Apparel</span><span class="what">Fitness &amp; Apparel</span></li><li><span class="n">14</span><span class="who">Tech Mock Interview</span><span class="what">Mentorship &amp; Recruiting</span></li><li><span class="n">15</span><span class="who">Divorce &amp; Family Law</span><span class="what">Legal Services</span></li><li><span class="n">16</span><span class="who">Pest Control NY</span><span class="what">Home Services</span></li><li><span class="n">17</span><span class="who">HR Training for IT</span><span class="what">IT Training</span></li><li><span class="n">18</span><span class="who">MyOpportunity App</span><span class="what">Business Networking</span></li><li><span class="n">19</span><span class="who">Orphanage (Google Ad Grant)</span><span class="what">Child Welfare</span></li><li><span class="n">20</span><span class="who">Scorpion War Robot</span><span class="what">Gaming</span></li><li><span class="n">21</span><span class="who">AppHud SaaS</span><span class="what">App Analytics</span></li><li><span class="n">22</span><span class="who">Pest Control #1</span><span class="what">Home Services</span></li></ol>
+</section>
+
+
+  <section class="case" id="case-live-proxies">
+    <p class="eyebrow">Case 01  ·  Conversion tracking for ChatGPT Ads and Paid Ads</p>
+    <h2>Live Proxies</h2>
+    <p class="meta">Commercial Proxies  ·  US  ·  $470/day</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Highly competitive market, new unknown brand with no paid ads previously, can only track paid subscriptions via offline conversions upload.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Maximize subscriptions within the current budget</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Semantic core creation: target search queries, close ones and interest-intent keywords to form the funnel</li><li>Campaigns split based on market intent level and devices</li><li>DSAs, Pmax, video campaign for broader brand awareness</li><li>Brand and competitors campaigns</li><li>Budgets selected according to device demand and CPC</li><li>Bid strategies and budgets adjusted after first month of data</li><li>Unique ad copies for every ad group with dynamic insertions</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Conversions</dt><dd class="figure">5,477.86</dd><dd class="change up">+180.26%</dd></div><div class="metric"><dt>CTR</dt><dd class="figure">7.22%</dd><dd class="change up">+94.60%</dd></div><div class="metric"><dt>Cost/conv.</dt><dd class="figure">$8.98</dd><dd class="change down">-31.17%</dd></div><div class="metric"><dt>Clicks</dt><dd class="figure">74,482</dd><dd class="change up">+60.00%</dd></div><div class="metric"><dt>Conv. value/cost</dt><dd class="figure">4.12</dd><dd class="change up">+101.48%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-krw-lawyers-personal-injury">
+    <p class="eyebrow">Case 02  ·  Conversion tracking for ChatGPT Ads and Paid Ads</p>
+    <h2>KRW Lawyers — Personal Injury</h2>
+    <p class="meta">Legal Services  ·  Texas, US  ·  $1,350/day</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Personal injury law in Texas is one of the most expensive niches in Google Ads; account previously managed by another specialist required a full audit and rebuild; dual conversion tracking needed for calls and form submissions.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Maximize calls and form submissions (leads) while decreasing cost per conversion</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Full account audit and rebuild from scratch</li><li>Competitors research and website audit</li><li>Semantic core development: category- and product-based search for Texas</li><li>Performance Max campaign launch with dedicated audience signals</li><li>Bidding overhaul: Maximize Conversions with Target CPA</li><li>Conversion tracking for both calls and form submissions</li><li>Negative keyword lists, bid adjustments by location, device and schedule</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Conversions</dt><dd class="figure">837.98</dd><dd class="change up">+329.70%</dd></div><div class="metric"><dt>Cost/conv.</dt><dd class="figure">$104.84</dd><dd class="change down">-66.91%</dd></div><div class="metric"><dt>Conv. rate</dt><dd class="figure">5.75%</dd><dd class="change up">+38.37%</dd></div><div class="metric"><dt>Clicks</dt><dd class="figure">14,571</dd><dd class="change up">+291.85%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-juridconsult-legal-translations">
+    <p class="eyebrow">Case 03  ·  Conversion tracking for ChatGPT Ads and Paid Ads</p>
+    <h2>JuridConsult — Legal Translations</h2>
+    <p class="meta">Legal Services  ·  Netherlands  ·  €30/day</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Account previously managed with incorrectly configured conversions; poor campaign structure not aligned with website services; limited budget requiring maximum efficiency across multiple service categories and countries.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Maximize leads (calls, form submissions and chat enquiries) while decreasing cost per conversion within a limited budget</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Full account and conversion tracking audit</li><li>Conversion tracking rebuild: calls, form submissions and chat enquiries</li><li>Complete account rebuild with structure aligned to website services</li><li>Semantic core built from website content across all service categories and countries</li><li>Bid adjustments by location, device and schedule; negative keyword lists</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Conversions</dt><dd class="figure">76.85</dd><dd class="change up">+476.70%</dd></div><div class="metric"><dt>Cost/conv.</dt><dd class="figure">€10.62</dd><dd class="change down">-81.09%</dd></div><div class="metric"><dt>CTR</dt><dd class="figure">10.35%</dd><dd class="change up">+10.53%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-fundamental-enterprise-ai-platform">
+    <p class="eyebrow">Case 04  ·  Conversion tracking for ChatGPT Ads and Paid Ads</p>
+    <h2>Fundamental — Enterprise AI Platform</h2>
+    <p class="meta">AI / Predictive Analytics  ·  USA, UK, EU  ·  $110/day</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">New brand with no prior Google Ads history; highly competitive and expensive enterprise AI/ML niche in tier-1 markets; long B2B sales cycle where conversion is a website signup, not a purchase.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Drive website signups from enterprise decision-makers in tier-1 markets within a limited budget</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Full account setup from scratch: GA4, GTM, conversion tracking for signups</li><li>Competitor and market research for the enterprise AI/ML niche</li><li>Performance Max campaign for broad reach and lead generation</li><li>Search split by product and brand for USA and UK+EU separately</li><li>YouTube Shorts campaigns for brand awareness testing</li><li>Maximize Conversions with Target CPA; bids, budgets and audience signals</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Signups</dt><dd class="figure">19</dd><dd class="change up">+171.43%</dd></div><div class="metric"><dt>Interactions</dt><dd class="figure">117,996</dd><dd class="change up">+171.43%</dd></div><div class="metric"><dt>Interaction rate</dt><dd class="figure">39.16%</dd><dd class="change up">+62.22%</dd></div><div class="metric"><dt>Avg. cost</dt><dd class="figure">$0.05</dd><dd class="change down">-82.57%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-vindocs-vehicle-history-reports">
+    <p class="eyebrow">Case 05  ·  Free expert audit of your paid ads accounts</p>
+    <h2>VinDocs — Vehicle History Reports</h2>
+    <p class="meta">Automotive Data  ·  South Africa, Romania, NZ, Australia  ·  $325/day</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Account previously managed by another specialist required a full rebuild; multi-country campaigns across 4 markets with different demand and CPCs; dual B2C and B2B audiences.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Maximize purchases across all markets while improving ROAS and reducing cost per conversion</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Full account audit and complete rebuild from scratch</li><li>Separate Search campaigns per country with dedicated copies, keywords and budgets</li><li>Separate B2B landing-page campaigns targeting dealerships and fleet businesses</li><li>Competitors campaigns per market</li><li>Target ROAS for high-volume markets, TCPA for developing ones</li><li>Ongoing bid, budget and keyword optimization across all markets</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Purchases</dt><dd class="figure">511.86</dd><dd class="change up">+25.77%</dd></div><div class="metric"><dt>Cost/conv.</dt><dd class="figure">€14.09</dd><dd class="change down">-10.24%</dd></div><div class="metric"><dt>Conv. value/cost</dt><dd class="figure">1.24</dd><dd class="change up">+11.05%</dd></div><div class="metric"><dt>CTR</dt><dd class="figure">9.58%</dd><dd class="change up">+15.13%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-pfotenpiloten-dogmap-google-ad-grant">
+    <p class="eyebrow">Case 06  ·  Google Ad Grant AI setup through the official Google Ads API</p>
+    <h2>Pfotenpiloten / DogMap (Google Ad Grant)</h2>
+    <p class="meta">Nonprofit App  ·  International (23 languages)  ·  Google Grants ~$9,900/mo</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Account previously managed required a full rebuild; international audience across 23 languages; maximizing the full $10,000/mo grant spend while maintaining quality score and CTR.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Maximize app registrations and DogMap downloads while fully utilizing the Ad Grants budget</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Full account audit and complete rebuild of all campaigns</li><li>New Performance Max campaigns alongside rebuilt Search campaigns</li><li>All ad copies rewritten to meet Google Grants quality and CTR requirements</li><li>Campaigns for bookings, app downloads and brand &amp; niche keyword assistance</li><li>Ongoing monitoring to keep CTR above 5% and stay policy-compliant</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Conversions</dt><dd class="figure">116</dd><dd class="change up">+33.33%</dd></div><div class="metric"><dt>Cost/conv.</dt><dd class="figure">$256.41</dd><dd class="change down">-25.21%</dd></div><div class="metric"><dt>CTR</dt><dd class="figure">10.04%</dd><dd class="change up">+11.49%</dd></div><div class="metric"><dt>Conv. rate</dt><dd class="figure">3.68%</dd><dd class="change up">+36.38%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-solv-wellness-nutraceuticals">
+    <p class="eyebrow">Case 07  ·  Free expert audit of your paid ads accounts</p>
+    <h2>Solv Wellness — Nutraceuticals</h2>
+    <p class="meta">Health &amp; Nutraceuticals  ·  US  ·  $16,000/mo</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">High competition and brand semantics under active attack by competitors.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Grow sales, increase ROAS and decrease CPA</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Account settings and campaign setup audit</li><li>Previous performance review and improvement areas</li><li>Keyword review, semantic core restructuring and expansion</li><li>Ad copies reviewed and customized to every ad group</li><li>Sales audit to optimize and regroup the Shopping campaign</li><li>Ad assets expansion and improvement</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Transactions</dt><dd class="figure">+45.23%</dd><dd class="change up">+45.23%</dd></div><div class="metric"><dt>ROAS</dt><dd class="figure">+49%</dd><dd class="change up">+49%</dd></div><div class="metric"><dt>CPA</dt><dd class="figure">-31.7%</dd><dd class="change down">-31.7%</dd></div><div class="metric"><dt>Conv. rate</dt><dd class="figure">+2.86%</dd><dd class="change up">+2.86%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-matcha-outlet-tea-wholesale">
+    <p class="eyebrow">Case 08  ·  Free expert audit of your paid ads accounts</p>
+    <h2>Matcha Outlet — Tea Wholesale</h2>
+    <p class="meta">Food &amp; Beverage  ·  US</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Initially too broad semantics wasting budget; Smart campaign spending on non-convertible products.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Grow sales and decrease CPA</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Campaigns performance audit and new campaign plan</li><li>Detailed, expanded semantics; campaigns split by category with brand ad groups</li><li>DSA campaigns with all possible dynamic targets</li><li>Smart campaign optimization: paused low performers, improved CTAs</li><li>Bidding shifted from Max Conversions to Max ROAS 250%</li><li>Bid adjustments by location, demographics and devices</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Transactions</dt><dd class="figure">+60.26%</dd><dd class="change up">+60.26%</dd></div><div class="metric"><dt>Revenue</dt><dd class="figure">+88.09%</dd><dd class="change up">+88.09%</dd></div><div class="metric"><dt>Clicks</dt><dd class="figure">+101.36%</dd><dd class="change up">+101.36%</dd></div><div class="metric"><dt>New users</dt><dd class="figure">+54.86%</dd><dd class="change up">+54.86%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-ace-vestiti-apparel-8x-roas">
+    <p class="eyebrow">Case 09  ·  Google Ads management</p>
+    <h2>Ace Vestiti — Apparel (8x ROAS)</h2>
+    <p class="meta">Fashion &amp; Apparel  ·  Italy</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Grow sales from brand campaigns and market-intent audiences in a competitive apparel market.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Grow sales from brand campaigns and market intent audiences</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Detailed semantics for search campaigns</li><li>Quality score improvement</li><li>Smart Shopping campaign setup and optimization</li><li>Bids, keywords, negative and cross-negative keyword adjustment</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Transactions</dt><dd class="figure">60</dd><dd class="change up">+185.71%</dd></div><div class="metric"><dt>Revenue</dt><dd class="figure">+203.6%</dd><dd class="change up">+203.6%</dd></div><div class="metric"><dt>Transaction rate</dt><dd class="figure">4.03%</dd><dd class="change up">+73.31%</dd></div><div class="metric"><dt>Direct traffic transactions</dt><dd class="figure">65</dd><dd class="change up">+58.54%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-leboutique-giant-ecom-300-categories">
+    <p class="eyebrow">Case 10  ·  Google Ads management</p>
+    <h2>LeBoutique — Giant eCom (300+ Categories)</h2>
+    <p class="meta">Apparel &amp; Housewares  ·  International</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Four legacy accounts built with the K50 automation tool with crucial campaigns underdeveloped; transactions set as secondary (not primary) conversions; remarketing audiences not properly tracked; aggressive 1-month target KPIs.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Grow customers and decrease CPA</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Reviewed every campaign by spend, revenue, ROAS and KPIs; rebuilt from scratch (up to 3,000 ad groups per search campaign)</li><li>Paused underperforming, high-spend campaigns using direct + assisted data</li><li>Improved ad copies and assets, created new asset types and split tests</li><li>Adjusted bidding strategies, bids and redistributed budgets</li><li>Split campaigns by seasonality, demographics, product category and language</li><li>Dedicated Shopping campaign for housewares (not previously advertised)</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Transactions (main account)</dt><dd class="figure">+62.76%</dd><dd class="change up">+62.76%</dd></div><div class="metric"><dt>CPA (main account)</dt><dd class="figure">-32.94%</dd><dd class="change down">-32.94%</dd></div><div class="metric"><dt>CPA (second account)</dt><dd class="figure">-76.78%</dd><dd class="change down">-76.78%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-laterem-luxury-tile-plumbing">
+    <p class="eyebrow">Case 11  ·  Google Ads management</p>
+    <h2>Laterem — Luxury Tile &amp; Plumbing</h2>
+    <p class="meta">Home &amp; Building Supplies  ·  International</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">95% of orders are placed via phone call, not online purchase; maintaining optimal ROAS while developing the account from scratch.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Drive purchases (calls to orders) while maintaining optimal ROAS</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Separate campaigns per brand, product category and language (Search, DSA, Shopping, Display remarketing, PMax)</li><li>Analyzed competitor strategies and ad copies</li><li>Semantics built from every product, content piece and competitor data</li><li>Bid adjustments for locations, demographics and devices</li><li>Call tracking and GA4 eCommerce setup</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Revenue</dt><dd class="figure">+871%</dd><dd class="change up">+871%</dd></div><div class="metric"><dt>Calls</dt><dd class="figure">+136%</dd><dd class="change up">+136%</dd></div><div class="metric"><dt>Orders</dt><dd class="figure">+100%</dd><dd class="change up">+100%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-translation-agency-lead-gen">
+    <p class="eyebrow">Case 12  ·  Google Ads management</p>
+    <h2>Translation Agency — Lead Gen</h2>
+    <p class="meta">Translation Services  ·  International</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Highly competitive market with CPC up to $2 per click.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Grow number of leads and decrease cost per lead</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Detailed semantics development</li><li>Dynamic keyword insertion ads and extensions</li><li>Local-language search queries</li><li>Bid adjustments</li><li>Negative and cross-negative keywords</li><li>Search remarketing</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Conversions</dt><dd class="figure">+266%</dd><dd class="change up">+266%</dd></div><div class="metric"><dt>Cost/conv.</dt><dd class="figure">-23.6%</dd><dd class="change down">-23.6%</dd></div><div class="metric"><dt>Conv. rate</dt><dd class="figure">+23.5%</dd><dd class="change up">+23.5%</dd></div><div class="metric"><dt>CPC</dt><dd class="figure">-5.8%</dd><dd class="change down">-5.8%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-yoga-accessories-apparel">
+    <p class="eyebrow">Case 13  ·  Google Ads management</p>
+    <h2>Yoga Accessories &amp; Apparel</h2>
+    <p class="meta">Fitness &amp; Apparel  ·  International</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Client previously spent budget with almost no return — only 4 conversions and no real PPC revenue.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Grow online sales</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Detailed search campaign semantics, quality score improvement, RSAs</li><li>DSA launch for categories</li><li>Search and dynamic remarketing launch</li><li>Bid and bidding strategy adjustment</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Transactions</dt><dd class="figure">30</dd><dd class="change flat">vs 4 previously</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-tech-mock-interview">
+    <p class="eyebrow">Case 14  ·  Free expert audit of your paid ads accounts</p>
+    <h2>Tech Mock Interview</h2>
+    <p class="meta">Mentorship &amp; Recruiting  ·  Canada  ·  CA$1,500/mo</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Significant competition, unknown brand - new startup, limited budget, only paid signup conversions.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Minimal CPA with purchases within the limited budget</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Competitors research in Canada</li><li>Website audit and recommendations</li><li>Semantic core creation with interest intent funnel</li><li>Campaigns split based on market intent and devices</li><li>Pmax and competitors campaigns</li><li>Custom ad copies with callouts and dynamic keywords</li><li>Micro and macro goals setup</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Conversions (Aug-Nov vs Apr-Jul)</dt><dd class="figure">+94.62%</dd><dd class="change up">+94.62%</dd></div><div class="metric"><dt>YoY Conversions</dt><dd class="figure">+53.15%</dd><dd class="change up">+53.15%</dd></div><div class="metric"><dt>Conversion Rate YoY</dt><dd class="figure">+297.43%</dd><dd class="change up">+297.43%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-divorce-family-law">
+    <p class="eyebrow">Case 15  ·  Google Ads management</p>
+    <h2>Divorce &amp; Family Law</h2>
+    <p class="meta">Legal Services  ·  Colorado, US</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Established account since 2017 with suboptimal performance, COVID-19 impact on divorce rates, broad targeting wasting budget.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Generate more leads and calls from the website</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Account analysis led to rebuilding from scratch</li><li>Broader and more detailed semantics</li><li>28 separate URLs for every location + service</li><li>Separate budgets according to semantics and demand</li><li>Bid adjustments for age, gender, and household income</li><li>Interest audience observations for every campaign</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>CTR</dt><dd class="figure">4.25%</dd><dd class="change up">+995.25%</dd></div><div class="metric"><dt>Conversions</dt><dd class="figure">44 calls</dd><dd class="change up">+76%</dd></div><div class="metric"><dt>Bounce Rate</dt><dd class="figure">70.27%</dd><dd class="change down">-21.24%</dd></div><div class="metric"><dt>Session Duration</dt><dd class="figure">01:01</dd><dd class="change up">+104%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-pest-control-ny">
+    <p class="eyebrow">Case 16  ·  Free expert audit of your paid ads accounts</p>
+    <h2>Pest Control NY</h2>
+    <p class="meta">Home Services  ·  NY (Nassau &amp; Suffolk)</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Limited budgets for both Google Ads and Bing Ads, high competition, seasonal demand fluctuations.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Receive calls and form submissions at minimum CPA</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Competitors activity review</li><li>Website audit and recommendations</li><li>Detailed semantics for all website offers</li><li>Proper keyword split between campaigns</li><li>Custom ads and CTAs for every ad group</li><li>Location-specific campaigns based on demand</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Bing Conversions (Aug-Nov vs Apr-Jul)</dt><dd class="figure">+82.74%</dd><dd class="change up">+82.74%</dd></div><div class="metric"><dt>Google Conversions YoY</dt><dd class="figure">+403.83%</dd><dd class="change up">+403.83%</dd></div><div class="metric"><dt>Conversion Rate YoY</dt><dd class="figure">+342.76%</dd><dd class="change up">+342.76%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-hr-training-for-it">
+    <p class="eyebrow">Case 17  ·  Google Ads management</p>
+    <h2>HR Training for IT</h2>
+    <p class="meta">IT Training  ·  International</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Competitive B2B market, complex decision-making cycle, need to reach HR decision-makers.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Grow sales via more B2B leads for less cost</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Detailed semantics for Search Ad campaigns</li><li>Target audience profile analysis</li><li>GDN campaigns launch for cold audiences</li><li>Remarketing campaigns development</li><li>Custom creatives for cold audiences</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Conversions</dt><dd class="figure">+30%</dd><dd class="change up">+30%</dd></div><div class="metric"><dt>CPC</dt><dd class="figure">-57.53%</dd><dd class="change down">-57.53%</dd></div><div class="metric"><dt>Avg Position</dt><dd class="figure">+49%</dd><dd class="change up">+49%</dd></div><div class="metric"><dt>Clicks</dt><dd class="figure">+651%</dd><dd class="change up">+651%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-myopportunity-app">
+    <p class="eyebrow">Case 18  ·  Free expert audit of your paid ads accounts</p>
+    <h2>MyOpportunity App</h2>
+    <p class="meta">Business Networking  ·  US  ·  $25,000/mo</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Emerging highly competitive niche, competing against LinkedIn and Bumble, previous SEO team used bot traffic.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Acquire new user registrations and app installs</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>US competitors research</li><li>Website audit and recommendations</li><li>Semantic core with only targeted queries</li><li>Campaigns split by queries and devices</li><li>DSA, Pmax, video campaigns for reach</li><li>Custom ad copies with callouts for every ad group</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Signups</dt><dd class="figure">235 → 702</dd><dd class="change up">+42.68%</dd></div><div class="metric"><dt>CPA Signups</dt><dd class="figure">$106.38</dd><dd class="change flat">Optimized</dd></div><div class="metric"><dt>Installs</dt><dd class="figure">3,163 → 5,167</dd><dd class="change up">+63.31%</dd></div><div class="metric"><dt>CPI</dt><dd class="figure">$16.52</dd><dd class="change flat">Optimized</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-orphanage-google-ad-grant">
+    <p class="eyebrow">Case 19  ·  Google Ad Grant AI setup through the official Google Ads API</p>
+    <h2>Orphanage (Google Ad Grant)</h2>
+    <p class="meta">Child Welfare  ·  International</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Very high competition in nonprofit space, Grant accounts limited to $2 max CPC, need to target high-income countries.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Receive adoption applications and donations</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Market analysis for high-income country targeting</li><li>Semantic gathering for the niche</li><li>Search campaigns by country targeting</li><li>Responsive Search Ads creation</li><li>DSA campaign creation</li><li>GA4 audiences and conversion goals setup</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Conversions</dt><dd class="figure">9 → 847</dd><dd class="change up">+9,300%</dd></div><div class="metric"><dt>Clicks</dt><dd class="figure">404 → 1,120</dd><dd class="change up">+177%</dd></div><div class="metric"><dt>Sessions</dt><dd class="figure">358 → 1,234</dd><dd class="change up">+244%</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-scorpion-war-robot">
+    <p class="eyebrow">Case 20  ·  Google Ads management</p>
+    <h2>Scorpion War Robot</h2>
+    <p class="meta">Gaming  ·  US, UK, AUS, NZ, CA, APAC</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Initially only organic with 50-80 daily installs, limited budget across multiple countries.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Get more installs of iPhone app</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Competition review per each country</li><li>Campaign split by location (US, UK/NZ/CA/AUS, Asia)</li><li>Budget optimization based on CPI targets</li><li>Creative optimization for each market</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>US Campaign CPI</dt><dd class="figure">$0.31 vs $0.41 target</dd><dd class="change down">-24%</dd></div><div class="metric"><dt>UK/NZ/CA/AUS CPI</dt><dd class="figure">$0.19 vs $0.26 target</dd><dd class="change down">-27%</dd></div><div class="metric"><dt>Asia Campaign CPI</dt><dd class="figure">$0.06 vs $0.08 target</dd><dd class="change down">-25%</dd></div><div class="metric"><dt>Total Installs</dt><dd class="figure">10,611 ads / 29,000+ total</dd><dd class="change flat">2.7x organic boost</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-apphud-saas">
+    <p class="eyebrow">Case 21  ·  Google Ads management</p>
+    <h2>AppHud SaaS</h2>
+    <p class="meta">App Analytics  ·  US</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Highly competitive market, need to reach app developers and product managers.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">More registrations for less CAC</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Competitors ads review</li><li>Semantics from website content</li><li>Campaigns developed by product categories</li><li>Competitor campaign</li><li>DSA campaign with all dynamic targets</li><li>Bids adjustment by locations, demographics, devices</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>User Accounts Created</dt><dd class="figure">18</dd><dd class="change flat">First month</dd></div><div class="metric"><dt>Cost</dt><dd class="figure">$247.60</dd><dd class="change flat">Initial spend</dd></div><div class="metric"><dt>CPA</dt><dd class="figure">$13.76</dd><dd class="change flat">Optimized</dd></div></dl></div>
+  </section>
+
+  <section class="case" id="case-pest-control-1">
+    <p class="eyebrow">Case 22  ·  Google Ads management</p>
+    <h2>Pest Control #1</h2>
+    <p class="meta">Home Services  ·  US</p>
+
+    <div class="block"><p class="label">The problem</p><p class="read">Large number of aggressive competitors with limited daily budget.</p></div>
+    <div class="block"><p class="label">What it had to do</p><p class="read">Growth in calls and orders</p></div>
+
+    <div class="block"><p class="label">The work</p><ul class="work"><li>Current campaigns analysis</li><li>Priority channels: Search, Remarketing, Video</li><li>Semantics collected from website and previous campaigns</li><li>Campaigns redistributed by brand, insect types, services</li><li>Bids adjusted by demographics, income, devices, geo, season</li></ul></div>
+
+    <div class="block"><p class="label">What changed</p><dl class="metrics"><div class="metric"><dt>Clicks (2 months)</dt><dd class="figure">+125%</dd><dd class="change up">+125%</dd></div><div class="metric"><dt>Impressions</dt><dd class="figure">+1,060%</dd><dd class="change up">+1,060%</dd></div><div class="metric"><dt>CTR</dt><dd class="figure">6.22%</dd><dd class="change up">+20%</dd></div><div class="metric"><dt>Call Conversions</dt><dd class="figure">+300%</dd><dd class="change up">+300%</dd></div></dl></div>
+  </section>
+
+<section class="closing">
+  <p class="eyebrow">About these pages</p>
+  <h2>How to read them</h2>
+  <p class="read">Every figure on the preceding pages comes from the advertising account it
+    describes, over the period that page names, and is published in the same form the client
+    saw it. Where a case gives no figure for something, the account did not measure it —
+    a gap is left as a gap rather than filled with an estimate.</p>
+  <p class="read">These are advertising results. They are evidence of work done on comparable
+    accounts and they are not a forecast: what an account does next depends on its market, its
+    offer and its budget, and anyone who tells you otherwise before seeing it is guessing.</p>
+  <p class="read">The hours and the job-success score on the cover are the public record on
+    Upwork and can be checked there.</p>
+  <p class="identify">Top-Rated Team (Danylo Burykin SZČO) · top-rated.team<br>
+    Generated from the published case studies — <code>scripts/build-cases-pdf.ts</code></p>
+</section>
+
+</body>
+</html>
