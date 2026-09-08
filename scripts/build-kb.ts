@@ -604,7 +604,107 @@ const LEGAL: Corpus = {
   ],
 };
 
-export const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS, LINKEDIN_AUTOMATION, AI_BUILDS, ADGRANT_AI, LEGAL];
+export /**
+ * Door: the paid-ads door's Meta half. The one platform this company sells that
+ * had an agent row and no corpus at all — meta-ads has existed in
+ * shared/roster.ts with useKb false since it was written.
+ *
+ * TWO TRAPS, both found by measurement rather than by reading:
+ *
+ * The base path is /documentation/ads-commerce/, not /docs/marketing-api/. The
+ * second returns 404 behind a ~179KB single-page-app shell, which fetchText
+ * rejects — a warning line in an otherwise green build.
+ *
+ * And the host CONTENT-NEGOTIATES ON Accept. With the markdown accept header
+ * fetchText sends, these URLs return raw markdown opening "# Heading". With
+ * text/html — what the article fetcher sends — the same URL returns an HTML
+ * shell. So these are markdownPages, and they must stay markdownPages.
+ *
+ * Enumerated rather than indexed: parseIndex only expands developers.openai.com
+ * paths, so an `index:` here would expand to nothing.
+ *
+ * WHAT THIS CORPUS CANNOT ANSWER, and the agent's prompt says so: Meta's
+ * advertiser-facing help — Ads Manager labels, Advertising Standards, "should we
+ * use Advantage+ or manual" — is not here. That material is not on a host this
+ * fetcher can read. The agent answers the API to the parameter and refuses the
+ * interface, which is the honest shape of what we can ground.
+ */
+const META_ADS: Corpus = {
+  namespace: "meta-ads",
+  file: "kb.meta-ads.json",
+  label: "Meta Ads — developers.facebook.com/documentation/ads-commerce",
+  markdownPages: [
+    { title: "Conversions API", url: "https://developers.facebook.com/documentation/ads-commerce/conversions-api.md" },
+    { title: "Conversions API: Get Started", url: "https://developers.facebook.com/documentation/ads-commerce/conversions-api/get-started.md" },
+    { title: "Conversions API: Using the API", url: "https://developers.facebook.com/documentation/ads-commerce/conversions-api/using-the-api.md" },
+    { title: "Conversions API: Verifying Your Setup", url: "https://developers.facebook.com/documentation/ads-commerce/conversions-api/verifying-setup.md" },
+    { title: "Conversions API: Best Practices", url: "https://developers.facebook.com/documentation/ads-commerce/conversions-api/best-practices.md" },
+    { title: "Handling Duplicate Pixel and Conversions API Events", url: "https://developers.facebook.com/documentation/ads-commerce/conversions-api/deduplicate-pixel-and-server-events.md" },
+    { title: "Server Event Parameters", url: "https://developers.facebook.com/documentation/ads-commerce/conversions-api/parameters/server-event.md" },
+    { title: "Customer Information Parameters", url: "https://developers.facebook.com/documentation/ads-commerce/conversions-api/parameters/customer-information-parameters.md" },
+    { title: "Custom Data Parameters", url: "https://developers.facebook.com/documentation/ads-commerce/conversions-api/parameters/custom-data.md" },
+    { title: "Sending Offline Events Using the Conversions API", url: "https://developers.facebook.com/documentation/ads-commerce/conversions-api/offline-events.md" },
+    { title: "Conversions API End-to-End Implementation", url: "https://developers.facebook.com/documentation/ads-commerce/conversions-api/guides/end-to-end-implementation.md" },
+    { title: "Dataset Quality API", url: "https://developers.facebook.com/documentation/ads-commerce/conversions-api/dataset-quality-api.md" },
+    { title: "Marketing API Overview", url: "https://developers.facebook.com/documentation/ads-commerce/marketing-api/overview.md" },
+    { title: "Get Started with the Marketing API", url: "https://developers.facebook.com/documentation/ads-commerce/marketing-api/get-started.md" },
+    { title: "Marketing API Rate Limiting", url: "https://developers.facebook.com/documentation/ads-commerce/marketing-api/overview/rate-limiting.md" },
+    { title: "Advantage+ Campaign Experience", url: "https://developers.facebook.com/documentation/ads-commerce/marketing-api/advantage-campaigns.md" },
+    { title: "Advantage+ Shopping Campaigns", url: "https://developers.facebook.com/documentation/ads-commerce/marketing-api/advantage-shopping-campaigns.md" },
+    { title: "Lead Ads", url: "https://developers.facebook.com/documentation/ads-commerce/marketing-api/guides/lead-ads.md" },
+  ],
+};
+
+/**
+ * Shopping feeds, and the only corpus here that adds knowledge the shelf does
+ * not already hold in some other shape.
+ *
+ * THE GAP, MEASURED: there are zero support.google.com/merchants URLs across
+ * every document on the shelf. The google-ads corpus has Shopping-adjacent
+ * pages and not one line of the product data specification, so "What product
+ * attributes are required in the feed?" came back with "Monitor and optimize
+ * your Shopping campaigns" — a page that does not answer it. Shopping is a
+ * third of this door's own pitch.
+ *
+ * No extractor work: support.google.com is already in ARTICLE_CONTAINERS and
+ * /merchants matches it by host.
+ *
+ * THE IDS BELOW ARE THE POST-REDIRECT ONES. 6324454 is a 404, and 188494,
+ * 2948694, 188478, 7439058 and 6098295 each 301 onto a page already in this
+ * list — 188494 lands on the product data specification, which would have been
+ * indexed twice under two titles. Hand-check any addition and de-duplicate by
+ * FINAL url, the way the GOOGLE_ADS literal says.
+ */
+const MERCHANT_CENTER: Corpus = {
+  namespace: "merchant-center",
+  file: "kb.merchant-center.json",
+  label: "Google Merchant Center — support.google.com/merchants",
+  htmlPages: [
+    { title: "Product data specification", url: "https://support.google.com/merchants/answer/7052112?hl=en" },
+    { title: "Shipping [shipping]", url: "https://support.google.com/merchants/answer/6324484?hl=en" },
+    { title: "Price [price]", url: "https://support.google.com/merchants/answer/6324371?hl=en" },
+    { title: "Image link [image_link]", url: "https://support.google.com/merchants/answer/6324350?hl=en" },
+    { title: "About unique product identifiers", url: "https://support.google.com/merchants/answer/160161?hl=en" },
+    { title: "GTIN [gtin]", url: "https://support.google.com/merchants/answer/6324461?hl=en" },
+    { title: "Availability [availability]", url: "https://support.google.com/merchants/answer/6324448?hl=en" },
+    { title: "Issues in Merchant Center", url: "https://support.google.com/merchants/answer/12153802?hl=en" },
+    { title: "How to upload your products to Merchant Center", url: "https://support.google.com/merchants/answer/11586438?hl=en" },
+    { title: "Google product category [google_product_category]", url: "https://support.google.com/merchants/answer/6324436?hl=en" },
+    { title: "Brand [brand]", url: "https://support.google.com/merchants/answer/6324351?hl=en" },
+    { title: "Shipping weight [shipping_weight]", url: "https://support.google.com/merchants/answer/6324503?hl=en" },
+    { title: "Set up custom attributes to use in attribute rules", url: "https://support.google.com/merchants/answer/14992797?hl=en" },
+    { title: "How to fix: Missing or incorrect GTIN", url: "https://support.google.com/merchants/answer/14899834?hl=en" },
+    { title: "Condition [condition]", url: "https://support.google.com/merchants/answer/6324469?hl=en" },
+    { title: "Identifier exists [identifier_exists]", url: "https://support.google.com/merchants/answer/6324478?hl=en" },
+    { title: "Description [description]", url: "https://support.google.com/merchants/answer/6324468?hl=en" },
+    { title: "Title [title]", url: "https://support.google.com/merchants/answer/6324415?hl=en" },
+    { title: "Link [link]", url: "https://support.google.com/merchants/answer/6324416?hl=en" },
+    { title: "Sale price [sale_price]", url: "https://support.google.com/merchants/answer/6324471?hl=en" },
+  ],
+};
+
+/** Exported for scripts/refresh-corpora.ts, which re-reads every one of them. */
+export const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS, LINKEDIN_AUTOMATION, AI_BUILDS, ADGRANT_AI, LEGAL, META_ADS, MERCHANT_CENTER];
 /* -------------------------------- chunking -------------------------------- */
 
 const TARGET_CHARS = 1200;
@@ -720,7 +820,18 @@ export async function runFetch(dir: string, corpus: Corpus): Promise<CorpusFetch
   if (markdownRefs.length > 0) console.log(`  ${markdownRefs.length} markdown pages to fetch`);
 
   for (const ref of markdownRefs) {
-    const markdown = await fetchText(ref.url);
+    /*
+     * DECODED, because a markdown twin is not always clean markdown.
+     *
+     * The HTML path decodes entities in four places; this one decoded nowhere,
+     * and it did not matter while every markdown source here was OpenAI's, whose
+     * twins carry none. Meta's do: "advertiser&#039;s" is in the first sentence
+     * of conversions-api.md, and the pages carry thousands of them between
+     * them — in headings as well as body text, so they reach chunk titles and
+     * from there a citation a visitor reads.
+     */
+    const raw = await fetchText(ref.url);
+    const markdown = raw === null ? null : decodeEntities(raw);
     if (!markdown) {
       failures += 1;
       failed.push({ title: ref.title, url: ref.url, reason: "could not be read" });

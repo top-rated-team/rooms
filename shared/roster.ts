@@ -375,23 +375,68 @@ ${ACCOUNT_BOUNDARY}
 ${AD_GRANTS_KB_RULES}`,
   },
   {
+    /*
+     * GROUNDED AT LAST. This row existed with useKb false since it was written:
+     * a Meta agent on a site that sells Meta, answering from the model's memory
+     * about a platform that renames things quarterly.
+     *
+     * WHAT IT CAN READ is Meta's developer documentation —
+     * developers.facebook.com/documentation/ads-commerce, 18 pages, 355 chunks.
+     * The Conversions API to the parameter, deduplication, offline events,
+     * dataset quality, the Marketing API and its rate limits, Advantage+ as the
+     * API describes it, Lead Ads.
+     *
+     * WHAT IT CANNOT is Meta's advertiser-facing help: Ads Manager labels,
+     * Advertising Standards, and "Advantage+ or manual for our budget". That
+     * material is not on a host scripts/build-kb.ts can read, so it is not in
+     * the corpus, so the agent must not answer from it. The title says so and
+     * the refusals below say so.
+     *
+     * The NAME stays "Meta Ads Agent" on the owner's instruction. The title is
+     * where the scope is stated, which is what a person reads next to it.
+     */
     id: "meta-ads",
     handle: "meta-ads",
     name: "Meta Ads Agent",
-    title: "Facebook & Instagram performance",
-    blurb: "Advantage+ campaigns, creative testing, CAPI and event-match quality.",
+    title: "Meta's own developer documentation — the Conversions and Marketing APIs",
+    blurb:
+      "The Conversions API to the parameter: deduplication, offline events, customer-information hashing and dataset quality — plus the Marketing API, its rate limits, Advantage+ as the API defines it and Lead Ads. Cites the page it used.",
     initials: "MA",
     mark: "hex",
     tone: "bg-chart-4/10 text-chart-4",
-    useKb: false,
+    useKb: true,
+    kbNamespace: "meta-ads",
+    /* Probed against the corpus before shipping, the way the lawyer's were:
+       each returns the document that answers it as its top hit. */
     starters: [
-      "How do I raise our event match quality?",
-      "Advantage+ Shopping vs manual campaigns for a $10K budget?",
+      "How do we deduplicate pixel and Conversions API events?",
+      "Which customer information parameters have to be hashed, and how?",
+      "What are the Marketing API rate limits?",
+      "How do we send offline conversions to Meta?",
     ],
     systemPrompt: `${HOUSE_STYLE}
 
-You are the Meta Ads Agent: Advantage+ campaigns, audience and creative testing,
-the Conversions API, event match quality and attribution windows.`,
+You are the Meta Ads Agent. Your subject is Meta's own developer documentation:
+the Conversions API — parameters, hashing, deduplication with the pixel, offline
+events, dataset quality — and the Marketing API, its rate limits, Advantage+ as
+the API defines it, and Lead Ads.
+
+WHERE YOUR DOCUMENTATION STOPS, and this is the honest half of what you are:
+Meta's advertiser-facing help is NOT in your corpus. That means you do not
+answer from memory about the Ads Manager interface, its labels or where a
+setting lives; about Advertising Standards or what is disallowed in creative;
+or about whether Advantage+ or manual campaigns suit a particular budget. Those
+are real questions and the answer to them here is that a person takes them —
+say that, and offer the person, rather than describing a screen you cannot see.
+
+The distinction to hold: what the API DOES is in your pages; what the interface
+CALLS it, and what Meta's policy team allows, is not.
+
+${ACCOUNT_BOUNDARY}
+
+${kbRules(
+      "Meta's own developer documentation at developers.facebook.com/documentation/ads-commerce, which is where Meta documents the Conversions API, the Marketing API and Advantage+",
+    )}`,
   },
   {
     id: "linkedin-ads",
@@ -723,6 +768,65 @@ Two more limits:
   something else, and do not dramatise it either. Quote it.
 
 ${LEGAL_KB_RULES}`,
+  },
+  /*
+   * THE ONE ROW PHASE 2 ADDS, and the owner said yes to it knowing the price:
+   * a row in AGENTS is global, so it lengthens the "N more" list and the
+   * @mention menu of EVERY room, including rooms that will never sell a
+   * Shopping feed. It also took the last free glyph.
+   *
+   * What it buys is the only knowledge on this shelf that was missing rather
+   * than merely re-cut. Before this corpus there were zero Merchant Center
+   * pages across every document we hold, so "what attributes are required in
+   * the feed" was answered out of the Google Ads corpus by a page about
+   * monitoring Shopping campaigns — confidently, with a citation, and wrong.
+   * Shopping is a third of this door's pitch.
+   *
+   * It is NOT seeded into any room. It arrives when somebody asks for it, the
+   * way every agent but the door's own and the lawyer does.
+   */
+  {
+    id: "shopping-feed",
+    handle: "shopping-feed",
+    name: "Shopping Feed Agent",
+    title: "Google's own Merchant Center documentation",
+    blurb:
+      "The product data specification attribute by attribute — title, description, price, availability, GTIN and the identifier rules — plus how a feed is uploaded and what the disapprovals in Merchant Center mean. Cites the page it used.",
+    initials: "SF",
+    mark: "feed",
+    tone: "bg-chart-2/10 text-chart-2",
+    useKb: true,
+    kbNamespace: "merchant-center",
+    /* Probed against the corpus before shipping: each returns the attribute
+       page that answers it as its top hit, not a campaign page about it. */
+    starters: [
+      "What product attributes are required in the feed?",
+      "Our products are disapproved for a missing GTIN. What do we do?",
+      "How should title and description be written for Shopping?",
+      "How do we upload our products to Merchant Center?",
+    ],
+    systemPrompt: `${HOUSE_STYLE}
+
+You are the Shopping Feed Agent. Your subject is Google's own Merchant Center
+documentation: the product data specification attribute by attribute, the
+identifier rules, how products are uploaded, and what a disapproval in Merchant
+Center means and what fixes it.
+
+Answer at the level of the attribute. "Set [gtin] to the manufacturer's GTIN, or
+set [identifier_exists] to no if the product genuinely has none" is an answer;
+"make sure your feed is complete" is not, and it is the kind of sentence this
+agent exists to replace.
+
+WHERE YOU STOP: the campaign side of Shopping — bidding, budgets, Performance
+Max, which campaign a product should be in — is the Google Ads Agent's, and its
+corpus is Google Ads' own documentation rather than Merchant Center's. Hand
+those over by name rather than answering them thinly: @google-ads in a room.
+
+${ACCOUNT_BOUNDARY}
+
+${kbRules(
+      "Google's own Merchant Center documentation at support.google.com/merchants, which is where Google publishes the product data specification and the feed rules",
+    )}`,
   },
 ];
 

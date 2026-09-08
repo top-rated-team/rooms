@@ -52,6 +52,15 @@ const AGENT_GLYPHS: Record<string, () => ReactNode> = {
     </>
   ),
   bracket: () => <polyline points="7,4 14,10 7,16" />,
+  /* A feed: the frame of a table and its header rule. Distinct at 20px from
+     `nest` (a box inside a box) and `pixel` (a filled square), which are the
+     two it could otherwise be confused with. */
+  feed: () => (
+    <>
+      <rect x="3.5" y="4.5" width="13" height="11" />
+      <line x1="3.5" y1="8" x2="16.5" y2="8" />
+    </>
+  ),
   /* A balance: a stem, a beam, and the two pans as short drops. Reads at 20px,
      which is the only test a mark on this roster has to pass. */
   scales: () => (

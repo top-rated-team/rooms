@@ -74,7 +74,11 @@ const NOT_A_PRICE: Record<string, string> = {
   $30K: "a visitor's own monthly spend, inside a starter question they click.",
   $200: "a visitor's own average contract value, inside a starter question they click.",
   $10k: "the size of a Google Ad Grant, which Google sets and we do not charge, inside a starter question.",
-  $10K: "the same Google grant, capitalised differently on the agent's copy of the question.",
+  /* $10K was here, capitalised that way by one Meta starter — "Advantage+
+     Shopping vs manual campaigns for a $10K budget?". That starter was replaced
+     when the Meta agent was grounded, the figure left the tree with it, and this
+     test refused to keep a standing exception for a number nobody writes. Which
+     is the whole point of that assertion. */
 };
 
 /** The trees a visitor's eyes can reach: the client, and the data the client reads. */
