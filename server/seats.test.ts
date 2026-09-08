@@ -22,17 +22,21 @@ import {
   MAX_CALLS_PER_DAY,
   MAX_EXPIRES_DAYS,
   ROOM_TOKEN_IS_NOT_A_SEAT,
+  SEAT_AUTHORIZATION_SCHEME,
   WATCH_CANNOT_POST,
   admitSeat,
   agentsNamedIn,
   authenticateSeat,
   claimSeatCall,
+  credentialFromAuthorization,
   listSeats,
   mayAgentReplyToAgent,
+  mayKickOffFromMessage,
   postFromSeat,
   readSeatThread,
   resetSeatsForTests,
   revokeSeat,
+  seatForMemberInRoom,
   setSeatMode,
   storedSeatForTests,
 } from "./seats";
@@ -212,6 +216,39 @@ describe("the credential is not the room link", () => {
 
     const junk = authenticateSeat("seat_thisisnotarealsecretatall00", T0);
     assert.equal(junk.ok, false);
+  });
+
+  it("reads the secret from an Authorization: Seat header, and ignores Bearer room tokens", async () => {
+    const room = await openRoom();
+    const admitted = await admit(room);
+    assert.equal(admitted.ok, true);
+    if (!admitted.ok) return;
+
+    const pulled = credentialFromAuthorization(`${SEAT_AUTHORIZATION_SCHEME} ${admitted.credential}`);
+    assert.equal(pulled, admitted.credential);
+    assert.equal(authenticateSeat(pulled ?? "", T0).ok, true);
+
+    assert.equal(credentialFromAuthorization(`Bearer ${room.token}`), null);
+    assert.equal(credentialFromAuthorization(`Bearer ${admitted.credential}`), null);
+    assert.equal(credentialFromAuthorization(room.token), null);
+  });
+
+  it("refuses to read or post when the caller presents the room token as the agent", async () => {
+    const room = await openRoom();
+    const admitted = await admit(room);
+    assert.equal(admitted.ok, true);
+    if (!admitted.ok) return;
+
+    const read = await readSeatThread(room.token, T0);
+    assert.equal(read.ok, false);
+    if (read.ok) return;
+    assert.equal(read.error, ROOM_TOKEN_IS_NOT_A_SEAT);
+
+    await setSeatMode(room.token, admitted.seat.id, "act", T0);
+    const posted = await postFromSeat(room.token, "sneaking in", T0);
+    assert.equal(posted.ok, false);
+    if (posted.ok) return;
+    assert.equal(posted.error, ROOM_TOKEN_IS_NOT_A_SEAT);
   });
 });
 
@@ -452,6 +489,45 @@ describe("expiry and revoke", () => {
     assert.match(auth.error, /The trial ended/);
   });
 
+  it("looks a seat up by the member key the rail's revoke button actually has", async () => {
+    const room = await openRoom();
+    const admitted = await admit(room);
+    assert.equal(admitted.ok, true);
+    if (!admitted.ok) return;
+
+    const found = await seatForMemberInRoom(room.token, admitted.seat.memberKey, T0);
+    assert.equal(found?.id, admitted.seat.id);
+    assert.equal(await seatForMemberInRoom(room.token, "agent:nobody", T0), null);
+  });
+
+  it("refuses a second revoke rather than writing the reason twice", async () => {
+    const room = await openRoom();
+    const admitted = await admit(room);
+    assert.equal(admitted.ok, true);
+    if (!admitted.ok) return;
+
+    const first = await revokeSeat(
+      room.token,
+      { seatId: admitted.seat.id, by: PARTY.name, reason: "The trial ended." },
+      T0,
+    );
+    assert.equal(first.ok, true);
+
+    const second = await revokeSeat(
+      room.token,
+      { seatId: admitted.seat.id, by: PARTY.name, reason: "Again." },
+      T0 + 1,
+    );
+    assert.equal(second.ok, false);
+    if (second.ok) return;
+    assert.match(second.error, /The trial ended/);
+    assert.doesNotMatch(second.error, /Again/);
+
+    const state = await storage.getWorkspaceByToken(room.token);
+    const revokeLines = (state?.messages ?? []).filter((message) => message.body.includes("Revoked"));
+    assert.equal(revokeLines.length, 1);
+  });
+
   it("refuses a revoke with no reason, because a timestamp alone cannot say why access ended", async () => {
     const room = await openRoom();
     const admitted = await admit(room);
@@ -582,6 +658,42 @@ describe("an agent replies to an agent only when a person named both in one mess
       namedByPerson: named,
     });
     assert.equal(allowed.ok, true);
+  });
+
+  it("is the same rule when the message route asks in one call", async () => {
+    const room = await openRoom();
+    const admitted = await admit(room);
+    assert.equal(admitted.ok, true);
+    if (!admitted.ok) return;
+
+    const visitor = mayKickOffFromMessage({
+      authorKind: "visitor",
+      authorKey: "visitor",
+      body: "Carry on.",
+      targetAgentId: "chatgpt-ads",
+      workspaceId: room.workspaceId,
+    });
+    assert.equal(visitor.ok, true);
+
+    const loop = mayKickOffFromMessage({
+      authorKind: "agent",
+      authorKey: admitted.seat.memberKey,
+      body: `@chatgpt-ads take this.`,
+      mentions: ["chatgpt-ads"],
+      targetAgentId: "chatgpt-ads",
+      workspaceId: room.workspaceId,
+    });
+    assert.equal(loop.ok, false);
+
+    const both = mayKickOffFromMessage({
+      authorKind: "agent",
+      authorKey: admitted.seat.memberKey,
+      body: `@chatgpt-ads @${admitted.seat.handle} both of you.`,
+      mentions: ["chatgpt-ads", admitted.seat.handle],
+      targetAgentId: "chatgpt-ads",
+      workspaceId: room.workspaceId,
+    });
+    assert.equal(both.ok, true);
   });
 });
 

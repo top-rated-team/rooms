@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import type { Seat } from "@shared/api";
-import { OUTSIDE_AGENT_LIMITS } from "@/components/workspace/MemberRail";
+import { EXPERTS } from "@shared/roster";
+import { OUTSIDE_AGENT_LIMITS, type MemberDetail } from "@/components/workspace/MemberRail";
 import { cn } from "@/lib/utils";
 import { ACTION, ACTION_QUIET, CHROME, LABEL, META, READ } from "@/components/workspace/room-style";
 
@@ -17,7 +18,7 @@ import { ACTION, ACTION_QUIET, CHROME, LABEL, META, READ } from "@/components/wo
  * handle for the room. Presenting that link as this agent will not work.
  *
  * The four sentences at the bottom are not settings. There is no screen that
- * turns them off. They are the same four the member rail prints after
+ * turns them on. They are the same four the member rail prints after
  * admission, so they are legible before anyone presses Admit.
  * ------------------------------------------------------------------------- */
 
@@ -51,31 +52,70 @@ export interface AdmitAgentIssued {
   credential: string;
 }
 
+/** What the member rail needs from a public seat. Same numbers, no secret. */
+export function detailFromSeat(seat: Seat): Pick<MemberDetail, "company" | "outside" | "revoked"> {
+  return {
+    company: seat.company,
+    outside: {
+      company: seat.company,
+      mode: seat.mode,
+      thread: seat.thread,
+      joinedOn: seat.joinedOn,
+      expiresOn: seat.expiresOn,
+      callsUsed: seat.callsUsed,
+      callsPerDay: seat.callsPerDay,
+    },
+    ...(seat.revoked ? { revoked: seat.revoked } : {}),
+  };
+}
+
 export interface AdmitAgentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   threads: AdmitThread[];
-  parties: AdmitParty[];
+  /** Who on our side can be answerable. The roster is used when this is empty. */
+  parties?: AdmitParty[];
   /** The thread currently open, pre-selected. */
   defaultChannelId?: string;
   /** Who on our side is pre-selected as the named party. */
   defaultPartyKey?: string;
-  /** Resolves with the seat and the one-time credential, or null on failure. */
-  onAdmit: (input: AdmitAgentInput) => Promise<AdmitAgentIssued | null>;
+  /** Resolves with the seat and the one-time credential, or an error the sheet can print. */
+  onAdmit: (input: AdmitAgentInput) => Promise<AdmitAgentIssued | { error: string } | null>;
 }
 
 function localDate(daysFromToday: number = 0): string {
   const date = new Date();
   date.setDate(date.getDate() + daysFromToday);
+  return toDateInput(date);
+}
+
+function toDateInput(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
-function isoEndOfUtcDay(date: string): string {
-  return `${date}T23:59:59.000Z`;
+/** End of the chosen local day, clamped so the server 90-day cap cannot refuse it. */
+function expiryIso(date: string): string {
+  const [year, month, day] = date.split("-").map(Number);
+  const end = new Date(year, (month ?? 1) - 1, day ?? 1, 23, 59, 59, 0).getTime();
+  const cap = Date.now() + MAX_EXPIRES_DAYS * 24 * 60 * 60 * 1000;
+  return new Date(Math.min(end, cap)).toISOString();
 }
+
+function maxExpiryDate(): string {
+  const cap = Date.now() + MAX_EXPIRES_DAYS * 24 * 60 * 60 * 1000;
+  const at = new Date(cap);
+  const endOfThatLocalDay = new Date(at.getFullYear(), at.getMonth(), at.getDate(), 23, 59, 59).getTime();
+  if (endOfThatLocalDay > cap) at.setDate(at.getDate() - 1);
+  return toDateInput(at);
+}
+
+const ROSTER_PARTIES: AdmitParty[] = EXPERTS.map((expert) => ({
+  memberKey: expert.memberKey,
+  displayName: expert.name,
+}));
 
 function fieldClassName(kind: "strong" | "quiet" = "strong"): string {
   return cn(
@@ -89,17 +129,18 @@ export function AdmitAgentDialog({
   open,
   onOpenChange,
   threads,
-  parties,
+  parties = [],
   defaultChannelId,
   defaultPartyKey,
   onAdmit,
 }: AdmitAgentDialogProps) {
+  const resolvedParties = parties.length > 0 ? parties : ROSTER_PARTIES;
   const firstThread = defaultChannelId && threads.some((thread) => thread.id === defaultChannelId)
     ? defaultChannelId
     : threads[0]?.id ?? "";
-  const firstParty = defaultPartyKey && parties.some((party) => party.memberKey === defaultPartyKey)
+  const firstParty = defaultPartyKey && resolvedParties.some((party) => party.memberKey === defaultPartyKey)
     ? defaultPartyKey
-    : parties[0]?.memberKey ?? "";
+    : resolvedParties[0]?.memberKey ?? "";
 
   const [company, setCompany] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -129,13 +170,14 @@ export function AdmitAgentDialog({
     [channelId, threads],
   );
   const party = useMemo(
-    () => parties.find((row) => row.memberKey === boundPartyKey) ?? parties[0],
-    [boundPartyKey, parties],
+    () => resolvedParties.find((row) => row.memberKey === boundPartyKey) ?? resolvedParties[0],
+    [boundPartyKey, resolvedParties],
   );
 
+  const latestExpiry = maxExpiryDate();
   const calls = Number.parseInt(callsPerDay, 10);
   const callsOk = Number.isInteger(calls) && calls >= 1 && calls <= MAX_CALLS_PER_DAY;
-  const expiryOk = /^\d{4}-\d{2}-\d{2}$/.test(expiresOn) && expiresOn >= localDate() && expiresOn <= localDate(MAX_EXPIRES_DAYS);
+  const expiryOk = /^\d{4}-\d{2}-\d{2}$/.test(expiresOn) && expiresOn >= localDate() && expiresOn <= latestExpiry;
   const canSubmit =
     company.trim().length > 0 &&
     displayName.trim().length > 0 &&
@@ -155,13 +197,15 @@ export function AdmitAgentDialog({
       channelId: thread.id,
       boundPartyKey: party.memberKey,
       callsPerDay: calls,
-      expiresOn: isoEndOfUtcDay(expiresOn),
+      expiresOn: expiryIso(expiresOn),
     });
     setBusy(false);
-    if (result) setIssued(result);
+    if (result && "credential" in result) setIssued(result);
     else {
       setFailed(
-        "That admission did not come back. Send it again — a duplicate is easy to revoke, an agent that was never admitted is not.",
+        result && "error" in result
+          ? result.error
+          : "That admission did not come back. Send it again — a duplicate is easy to revoke, an agent that was never admitted is not.",
       );
     }
   }, [canSubmit, calls, company, displayName, expiresOn, onAdmit, party, thread]);
@@ -169,7 +213,7 @@ export function AdmitAgentDialog({
   const missing =
     threads.length === 0
       ? "This room has no thread to admit an agent into."
-      : parties.length === 0
+      : resolvedParties.length === 0
         ? "An admission has to be bound to a named person on our side, and this room has not named one."
         : null;
 
@@ -287,7 +331,7 @@ export function AdmitAgentDialog({
                 className={cn(fieldClassName(), "text-foreground")}
                 data-testid="select-admit-party"
               >
-                {parties.map((row) => (
+                {resolvedParties.map((row) => (
                   <option key={row.memberKey} value={row.memberKey} className="bg-background text-foreground">
                     {row.displayName}
                   </option>
@@ -321,7 +365,7 @@ export function AdmitAgentDialog({
                 id="admit-expires"
                 type="date"
                 min={localDate()}
-                max={localDate(MAX_EXPIRES_DAYS)}
+                max={latestExpiry}
                 value={expiresOn}
                 onChange={(event) => setExpiresOn(event.target.value)}
                 className={cn(fieldClassName("quiet"), "text-foreground")}

@@ -63,6 +63,9 @@ export const WATCH_CANNOT_POST =
 export const ROOM_TOKEN_IS_NOT_A_SEAT =
   "The room link is a handle for the room. It is not a credential for this agent.";
 
+/** Scheme for the agent's own secret: `Authorization: Seat <credential>`. Not Bearer, so a room token cannot be smuggled in by accident. */
+export const SEAT_AUTHORIZATION_SCHEME = "Seat";
+
 function budgetSpentLine(callsPerDay: number): string {
   return `Budget spent — ${callsPerDay} calls today. It stopped, and said so in the thread.`;
 }
@@ -151,6 +154,20 @@ export type RevokeSeatInput = z.infer<typeof revokeSeatSchema>;
 export type SeatResult<T> = { ok: true } & T | { ok: false; error: string };
 
 /* --------------------------------- helpers -------------------------------- */
+
+/**
+ * Pull the agent's own secret out of an Authorization header. The Seat scheme
+ * is the only one that carries this secret, so a Bearer room token returns
+ * null rather than being tried as the agent.
+ */
+export function credentialFromAuthorization(header: string | undefined | null): string | null {
+  if (!header) return null;
+  const match = header.match(/^(\S+)\s+(\S+)$/);
+  if (!match) return null;
+  const [, scheme, value] = match;
+  if (scheme.toLowerCase() !== SEAT_AUTHORIZATION_SCHEME.toLowerCase()) return null;
+  return value;
+}
 
 function hashCredential(credential: string): string {
   return createHash("sha256").update(credential).digest("hex");
@@ -344,6 +361,26 @@ export function mayAgentReplyToAgent(input: {
   };
 }
 
+/**
+ * The form the message route should call: name the agents in this one body,
+ * then apply the loop rule. A visitor still always gets through.
+ */
+export function mayKickOffFromMessage(input: {
+  authorKind: MemberKind;
+  authorKey: string;
+  body: string;
+  mentions?: string[];
+  targetAgentId: string;
+  workspaceId: string;
+}): { ok: true } | { ok: false; reason: string } {
+  return mayAgentReplyToAgent({
+    authorKind: input.authorKind,
+    authorKey: input.authorKey,
+    targetAgentId: input.targetAgentId,
+    namedByPerson: agentsNamedIn(input.body, input.mentions, seatHandlesFor(input.workspaceId)),
+  });
+}
+
 /* ------------------------------- owner actions ------------------------------- */
 
 export async function admitSeat(
@@ -456,6 +493,7 @@ export async function revokeSeat(
   if (!stored || stored.workspaceId !== state.workspace.id) {
     return { ok: false, error: "Unknown admission in this room." };
   }
+  if (stored.revoked) return { ok: false, error: revokedLine(stored.revoked) };
 
   const reason = parsed.data.reason.trim();
   const by = parsed.data.by.trim();
@@ -516,6 +554,17 @@ export async function listSeats(token: string, now: number = Date.now()): Promis
       rollDay(row, now);
       return toPublic(row);
     });
+}
+
+/** The rail's revoke control has a memberKey, not a seat id. */
+export async function seatForMemberInRoom(
+  token: string,
+  memberKey: string,
+  now: number = Date.now(),
+): Promise<Seat | null> {
+  const listed = await listSeats(token, now);
+  if (!listed) return null;
+  return listed.find((row) => row.memberKey === memberKey) ?? null;
 }
 
 /* ----------------------------- agent actions ----------------------------- */

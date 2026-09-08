@@ -89,17 +89,40 @@ export function prepareBooking(): Promise<boolean> {
       const button = window.calendar?.schedulingButton;
       if (!button) return settle("unavailable");
 
+      /*
+       * A WRAPPER, AND THE TARGET INSIDE IT — because of how their load() works.
+       *
+       * Their code is: `var b = a.target; a = I(a); b.insertAdjacentElement("afterend", a)`.
+       * The button is inserted as the target's NEXT SIBLING, not as its child.
+       * My first version passed a clipped div and then looked for the button
+       * INSIDE it, so it never found one: the poll timed out, openBooking()
+       * returned false, and every click fell through to the link — which is
+       * exactly the new tab the owner saw.
+       *
+       * So the clip goes on a wrapper and the target is a span within it. The
+       * button lands beside the span, inside the wrapper, and the wrapper hides
+       * it. The popup itself is unaffected: their onclick appends the overlay to
+       * document.body, so it is never inside anything we clipped.
+       */
       host = document.createElement("div");
-      /* Out of the layout and out of the reading order: only our own control is
-         ever pressed, and a hidden duplicate that a screen reader announces is
-         two buttons for one action. `display:none` would stop Google's script
-         measuring it, so it is clipped instead. */
       host.setAttribute("aria-hidden", "true");
       host.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)";
+      const anchor = document.createElement("span");
+      host.appendChild(anchor);
       document.body.appendChild(host);
-      button.load({ url: SCHEDULE_URL, label: "Book a call", target: host });
 
-      // The script builds its button asynchronously after load() returns.
+      /*
+       * `color` is not optional in practice. Their I() does B(a.color) and B
+       * validates against /^#(?:[0-9a-f]{3}){1,2}$/ — pass nothing and it
+       * throws inside load(), which was the second reason this never worked.
+       * The value is irrelevant because the button is never seen; it is our own
+       * clay so that if their script ever reveals it, it is not Google blue.
+       */
+      button.load({ url: SCHEDULE_URL, color: "#9A4A22", label: "Book a call", target: anchor });
+
+      // The button is built synchronously inside load(), but poll anyway: the
+      // script is theirs to change, and a poll that succeeds on its first tick
+      // costs nothing.
       const deadline = Date.now() + 4000;
       const poll = () => {
         if (host?.querySelector("button")) return settle("ready");
