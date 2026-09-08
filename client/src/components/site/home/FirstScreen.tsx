@@ -41,14 +41,24 @@ export function FirstScreen() {
         the market asks for. A headline that says "seven" has to be edited every
         time that happens, and will not be.
 
-        The owner asked twice for a word of totality, first "any" and then
-        "all", and "all" is the one that works. "Any expert digital services"
-        reads as a promise to do anything asked; "all expert digital services"
-        claims his own list is complete, which is a positioning claim rather
-        than a deliverable — and White Label is what makes it defensible, since
-        a partner can put their own set on this platform. Still no number: the
-        list immediately below says how many there are today, generated, so
-        nobody has to remember.
+        FIFTH PASS, and the two halves now do different jobs. The owner wanted
+        the opening to be about hybridising AI with digital experts for the
+        reader's own business. Said plainly that way it collides with the second
+        sentence, which already names people and AI agents — a two-sentence
+        headline that says the same thing twice is shorter than it looks and
+        weaker than either half.
+
+        So the first half carries the CATEGORY and the ADDRESSEE — hybrid,
+        digital services, and "shaped to your business", which is his "именно
+        твоего бизнеса" — and the second half stays the mechanism, which is what
+        hybrid actually means here. "Hybridise" as a verb was the other option
+        and it reads as a brochure; the adjective is his own word from an
+        earlier pass and it does the same work without asking anyone to admire
+        it.
+
+        The count is gone for good: it was a ceiling, and White Label is the
+        door that breaks it. The list immediately below says how many there are
+        today, generated, so nobody has to remember.
 
         THE SECOND SENTENCE IS THE OWNER'S OWN SHORTER ONE. He tried three:
         "One AI room", then "One AI-human hybrid room behind all of them", then
@@ -64,11 +74,16 @@ export function FirstScreen() {
         <Link
           href="/services"
           data-testid="link-headline-services"
+          /* ONLY THE TERM IS LINKED, not the whole sentence. At 68px the
+             sentence wraps onto three lines, and a 3px rule under all three
+             reads as damage rather than as a link — a render showed that
+             plainly. "Hybrid digital services" is the thing /services is a list
+             of, which also makes it the right amount of text to be a link. */
           className="underline decoration-[3px] underline-offset-[0.16em] decoration-line hover:decoration-foreground"
         >
-          All expert digital services
+          Hybrid digital services
         </Link>
-        . One room for people and AI agents to deliver.
+        , shaped to your business. One room for people and AI agents to deliver.
       </h1>
 
       <div>
