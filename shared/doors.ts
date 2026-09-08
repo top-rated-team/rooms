@@ -407,7 +407,7 @@ export const DOORS: DoorDef[] = [
      * It is the reason the assessment goes first, and hiding it behind
      * "documented interfaces" sold the reassurance without the work. */
     blurb:
-      "A qualified lawyer writes down what is and is not allowed where you are before anything runs, on their own paper. We then build only that and hand your team the code to operate, naming in the scope which parts go through LinkedIn's own API and which drive your own logged-in session — because sign-in, email and posting are the only permissions LinkedIn gives out without approval.",
+      "What is and is not allowed where you are gets written down before anything runs — by our AI lawyer agent, from the platforms' own published rules with every page it used cited, or by a qualified lawyer on their own paper where you need the opinion signed. We then build only that and hand your team the code to operate, naming in the scope which parts go through LinkedIn's own API and which drive your own logged-in session — because sign-in, email and posting are the only permissions LinkedIn gives out without approval.",
     // Its own agent, not the shared ai-dev one the ai-builds door also uses: one
     // agent carries one corpus, and this door's refusal — never say whether an
     // automation is permitted — is not a refusal ai-dev has any reason to carry.

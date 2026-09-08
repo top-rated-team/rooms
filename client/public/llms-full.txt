@@ -251,10 +251,12 @@ Contact: https://top-rated.team/contact
 
 https://ai.top-rated.team/services/linkedin-automation
 
-A qualified lawyer writes down what is and is not allowed where you are before
-anything runs, on their own paper. We then build only that and hand your team
-the code to operate, naming in the scope which parts go through LinkedIn's own
-API and which drive your own logged-in session — because sign-in, email and
+What is and is not allowed where you are gets written down before anything
+runs — by our AI lawyer agent, from the platforms' own published rules with
+every page it used cited, or by a qualified lawyer on their own paper where
+you need the opinion signed. We then build only that and hand your team the
+code to operate, naming in the scope which parts go through LinkedIn's own API
+and which drive your own logged-in session — because sign-in, email and
 posting are the only permissions LinkedIn gives out without approval.
 
 Status: open, with a panel on the page.
