@@ -3,6 +3,7 @@ import { Link } from "wouter";
 
 import { BOOK_A_CALL_URL } from "@shared/roster";
 import { useTheme } from "@/hooks/use-theme";
+import { useBooking } from "@/hooks/use-booking";
 
 /* Lazily loaded: LeadDialog pulls in Radix, and this header is in the landing
    chunk that paid traffic downloads first. */
@@ -47,6 +48,7 @@ export function Header() {
   const { resolvedTheme, setTheme } = useTheme();
   const [messageOpen, setMessageOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const booking = useBooking();
   const close = () => setMenuOpen(false);
   /* Two states rather than three. "System" is still what a visitor who never
      presses this gets, because that is what the theme starts as; pressing it is
@@ -147,6 +149,7 @@ export function Header() {
             target="_blank"
             rel="noopener noreferrer"
             data-testid="link-nav-book-a-call"
+            {...booking}
             className={LINK}
           >
             Book a call

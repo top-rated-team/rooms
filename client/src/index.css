@@ -550,3 +550,60 @@
   text-transform: uppercase;
   color: hsl(var(--muted-foreground));
 }
+
+/* ==========================================================================
+ * GOOGLE'S BOOKING POPUP, brought closer to this page
+ *
+ * The embed injects three elements of its own and they are OURS to style,
+ * because they are in our document. What is inside the popup is not: it is an
+ * iframe on calendar.google.com, and no stylesheet of ours reaches across an
+ * origin. So the booking form itself stays Google's — that is a limit of the
+ * web, not a thing left undone, and pretending otherwise would mean rebuilding
+ * their scheduler.
+ *
+ * What is reachable, and worth reaching:
+ *
+ *   .hur54b  the full-screen backdrop. Google's is rgba(32,33,36,.6) with a
+ *            flat 72px padding — which on a phone leaves a booking form about
+ *            240px wide. Ours matches the lead dialog's own backdrop and gives
+ *            the frame room to breathe at every width.
+ *   .mmGMM   the iframe. 8px radius and a white fill; ours takes the popover
+ *            radius and border so it reads as this site's own surface, and the
+ *            fill stays white because the form inside it is white and a dark
+ *            frame around a light form is a seam.
+ *   .qxCTlb  Google's own button. Never rendered — client/src/lib/booking.ts
+ *            clips it and clicks it — but styled dead in case a future version
+ *            of their script reveals it before ours has hidden it.
+ *
+ * THE CLASS NAMES ARE MINIFIED AND THEY WILL CHANGE. When they do, none of
+ * this applies and the popup renders in Google's default styling: still
+ * centred, still usable, just not ours. That is the correct failure — the
+ * booking must never depend on a selector we do not control.
+ * ========================================================================== */
+
+.hur54b {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(2px);
+  padding: var(--s3) !important;
+}
+
+@media (min-width: 640px) {
+  .hur54b {
+    padding: var(--s5) !important;
+  }
+}
+
+.mmGMM {
+  border: 1px solid hsl(var(--popover-border)) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.45);
+}
+
+/* Dead unless their script ever shows it before ours hides it. */
+.qxCTlb {
+  font-family: var(--font-sans) !important;
+  font-weight: 500 !important;
+  border-radius: 0.3rem !important;
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
