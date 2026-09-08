@@ -14,7 +14,7 @@
  *
  * THREE THINGS THE OWNER'S SPECIFICATION SAYS THAT THE CODE DID NOT, and each
  * one is a sentence here rather than a note in a document nobody opens. The
- * long version is the last section of docs/pricing-spec.md.
+ * long version is the last section of private/pricing-spec.md.
  *
  * 1. "Unlimited hours" is true, and it is about a person. A contractor's time
  *    on a $49 task is not metered. Agent conversation IS metered — server/spend.ts
@@ -32,7 +32,7 @@
 /**
  * The rows, by name — except `partner`, WHICH NAMES NO ROW.
  *
- * The rule from docs/doors.md still holds: whoever sets the price is the seller
+ * The rule from private/doors.md still holds: whoever sets the price is the seller
  * of the work, so this site cannot publish a figure for a door another company
  * contracts and invoices. What changed is how that is honoured. It used to be a
  * row carrying no figure, which said out loud that we take no share and publish
@@ -81,7 +81,7 @@ export interface PriceRow {
   /**
    * Whether Top-Rated Team sets this price. False on the partner row and only
    * there. Read by the page to decide whether it may print a figure at all,
-   * which is the docs/doors.md rule expressed as data rather than as care.
+   * which is the private/doors.md rule expressed as data rather than as care.
    */
   ours: boolean;
 }

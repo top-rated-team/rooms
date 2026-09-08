@@ -7,3 +7,17 @@ dist/
 .vite/
 migrations/meta/
 data/kb/*.embeddings.json
+
+# ---------------------------------------------------------------------------
+# NOT IN THE PUBLIC REPOSITORY.
+#
+# This repository is the fork target and is going public. These five documents
+# are how this company prices, what it earns, which tier each offer sits in and
+# who invoices whom — commercially useful to a competitor and to the partner,
+# and useful to nobody who wants to run a copy. The engineering documents in
+# docs/ stay, because a forker needs them.
+#
+# They are still HERE, so an agent working in this checkout reads them at
+# private/<name> — every pointer in the code and in parcels.json was moved with
+# them. Keep them in their own repository; this one must never see them again.
+private/

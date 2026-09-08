@@ -215,7 +215,7 @@ customer-facing exclusivity guarantee.
 
 Live copy is at `/white-label` on the apex. The new row's `path` is
 `/services/white-label`. The row comment notes "the apex migration has to land
-it"; see `docs/apex-migration.md`. The apex header and footer both link
+it"; see `private/apex-migration.md`. The apex header and footer both link
 `/white-label`, and the footer separately lists a non-linked services item
 "White-Label PPC" (`href:null`) — both need updating when the path moves.
 

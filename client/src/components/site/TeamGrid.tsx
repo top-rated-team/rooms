@@ -12,7 +12,7 @@ import { HEADING, META, PAGE, READ_MUTED } from "@/components/site/doors/quiet";
  * half-redacted: "Dan B.") and three options, then says the rebuild should
  * carry the names through until the owner rules. The parcel overrules that
  * default: the owner does not want his full legal name across the internet,
- * and the identification rule (docs/doors.md; the footer) confines the legal
+ * and the identification rule (private/doors.md; the footer) confines the legal
  * form to the footer, Terms and invoices. Publishing even an abbreviated
  * personal name on a public page is the thing that rule exists to stop.
  *

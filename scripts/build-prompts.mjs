@@ -38,7 +38,7 @@ const WAVES = [
   { n: 4, keys: ["door-ai-builds-body"] },
 
   /*
-   * THE FORK PROGRAMME. docs/fork-and-partners.md is the brief for all three and
+   * THE FORK PROGRAMME. private/fork-and-partners.md is the brief for all three and
    * every prompt says to read it first. It was four: partner-usage-report is
    * gone because the fork is free and reports nothing back, which was the
    * owner's decision and took the parcel, the endpoint and the whole privacy
@@ -58,7 +58,7 @@ function prompt(key) {
   const lines = [];
   lines.push(`You are working in ${REPO}, branch main. One parcel, called "${key}".`);
   lines.push("");
-  lines.push("Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.");
+  lines.push("Read these first, before you write anything: README.md, private/doors.md, shared/doors.ts.");
   lines.push("Then read three files next to the ones you are about to change.");
   lines.push("");
   lines.push("WHAT YOU OWN. These files, and nothing else in the repository:");

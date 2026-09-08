@@ -46,7 +46,7 @@ import { GITHUB_URL } from "@shared/roster";
  *   "Free audit and consultation available"
  *   "Ready to Scale?"
  *
- * The fork claims agree with docs/fork-and-partners.md: a copy you run is free,
+ * The fork claims agree with private/fork-and-partners.md: a copy you run is free,
  * nothing phones home, there is no commission and no licence key, and what is
  * paid for is help at the published prices. The repository is the fork target.
  * shared/roster.ts says it is private at the time of writing, so this page

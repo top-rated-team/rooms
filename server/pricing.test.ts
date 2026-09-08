@@ -415,7 +415,7 @@ describe("a door is sold on one row of the ladder, and it is its own", () => {
 
   it("publishes no figure of ours for work another company invoices", () => {
     /*
-     * docs/doors.md, and it costs money to get wrong: "whoever sets the price is
+     * private/doors.md, and it costs money to get wrong: "whoever sets the price is
      * the seller of that work. On a door that is not Top-Rated Team's own,
      * publishing a price makes Top-Rated Team the seller in fact, whatever the
      * footer says."

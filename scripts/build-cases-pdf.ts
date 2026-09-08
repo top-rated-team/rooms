@@ -94,12 +94,25 @@ function span(file: string, count: number): "full" | "half" | "third" {
   return rank[byWidth] <= rank[ceiling] ? byWidth : ceiling;
 }
 
-/** A build's own screenshot, where there is one. */
+/**
+ * A build's own screenshot, where there is one.
+ *
+ * Four were captured in a browser with the consent banners removed. The fifth,
+ * being.marketing, could not be: what answers at that address is the Gumroad
+ * store, and a capture of it would put a third party's CZK price list in this
+ * PDF. The product is a custom GPT inside ChatGPT, behind a login, so the owner
+ * sent the screenshot himself.
+ *
+ * The Upwork proposal agent has none and gets none — it is a Claude Code skill
+ * with no interface to photograph, and a picture of a terminal would be
+ * decoration rather than evidence.
+ */
 const BUILD_SHOTS: Record<string, string> = {
   "adgrant-ai": "adgrant-ai.png",
   "top-voice": "top-voice.png",
   warmlike: "warmlike.png",
   "top-rated-team": "top-rated-team.png",
+  "being-existential-coach": "being.png",
 };
 
 const esc = (s: string) =>

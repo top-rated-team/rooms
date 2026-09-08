@@ -11,7 +11,7 @@ The doors are ChatGPT Ads conversion tracking, Google Ads, Google Ad Grants, Lin
 Ads, LinkedIn automation with a written legal assessment, LinkedIn growth (delivered by
 a separate partner company, under its own name and its own invoice), and custom AI
 builds. They are rows in `shared/doors.ts` against one template — what each field does,
-and what happens when the legal name on one of them is wrong, is in `docs/doors.md`.
+and what happens when the legal name on one of them is wrong, is in `private/doors.md`.
 
 Three surfaces:
 

@@ -51,7 +51,7 @@ export function collectSource(): Record<string, string> {
 /**
  * The door this form is sitting on, so the "if it cannot wait" line offers that
  * company's own address. Never a default: a visitor who came through a door
- * that is not ours must not be handed our contact page — see docs/doors.md.
+ * that is not ours must not be handed our contact page — see private/doors.md.
  */
 function currentDoor(): DoorDef {
   const fallback = DOOR_BY_ID[DEFAULT_DOOR_ID];

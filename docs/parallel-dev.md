@@ -31,7 +31,7 @@ not as something to run.
 
 Three of these — `page-blog`, `page-team`, `page-roi-calculator` — are the
 addresses blocking the move to the apex domain, and they are the reason this
-programme exists. See `docs/apex-migration.md`.
+programme exists. See `private/apex-migration.md`.
 
 **The ordering rule is different this time.** Programme one's was "never two
 doors in one wave", because every door parcel appended a corpus to
@@ -129,7 +129,7 @@ thirty-line edits merge into something nobody can verify.
 **2. Paste this at the top of every agent's brief**, with the parcel name filled in:
 
 > The repository is `~/Documents/ChatGPT Ads`, branch main. Read `README.md`,
-> `docs/doors.md` and `shared/doors.ts` first, then read three neighbouring files
+> `private/doors.md` and `shared/doors.ts` first, then read three neighbouring files
 > before you write one. You own exactly the paths listed under `<parcel>` in
 > `parcels.json` and nothing else — other agents are in this tree right now.
 > Anything you need in a file you do not own goes in your report as a handoff,

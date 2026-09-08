@@ -564,7 +564,7 @@ export const DOORS: DoorDef[] = [
     },
     tier: "grey",
     // Not "custom": custom is still us quoting. Maksymenko sets this price and
-    // invoices it, so this site publishes no figure for it — docs/doors.md,
+    // invoices it, so this site publishes no figure for it — private/doors.md,
     // "whoever sets the price is the seller of that work".
     priceTier: "partner",
     status: "coming",

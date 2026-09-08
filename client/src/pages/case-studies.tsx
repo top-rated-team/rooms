@@ -20,7 +20,7 @@ import { LINK, META, PAGE, READ_MUTED } from "@/components/site/doors/quiet";
  * ones for one service. The filter reads DOORS and the derived `doors` field
  * on each case; this page does not list services by hand.
  *
- * When docs/apex-migration.md is carried out, /case-studies is one of the
+ * When private/apex-migration.md is carried out, /case-studies is one of the
  * fourteen addresses that has to keep answering, and this is the page that
  * answers it.
  * ------------------------------------------------------------------------- */

@@ -606,7 +606,7 @@ ${kbRules(
    * took a long conversation with the owner, and the conclusion of that
    * conversation is currently written down in three places nobody outside this
    * repository can read: the tier rows in shared/doors.ts, the corpus of
-   * LinkedIn's own API documentation, and docs/doors.md. A client asking "can
+   * LinkedIn's own API documentation, and private/doors.md. A client asking "can
    * we do this" got a person, eventually. That answer is retrieval over
    * published rules, which is exactly the shape of work this panel already
    * does well.
@@ -829,7 +829,7 @@ export const WHATSAPP_URL = "https://wa.me/420774654822";
  * day somebody creates a repository at the old name.
  *
  * It is private at the time of writing, so this link 404s for a visitor until
- * it is opened — see docs/repo-move.md for what publishing the history exposes.
+ * it is opened — see private/repo-move.md for what publishing the history exposes.
  */
 export const GITHUB_URL = "https://github.com/top-rated-team/rooms";
 export const MAIN_SITE_URL = "https://top-rated.team";

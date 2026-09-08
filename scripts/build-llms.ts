@@ -250,7 +250,7 @@ function sectionToText(html: string): string {
  * The summary both files open on. Every clause is checkable against a page: the
  * count is PUBLIC_DOORS, which is what the home page and /services count in
  * words; the invoice sentence is on every row; and "no price" is the rule in
- * docs/doors.md that the agents' own prompts refuse to break.
+ * private/doors.md that the agents' own prompts refuse to break.
  */
 const SUMMARY = [
   "Paid advertising, the measurement under it, and the custom AI around both.",

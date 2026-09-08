@@ -9,7 +9,7 @@
  *   - Top-Rated Team invoices its own fee separately
  *
  * The card has to say which of those a given amount is. A shared invoice would
- * put Top-Rated Team on work it does not sell — see docs/doors.md.
+ * put Top-Rated Team on work it does not sell — see private/doors.md.
  *
  * THIS SITE DOES NOT TAKE THE MONEY. There is no card processor in this
  * repository. Pressing Pay writes the paid state onto the row and into the
