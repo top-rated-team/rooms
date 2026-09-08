@@ -453,6 +453,29 @@ export function registerRoutes(app: Express): void {
     app.get(`${stale}/:slug`, (req, res) => res.redirect(301, `/services/${encodeURIComponent(req.params.slug)}`));
   }
 
+  /*
+   * TWO ADDRESSES FROM THE OLD SITE, ANSWERED EARLY.
+   *
+   * These are top-rated.team's, not this application's, and they answer here
+   * only once the apex moves — see docs/apex-migration.md, which lists all
+   * fourteen. They are registered now because both destinations have stopped
+   * being decisions:
+   *
+   *   /white-label had no door when the migration was written, and it is now
+   *   the eighth, so the page it always was becomes /services/white-label.
+   *
+   *   /leads sold "FREE leads" and the owner removed the offer. An address for
+   *   an offer that no longer exists goes to the front of the house, not to a
+   *   404, because agencies have linked to it for years.
+   *
+   * The rest of that table still needs answers — /team, /roi-calculator and
+   * the blog have nowhere to land yet — and they are deliberately not guessed
+   * at here. A 301 is the one redirect a crawler treats as permanent, so it is
+   * the wrong instrument for a page whose home is undecided.
+   */
+  app.get("/white-label", (_req, res) => res.redirect(301, "/services/white-label"));
+  app.get("/leads", (_req, res) => res.redirect(301, "/"));
+
   const createWorkspaceLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many workspaces from this address. Try again later, or book a call." });
   const leadLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many requests from this address. Try again later." });
   // Inviting people also raises a lead, so it gets its own budget rather than
