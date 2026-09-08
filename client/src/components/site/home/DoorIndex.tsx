@@ -97,11 +97,12 @@ export function DoorIndex() {
                 data-testid="text-door-partner"
                 className={`type-meta col-start-2 lg:col-start-4 ${shut ? "opacity-60" : ""}`}
               >
+                {/* The word and nothing after it. It said "Partner ·
+                    <company>" and the owner cut the company: a list is where a
+                    reader decides what to read next, and the supplier's name is
+                    what they need on the page they open, not before it. */}
                 {isPublicDoor(door) ? null : (
-                  <>
-                    <span className="text-primary">{DOOR_TIERS[door.tier].label}</span>
-                    <span className="text-muted-foreground"> · {door.contract.displayName ?? door.contract.legalName}</span>
-                  </>
+                  <span className="text-primary">{DOOR_TIERS[door.tier].label}</span>
                 )}
               </span>
             </div>

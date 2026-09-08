@@ -1,10 +1,8 @@
 import { Link } from "wouter";
 
-import { DEFAULT_DOOR_ID, DOOR_BY_ID, DOOR_TIERS, type DoorDef } from "@shared/doors";
+import { DOOR_TIERS, type DoorDef } from "@shared/doors";
 import { HEADING, META, META_PLAIN, NUMERAL } from "@/components/site/doors/quiet";
 
-/** Ours. A row naming this company is telling the reader nothing new. */
-const OUR_LEGAL_NAME = DOOR_BY_ID[DEFAULT_DOOR_ID].contract.legalName;
 
 /**
  * One door, as a line in an index rather than as a card.
@@ -74,11 +72,12 @@ export function DoorCard({ door, index, className }: DoorCardProps) {
           appears on exactly the rows where it tells the reader something they
           would not otherwise assume. */}
       <div className="lg:col-start-4 lg:text-right">
-        {door.contract.legalName !== OUR_LEGAL_NAME ? (
-          <p className={META} data-testid="text-door-legal-name">
-            {door.contract.legalName}
-          </p>
-        ) : null}
+        {/* The tier below says "Partner" and that is all a list needs. The
+            company's name used to print here too; the owner cut it for the same
+            reason it left the home index — a list is where a reader decides
+            what to open, and the supplier's name is what they need on the page
+            they open. It is still on that door's own page, in its terms, in its
+            invoice line and in the footer of any room opened through it. */}
         <p className={`mt-[var(--s1)] ${META}`} data-testid="text-door-tier">
           {tier.label}
         </p>

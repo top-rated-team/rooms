@@ -419,6 +419,42 @@ function DoorPage({ door }: { door: DoorDef }) {
                       </div>
                     )}
                   </div>
+
+                  {/*
+                    THE ROOM, PROMOTED. It used to be one quiet link at the very
+                    bottom of the page, which was a deliberate choice and the
+                    wrong one. The owner's reason is the right way round: a chat
+                    with an agent surprises nobody in 2026, and the room is the
+                    part nobody else is offering — so it cannot be the quietest
+                    thing on the page.
+
+                    It sits under the panel because that is where a reader is
+                    when they realise the answer is worth keeping, and it is a
+                    real action rather than a hint. The sentence above it is what
+                    a room actually is, in one line, because "open a room" means
+                    nothing to somebody who has never seen one.
+                  */}
+                  <div className="mt-[var(--s3)] border-t border-border pt-[var(--s3)]">
+                    <p className={READ}>
+                      Or open a room and skip the asking. One address of its own, this door&rsquo;s agent and our
+                      people already in it, the work written out as a checklist — and no signup, because the link in
+                      your browser is the whole account.
+                    </p>
+                    <button
+                      type="button"
+                      data-testid="button-door-open-room"
+                      className={`${ACTION} mt-[var(--s3)]`}
+                      onClick={() => void openRoom()}
+                      disabled={openingRoom}
+                    >
+                      {openingRoom ? "Opening a room…" : "Open a room"}
+                    </button>
+                    {roomError ? (
+                      <p role="alert" className="type-note mt-[var(--s2)] text-destructive">
+                        {roomError}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
               ) : (
                 /* A door that cannot hold a conversation says so on the left
@@ -575,29 +611,9 @@ function DoorPage({ door }: { door: DoorDef }) {
                 we run, and offers no second way in — the call above is the way
                 in, and it was offered once. */}
             {panelIsOpen ? (
-              <>
-                <p className={READ}>
-                  Ask first. It costs nothing, and it is the fastest way to find out whether you need us at all.
-                </p>
-                <p className={`mt-[var(--s3)] ${READ_MUTED}`}>
-                  A kept answer becomes a room: one address, our agents and our people in it, and no signup — the link
-                  in your browser is the whole account.
-                </p>
-                <button
-                  type="button"
-                  data-testid="button-door-open-room"
-                  className={`${ACTION_QUIET} mt-[var(--s3)]`}
-                  onClick={() => void openRoom()}
-                  disabled={openingRoom}
-                >
-                  {openingRoom ? "Opening a room…" : "Open one without asking anything first"}
-                </button>
-                {roomError ? (
-                  <p role="alert" className="type-note mt-[var(--s2)] text-destructive">
-                    {roomError}
-                  </p>
-                ) : null}
-              </>
+              <p className={READ}>
+                Ask first. It costs nothing, and it is the fastest way to find out whether you need us at all.
+              </p>
             ) : (
               <p className={READ_MUTED}>
                 There is no magic: just expertise, dedicated hours, and a systematic approach.

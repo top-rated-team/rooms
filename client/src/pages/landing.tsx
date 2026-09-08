@@ -4,6 +4,7 @@ import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import DoorIndex from "@/components/site/home/DoorIndex";
 import FirstScreen from "@/components/site/home/FirstScreen";
+import HouseAsk from "@/components/site/home/HouseAsk";
 import Plate from "@/components/site/home/Plate";
 import Results from "@/components/site/home/Results";
 import Ladder from "@/components/site/Ladder";
@@ -80,6 +81,7 @@ export function Landing() {
             twice makes no sense here. The doors each carry their own, where the
             agent matches the page. The unified room this page should have
             instead is queued as the `home-room` parcel. */}
+        <HouseAsk />
         <TalkToUs className="pt-[var(--s5)]" />
         <Results />
         {/* Low, and after the work: a price means nothing until the reader

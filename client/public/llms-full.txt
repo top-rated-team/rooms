@@ -48,11 +48,12 @@ Contact: https://top-rated.team/contact
 
 https://ai.top-rated.team/services/paid-ads-audit
 
-A person reads your Google Ads, LinkedIn Ads or Meta account and tells you
-what the automation in it has actually been doing. Most accounts we open have
-been run by the platform's own bidding and by agents somebody added, and are
-now optimising against something nobody chose. You get what we found either
-way, and there is nothing to sign to get it.
+Here a person is not the risk — a person is the tool for fixing what the AI
+got wrong. Somebody reads your Google Ads, LinkedIn Ads or Meta account and
+tells you what the automation in it has actually been doing. Most accounts we
+open have been run by the platform's own bidding and by agents somebody added,
+and are now optimising against something nobody chose. You get what we found
+either way, and there is nothing to sign to get it.
 
 Status: open, and no agent of ours answers in it.
 

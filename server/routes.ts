@@ -36,6 +36,7 @@ import {
 import { rateLimit } from "./rateLimit";
 import { llmReady, streamAgentAnswer } from "./ai/agentRuntime";
 import { kbStatus } from "./ai/kb";
+import { routeQuestion } from "./ai/route-question";
 import { ASK_LEDGER_KEY, askBudgetUsd, askLedgerKey, claimAgentTurn, guardAgentTurn, recordTurnCost } from "./spend";
 import { acceptWhatsAppInbound, bindingStateForToken, completeLinkedIn, startLinkedIn, startWhatsApp } from "./identity";
 import { listBoosters } from "./flygen";
@@ -1021,6 +1022,25 @@ export function registerRoutes(app: Express): void {
   app.get("/api/kb/status", (_req, res) => {
     res.json({ ...kbStatus(), llmReady: llmReady() });
   });
+
+  /* --------------------- route a home-page question ---------------------- */
+  /*
+   * The home page is not a door. This looks the question up against the door
+   * table and returns a live door, a page, or a choice. It does not call the
+   * model: claiming a spend turn here would spend the visitor's allowance on a
+   * lookup. When a door's agent then answers, /api/ask claims as it always has.
+   * The same per-address rate limit as /api/ask still applies.
+   */
+  app.post(
+    "/api/route-question",
+    askLimit,
+    route(async (req, res) => {
+      const parsed = askSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const picked = typeof req.body?.doorId === "string" ? req.body.doorId : undefined;
+      res.json(routeQuestion(parsed.data.question, picked));
+    }),
+  );
 
   /* ---------------------- room identity (two routes) ---------------------- */
 

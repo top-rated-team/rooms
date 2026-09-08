@@ -88,9 +88,9 @@ export function FirstScreen() {
             the first screen's text, which is the complaint this rewrite began
             with. Panel.tsx carries it. */}
         <p className="type-body m-0">
-          Start with a free audit of what the automation in your ads accounts has been doing. Then the work it turns
-          up: paid advertising and the measurement under it, Google Ad Grants, inbound LinkedIn on the official API,
-          and custom AI around all of it &mdash; for your clients as readily as for you.
+          Start with a free expert audit of what the AI agents and automations in your ad accounts have been doing.
+          Then the work it turns up: paid advertising and the measurement under it, Google Ad Grants, inbound LinkedIn
+          on the official API, and custom AI around all of it &mdash; for your clients as readily as for you.
         </p>
         <dl
           data-testid="list-record"

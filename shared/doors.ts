@@ -212,8 +212,16 @@ export const DOORS: DoorDef[] = [
     initials: "AU",
     tone: "bg-primary/10 text-primary",
     headline: "Free expert audit of your paid ads accounts",
+    /*
+     * The owner's slogan, and this is the door it was written for even though
+     * he offered it for anywhere. His words: "When human factor is not an issue,
+     * but a tool to fix AI mistakes." The grammar is straightened and the shape
+     * is kept, because the shape is the argument — the whole market is selling
+     * the human as a risk to be removed, and this door sells the human as the
+     * instrument.
+     */
     blurb:
-      "A person reads your Google Ads, LinkedIn Ads or Meta account and tells you what the automation in it has actually been doing. Most accounts we open have been run by the platform's own bidding and by agents somebody added, and are now optimising against something nobody chose. You get what we found either way, and there is nothing to sign to get it.",
+      "Here a person is not the risk — a person is the tool for fixing what the AI got wrong. Somebody reads your Google Ads, LinkedIn Ads or Meta account and tells you what the automation in it has actually been doing. Most accounts we open have been run by the platform's own bidding and by agents somebody added, and are now optimising against something nobody chose. You get what we found either way, and there is nothing to sign to get it.",
     firstAgentId: null,
     agentLine:
       "No agent answers first in this door, and that is the point: an audit is a person opening an account they can see. No documentation can say what the automation did to yours, so nothing here will guess at it.",
@@ -508,7 +516,18 @@ export const DOORS: DoorDef[] = [
     initials: "MK",
     // Deliberately not one of our brand tones: this row is not our company.
     tone: "bg-muted text-muted-foreground",
-    headline: "LinkedIn growth — run by Maksymenko LinkedIn Growth",
+    /*
+     * THE HEADLINE NAMES THE WORK, and the company is named where a person is
+     * deciding who to pay: this door's own page, and the footer of the room a
+     * conversation here becomes. It used to read "LinkedIn growth — run by
+     * Maksymenko LinkedIn Growth", which put a supplier's trading name in a
+     * list of services and told a browsing reader nothing they could use.
+     *
+     * The disclosure has not moved out of the product, only off the index. The
+     * tier still says Partner, the page still names the company, its terms and
+     * its invoice line, and the room still prints all three in its footer.
+     */
+    headline: "LinkedIn growth, run by a partner company",
     blurb:
       "A separate company, a separate contract, a separate invoice. Not Top-Rated Team. If you buy this and something of ours, you get two of everything: two contracts, two invoices, two support addresses.",
     firstAgentId: null,

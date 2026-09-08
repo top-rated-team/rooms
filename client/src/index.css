@@ -584,12 +584,29 @@
 .hur54b {
   background-color: rgba(0, 0, 0, 0.6) !important;
   backdrop-filter: blur(2px);
-  padding: var(--s3) !important;
+  /*
+   * AS LITTLE PADDING AS THE FRAME CAN HAVE, because the frame is 100% of what
+   * is left and the calendar inside it does not reflow — it scrolls, inside the
+   * popup, which is the one thing a booking form must not make somebody do.
+   *
+   * Google's own value is a flat 72px on every side at every width, which on a
+   * laptop leaves the month view short enough to scroll and on a phone leaves a
+   * form about 240px wide. This is small and fixed at the top and bottom, where
+   * height is what the calendar is short of, and a little wider at the sides on
+   * a large screen so the frame is not edge-to-edge glass.
+   */
+  padding: 12px !important;
 }
 
 @media (min-width: 640px) {
   .hur54b {
-    padding: var(--s5) !important;
+    padding: 16px 24px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hur54b {
+    padding: 24px max(24px, calc((100vw - 1100px) / 2)) !important;
   }
 }
 
@@ -597,6 +614,14 @@
   border: 1px solid hsl(var(--popover-border)) !important;
   border-radius: 0.5rem !important;
   box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.45);
+  /*
+   * Their rule is width:100%;height:100% of the padded backdrop, which is
+   * right — so the only way to give the calendar room is to take padding away
+   * above. This adds a floor: on a short window the frame stops shrinking and
+   * the BACKDROP scrolls instead, which is a page scroll a person expects,
+   * rather than a scrollbar inside a modal that most people never find.
+   */
+  min-height: min(680px, calc(100vh - 24px)) !important;
 }
 
 /* Dead unless their script ever shows it before ours hides it. */
