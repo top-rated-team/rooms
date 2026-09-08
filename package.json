@@ -15,6 +15,7 @@
     "kb:fetch": "tsx scripts/build-kb.ts fetch",
     "kb:embed": "tsx scripts/build-kb.ts embed",
     "kb:build": "tsx scripts/build-kb.ts all",
+    "kb:refresh": "tsx scripts/refresh-corpora.ts",
     "blog:build": "tsx scripts/build-blog.ts",
     "test": "tsx --test \"server/**/*.test.ts\"",
     "verify": "npm run check && npm test && npm run build",

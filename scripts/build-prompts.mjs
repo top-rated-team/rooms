@@ -46,7 +46,7 @@ const WAVES = [
    * dependency, not a preference: partner-setup writes the config that
    * partner-catalogue reads, so the resolver exists before the page that fills it.
    */
-  { n: 5, keys: ["partner-catalogue", "legal-agent-upkeep"] },
+  { n: 5, keys: ["partner-catalogue", "legal-agent-upkeep"], landed: true },
   { n: 6, keys: ["partner-setup"] },
 ];
 

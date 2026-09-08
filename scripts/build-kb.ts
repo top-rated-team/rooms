@@ -23,6 +23,7 @@
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 import {
   KB_FILE,
@@ -40,7 +41,7 @@ import { EMBED_BATCH_SIZE, EMBED_MODEL, classifyLlmError, embedTexts, getClient 
  * the file so the corpus carries its own name and the server can tell two
  * corpora apart without inferring anything from the filename.
  */
-interface Corpus {
+export interface Corpus {
   namespace: string;
   /** File under data/kb/. Its embeddings live beside it as `<base>.embeddings.json`. */
   file: string;
@@ -603,7 +604,7 @@ const LEGAL: Corpus = {
   ],
 };
 
-const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS, LINKEDIN_AUTOMATION, AI_BUILDS, ADGRANT_AI, LEGAL];
+export const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS, LINKEDIN_AUTOMATION, AI_BUILDS, ADGRANT_AI, LEGAL];
 /* -------------------------------- chunking -------------------------------- */
 
 const TARGET_CHARS = 1200;
@@ -670,13 +671,50 @@ async function main(): Promise<void> {
 
 /* --------------------------------- fetch ---------------------------------- */
 
-async function runFetch(dir: string, corpus: Corpus): Promise<void> {
+export interface CorpusFetchResult {
+  namespace: string;
+  file: string;
+  read: Array<{ title: string; url: string }>;
+  failed: Array<{ title: string; url: string; reason: string }>;
+  /** True when nothing was fetched and the file on disk was left as it was. */
+  leftUntouched: boolean;
+  changed: boolean;
+  documents: number;
+  chunks: number;
+  builtAt: string | null;
+}
+
+async function existingCorpusMeta(
+  file: string,
+): Promise<{ builtAt: string; documents: number; chunks: number } | null> {
+  try {
+    const parsed: unknown = JSON.parse(await readFile(file, "utf8"));
+    if (typeof parsed !== "object" || parsed === null) return null;
+    const builtAt = (parsed as { builtAt?: unknown }).builtAt;
+    const documents = (parsed as { documents?: unknown }).documents;
+    const chunks = (parsed as { chunks?: unknown }).chunks;
+    if (typeof builtAt !== "string") return null;
+    return {
+      builtAt,
+      documents: typeof documents === "number" ? documents : Array.isArray(chunks) ? chunks.length : 0,
+      chunks: Array.isArray(chunks) ? chunks.length : 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function runFetch(dir: string, corpus: Corpus): Promise<CorpusFetchResult> {
   console.log("");
   console.log(`[${corpus.namespace}] ${corpus.label}`);
 
   const chunks: KbChunk[] = [];
   const fetched: string[] = [];
+  const read: CorpusFetchResult["read"] = [];
+  const failed: CorpusFetchResult["failed"] = [];
   let failures = 0;
+  const target = path.join(dir, corpus.file);
+  const previous = await existingCorpusMeta(target);
 
   const markdownRefs = await collectMarkdownRefs(corpus);
   if (markdownRefs.length > 0) console.log(`  ${markdownRefs.length} markdown pages to fetch`);
@@ -685,6 +723,7 @@ async function runFetch(dir: string, corpus: Corpus): Promise<void> {
     const markdown = await fetchText(ref.url);
     if (!markdown) {
       failures += 1;
+      failed.push({ title: ref.title, url: ref.url, reason: "could not be read" });
       continue;
     }
     fetched.push(markdown);
@@ -692,6 +731,7 @@ async function runFetch(dir: string, corpus: Corpus): Promise<void> {
     const url = humanUrl(ref.url);
     const title = titleOf(markdown) ?? ref.title;
     const added = chunkDocument(markdown, title, url, chunks);
+    read.push({ title, url: ref.url });
     console.log(`    ${title} — ${added} chunks`);
     await delay(REQUEST_DELAY_MS);
   }
@@ -703,9 +743,11 @@ async function runFetch(dir: string, corpus: Corpus): Promise<void> {
     const page = await fetchArticle(ref);
     if (!page) {
       failures += 1;
+      failed.push({ title: ref.title, url: ref.url, reason: "could not be read" });
       continue;
     }
     const added = chunkDocument(page.markdown, page.title, ref.url, chunks);
+    read.push({ title: page.title, url: ref.url });
     console.log(`    ${page.title} — ${added} chunks`);
     await delay(REQUEST_DELAY_MS);
   }
@@ -721,20 +763,30 @@ async function runFetch(dir: string, corpus: Corpus): Promise<void> {
       chunkDocument(full, corpus.full.title, corpus.full.url, spare);
       const unique = spare.filter((chunk) => !isCovered(chunk.text, covered));
       chunks.push(...unique);
+      read.push({ title: corpus.full.title, url: corpus.full.url });
       console.log(`    ${corpus.full.title} — ${unique.length} chunks kept, ${spare.length - unique.length} already covered`);
     } else {
       failures += 1;
+      failed.push({ title: corpus.full.title, url: corpus.full.url, reason: "could not be read" });
     }
   }
-
-  const target = path.join(dir, corpus.file);
 
   // A corpus that fetched nothing keeps whatever is already on disk. The deploy
   // runs this on every push, and blanking a corpus that is answering questions
   // is worse than serving one that is a few days old.
   if (chunks.length === 0) {
     console.warn(`  nothing was fetched — ${corpus.file} left untouched`);
-    return;
+    return {
+      namespace: corpus.namespace,
+      file: corpus.file,
+      read,
+      failed,
+      leftUntouched: true,
+      changed: false,
+      documents: previous?.documents ?? 0,
+      chunks: previous?.chunks ?? 0,
+      builtAt: previous?.builtAt ?? null,
+    };
   }
 
   // `namespace` is written first and read back by server/ai/kb.ts, which loads
@@ -752,6 +804,22 @@ async function runFetch(dir: string, corpus: Corpus): Promise<void> {
   console.log(`  wrote ${target}`);
   console.log(`  ${file.chunks.length} chunks from ${file.documents} documents`);
   if (failures > 0) console.log(`  ${failures} source(s) could not be fetched — see the warnings above`);
+
+  return {
+    namespace: corpus.namespace,
+    file: corpus.file,
+    read,
+    failed,
+    leftUntouched: false,
+    changed:
+      previous === null ||
+      previous.builtAt !== file.builtAt ||
+      previous.documents !== file.documents ||
+      previous.chunks !== file.chunks.length,
+    documents: file.documents,
+    chunks: file.chunks.length,
+    builtAt: file.builtAt,
+  };
 }
 
 async function collectMarkdownRefs(corpus: Corpus): Promise<DocRef[]> {
@@ -1516,7 +1584,20 @@ function describe(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
-main().catch((err: unknown) => {
-  console.error(`\nbuild-kb failed: ${describe(err)}`);
-  process.exitCode = 1;
-});
+function isDirectRun(): boolean {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  if (/(^|[\\/])build-kb\.(ts|js)$/.test(entry)) return true;
+  try {
+    return import.meta.url === pathToFileURL(path.resolve(entry)).href;
+  } catch {
+    return false;
+  }
+}
+
+if (isDirectRun()) {
+  main().catch((err: unknown) => {
+    console.error(`\nbuild-kb failed: ${describe(err)}`);
+    process.exitCode = 1;
+  });
+}

@@ -14,6 +14,7 @@
  * the overview page cannot drift.
  */
 
+import { resolveCatalogue, type OperatorConfig } from "./catalogue";
 import { type PriceTierId } from "./pricing";
 import { AGENT_BY_ID, MAIN_SITE_URL, type AgentDef } from "./roster";
 
@@ -601,4 +602,13 @@ export const DEFAULT_DOOR_ID = "chatgpt-ads";
 /** The agent that opens this door's conversation, or undefined where none of ours does. */
 export function doorAgent(door: DoorDef): AgentDef | undefined {
   return door.firstAgentId ? AGENT_BY_ID[door.firstAgentId] : undefined;
+}
+
+/**
+ * What a page should render instead of DOORS. With no operator this is DOORS,
+ * the same array, so the reference deployment does not move. A fork passes
+ * the operator config; shared/catalogue.ts is the resolver.
+ */
+export function catalogue(operator?: OperatorConfig | null) {
+  return resolveCatalogue(DOORS, operator);
 }

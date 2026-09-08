@@ -1,0 +1,58 @@
+{
+  "namespace": "legal",
+  "note": "Adding a jurisdiction or a niche is adding a source URL here. This file is the list the refresh reads. Each entry is a document somebody else published — title and URL only. An agent may add a URL and re-read the page; it may not write the page.",
+  "sources": [
+    {
+      "title": "LinkedIn User Agreement",
+      "url": "https://www.linkedin.com/legal/user-agreement"
+    },
+    {
+      "title": "LinkedIn Professional Community Policies",
+      "url": "https://www.linkedin.com/legal/professional-community-policies"
+    },
+    {
+      "title": "LinkedIn API Terms of Use",
+      "url": "https://www.linkedin.com/legal/l/api-terms-of-use"
+    },
+    {
+      "title": "LinkedIn Privacy Policy",
+      "url": "https://www.linkedin.com/legal/privacy-policy"
+    },
+    {
+      "title": "LinkedIn: Prohibited software and extensions",
+      "url": "https://www.linkedin.com/help/linkedin/answer/a1341387"
+    },
+    {
+      "title": "Google Ads policies overview",
+      "url": "https://support.google.com/adspolicy/answer/6008942"
+    },
+    {
+      "title": "Google Ads: Misrepresentation",
+      "url": "https://support.google.com/adspolicy/answer/6020955"
+    },
+    {
+      "title": "Google Ads: Trademarks",
+      "url": "https://support.google.com/adspolicy/answer/6118"
+    },
+    {
+      "title": "Google Ads: Circumventing systems",
+      "url": "https://support.google.com/adspolicy/answer/6020954"
+    },
+    {
+      "title": "Google Ads API Terms and Conditions",
+      "url": "https://developers.google.com/google-ads/api/terms"
+    },
+    {
+      "title": "EDPB Guidelines 05/2020 on consent under the GDPR",
+      "url": "https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-052020-consent-under-regulation-2016679_en"
+    },
+    {
+      "title": "FTC: CAN-SPAM Act Compliance Guide for Business",
+      "url": "https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business"
+    },
+    {
+      "title": "ICO: Electronic and telephone marketing",
+      "url": "https://ico.org.uk/for-organisations/direct-marketing-and-privacy-and-electronic-communications/guide-to-pecr/electronic-and-telephone-marketing/"
+    }
+  ]
+}
