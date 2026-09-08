@@ -31,7 +31,7 @@ const WAVES = [
      work that is already in main — the owner reads that page, not this file,
      and a re-run of a landed parcel is an agent rewriting a finished file. */
   { n: 1, keys: ["page-blog", "cases-filter", "footer-links"], landed: true },
-  { n: 2, keys: ["page-team", "door-white-label", "digest-trigger"] },
+  { n: 2, keys: ["page-team", "door-white-label", "digest-trigger"], landed: true },
   { n: 3, keys: ["page-roi-calculator", "door-partner", "connector-gpt"] },
   // Alone because it is last of the site work, not because it is dangerous. If
   // wave 3 finishes early, this can be pulled forward into it — it adds no route.

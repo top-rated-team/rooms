@@ -495,6 +495,13 @@ export function registerRoutes(app: Express): void {
    */
   app.get("/white-label", (_req, res) => res.redirect(301, "/services/white-label"));
   app.get("/leads", (_req, res) => res.redirect(301, "/"));
+  /*
+   * /contact goes to the front of the house because the front of the house is
+   * now the contact page: the first screen carries the call, the message, the
+   * WhatsApp number and the room, and the footer carries the address. There is
+   * no thinner page to build that would say more than that.
+   */
+  app.get("/contact", (_req, res) => res.redirect(301, "/"));
 
   const createWorkspaceLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many workspaces from this address. Try again later, or book a call." });
   const leadLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many requests from this address. Try again later." });
