@@ -96,7 +96,22 @@ const SWEPT = ["../client/src", "../shared"];
  * banner is still there — if somebody ever edits the file directly and drops
  * it, the exemption stops applying and the sweep covers it again.
  */
-const GENERATED_EXEMPT = "shared/cases.ts";
+/*
+ * shared/builds.ts is exempt on the same terms and for a sharper reason. It
+ * holds the six things this company has built, and two of them — top-voice.ai
+ * and warmlike.com — publish their own price lists on their own sites. Those
+ * figures ($329, $199, $49 a booster) are quoted from those pages because the
+ * partner door and the custom-AI door describe those products, and they are
+ * PRICES OF OTHER PAGES, not rows of this site's ladder. Putting them in
+ * PRICES would have this site selling them; putting them in NOT_A_PRICE would
+ * be a list that goes stale the first time top-voice.ai changes a plan.
+ *
+ * The same thing makes it safe: scripts/build-builds.ts generates the file from
+ * data/builds/*.json, so a price of ours cannot be typed into it by hand, and
+ * the banner assertion below withdraws the exemption the moment somebody edits
+ * it directly.
+ */
+const GENERATED_EXEMPT = ["shared/cases.ts", "shared/builds.ts"];
 
 function sourceFiles(dir: URL): URL[] {
   return readdirSync(dir).flatMap((entry) => {
@@ -121,7 +136,7 @@ describe("every price the site renders traces to a row in shared/pricing.ts", ()
     const unexplained: string[] = [];
 
     for (const file of files) {
-      if (file.pathname.endsWith(GENERATED_EXEMPT)) continue;
+      if (GENERATED_EXEMPT.some((name) => file.pathname.endsWith(name))) continue;
       const lines = readFileSync(file, "utf8").split("\n");
       lines.forEach((line, index) => {
         /* A "$1" on a replace() line is a capture-group backreference, not
@@ -148,21 +163,30 @@ describe("every price the site renders traces to a row in shared/pricing.ts", ()
 
   it("only exempts a file that is generated, so a price cannot be hand-written into it", () => {
     /*
-     * The exemption above skips a whole file. It is only defensible while
-     * nothing writes in that file by hand, so this asserts the two things that
-     * make that true: the banner that says so, and the generator that puts it
-     * there. Edit shared/cases.ts directly and drop the banner, and this fails
-     * rather than letting an unpublished price of ours ride in on a case study.
+     * The exemption above skips whole files. It is only defensible while nothing
+     * writes in them by hand, so this asserts the two things that make that
+     * true, for each one: the banner that says so, and the generator that puts
+     * it there. Edit an exempt file directly and drop the banner, and this
+     * fails rather than letting an unpublished price of ours ride in on a case
+     * study or a portfolio entry.
      */
-    const exempt = files.find((file) => file.pathname.endsWith(GENERATED_EXEMPT));
-    assert.ok(exempt, `${GENERATED_EXEMPT} is exempt from the sweep and does not exist`);
-    const text = readFileSync(exempt, "utf8");
-    assert.match(text, /GENERATED — do not edit/, `${GENERATED_EXEMPT} is exempt but is not marked generated`);
-    assert.match(text, /scripts\/build-cases\.ts/, `${GENERATED_EXEMPT} does not name the script that writes it`);
-    assert.ok(
-      existsSync(new URL("../scripts/build-cases.ts", import.meta.url)),
-      "the generator named by the exempt file is missing, so the file is now hand-maintained",
-    );
+    for (const name of GENERATED_EXEMPT) {
+      const exempt = files.find((file) => file.pathname.endsWith(name));
+      assert.ok(exempt, `${name} is exempt from the sweep and does not exist`);
+
+      const text = readFileSync(exempt, "utf8");
+      assert.match(text, /GENERATED — do not edit/, `${name} is exempt but is not marked generated`);
+
+      /* The banner names its own generator; this reads that name out of the
+         file rather than being told it, so a third exempt file needs no edit
+         here and cannot arrive without a generator behind it. */
+      const named = /Run `npx tsx (scripts\/[\w-]+\.ts)`/.exec(text);
+      assert.ok(named, `${name} is exempt but its banner does not name the script that writes it`);
+      assert.ok(
+        existsSync(new URL(`../${named[1]}`, import.meta.url)),
+        `${name} names ${named[1]}, which does not exist — the file is now hand-maintained`,
+      );
+    }
   });
 
   it("still finds every figure NOT_A_PRICE claims to explain", () => {

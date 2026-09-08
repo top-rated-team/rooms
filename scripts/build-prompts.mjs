@@ -13,23 +13,25 @@ const m = JSON.parse(fs.readFileSync("parcels.json", "utf8"));
 const REPO = "~/Documents/ChatGPT Ads";
 
 const WAVES = [
-  { n: 1, keys: ["spend-limits", "door-linkedin-ads", "favicon-and-social"] },
-  { n: 2, keys: ["door-linkedin-automation", "llms-txt", "pricing-and-packaging"] },
-  { n: 3, keys: ["door-ai-builds", "legal-name-display", "door-ad-grants-adgrant-ai"] },
-  { n: 4, keys: ["rented-accounts-inventory", "identity-in-the-room", "room-identity-binding"] },
-  { n: 5, keys: ["payment-link"] },
-  { n: 6, keys: ["room"], alone: true },
-  // Its own wave. It does not touch the room, but `room` is runAlone and that
-  // means alone — I put them together for a moment and check-parcels now
-  // refuses that, which is why the rule is in the tool rather than in a comment.
-  { n: 7, keys: ["home-room"] },
-  { n: 8, keys: ["outside-agent"], alone: true },
-  { n: 9, keys: ["approval-card"], alone: true },
-  { n: 10, keys: ["recurring-and-digest"], alone: true },
-  // Last, and alone: it is the only parcel that opens a two-way path into a
-  // room from outside this site, and it reuses room-identity-binding's WAHA
-  // client rather than writing a second one.
-  { n: 11, keys: ["room-bridge-whatsapp-chatwoot"], alone: true },
+  /*
+   * PROGRAMME TWO. The eleven waves of programme one are landed; their manifest
+   * is kept in docs/parcels-programme-1.json for the record.
+   *
+   * Three at a time, and the ordering rule that matters here is not the one it
+   * was last time. Programme one's rule was "never two doors in one wave",
+   * because every door appended a Corpus to scripts/build-kb.ts. These parcels
+   * do not build corpora; what they collide on instead is a route in App.tsx
+   * and an entry in doors/bodies.tsx. Both are one-line additions the seam rule
+   * permits — but they share one working tree, and two agents editing one line
+   * of one file in the same second is a merge nobody can check. So: at most one
+   * route-adder and at most one body-adder per wave.
+   */
+  { n: 1, keys: ["page-blog", "cases-filter", "footer-links"] },
+  { n: 2, keys: ["page-team", "door-white-label", "digest-trigger"] },
+  { n: 3, keys: ["page-roi-calculator", "door-partner", "connector-gpt"] },
+  // Alone because it is last, not because it is dangerous. If wave 3 finishes
+  // early, this can be pulled forward into it — it adds no route.
+  { n: 4, keys: ["door-ai-builds-body"] },
 ];
 
 function prompt(key) {

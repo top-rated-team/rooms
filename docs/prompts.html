@@ -43,7 +43,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">19 of them. Copy one, paste it into a fresh agent, and that is the whole job.
+  <p class="lede">10 of them. Copy one, paste it into a fresh agent, and that is the whole job.
   Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -63,27 +63,28 @@
       <p class="waveNote">Start these 3 together. When all 3 have reported, run the two commands, then go to the next wave.</p>
       <article class="parcel">
         <header>
-          <h3>spend-limits</h3>
-          <button class="copy" data-target="p-spend-limits">Copy this prompt</button>
+          <h3>page-blog</h3>
+          <button class="copy" data-target="p-page-blog">Copy this prompt</button>
         </header>
-        <p class="what">An agent reply costs about a quarter of a cent and a human conversation about three.</p>
-        <pre id="p-spend-limits">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "spend-limits".
+        <p class="what">Five posts on top-rated.team are the standing search traffic of the old site, and the apex cannot move until this application answers on their exact URLs.</p>
+        <pre id="p-page-blog">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "page-blog".
 
 Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
 Then read three files next to the ones you are about to change.
 
 WHAT YOU OWN. These files, and nothing else in the repository:
-  server/spend.ts
-  server/spend.test.ts
-  server/ai/usage.ts
+  client/src/pages/blog.tsx
+  client/src/pages/blog-post.tsx
+  shared/blog.ts
+  scripts/build-blog.ts
+  data/blog
 
 SHARED FILES YOU MAY TOUCH, and only in the way described:
-  server/routes.ts
-      - one guard call before the model call, and one cost-event call after the stream ends
-  server/ai/agentRuntime.ts
-      - line 42: a `usage?: { model: string; promptTokens: number; completionTokens: number }` member on AgentStreamChunk
-      - line 198: `stream_options: { include_usage: true },` in create()'s body
-      - inside the for-await loop: yield the usage chunk when the API sends one, taking the model from `opened.model` and NOT from importing CHAT_MODEL — the 404 fallback silently switches to gpt-4o-mini, and that is the one case where a logged model would otherwise be wrong
+  client/src/App.tsx
+      - a route for /blog
+      - a route for /blog/:slug
+  package.json
+      - one build script line
 
 Add to those, never delete from them. Other agents are editing the same files right now.
 
@@ -94,26 +95,22 @@ NEVER EDIT THESE, whatever the reason:
   client/src/index.css
 
 WHAT DONE MEANS FOR THIS PARCEL:
-  READ docs/OPENAI-SDK-NOTES.md first: the token-accounting recipe is already written there, so
-  do not re-derive it. Today AgentStreamChunk carries only delta, citations and error, and
-  create() sets no stream_options — so no token count, dollar figure or model name reaches the
-  caller at all, and a cost log written today would be invented. The seam above is what makes
-  the numbers exist. Then three independent bounds, because each fails differently: a count of
-  turns per room, a clock that stops an agent after N minutes of activity, and a budget in money
-  per room per month, warned at 80% and paused at 100%. One cost event per turn — room, agent,
-  model, tokens in, tokens out, dollars — and nothing more. The count is taken atomically BEFORE
-  the model call, so two messages arriving together cannot both pass. ON THE
-  AGENT-REPLIES-TO-AGENT INVARIANT: check before you test it. POST
-  /api/workspaces/:token/messages hard-codes authorKind "visitor" and resolveAgent takes no
-  author argument, so a server-authored message cannot currently reach the reply path at all —
-  the invariant holds by construction rather than by a rule. Say which it is in your report, and
-  write the test against what the code actually does.
+  /blog lists the five posts newest first and /blog/&lt;slug&gt; renders one, at the EXACT slugs in
+  data/blog (two of them look truncated and are not: they are the live URLs). Generated the way
+  shared/cases.ts is — scripts/build-blog.ts reads data/blog/*.md and writes shared/blog.ts, and
+  the generated file carries the do-not-edit banner, because a post edited by hand stops
+  matching the page it was published at. Frontmatter carries slug, title, date, description,
+  sourceUrl and headings. Render the markdown with the site's own reading typography; do not add
+  a hero, an author box, share buttons, a related-posts rail or a newsletter form. Each post
+  sets its own &lt;title&gt; and meta description from the frontmatter and puts back what it found,
+  the way landing.tsx does. The index needs no search box and no tag filter — five posts do not
+  need finding. Add both URLs to sitemap.xml.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
-  An agent reply costs about a quarter of a cent and a human conversation about three. Two
-  agents answering each other cost about $4 an hour on this model — which is not frightening,
-  and that is the danger: left running it is $104 a day and nobody notices, because nothing
-  alarming happens at $4.
+  Five posts on top-rated.team are the standing search traffic of the old site, and the apex
+  cannot move until this application answers on their exact URLs. They are already transcribed
+  in data/blog — fetched from the live pages and checked by a second agent — so this parcel is
+  about publishing them, not writing them.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.
@@ -137,86 +134,18 @@ WHEN YOU FINISH, report exactly this:
       </article>
       <article class="parcel">
         <header>
-          <h3>door-linkedin-ads</h3>
-          <button class="copy" data-target="p-door-linkedin-ads">Copy this prompt</button>
+          <h3>cases-filter</h3>
+          <button class="copy" data-target="p-cases-filter">Copy this prompt</button>
         </header>
-        <p class="what">The row exists and the page renders honestly as not open.</p>
-        <pre id="p-door-linkedin-ads">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "door-linkedin-ads".
+        <p class="what">22 cases on one page with no way to say which service you came for.</p>
+        <pre id="p-cases-filter">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "cases-filter".
 
 Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
 Then read three files next to the ones you are about to change.
 
 WHAT YOU OWN. These files, and nothing else in the repository:
-  data/kb/kb.linkedin-ads.json
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  scripts/build-kb.ts
-      - one Corpus const appended after AD_GRANTS, and "LINKEDIN_ADS" appended to the CORPORA array on line 243
-  shared/roster.ts
-      - the EXISTING linkedin-ads agent entry, rewritten not appended: useKb false -&gt; true, add kbNamespace: "linkedin-ads", and add a kbRules(...) call to its systemPrompt. Do not add a second agent — this one already exists and the door already points at it.
-  shared/doors.ts
-      - the linkedin-ads row only: status, and any copy fix
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  A corpus from LinkedIn's own advertising documentation only — nothing behind a login, no
-  third-party blog. The agent it grounds ALREADY EXISTS (shared/roster.ts, id linkedin-ads,
-  today useKb: false with no namespace) and the door row already points at it, so this is a
-  rewrite of one entry, not a new agent. EVIDENCE IS A TEST, NOT A SCREENSHOT: there is no
-  OPENAI_API_KEY on this machine, so /api/ask cannot answer here. Add a case to
-  server/ai/kb.test.ts asserting that retrieve("linkedin-ads", q) returns the expected pages for
-  two named buyer questions and that no hit comes from another corpus's host. `npm run kb:embed`
-  also needs the key, so the corpus will serve in BM25 mode locally — that is normal and not a
-  failure to report. The live deployment DOES have a key and does answer, so after the operator
-  deploys, the two buyer questions can be asked for real; put them in the report as the check to
-  run, not as a check you ran. FIRST, ANSWER THE QUESTION THE OWNER HAS NOT: nobody has
-  confirmed LinkedIn Ads is actually sold. If it is not, say so and stop — do not build a door
-  for a service that does not exist.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  The row exists and the page renders honestly as not open. Opening it is a corpus, an agent and
-  one word — the machinery landed with the namespace change.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-      <article class="parcel">
-        <header>
-          <h3>favicon-and-social</h3>
-          <button class="copy" data-target="p-favicon-and-social">Copy this prompt</button>
-        </header>
-        <p class="what">The browser tab, the bookmark and every link pasted into a chat all currently load one 1238x1238, 74 KB square.</p>
-        <pre id="p-favicon-and-social">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "favicon-and-social".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/public/assets/**
+  client/src/pages/case-studies.tsx
+  client/src/components/site/CaseFilter.tsx
 
 SHARED FILES: none. You do not edit any file outside the list above.
 
@@ -227,23 +156,76 @@ NEVER EDIT THESE, whatever the reason:
   client/src/index.css
 
 WHAT DONE MEANS FOR THIS PARCEL:
-  A small favicon set from the existing mark, and a proper wide social image — the mark plus the
-  name on the site's own ground, sized for a link preview. The logo itself is not redrawn: it is
-  the one place colour lives on an otherwise colourless page, and that is deliberate.
-  client/index.html IS FROZEN and you may not edit it — one shell serves every route. Your
-  output is wired by the operator, so the parcel is NOT DONE until your report carries this
-  block verbatim, all five lines, because four are not enough: line 41 rel=icon href; line 42
-  apple-touch-icon href (the 180px one); line 61 og:image content, as an absolute URL, plus
-  og:image:width and og:image:height; line 71 twitter:image content; and line 65 twitter:card,
-  which must change from "summary" to "summary_large_image" — without that last one the wide
-  image is still shown as a square thumbnail, which is the exact failure this parcel exists to
-  fix. Verification is `npm run verify` plus confirming the files land in dist/public/assets/
-  under the names your block references. Not a browser tab and not a card scraper.
+  A filter on /case-studies that shows all cases or the cases for one service, driven by the
+  `doors` field that shared/cases.ts already derives. Read it from DOORS so a new door needs no
+  edit here, and show ONLY doors that actually have a case — five have none, and an option that
+  returns an empty list is a dead end the page put there itself. 'All' is the default and says
+  how many. The choice belongs in the URL (?service=google-ads) so a filtered view can be linked
+  and the back button works. No animation on filtering. Keyboard-operable, and the count updates
+  in a live region so the change is not silent to a screen reader.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
-  The browser tab, the bookmark and every link pasted into a chat all currently load one
-  1238x1238, 74 KB square. A square logo shared in a messenger reads as somebody's avatar rather
-  than as a site.
+  22 cases on one page with no way to say which service you came for. The owner asked for a
+  selector; the data is already there — every case in shared/cases.ts carries a derived `doors`
+  array.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+      <article class="parcel">
+        <header>
+          <h3>footer-links</h3>
+          <button class="copy" data-target="p-footer-links">Copy this prompt</button>
+        </header>
+        <p class="what">Three products of ours and two agent-facing files exist and nothing links to them.</p>
+        <pre id="p-footer-links">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "footer-links".
+
+Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  client/src/components/site/Footer.tsx
+
+SHARED FILES: none. You do not edit any file outside the list above.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  The footer gains: Google Ads, linking to /services/google-ads; AdGrant.AI, linking to
+  https://adgrant.ai; and Being.Marketing, linking to https://being.marketing — the last
+  rendered as the word 'Being.' followed by 'Marketing' struck through, which is how its owner
+  writes it. Use real markup (&lt;s&gt; or a line-through class), NOT the styled unicode look-alikes,
+  which screen readers read as gibberish and search engines index as noise. Also link /llms.txt
+  and /llms-full.txt, quietly, in the row that already carries the legal links — an agent-facing
+  site should say so, and the owner asked for it. External links open in a new tab with
+  rel="noopener noreferrer". Do not touch the identification line: 'Top-Rated Team (Danylo
+  Burykin SZČO)' is where the legal name is allowed to appear and it stays exactly as it is.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  Three products of ours and two agent-facing files exist and nothing links to them. llms.txt
+  and llms-full.txt are already served from client/public and already generated — they are
+  simply not reachable from a page.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.
@@ -271,25 +253,22 @@ WHEN YOU FINISH, report exactly this:
       <p class="waveNote">Start these 3 together. When all 3 have reported, run the two commands, then go to the next wave.</p>
       <article class="parcel">
         <header>
-          <h3>door-linkedin-automation</h3>
-          <button class="copy" data-target="p-door-linkedin-automation">Copy this prompt</button>
+          <h3>page-team</h3>
+          <button class="copy" data-target="p-page-team">Copy this prompt</button>
         </header>
-        <p class="what">This is the owner's own service — building automation for a client who then operates it, with a written legal assessment in front of it.</p>
-        <pre id="p-door-linkedin-automation">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "door-linkedin-automation".
+        <p class="what">One of the four addresses blocking the apex move.</p>
+        <pre id="p-page-team">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "page-team".
 
 Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
 Then read three files next to the ones you are about to change.
 
 WHAT YOU OWN. These files, and nothing else in the repository:
-  data/kb/kb.linkedin-automation.json
+  client/src/pages/team.tsx
+  client/src/components/site/TeamGrid.tsx
 
 SHARED FILES YOU MAY TOUCH, and only in the way described:
-  scripts/build-kb.ts
-      - one Corpus const appended after AD_GRANTS, and "LINKEDIN_AUTOMATION" appended to the CORPORA array on line 243
-  shared/roster.ts
-      - a NEW agent entry appended to AGENTS after ai-dev — id and handle "linkedin-automation", useKb: true, kbNamespace: "linkedin-automation", systemPrompt = HOUSE_STYLE + persona + its own kbRules(...). About twenty lines, and that is agreed here. DO NOT touch the ai-dev entry.
-  shared/doors.ts
-      - the linkedin-automation row only: firstAgentId -&gt; "linkedin-automation", the agentLine that currently says "The AI Dev Agent", status, comingLine, and the blurb fix below
+  client/src/App.tsx
+      - a route for /team
 
 Add to those, never delete from them. Other agents are editing the same files right now.
 
@@ -300,18 +279,18 @@ NEVER EDIT THESE, whatever the reason:
   client/src/index.css
 
 WHAT DONE MEANS FOR THIS PARCEL:
-  Same shape as door-linkedin-ads, including the evidence rule: a retrieval test, not a pasted
-  answer. The agent is NEW here (the row shares ai-dev with the ai-builds door today, and one
-  agent can only carry one corpus). The agent must NEVER say whether any particular automation
-  is permitted by a platform: it names the assessment and stops. The door's current blurb claims
-  the work is built "against documented interfaces", which contradicts what the product it
-  describes actually does — fix the copy or hand the contradiction back.
+  /team in the new design, at the same URL. docs/specs/team.md is the spec — it was written from
+  the live page and then corrected by a second agent, so read its whole 'problems' record, not
+  only its summary. Two things in it are decisions rather than facts and the spec says so:
+  whether to keep individual names (the owner does not want his full legal name across the
+  internet — see the identification rule in the footer) and whether to keep the '11-50'
+  team-size tile, which the site cannot substantiate. Take the conservative reading of both and
+  leave a comment saying you did. Set the page's own title and meta description. Add /team to
+  sitemap.xml. Do not add photographs that this repository does not have.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
-  This is the owner's own service — building automation for a client who then operates it, with
-  a written legal assessment in front of it. The row currently points at the shared ai-dev
-  agent, which the ai-builds row also points at; one agent carries one namespace, so two doors
-  cannot both ground on it. This parcel gives the door its own.
+  One of the four addresses blocking the apex move. It exists on top-rated.team today and has to
+  keep working when this application answers on that domain.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.
@@ -335,23 +314,21 @@ WHEN YOU FINISH, report exactly this:
       </article>
       <article class="parcel">
         <header>
-          <h3>llms-txt</h3>
-          <button class="copy" data-target="p-llms-txt">Copy this prompt</button>
+          <h3>door-white-label</h3>
+          <button class="copy" data-target="p-door-white-label">Copy this prompt</button>
         </header>
-        <p class="what">The whole product is agent-facing, so an agent arriving at the site and being able to read what is sold is worth more here than on an ordinary marketing site.</p>
-        <pre id="p-llms-txt">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "llms-txt".
+        <p class="what">White Label is in the top navigation, is the door a reselling agency arrives looking for by name, and is the only door whose old page on top-rated.team sold something this one does not yet describe.</p>
+        <pre id="p-door-white-label">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "door-white-label".
 
 Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
 Then read three files next to the ones you are about to change.
 
 WHAT YOU OWN. These files, and nothing else in the repository:
-  client/public/llms.txt
-  client/public/llms-full.txt
-  scripts/build-llms.ts
+  client/src/components/site/doors/WhiteLabelBody.tsx
 
 SHARED FILES YOU MAY TOUCH, and only in the way described:
-  package.json
-      - one build script line
+  client/src/components/site/doors/bodies.tsx
+      - one entry in DOOR_BODIES
 
 Add to those, never delete from them. Other agents are editing the same files right now.
 
@@ -362,17 +339,21 @@ NEVER EDIT THESE, whatever the reason:
   client/src/index.css
 
 WHAT DONE MEANS FOR THIS PARCEL:
-  Two files, generated from shared/doors.ts and the door pages rather than hand-written, so they
-  cannot drift. /llms.txt is a SHORT index — what the site is, the seven doors, one line each,
-  links to the pages — a few kilobytes. /llms-full.txt is the expanded content. Look at
-  connectsafely.ai's pair first and do NOT copy it: theirs are 227 KB and 235 KB and nearly
-  identical, which throws away the point of having an index. Exclude /w/ from both for the same
-  reason robots.txt does — a room token is a bearer credential in a URL. Nothing in either file
-  may claim something the door pages do not.
+  A body for /services/white-label, mounted through DOOR_BODIES. docs/specs/white-label.md is
+  the spec, written from the live page. It contains a section naming sentences on the old page
+  that this application cannot stand behind — those do not get carried over, and the ones you
+  drop should be named in a comment so nobody restores them. What the body must answer, because
+  an agency asks all four: what is actually resold, what their client sees and does not see,
+  whose name is on the room, and what happens to the relationship if they stop. Read
+  shared/doors.ts's white-label row first and contradict none of it. Follow ChatGptAdsBody.tsx
+  for structure and restraint — no cards, no chips, no icons. The price row already renders from
+  shared/pricing.ts; do not print a second figure.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
-  The whole product is agent-facing, so an agent arriving at the site and being able to read
-  what is sold is worth more here than on an ordinary marketing site.
+  White Label is in the top navigation, is the door a reselling agency arrives looking for by
+  name, and is the only door whose old page on top-rated.team sold something this one does not
+  yet describe. It renders as a headline and a price today because no parcel ever owned its
+  body.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.
@@ -396,25 +377,23 @@ WHEN YOU FINISH, report exactly this:
       </article>
       <article class="parcel">
         <header>
-          <h3>pricing-and-packaging</h3>
-          <button class="copy" data-target="p-pricing-and-packaging">Copy this prompt</button>
+          <h3>digest-trigger</h3>
+          <button class="copy" data-target="p-digest-trigger">Copy this prompt</button>
         </header>
-        <p class="what">This is the first thing on the site that makes a commercial promise, so it is the first thing that has to be one number in one place.</p>
-        <pre id="p-pricing-and-packaging">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "pricing-and-packaging".
+        <p class="what">server/digest.ts is written and tested and nothing calls it.</p>
+        <pre id="p-digest-trigger">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "digest-trigger".
 
 Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
 Then read three files next to the ones you are about to change.
 
 WHAT YOU OWN. These files, and nothing else in the repository:
-  shared/pricing.ts
-  server/pricing.test.ts
-  client/src/components/site/Ladder.tsx
+  server/schedule.ts
+  server/schedule.test.ts
 
 SHARED FILES YOU MAY TOUCH, and only in the way described:
-  shared/roster.ts
-      - one import of the published prices into HOUSE_STYLE, replacing the blanket prohibition with the narrower rule described below
-  shared/doors.ts
-      - a `tier` reference on each door row pointing at its row in shared/pricing.ts
+  server/routes.ts
+      - one import
+      - one call to start the schedule
 
 Add to those, never delete from them. Other agents are editing the same files right now.
 
@@ -425,41 +404,22 @@ NEVER EDIT THESE, whatever the reason:
   client/src/index.css
 
 WHAT DONE MEANS FOR THIS PARCEL:
-  READ docs/pricing-spec.md FIRST, INCLUDING ITS LAST SECTION. It names three places where this
-  specification contradicts code that is already deployed, and getting those wrong makes the
-  site untrue rather than merely unfinished. ONE SOURCE. shared/pricing.ts holds the ladder as
-  data — from $49 a task, $49/month, $99, from $499/month, +$49/month for boosters, free on the
-  client's own keys, custom for the rest. The page renders it and the agents read the same rows.
-  A price that exists in two places is a price that will disagree with itself. THE AGENT RULE
-  CHANGES, and it becomes a different rule rather than a weaker one. Today HOUSE_STYLE forbids
-  an agent from stating any price at all, because the LinkedIn Ads agent invented a four-tier
-  price list on the live site. Replace that with: AN AGENT MAY STATE A PUBLISHED PRICE VERBATIM
-  AND MAY NEVER STATE ANY OTHER NUMBER. No arithmetic, no proration, no "roughly", no discount,
-  no estimate for a custom door. Feed the prices into the prompt from shared/pricing.ts so an
-  agent cannot quote a figure the page does not show. server/ai/grounding.test.ts currently
-  asserts that no agent prompt contains a currency figure. That case has to change with the rule
-  — but it must NOT simply be deleted. Replace it with the assertion that every currency figure
-  in every prompt appears verbatim in shared/pricing.ts, which is the same guarantee expressed
-  against the new rule. If you weaken that test instead of re-aiming it, you have reopened the
-  exact hole it was written to close. WHERE IT GOES. A section low on the home page, and the
-  relevant rows on each door page — a door shows its own tier, not the whole ladder. Set in the
-  type scale that exists: no cards, no ring around the recommended one, no monthly/annual
-  toggle, no crossed-out prices. The design has three type sizes and one accent; a pricing table
-  is where that discipline is most likely to be abandoned. TWO SLOGANS DO NOT SHIP AS WRITTEN,
-  and the reasons are in the spec: "All Google Ads experts are fired today" asserts something
-  false about other people's employment, and "Never pay for AI tokens! Unlimited vibe coding for
-  $99/mo" contradicts both the bring-your-own-keys condition and the spend limits that went live
-  today. The spec gives a true version of each. Use the rest as given. WHAT A BUYER SEES BEFORE
-  PAYING, because the owner asked for it explicitly and it is the trust half of the offer: a
-  link to book a free introductory call with Dan Burykin AND the assigned contractor, and both
-  Upwork profiles for reference. Visible before buying and again inside the room. TESTS,
-  server-side and mandatory: every price rendered anywhere traces to a row in shared/pricing.ts;
-  the re-aimed grounding case above; and no door page shows a tier that is not its own.
+  A weekly trigger that calls runWeeklyDigest for each room that should get one. Read
+  server/digest.ts first — it already decides what a digest says, when a week has passed and
+  what happens on a second call in the same week, so this parcel adds WHEN, not WHAT. It writes
+  into the room and posts nowhere outside it: the room's arrival note promises 'Nothing here
+  posts anywhere by itself' and that promise is about the outside world, which this must not
+  break. One timer for the process, not one per room. It must survive a restart without
+  double-posting — digest.ts already guards the same week, so lean on that rather than inventing
+  state. Off unless an environment variable turns it on, defaulting to off, so a deploy cannot
+  start writing into live rooms before the owner has decided. Tests: fires once a week, does not
+  fire twice, does not fire for a room with nothing to say, and does not start at all when the
+  variable is unset. server/index.ts is FROZEN — mount from registerRoutes.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
-  This is the first thing on the site that makes a commercial promise, so it is the first thing
-  that has to be one number in one place. The owner's specification is written out in
-  docs/pricing-spec.md — read that before this parcel, all of it, including the last section.
+  server/digest.ts is written and tested and nothing calls it. runWeeklyDigest exists, composes
+  a real digest and is exercised by ten tests; no timer anywhere invokes it, so no room has ever
+  received one.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.
@@ -487,151 +447,23 @@ WHEN YOU FINISH, report exactly this:
       <p class="waveNote">Start these 3 together. When all 3 have reported, run the two commands, then go to the next wave.</p>
       <article class="parcel">
         <header>
-          <h3>door-ai-builds</h3>
-          <button class="copy" data-target="p-door-ai-builds">Copy this prompt</button>
+          <h3>page-roi-calculator</h3>
+          <button class="copy" data-target="p-page-roi-calculator">Copy this prompt</button>
         </header>
-        <p class="what">The owner already sells custom AI builds at being.marketing.</p>
-        <pre id="p-door-ai-builds">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "door-ai-builds".
+        <p class="what">A working tool on the old site and the third of the four addresses blocking the apex.</p>
+        <pre id="p-page-roi-calculator">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "page-roi-calculator".
 
 Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
 Then read three files next to the ones you are about to change.
 
 WHAT YOU OWN. These files, and nothing else in the repository:
-  data/kb/kb.ai-builds.json
+  client/src/pages/roi-calculator.tsx
+  shared/roi.ts
+  server/roi.test.ts
 
 SHARED FILES YOU MAY TOUCH, and only in the way described:
-  scripts/build-kb.ts
-      - one Corpus const appended after AD_GRANTS, and "AI_BUILDS" appended to the CORPORA array on line 243
-  shared/roster.ts
-      - a NEW agent entry appended to AGENTS — id and handle "ai-builds", useKb: true, kbNamespace: "ai-builds", its own kbRules(...). DO NOT touch the ai-dev entry, which the SERVICES rows also point at.
-  shared/doors.ts
-      - the ai-builds row only: firstAgentId, the agentLine, status, comingLine
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  Same shape, same evidence rule — a retrieval test. The agent is NEW: the row points at ai-dev
-  today, which three SERVICES rows and the linkedin-automation door also point at. Read what is
-  actually sold at being.marketing before writing a word of it — and note it renders
-  client-side, so fetching the URL returns an empty shell; open it in a browser or read its
-  bundle.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  The owner already sells custom AI builds at being.marketing. This door is that direction of
-  the workspace, not a separate brand a client has to learn.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-      <article class="parcel">
-        <header>
-          <h3>legal-name-display</h3>
-          <button class="copy" data-target="p-legal-name-display">Copy this prompt</button>
-        </header>
-        <p class="what">The owner does not want his personal name set in every page's chrome.</p>
-        <pre id="p-legal-name-display">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "legal-name-display".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  docs/doors.md
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  shared/doors.ts
-      - a displayName beside legalName
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  Two fields instead of one: displayName "Top-Rated Team" for chrome and body copy, legalName
-  "Top-Rated Team (Danylo Burykin SZČO)" for the places where a person is deciding who they are
-  dealing with — the footer's identification line, the Terms, the room footer, and any invoice.
-  Plain selectable text in those places, NOT an image and NOT behind a hover: a hover does not
-  exist on a phone, and somebody copying the name into their own accounting needs to be able to
-  select it. A hover or a quiet small line is fine as presentation on top of that, never instead
-  of it. Then delete the hard-coded OUR_DISPLAY_NAME constant in client/src/pages/workspace.tsx
-  and read contract.displayName instead — that file belongs to the room parcel, so hand it over
-  rather than editing it. The "Top-Rated Team s.r.o." strings are already gone: do not go
-  looking for them.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  The owner does not want his personal name set in every page's chrome. It is a trading-name
-  question, and the answer differs by surface rather than being one setting.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-      <article class="parcel">
-        <header>
-          <h3>door-ad-grants-adgrant-ai</h3>
-          <button class="copy" data-target="p-door-ad-grants-adgrant-ai">Copy this prompt</button>
-        </header>
-        <p class="what">The owner asked for a variation of this site's style on the Ad Grants door, because AdGrant.AI exists today as a separate site with its own logo and 74 pages of its own material.</p>
-        <pre id="p-door-ad-grants-adgrant-ai">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "door-ad-grants-adgrant-ai".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/components/site/doors/AdGrantDoor.tsx
-  client/src/components/site/doors/adgrant-style.ts
-  data/kb/kb.adgrant-ai.json
-  server/ai/adgrant-corpus.test.ts
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  shared/doors.ts
-      - the ad-grants row: its own mark, and a second namespace for our own material
   client/src/App.tsx
-      - routes for the library pages, if the owner chooses to fold adgrant.ai in
-  scripts/build-kb.ts
-      - one Corpus const for our own AdGrant material, and its name on the CORPORA line
+      - a route for /roi-calculator
 
 Add to those, never delete from them. Other agents are editing the same files right now.
 
@@ -642,40 +474,153 @@ NEVER EDIT THESE, whatever the reason:
   client/src/index.css
 
 WHAT DONE MEANS FOR THIS PARCEL:
-  ONE DECISION IS THE OWNER'S AND IS NOT YOURS TO MAKE. State it in your report and build the
-  half that does not depend on it. Does adgrant.ai stay a separate site, or fold into
-  /use-case/ad-grants? It matters because those 74 URLs are indexed. Copying the material to a
-  second domain creates two copies of the same pages competing with each other, which costs both
-  of them. Folding it in means 301s from 74 addresses and adgrant.ai becoming a redirect.
-  Leaving it means the door LINKS to the library rather than containing it. Do not guess: the
-  wrong answer loses search traffic that already exists. BUILD REGARDLESS OF THAT ANSWER: A
-  VARIATION OF THE STYLE, and variation has a precise meaning here. Keep the type scale, the
-  spacing scale, the layout and the token names exactly as they are. The variation is ONE accent
-  token, overridden on this door only, plus AdGrant.AI's own wordmark. That is how a sub-brand
-  signals itself inside a system without eroding it. Do NOT introduce a second font, a second
-  spacing scale, cards, gradients, or a second colour anywhere else on the page — a design whose
-  whole argument is that it has almost no colour cannot survive one page deciding otherwise. SAY
-  WHAT THE TOOL ACTUALLY DOES, in the door's own plain voice: it needs a Google Ad Grant the
-  nonprofit already holds (and says so, and offers help getting one if not), it takes a website
-  URL and a Customer ID, the LinkedIn sign-in exists ONLY to cap free generations and reads only
-  the profile URL — say that in those terms, because a sign-in that is not explained reads as a
-  data grab — and it writes a full account structure the nonprofit can review before anything
-  runs. OUR OWN MATERIAL GETS ITS OWN NAMESPACE, and this is the load-bearing constraint. The
-  ad-grants corpus is Google's own documentation, 257 chunks from support.google.com, and
-  docs/doors.md states the rule: put an agency's opinion in it and the agent cites the agency's
-  opinion AS GOOGLE'S RULE. Case studies, templates, tricks and vertical pages are our claims,
-  not Google's. So they go in kb.adgrant-ai.json under their own namespace, and the door's agent
-  must attribute them differently in its answers — Google's documentation is what the platform
-  requires, ours is what we have found works. A test asserts no chunk from our corpus carries a
-  support.google.com URL and no chunk from Google's carries an adgrant.ai one. THE TRADEMARK,
-  flagged and not fixed by you: adgrant.ai's page title is "Google® Ad Grant AI". Using another
-  company's registered mark in a product title is the owner's call and possibly his lawyer's. Do
-  not copy it into this door and do not remove it from adgrant.ai. Name it in your report.
+  /roi-calculator, same URL, new design. docs/specs/roi-calculator.md carries the inputs, the
+  outputs and the exact arithmetic recovered from the original's own JavaScript. THE ARITHMETIC
+  IS THE DELIVERABLE: put every formula in shared/roi.ts as pure functions and test them in
+  server/roi.test.ts against the worked examples in the spec — a calculator whose numbers nobody
+  checked is worse than no calculator, because a visitor will quote them back. If the spec marks
+  a formula as unrecovered, do not guess: leave that output out and say in a comment which one
+  and why. Compute in the browser and submit nothing anywhere. Carry over the original's own
+  assumption and disclaimer wording, and print it where the numbers are, not in a footnote.
+  tabular-nums on every figure.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
-  The owner asked for a variation of this site's style on the Ad Grants door, because AdGrant.AI
-  exists today as a separate site with its own logo and 74 pages of its own material. The door
-  currently describes the tool in one sentence and shows none of it.
+  A working tool on the old site and the third of the four addresses blocking the apex. It also
+  prints money, which makes it the one page on this list where being approximately right is the
+  same as being wrong.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+      <article class="parcel">
+        <header>
+          <h3>door-partner</h3>
+          <button class="copy" data-target="p-door-partner">Copy this prompt</button>
+        </header>
+        <p class="what">The partner door currently says, three separate times on one page, that another company invoices it and we take no share.</p>
+        <pre id="p-door-partner">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "door-partner".
+
+Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  client/src/components/site/doors/PartnerBody.tsx
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  client/src/components/site/doors/bodies.tsx
+      - one entry in DOOR_BODIES
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  A body for /services/linkedin-growth. It describes top-voice.ai and warmlike.com —
+  shared/builds.ts has both, generated and verified, and PARTNER_BUILDS is exactly those two in
+  order; use the `forPartner` field, which was written for this page. Both links open in a new
+  tab with rel="noopener noreferrer", on the owner's instruction. THE TONE IS THE POINT: the
+  page repeats the same disclosure three times ('Maksymenko LinkedIn Growth invoices you
+  directly…', 'Another company contracts with you…', and again under 'Who you would be buying
+  from'). Say it ONCE, plainly, where a buyer needs it — which is next to the money — and delete
+  the other two. Also fix a real slip: the body prints 'Top-Rated Team (Danylo Burykin SZČO)' in
+  running copy, and the legal form belongs only in the footer identification line, Terms, the
+  room footer and invoices. Body copy says 'Top-Rated Team'. Do not print a price:
+  shared/pricing.ts resolves this door to no row at all and that is deliberate.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  The partner door currently says, three separate times on one page, that another company
+  invoices it and we take no share. The owner has twice asked for that tone to stop, and the
+  page still has no description of the two products the partner actually runs.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+      <article class="parcel">
+        <header>
+          <h3>connector-gpt</h3>
+          <button class="copy" data-target="p-connector-gpt">Copy this prompt</button>
+        </header>
+        <p class="what">The owner's first priority for a custom GPT and a Claude connector is a general Top-Rated Team one: it should be able to explain the company and its services and invite somebody into a room.</p>
+        <pre id="p-connector-gpt">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "connector-gpt".
+
+Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  server/connector
+  client/public/.well-known
+  docs/connector.md
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  server/routes.ts
+      - one import
+      - two mount lines
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  A read-mostly public surface plus the two manifests that let a custom GPT and an MCP client
+  use it. Endpoints, all under /api/connector: the services (from shared/doors.ts), the
+  published price rows (from shared/pricing.ts, EXACTLY as written — no arithmetic, no ranges),
+  the case studies (from shared/cases.ts), and a grounded question that reuses the same path
+  /api/ask uses. Room creation is the one write, and it goes through the same POST
+  /api/workspaces the site uses, so the room-creation rate limit applies unchanged. Serve an
+  OpenAPI 3.1 document for the GPT and an MCP server for Claude over the same handlers — one
+  implementation, two front doors, or the two will drift. THE SPEND GUARD IS NOT OPTIONAL:
+  server/spend.ts already bounds /api/ask per IP and globally, and the connector must go through
+  it rather than around it, or the monthly budget becomes a suggestion. Nothing here exposes a
+  room token, a lead, a member or anything under /w/. Write docs/connector.md with the exact
+  steps to install it in a custom GPT and in Claude.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  The owner's first priority for a custom GPT and a Claude connector is a general Top-Rated Team
+  one: it should be able to explain the company and its services and invite somebody into a
+  room. Everything it needs already exists — the doors, the pricing rows, the cases, the
+  grounded ask endpoint and room creation — and none of it is reachable from outside a browser.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.
@@ -700,306 +645,24 @@ WHEN YOU FINISH, report exactly this:
     </section>
     <section class="wave">
       <h2>Wave 4</h2>
-      <p class="waveNote">Start these 3 together. When all 3 have reported, run the two commands, then go to the next wave.</p>
-      <article class="parcel">
-        <header>
-          <h3>rented-accounts-inventory</h3>
-          <button class="copy" data-target="p-rented-accounts-inventory">Copy this prompt</button>
-        </header>
-        <p class="what">Whoever runs a boosting engagement needs to know what capacity exists and what state each unit is in — live, restricted, under appeal, rental ending.</p>
-        <pre id="p-rented-accounts-inventory">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "rented-accounts-inventory".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  server/flygen.ts
-  server/flygen.test.ts
-  client/src/components/workspace/AccountsPanel.tsx
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  server/routes.ts
-      - one read-only route serving the account list to a room
-  shared/api.ts
-      - one type for a rented account as the room sees it
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  THEY ARE CALLED BOOSTERS, AND THEY ARE CAPACITY, NOT PEOPLE. Never a room member: no avatar,
-  no badge, no presence, no entry in the member rail or the @mention list. A separate panel that
-  reads like an inventory. The reason is in our own contract — terms.tsx section 6 says a rented
-  account "is not your employee, your colleague, or a person endorsing you, and you should not
-  describe it as one" — and the member rail prints who pays whom under every name, so an account
-  listed there tells a client a person is on their team when none is. NAMING. A stable call sign
-  per booster, assigned from a fixed list and never regenerated: `Booster 03 · Basalt`. Numbers
-  for order, one call sign for recall. Draw the call signs from a register of THINGS — minerals,
-  stars, weather, rivers — and NOT from people's names, actors, or characters. Two reasons, and
-  the first is the load-bearing one. The API's `name` field is the real name of the real person
-  whose account is rented. It is third-party personal data and it must never reach a room, a log
-  or a client: this is the same rule Top-Voice's MEMBER_DATA_EXPORT switch exists to enforce. A
-  call sign is what makes that possible while keeping the unit recognisable. The second: a
-  human-sounding label recreates the exact confusion the panel exists to avoid. "Vito Corleone"
-  in a room reads as a colleague; "Booster 03 · Basalt" cannot. A famous person's name also
-  attaches a living individual to an account-rental operation without their knowledge. Map the
-  call sign from the account id deterministically, so the same booster keeps the same name
-  across restarts and no mapping has to be stored. WHAT MAY LEAVE THE SERVER — an allowlist, not
-  a blocklist, so a field flygen adds later cannot leak by default. The room sees exactly: the
-  call sign, the number, the state, the proxy's `location` (a country code, which is
-  operationally useful and identifies nobody), and the rental end date if the API ever exposes
-  one. Dropped in server/flygen.ts before anything else touches the object: `name`, `email`,
-  `password`, `twoFactorSecret`, `twoFactorSecretExpirationTime`, `description`, and the whole
-  `proxy` object except `location`. Build the projection by naming the fields you keep — never
-  by deleting the ones you don't. NEVER PERSIST THE RAW RESPONSE. Not to the database, not to a
-  file, not to a log, not in an error. The rate limit is 20 requests per minute, so a cache is
-  needed — cache the REDACTED projection only, and let the raw response go out of scope in the
-  same function that fetched it. A cached password is a stored password. READ-ONLY. Fetch and
-  display. This parcel does not rent, release, sign in, appeal, retry, or compute a TOTP code,
-  and it exposes no route that could. The docs explain how to generate 2FA codes; that is not
-  this parcel's business and no code for it belongs here. TESTS, server-side and therefore
-  mandatory: - the projection carries none of the seven dropped fields, asserted field by field
-  against a fixture shaped like the documented response, with obviously-fake credentials in it;
-  - a booster never appears in the members list or the mention list; - the same account id
-  always yields the same call sign; - a 401, a 429 and a timeout each render the panel as "not
-  available" rather than as an empty inventory — an empty list reads as "no boosters", which is
-  a different fact from "we could not ask"; - the API key appears in no response body and no
-  thrown error.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  Whoever runs a boosting engagement needs to know what capacity exists and what state each unit
-  is in — live, restricted, under appeal, rental ending. The Top-Voice contract now commits us
-  to appealing a restriction and replacing the account if the appeal fails, and the room is
-  where that sequence should be visible to the person managing it.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-      <article class="parcel">
-        <header>
-          <h3>identity-in-the-room</h3>
-          <button class="copy" data-target="p-identity-in-the-room">Copy this prompt</button>
-        </header>
-        <p class="what">The rail and the message list draw no mark of any kind today — only names.</p>
-        <pre id="p-identity-in-the-room">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "identity-in-the-room".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/components/workspace/Avatar.tsx
-  client/src/components/workspace/MemberRail.tsx
-  client/src/components/workspace/MessageItem.tsx
-  client/src/components/workspace/AgentMark.tsx
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  shared/roster.ts
-      - an optional `photo?: string` on ExpertDef, set only for the people whose real photograph is in client/public/assets/people/
-      - an optional `mark?: string` on AgentDef naming this agent's glyph
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  TWO KINDS OF THING, drawn differently on purpose, so a person and a piece of software are
-  never mistaken for each other without a legend. PEOPLE. A real photograph or two letters of
-  ink, and NOTHING IN BETWEEN. Read the photographs from client/public/assets/people/&lt;id&gt;.jpg
-  for the four ids in EXPERTS (ihor, dan, julia, bohdan) and set `photo` only for the files that
-  are actually there. A person with no file keeps the monogram Avatar.tsx already draws. DO NOT
-  generate, source, illustrate or otherwise invent a likeness for anybody, and do not add a
-  silhouette placeholder that reads as a photograph of a person. The rail prints an
-  accountability line under each name saying who pays whom and who signs the contract; a face
-  beside that line is part of a record, and a face of somebody who does not exist makes it a
-  false one. A room showing two photographs and two monograms is honest, not unfinished — say so
-  in your report rather than filling the gap. AGENTS. A mark, not a logo. One geometric glyph
-  per agent, drawn as inline SVG in AgentMark.tsx at the same stroke weight as the door
-  illustration in components/site/home/Plate.tsx, monochrome, currentColor only. No fill, no
-  colour, no rounded chip, no gradient, nothing that reads as a brand: these nine are our own
-  software, and a logo implies a vendor you could buy separately. Nine coloured badges in one
-  rail would be the loudest object in the room, which is the badge row the redesign deleted.
-  Distinguish them by geometry rather than by hue — the difference between the Google Ads agent
-  and the Ad Grants agent has to survive being printed in one ink at 20 pixels. Fall back to the
-  agent's existing initials when it has no mark yet. WHERE THEY GO. The member rail, and the
-  message list beside each author. Keep everything the rail already says in words: the six
-  badges, the accountability lines, the sentence about nobody watching until somebody is asked.
-  A mark is added beside those, never instead of them. Presence is still not drawn and must stay
-  that way: every member is written 'online' at seed time and no code path ever changes it, so a
-  dot beside a face would claim four people are watching a room nobody has been told about. The
-  comment at the top of Avatar.tsx explains it — read it before you touch PresenceDot. EVIDENCE.
-  There is no client test runner, so this parcel owes a rendered check instead: open a room at
-  both widths and in both themes, and report what a person with a photo, a person without one,
-  and an agent each look like beside their accountability line. Say what the rail looks like
-  when NONE of the four photographs exist, because that is what it looks like today. THE
-  ACCOUNTABILITY LINE, on the owner's instruction: it is too heavy as a line under every single
-  name. Quieten it WITHOUT hiding what a person needs in order to know who they are dealing
-  with: - Keep it visible when it says something a reader would not assume — a member paid by a
-  different company, anyone on somebody else's door, any line naming a party other than us. That
-  is a disclosure, not furniture. - Collapse it to on demand for the ordinary case, our own
-  people in our own room, where it repeats what the room already says. - NOT hover-only. A hover
-  does not exist on a phone, and this is the one thing in the room a person may need on a phone.
-  Make it a press or a tap that stays open, reachable by keyboard, with the text in the DOM so
-  it can be selected and copied. Report what the rail looks like in both states, and confirm
-  that no line naming another company is behind an interaction.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  The rail and the message list draw no mark of any kind today — only names. The redesign
-  removed the coloured squares because their colour was a legend nobody had, and it removed them
-  everywhere rather than replacing them. The owner's reading is right: on the site a face is
-  decoration, but in a room who is present IS the content, because the room's whole argument is
-  about who is answerable for what. Identity is the one thing that has earned visual weight in
-  here.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-      <article class="parcel">
-        <header>
-          <h3>room-identity-binding</h3>
-          <button class="copy" data-target="p-room-identity-binding">Copy this prompt</button>
-        </header>
-        <p class="what">Three levels of access to the agents: a sold allowance with nobody signed in, more when signed in, and — the moment a visitor starts pasting links to their own accounts — a request to identify themselves for confidentiality.</p>
-        <pre id="p-room-identity-binding">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "room-identity-binding".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  server/identity.ts
-  server/identity.test.ts
-  server/waha.ts
-  client/src/components/workspace/IdentifyStrip.tsx
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  server/routes.ts
-      - the routes for the two identification paths
-  shared/api.ts
-      - one type for a room's binding state
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  THREE LEVELS, and the third is the only one that asks for anything. Anonymous gets a bounded
-  allowance. Signed in gets more. When the visitor pastes a link to something of their own, the
-  agent asks them to identify themselves FOR CONFIDENTIALITY — because from that point the room
-  contains their account, their site, their numbers. TWO ROUTES, and neither may be the only
-  one: - LinkedIn, through the OFFICIAL API and its own consent screen. Nothing scraped, nothing
-  session-based. - WhatsApp, through WAHA (https://waha.devlike.pro/), already running on
-  another host: a link or a QR code opens WhatsApp with a pre-filled message carrying the
-  address of their room, sent to us. SAY WHAT IT IS FOR, in the strip itself, in one sentence:
-  the room is bound to them so nobody else who finds the link can read it, and the link lands in
-  a place they will still have next week. Do not dress a convenience as a security requirement,
-  and do not imply LinkedIn endorses anything. THE ROOM LINK IS A BEARER CREDENTIAL. It is
-  already treated as one — robots.txt disallows /w/, the pages carry noindex, and sitemap.xml
-  leaves them out. Binding must NOT weaken that: identifying someone adds a second fact about
-  the room, it does not turn the token into a password. And a WhatsApp message carrying the
-  address means the credential now sits in a chat log, so say so plainly where the visitor
-  chooses it. WHAT MAY BE STORED. The minimum that answers "is this the same person": an opaque
-  provider id and the display name they chose to give. No phone number in a log, no LinkedIn
-  access token beyond what the binding needs, no contact list, nothing about anyone who is not
-  the visitor. TESTS: an unbound room keeps working at the anonymous allowance; a failed or
-  abandoned identification leaves the room exactly as it was rather than half-bound; the stored
-  shape carries no token and no phone number; and the WAHA host being down degrades to the
-  LinkedIn route with a sentence saying so, never to a dead button.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  Three levels of access to the agents: a sold allowance with nobody signed in, more when signed
-  in, and — the moment a visitor starts pasting links to their own accounts — a request to
-  identify themselves for confidentiality. What is being offered is a convenience, not a gate:
-  bind the room to their LinkedIn, or keep the link to it in WhatsApp so they can find it again.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-    </section>
-    <section class="wave">
-      <h2>Wave 5</h2>
       <p class="waveNote">Start these 1 together. When all 1 have reported, run the two commands, then go to the next wave.</p>
       <article class="parcel">
         <header>
-          <h3>payment-link</h3>
-          <button class="copy" data-target="p-payment-link">Copy this prompt</button>
+          <h3>door-ai-builds-body</h3>
+          <button class="copy" data-target="p-door-ai-builds-body">Copy this prompt</button>
         </header>
-        <p class="what">A client can be talked to, briefed and matched with a person, and then has to be invoiced by hand outside the site.</p>
-        <pre id="p-payment-link">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "payment-link".
+        <p class="what">The custom-AI door is sold on 'we build these' and shows nothing we have built.</p>
+        <pre id="p-door-ai-builds-body">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "door-ai-builds-body".
 
 Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
 Then read three files next to the ones you are about to change.
 
 WHAT YOU OWN. These files, and nothing else in the repository:
-  server/payments.ts
-  server/payments.test.ts
-  client/src/components/workspace/PriceCard.tsx
+  client/src/components/site/doors/AiBuildsBody.tsx
 
 SHARED FILES YOU MAY TOUCH, and only in the way described:
-  shared/api.ts
-      - one price type
+  client/src/components/site/doors/bodies.tsx
+      - one entry in DOOR_BODIES
 
 Add to those, never delete from them. Other agents are editing the same files right now.
 
@@ -1010,476 +673,21 @@ NEVER EDIT THESE, whatever the reason:
   client/src/index.css
 
 WHAT DONE MEANS FOR THIS PARCEL:
-  A price can be put in a thread and paid, and the room records that it was. No pricing page, no
-  plans, no subscription machinery. The money flow is the owner's: the expert invoices the
-  client for the work, and Top-Rated Team invoices its own fee separately — so a price card must
-  be able to say whose price it is.
+  A body for /services/ai-builds that shows the six builds in shared/builds.ts: this
+  application, AdGrant.AI, Top Voice, WarmLike, the Upwork proposal agent and the
+  Being.Marketing existential coach. THEY ARE A PORTFOLIO, NOT CASE STUDIES — there is no client
+  and no metric, and inventing either is the one thing this repository has a test for. Show what
+  each is, what we built in it, and a link where there is one; two have no public page and must
+  not be given one. Read `unverifiedClaims` on each build and print nothing listed there: it is
+  what a second agent could not confirm against the live product. Being.Marketing renders as
+  'Being.' plus 'Marketing' struck through, in real markup, linking to https://being.marketing
+  and not to the /l/being path. External links open in a new tab. Follow ChatGptAdsBody.tsx for
+  restraint.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
-  A client can be talked to, briefed and matched with a person, and then has to be invoiced by
-  hand outside the site.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-    </section>
-    <section class="wave">
-      <h2>Wave 6 — this one runs alone</h2>
-      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
-      <article class="parcel">
-        <header>
-          <h3>room</h3>
-          <button class="copy" data-target="p-room">Copy this prompt</button>
-        </header>
-        <p class="what">Everything reads the room. Two agents in it at once produce a merge nobody can check. It was missing from this manifest, which is the one place that is meant to prevent exactly that.</p>
-        <pre id="p-room">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "room".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/pages/workspace.tsx
-  client/src/components/workspace/AdGrantPanel.tsx
-  client/src/components/workspace/ChannelHeader.tsx
-  client/src/components/workspace/Composer.tsx
-  client/src/components/workspace/InviteExpertDialog.tsx
-  client/src/components/workspace/Markdown.tsx
-  client/src/components/workspace/MessageList.tsx
-  client/src/components/workspace/NewChannelDialog.tsx
-  client/src/components/workspace/RoomArrival.tsx
-  client/src/components/workspace/RoomFooter.tsx
-  client/src/components/workspace/ShareLinkBar.tsx
-  client/src/components/workspace/WorkspaceSidebar.tsx
-  client/src/components/workspace/room-style.ts
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  client/src/App.tsx
-      - a route
-  shared/api.ts
-      - types the room reads
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  Whatever the parcel says on the day — but alone, and never at the same time as approval-card,
-  outside-agent, recurring-and-digest or payment-link, each of which adds a file to the same
-  directory. Two things are known to be waiting here and neither is cosmetic: shared/playbook.ts
-  seeds ONE room for all seven doors, so a charity opening a room through the Ad Grants door is
-  told the checklist is a ChatGPT-Ads conversion-tracking engagement; and server/storage.ts
-  seeds our own roster unconditionally, so a room opened through the partner's door prints an
-  accountability line naming the wrong company as the payer. Both are in files this parcel does
-  not own — hand them over, or take server/storage.ts as a seam and say so. THREE COMPONENTS ARE
-  BUILT, TESTED AND REACHABLE BY NOTHING, and wiring them is this parcel's first job. Each was
-  made by a parcel that did not own the room, so none could mount its own work: - PriceCard.tsx
-  — a price in a thread. server/payments.ts has 21 tests behind it, including the one that
-  matters most: it REFUSES to put a Top-Rated Team fee in a room the partner invoices, so our
-  name cannot land on their work. Mount it where a message carrying a price appears, and under a
-  single turn where one is attached to a turn. - AccountsPanel.tsx — the boosters, as capacity
-  and never as members. Its own parcel's tests already assert it never reaches the member rail
-  or the mention list; keep that true. - IdentifyStrip.tsx — the LinkedIn and WhatsApp binding.
-  The WhatsApp half asks a visitor to send a code, so put it where a person is about to paste
-  something of their own, not on arrival. Read each one's tests before mounting it: they say
-  what the component must not be asked to do.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  Everything reads the room. Two agents in it at once produce a merge nobody can check. It was
-  missing from this manifest, which is the one place that is meant to prevent exactly that.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-    </section>
-    <section class="wave">
-      <h2>Wave 7</h2>
-      <p class="waveNote">Start these 1 together. When all 1 have reported, run the two commands, then go to the next wave.</p>
-      <article class="parcel">
-        <header>
-          <h3>home-room</h3>
-          <button class="copy" data-target="p-home-room">Copy this prompt</button>
-        </header>
-        <p class="what">The home page had a panel that was one door's agent — the ChatGPT Ads chat, with its starter questions — standing in as the house voice.</p>
-        <pre id="p-home-room">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "home-room".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/components/site/home/HouseAsk.tsx
-  server/ai/route-question.ts
-  server/ai/route-question.test.ts
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  client/src/pages/landing.tsx
-      - one section, where the panel used to be
-  server/routes.ts
-      - one route that routes a question to a door
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  A QUESTION ASKED ON THE HOME PAGE DOES NOT KNOW WHICH DOOR IT BELONGS TO, and that is the
-  whole problem to solve. Nine agents each read one corpus and there is no fallback,
-  deliberately — server/ai/kb.ts returns nothing rather than answering out of a neighbour's
-  documentation. So route the question, and SHOW THE ROUTING. Read it, pick the door whose
-  subject it is, say which one you picked and why in one line, and let that door's agent answer.
-  A visitor who sees "this looks like a conversion-tracking question, so the measurement agent
-  is answering" has learned something about how the site is organised. A visitor who gets an
-  unexplained answer from an agent they did not choose has met the same defect in a new costume.
-  WHEN IT CANNOT TELL, IT ASKS. Do not guess a door on a thin question. Offer the two or three
-  it might be, in the reader's own words, and let them pick. Guessing wrong is worse than one
-  extra click, because the answer arrives with citations from documentation that has nothing to
-  do with what they asked. SOME QUESTIONS BELONG TO NO DOOR — what does this cost, who are you,
-  can I talk to somebody. Those are answered by the page, not by a model: the price is on
-  /pricing and in every agent's prompt, and the two ways to reach a person are already on the
-  first screen. Route to those rather than sending them to an agent that will decline. IT MUST
-  CLAIM THROUGH server/spend.ts like every other agent turn. The public panel shipped unguarded
-  once and a stale polling loop of ours ran on it for five hours; a new public ask endpoint is
-  the same hole. TESTS, server-side and mandatory: a question with an unmistakable subject
-  routes to that door; a thin question routes to nothing and returns choices; a question about
-  price or contact routes to the page rather than to an agent; and the router never returns a
-  door whose status is not live.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  The home page had a panel that was one door's agent — the ChatGPT Ads chat, with its starter
-  questions — standing in as the house voice. The owner said twice it made no sense there, and
-  he was right: a general button gave a specific door's answer. The panel has been removed
-  rather than relabelled, so the home page currently has no way to ask anything, and that is the
-  gap this closes.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-    </section>
-    <section class="wave">
-      <h2>Wave 8 — this one runs alone</h2>
-      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
-      <article class="parcel">
-        <header>
-          <h3>outside-agent</h3>
-          <button class="copy" data-target="p-outside-agent">Copy this prompt</button>
-        </header>
-        <p class="what">The member rail already renders the whole picture — mode, company, joined, expiry, calls-per-day, revoke with a reason, and four sentences about what an admitted agent can never do.</p>
-        <pre id="p-outside-agent">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "outside-agent".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  server/seats.ts
-  server/seats.test.ts
-  client/src/components/workspace/AdmitAgentDialog.tsx
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  shared/api.ts
-      - one seat type
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  Somebody else's agent is admitted to ONE thread, watch-only by default, with a call budget, an
-  expiry and a visible revoke. Its own credential, bound to a named party on our side — never
-  the room link, which is a state handle and must not be treated as authentication. Its own
-  counter, because the existing rate limits key on a visitor's IP address and a server-initiated
-  agent turn has none. And the rule as code, not as a policy page: an agent replies to an agent
-  only when a person named both in one message.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  The member rail already renders the whole picture — mode, company, joined, expiry,
-  calls-per-day, revoke with a reason, and four sentences about what an admitted agent can never
-  do. Its own comment says the server half does not exist. This parcel is that half.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-    </section>
-    <section class="wave">
-      <h2>Wave 9 — this one runs alone</h2>
-      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
-      <article class="parcel">
-        <header>
-          <h3>approval-card</h3>
-          <button class="copy" data-target="p-approval-card">Copy this prompt</button>
-        </header>
-        <p class="what">The product's whole compliance posture is that a person approves anything that leaves the room.</p>
-        <pre id="p-approval-card">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "approval-card".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/components/workspace/ApprovalCard.tsx
-  server/approvals.ts
-  server/approvals.test.ts
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  shared/api.ts
-      - one card type
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  A card in a thread showing what would change, a before and after, and two buttons. Approving
-  is recorded with who and when, and the record is what the client sees later. Port the shape
-  from the Top-Voice project's proposal cards rather than inventing one.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  The product's whole compliance posture is that a person approves anything that leaves the
-  room. There is no card to approve with.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-    </section>
-    <section class="wave">
-      <h2>Wave 10 — this one runs alone</h2>
-      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
-      <article class="parcel">
-        <header>
-          <h3>recurring-and-digest</h3>
-          <button class="copy" data-target="p-recurring-and-digest">Copy this prompt</button>
-        </header>
-        <p class="what">Rooms are working chats for one-off, ongoing and recurring work.</p>
-        <pre id="p-recurring-and-digest">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "recurring-and-digest".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  server/digest.ts
-  server/digest.test.ts
-  client/src/components/workspace/TaskPanel.tsx
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  shared/schema.ts
-      - a repeat field on the task
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  Three primitives and no new screens: a repeat setting on a task card so checking it off brings
-  it back next week; one weekly message saying what moved and what is waiting on the client; and
-  one line at the top of the channel saying what the room is doing now and who it is waiting on
-  — the channel header already prints a line in that spot. Agents write the digest and chase
-  what is late. Only a person changes or promises anything.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  Rooms are working chats for one-off, ongoing and recurring work. Four of the seven doors are
-  retainers. The method has to live in the room without adding a screen.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-    </section>
-    <section class="wave">
-      <h2>Wave 11 — this one runs alone</h2>
-      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
-      <article class="parcel">
-        <header>
-          <h3>room-bridge-whatsapp-chatwoot</h3>
-          <button class="copy" data-target="p-room-bridge-whatsapp-chatwoot">Copy this prompt</button>
-        </header>
-        <p class="what">The people doing the work need to answer from a phone, and the client should not have to install anything.</p>
-        <pre id="p-room-bridge-whatsapp-chatwoot">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "room-bridge-whatsapp-chatwoot".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  server/bridge/index.ts
-  server/bridge/attribution.ts
-  server/bridge/attribution.test.ts
-  server/bridge/chatwoot.ts
-  server/bridge/waha.ts
-  server/bridge/bridge.test.ts
-  client/src/components/workspace/BridgePanel.tsx
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  server/routes.ts
-      - the inbound webhook and one route to connect or disconnect a bridge
-  shared/api.ts
-      - one type for a room's bridges
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  ATTRIBUTION IS THE WHOLE PARCEL. Everything else here is plumbing. One WhatsApp number and one
-  ChatWoot inbox carry many speakers: Dan, each contractor, and any AI agent either side has
-  added. WhatsApp shows the client one sender for all of them. So every outbound message MUST
-  name who is speaking before it says anything else, and the name has to come from the room's
-  member record rather than from whoever typed it — a convention a human has to remember is a
-  convention that fails on a Friday. Use the room's own vocabulary, which already exists and is
-  already held to: the six badges in MemberRail.tsx. A person is a person and an agent says it
-  is an agent. NEVER let an agent's message arrive looking like a person's — that is the same
-  rule as the room itself, where an agent message reads as the company speaking, and it matters
-  more here because WhatsApp strips every other cue. Inbound is the mirror problem and is
-  harder: a WhatsApp group tells you a phone number, not which of three people on the client's
-  side wrote. Map what you can, and where you cannot, say so in the room rather than guessing an
-  author. A wrongly attributed client message is worse than an unattributed one. SPEND. A
-  bridged room is a way to trigger an agent from outside this site, so it must claim through
-  server/spend.ts exactly as /api/ask and the room path do. This is not hypothetical: the panel
-  endpoint shipped unguarded and a stale polling loop of ours ran on it for five hours before
-  anyone noticed. A WhatsApp group with an agent in it is the same hole with a friendlier face.
-  WHAT MAY CROSS, and it is not everything. A bridge is a door into a room that holds a client's
-  accounts and numbers. Decide and write down what does NOT go out over WhatsApp — at minimum
-  the room token itself, because a link in a group chat is the account. And say in the panel,
-  plainly, that a message sent to a WhatsApp group is readable by everyone in that group and
-  stored on their phones. SLACK AND CLICKUP are the client's own, connected by them and
-  revocable by them. Read-and-write into one channel or one list, never a mirror of everything:
-  a bridge that copies a whole workspace is a privacy problem wearing the clothes of a feature.
-  Same attribution rule. DEGRADE HONESTLY. WAHA is on another host and ChatWoot is a third
-  party; both will be down sometimes. A bridge that cannot deliver must say so in the room, on
-  the message that failed, and never silently drop it. A person believing they answered a client
-  when they did not is the worst outcome available. TESTS, all server-side and therefore
-  mandatory: every outbound message carries an attribution derived from the member record; an
-  agent's message can never be attributed as a person's; an unmappable inbound sender is marked
-  unattributed rather than guessed; a bridged agent turn goes through the spend claim; the room
-  token never appears in an outbound payload; and a delivery failure surfaces on the message
-  rather than in a log.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  The people doing the work need to answer from a phone, and the client should not have to
-  install anything. So contractors work through ChatWoot's app on one shared inbox and one
-  WhatsApp number, and the client is in WhatsApp. For more than one person on the client's side,
-  a WhatsApp group. The client can also connect their own Slack and ClickUp so the room reaches
-  where their team already is.
+  The custom-AI door is sold on 'we build these' and shows nothing we have built. Six of them
+  exist, and shared/cases.ts records that this door has no client case — which is true, and is
+  why the portfolio is the evidence it can actually offer.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.

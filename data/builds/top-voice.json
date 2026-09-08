@@ -1,0 +1,35 @@
+{
+  "slug": "top-voice",
+  "name": "Top Voice",
+  "url": "https://top-voice.ai",
+  "oneLine": "Organic LinkedIn growth engine that turns targeted reactions into inbound traffic",
+  "what": "Top Voice is a LinkedIn visibility platform built around reactions rather than outreach: you describe your business and who you sell to, and it generates a Signal Flow of boolean searches that assembles a feed of your target prospects' posts, then reacts to those posts on behalf of your profile or company page with natural, human-like timing. Because LinkedIn resurfaces posts you have reacted to in the feeds and notifications of the author and the author's own connections, the profile or page earns inbound visits instead of sending cold messages. The app is organised in three sections: Research (Influence Flows built from real influencer voices), Appear (Content Studio and Autopilot publishing) and Grow (LinkedIn Boosting). The page is equally explicit about what it refuses to do: no bulk cold outreach or DMs, no engagement pods, and no AI comments.",
+  "built": [
+    "Instant AI Setup: four fields generate an Influence Flow, a content campaign and a boosting campaign",
+    "Influence Flows - synthesised influencer voices, including custom ones from any LinkedIn profile URL",
+    "Content Studio with Autopilot: post copy, images, carousel PDFs and video, published to profiles or company pages on a schedule",
+    "LinkedIn Booster: AI-generated Signal Flow boolean searches that assemble a targeted posts feed",
+    "Reaction engine with human-like pacing - randomised 5-60 second delays and selectable reaction types",
+    "Rented-account pool: dedicated in-house LinkedIn accounts, blocking-free with a replacement guarantee",
+    "Performance Plan billing on Stripe: own and rented account slots, campaign slots, proration, auto top-up",
+    "Engager and profile-viewer tracking with webhook and Google Sheets delivery",
+    "AI Optimize plus an approve-before-apply queue, so no AI suggestion changes a campaign unreviewed",
+    "MCP connectors - Add to ChatGPT and Add to Claude - alongside in-app, web-chat and LinkedIn DM entry points",
+    "Guided in-app walkthrough for each section, plus referral and three-level affiliate program"
+  ],
+  "forPartner": "A client buying LinkedIn growth never has to hand over their own LinkedIn login: campaigns can run on a dedicated account rented from the in-house pool - blocking-free with a replacement guarantee - on the client's own connected account, or on a mix of both. From a short description of the client's business and target prospects, Top Voice builds a feed of those prospects' posts and reacts to them with natural, human-like timing, so the client's profile or company page shows up in the post author's notifications and in the relevant-post feeds of that author's connections, with no cold DMs, no pods and no AI comments. Content runs in parallel - post copy, images, carousels and video published to the client's profile or pages on a schedule - while engagers and profile viewers are tracked and can be pushed out by webhook or into a Google Sheet.",
+  "status": "live",
+  "fetchedAt": null,
+  "unverifiedClaims": [
+    "top-voice.ai is a client-rendered SPA whose served HTML body is empty; every string quoted above was verified verbatim against this repository's client source rather than against a rendered DOM, so section order and which strings are currently visible to a live visitor were not confirmed. The bundle path /assets/index-Dy6zFoC1.js is not established as the source of these strings - it is the shared entry chunk also cited for warmlike.com - and several items in 'built' (auto top-up, proration, campaign slots, the approve-before-apply queue, the per-section guided tours, engager and profile-viewer export) describe authenticated in-app surfaces, not public landing-page copy.",
+    "No prices, plan tiers or per-engager rates are stated in the fields above. They are NOT absent from the source, though: shared/performance-plan.ts hardcodes PRICE_PER_ACCOUNT = 49 and ENGAGERS_PER_ACCOUNT = 100, and the plan card the landing page renders states '$0.5 per engager it handles ($49/mo per account)', with '$0.15/token' for creative top-ups. Those figures were deliberately not carried into the fields above and must be checked against what is actually charged before any reuse.",
+    "No user counts, growth figures or performance metrics are recorded. The comparison section does state 'For the same [budget] Top Voice gets you 12 x more engagers than LinkedIn Ads', but it is the output of an on-page budget calculator, so it was deliberately not used.",
+    "'Results from a 14-day case study with Top Voice' appears as a caption in the page, directly under three hardcoded stat tiles - '300K+ Impressions Generated', '3,000+ Profile Visitors', '20+ Inbound Leads' (client/src/components/HowItWorksSteps.tsx, rendered on the landing page). Those are the page's own unverified marketing figures; they were deliberately not used and no result figures are claimed in the fields above.",
+    "The people and companies in the page's illustrations (BrightPath Foundation, ScaleUp Labs, ScaleUp For Good, 'Sarah', 'Surfaced to 1,200+ of Sarah's connections') are demo personas inside product mockups, not real clients or real numbers. No client name is verified.",
+    "The partner relationship is not stated anywhere on top-voice.ai. warmlike.com is named as the place where Profile Pre-lander pages are made, with their boosting then managed in Top Voice. forPartner was therefore written only from product capability the page itself states, and names no partner.",
+    "'Join thousands of professionals who are growing their LinkedIn presence on autopilot' is in the page copy but is an unquantified marketing claim; it was not used as a user count.",
+    "Timing statements quoted from the page - randomised 5-60 second reaction delays, 'a natural organic delay (3-14 days)' for some engagers, and 'See real engagement 1-2 weeks' - are the site's own claims and were not independently verified.",
+    "Trial terms found in the bundle ('Try FREE 14 days', 'Free 2-week trial', 'first 50 engagers are on us', 'Free trial covers your first account only') are landing-page copy - 'Try FREE 14 days' in the hero, the rest in the plan card the landing page renders - and may not match the current live offer, so no trial terms are asserted in the fields above.",
+    "The bundle also contains an outbound feature - AI auto-configuring connection requests to people who viewed or connected with the profile, plus AI follow-ups to profile viewers. The 'no outreach' language above is limited to what the page claims (no cold DMs, no bulk outreach, no pods, no AI comments) and does not assert the product is outbound-free."
+  ]
+}

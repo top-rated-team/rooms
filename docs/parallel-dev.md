@@ -16,6 +16,48 @@ One page. Everything on it is something you type or paste.
 
 ---
 
+## Which programme you are in
+
+**Programme two, ten parcels, four waves.** Programme one's nineteen parcels are
+all landed; its manifest is kept at `docs/parcels-programme-1.json` as a record,
+not as something to run.
+
+| Wave | Parcels |
+|---|---|
+| 1 | `page-blog`, `cases-filter`, `footer-links` |
+| 2 | `page-team`, `door-white-label`, `digest-trigger` |
+| 3 | `page-roi-calculator`, `door-partner`, `connector-gpt` |
+| 4 | `door-ai-builds-body` |
+
+Three of these — `page-blog`, `page-team`, `page-roi-calculator` — are the
+addresses blocking the move to the apex domain, and they are the reason this
+programme exists. See `docs/apex-migration.md`.
+
+**The ordering rule is different this time.** Programme one's was "never two
+doors in one wave", because every door parcel appended a corpus to
+`scripts/build-kb.ts`. None of these build a corpus. What they collide on
+instead is a route in `client/src/App.tsx` and an entry in
+`client/src/components/site/doors/bodies.tsx` — both one-line additions the seam
+rule permits, and both in one shared working tree, where two agents editing one
+line of one file in the same second produce a merge nobody can check. So: **at
+most one route-adder and one body-adder per wave.** The table above already
+holds to that.
+
+**Most of the content these parcels need is already on disk**, fetched from the
+live sources and then attacked by a second agent whose only job was to find
+claims the source does not support:
+
+- `data/blog/*.md` — the five posts, transcribed in full at their real slugs
+- `docs/specs/team.md`, `docs/specs/roi-calculator.md`, `docs/specs/white-label.md`
+- `shared/builds.ts` — the six things this company has built, generated from
+  `data/builds/*.json`, each carrying an `unverifiedClaims` list
+
+That last field is not decoration. It is what could not be confirmed against the
+live product, and a parcel printing something listed there has published a claim
+nobody checked.
+
+---
+
 ## Before anything
 
 This repository verifies itself with three commands and nothing else. There **is**
