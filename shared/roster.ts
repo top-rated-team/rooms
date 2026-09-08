@@ -643,7 +643,7 @@ export const SERVICES: ServiceDef[] = [
   { id: "ad-grants", group: "Paid Ads", name: "Google Ad Grants", blurb: "Search advertising in a nonprofit's own Google Ads account, on Google's terms.", agentId: "ad-grants" },
   { id: "white-label", group: "Paid Ads", name: "White-label PPC", blurb: "We run campaigns under your agency's brand." },
 
-  { id: "conversion-tracking", group: "Measurement", name: "Conversion tracking setup", blurb: "Pixel, Conversions API, deduplication, consent — installed and verified.", agentId: "conversion-tracking" },
+  { id: "conversion-tracking", group: "Measurement", name: "Conversion tracking setup", blurb: "Pixel or tag, server-side conversions, deduplication, consent — installed and verified on ChatGPT Ads, Google, Meta and LinkedIn.", agentId: "conversion-tracking" },
   { id: "ga4-gtm", group: "Measurement", name: "GA4 & Tag Manager", blurb: "Clean data layer, event taxonomy and a container you can reason about." },
   { id: "server-side", group: "Measurement", name: "Server-side tagging", blurb: "First-party endpoints that survive ad blockers and ITP." },
   { id: "offline", group: "Measurement", name: "Offline & CRM conversions", blurb: "Feed real revenue back into bidding, not just form fills." },

@@ -100,7 +100,9 @@ export function FirstScreen() {
         immediately made it longer and more precise — SUBJECT MATTER EXPERTS
         rather than "people", which is the actual claim, since what a client
         buys here is somebody who knows a trade — and at 19px it still sets on
-        one line with room to spare. That is the argument for the demotion
+        one line with room to spare. The join is "+" rather than "and", also on
+        his instruction, and it is the better mark here: "and" reads as a list
+        of two things you get, where "+" reads as one thing made of two. That is the argument for the demotion
         rather than the shrink: the sentence got free to say what it meant.
         
         So the sentence keeps its words and changes its rank. The claim is the
@@ -117,7 +119,7 @@ export function FirstScreen() {
         paragraph down with it.
       */}
         <p className="type-body mt-[var(--s2)] font-display font-medium" data-testid="text-home-mechanism">
-          Subject Matter Experts and AI agents in one room.
+          Subject Matter Experts + AI agents in one room.
         </p>
       </div>
 

@@ -72,13 +72,14 @@ and sends the invoice.
 Terms: https://top-rated.team/terms
 Contact: https://top-rated.team/contact
 
-### 2. Conversion tracking for ChatGPT Ads
+### 2. Conversion tracking for ChatGPT Ads and Paid Ads
 
 https://ai.top-rated.team/services/chatgpt-ads
 
-The one part of paid ads any AI agent still can't finish for you. Pixel,
-Conversions API, deduplication and consent — installed on your real site,
-verified against live conversions, and documented before we hand it back.
+The one part of paid ads any AI agent still can't finish for you. Pixel or
+tag, server-side conversions, deduplication and consent — on ChatGPT Ads,
+Google, Meta and LinkedIn — installed on your real site, verified against live
+conversions, and documented before we hand it back.
 
 Status: open, with a panel on the page.
 

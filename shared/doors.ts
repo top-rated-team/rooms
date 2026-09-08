@@ -247,9 +247,16 @@ export const DOORS: DoorDef[] = [
     path: "/services/chatgpt-ads",
     initials: "CA",
     tone: "bg-primary/10 text-primary",
-    headline: "Conversion tracking for ChatGPT Ads",
+    /* "and Paid Ads" is the owner's, and it corrects a real understatement.
+     * The work behind this door was never ChatGPT-Ads-only: the seven places an
+     * engagement goes wrong — which event counts, one event ID across two
+     * halves, consent that does not silently delete conversions, money that
+     * closes offline — are the same on Google, Meta and LinkedIn, and the
+     * checklist in the room has always covered them. The headline was selling
+     * one platform's worth of a service that does four. */
+    headline: "Conversion tracking for ChatGPT Ads and Paid Ads",
     blurb:
-      "The one part of paid ads any AI agent still can't finish for you. Pixel, Conversions API, deduplication and consent — installed on your real site, verified against live conversions, and documented before we hand it back.",
+      "The one part of paid ads any AI agent still can't finish for you. Pixel or tag, server-side conversions, deduplication and consent — on ChatGPT Ads, Google, Meta and LinkedIn — installed on your real site, verified against live conversions, and documented before we hand it back.",
     firstAgentId: "chatgpt-ads",
     agentLine: "The ChatGPT Ads Agent answers first, from developers.openai.com/ads, and cites the page it used.",
     starters: [

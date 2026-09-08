@@ -73,22 +73,23 @@ export const CONVERSION_TRACKING_TASKS: SeedTask[] = [
     assigneeKey: "agent:conversion-tracking",
   },
   {
-    title: "Install the ChatGPT Ads measurement pixel",
+    title: "Install the measurement pixel or tag on every platform you buy on",
     detail:
-      "Base snippet high in <head>, initialised with your pixel ID from Ads Manager, verified firing on a real page load — not in a preview.",
+      "The ChatGPT Ads base snippet high in <head>, and the Google tag, Meta pixel or LinkedIn insight tag as each applies — each initialised with your own ID from its own Ads Manager, and each verified firing on a real page load rather than in a preview.",
     status: "todo",
     assigneeKey: "human:ihor",
   },
   {
-    title: "Wire server-side conversions (Conversions API)",
+    title: "Wire server-side conversions on each platform",
     detail:
-      "Server-to-server events for the conversions that happen after the browser is gone: webhook-confirmed payments, CRM stage changes, refunds.",
+      "Server-to-server events for the conversions that happen after the browser is gone: webhook-confirmed payments, CRM stage changes, refunds. Each platform has its own road in — the ChatGPT Ads and Meta Conversions APIs, Google's offline conversion imports and enhanced conversions, LinkedIn's conversions API — and they do not accept the same payload.",
     status: "todo",
     assigneeKey: "human:ihor",
   },
   {
     title: "Deduplicate browser and server events",
-    detail: "Shared event IDs so one purchase is one conversion, not two.",
+    detail:
+      "Shared event IDs so one purchase is one conversion, not two — agreed once and used by both halves on every platform, because each one deduplicates on its own key and the first event received wins.",
     status: "todo",
     assigneeKey: "human:ihor",
   },

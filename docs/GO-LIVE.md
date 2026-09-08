@@ -5,7 +5,7 @@ Do these in order. Nothing here needs a command line.
 ## 1. Render (about ten minutes)
 
 1. Sign in at **render.com** with GitHub.
-2. **New** → **Blueprint** → choose `Being-Marketing/chatgpt-ads-team`.
+2. **New** → **Blueprint** → choose `Being-Marketing/Top-Rated.Team` (named `chatgpt-ads-team` until the rename in docs/repo-move.md).
    Render reads `render.yaml` and shows one service, `top-rated-team`.
 3. It asks for the values it refuses to read from a file. Only the first one
    matters today:

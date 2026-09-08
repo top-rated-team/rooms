@@ -1,3 +1,4 @@
+import { relative } from "node:path";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
@@ -105,6 +106,9 @@ function sourceFiles(dir: URL): URL[] {
   });
 }
 
+/** The repository root, from this file: server/ is one level down. */
+const REPO_ROOT = new URL("..", import.meta.url).pathname;
+
 describe("every price the site renders traces to a row in shared/pricing.ts", () => {
   const files = SWEPT.flatMap((tree) => sourceFiles(new URL(`${tree}/`, import.meta.url)));
 
@@ -125,7 +129,10 @@ describe("every price the site renders traces to a row in shared/pricing.ts", ()
         if (line.includes(".replace(")) return;
         for (const figure of currencyFigures(line)) {
           if (published.has(figure) || figure in NOT_A_PRICE) continue;
-          unexplained.push(`${file.pathname.split("/ChatGPT Ads/").pop()}:${index + 1} — ${figure}`);
+          /* Relative to the repository root, worked out from this file's own
+             location rather than from the checkout's folder name. The folder is
+             about to be renamed and the name was hard-coded here. */
+          unexplained.push(`${relative(REPO_ROOT, file.pathname)}:${index + 1} — ${figure}`);
         }
       });
     }
