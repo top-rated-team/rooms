@@ -259,8 +259,11 @@ posting are the only permissions LinkedIn gives out without approval.
 
 Status: open, with a panel on the page.
 
-Tier: Lawyer first. A qualified lawyer writes down what is allowed where you
-are before anything is built, and bills that part separately.
+Tier: Lawyer or our AI lawyer agent: end to end. What is allowed where you are
+gets written down before anything is built. Our AI lawyer agent does it end to
+end from the platforms' own published rules and cites every page it used; a
+qualified lawyer does it where you need an opinion signed in your
+jurisdiction, and bills that part separately.
 
 Panel: The LinkedIn Automation Agent answers first, from LinkedIn's own
 developer documentation, and cites the page it used: which permissions are
