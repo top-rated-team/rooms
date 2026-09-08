@@ -206,6 +206,31 @@ export function FirstScreen() {
           >
             Leave a message
           </button>
+          {/*
+            THE THIRD ACTION, and it is the one the site is actually for. The
+            owner counted two here and expected three — the room had been added
+            to the header and to the ask section and never to the first screen,
+            which is the one place every visitor sees.
+
+            It scrolls rather than opening a room on the spot, deliberately: the
+            section it lands on says in two sentences what a room is before it
+            offers one, and "open a room" pressed by somebody who has not read
+            that sentence is a room they will not come back to.
+          */}
+          <a
+            href="#panel"
+            data-testid="link-home-open-a-room"
+            onClick={(event) => {
+              const section = document.getElementById("panel");
+              if (!section || event.metaKey || event.ctrlKey || event.shiftKey) return;
+              event.preventDefault();
+              const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+              section.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+            }}
+            className="border-b border-border pb-[var(--s1)] text-muted-foreground hover:border-foreground hover:text-foreground"
+          >
+            Open a room
+          </a>
         </p>
       </div>
 

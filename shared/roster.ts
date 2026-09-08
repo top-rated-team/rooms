@@ -69,7 +69,15 @@ export interface ExpertDef {
 
 export interface ServiceDef {
   id: string;
-  group: "Paid Ads" | "Measurement" | "Growth" | "Build";
+  /*
+   * "Included" is a fifth group and it holds one row, which is the point of it.
+   * The AI Lawyer Agent is not a thing somebody buys and not a discipline
+   * alongside paid ads — it is in every room of ours already, seeded by
+   * shared/playbook.ts, and it costs nothing. Putting it under Build would
+   * price it; leaving it out of this list would hide the only service here that
+   * is free.
+   */
+  group: "Paid Ads" | "Measurement" | "Growth" | "Build" | "Included";
   name: string;
   blurb: string;
   /** Agent that can answer questions about it right now, if any. */
@@ -79,7 +87,7 @@ export interface ServiceDef {
 const HOUSE_STYLE = `
 You are part of Top-Rated Team (top-rated.team) — a 15+ year old paid-ads team:
 Google Partner top 10%, official Google Ads trainers, 100% Upwork job success,
-5,872 hours delivered, $2M+ ad spend managed, clients across US/CA/UK/AU/EU.
+5,872 hours delivered, $2M+ in budgets optimized, clients across US/CA/UK/AU/EU.
 
 How you answer:
 - Lead with the answer. No preamble, no "great question".
@@ -787,9 +795,11 @@ export const SERVICES: ServiceDef[] = [
   { id: "websites", group: "Build", name: "Websites & landing pages", blurb: "Fast, brand-consistent pages shipped in days.", agentId: "ai-dev" },
   { id: "software", group: "Build", name: "Software via AI dev tools", blurb: "Internal tools, portals and integrations built with modern AI tooling.", agentId: "ai-dev" },
   { id: "automation", group: "Build", name: "Automations & AI agents", blurb: "Reporting, alerting and workflow agents wired into your stack.", agentId: "ai-dev" },
+
+  { id: "legal", group: "Included", name: "AI Lawyer Agent — free, in every room", blurb: "What the platforms and regulators actually publish about automation, outreach, consent and advertising, with the page it used cited. It is in every marketing and development room of ours at no cost, and it is not a substitute for a lawyer where you need an opinion signed.", agentId: "legal" },
 ];
 
-export const SERVICE_GROUPS: ServiceDef["group"][] = ["Paid Ads", "Measurement", "Growth", "Build"];
+export const SERVICE_GROUPS: ServiceDef["group"][] = ["Paid Ads", "Measurement", "Growth", "Build", "Included"];
 
 /** Proof points reused from top-rated.team so both sites tell the same story. */
 export const PROOF = [

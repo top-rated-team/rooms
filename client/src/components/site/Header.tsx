@@ -101,7 +101,7 @@ export function Header() {
       data-testid="site-header"
       className="sticky top-0 z-40 border-b border-transparent bg-background/85 backdrop-blur-sm"
     >
-      <div className="mx-auto flex max-w-[var(--page)] items-center justify-between gap-[var(--s3)] px-[var(--s3)] py-[var(--s2)]">
+      <div className="mx-auto flex max-w-[var(--page)] items-center justify-between gap-[var(--s3)] px-[var(--s3)] py-[var(--s2)] pb-[calc(var(--s2)+0.5rem)]">
         <Link
           href="/"
           data-testid="link-logo"
@@ -126,12 +126,29 @@ export function Header() {
             thirds are empty space narrowing to nothing. So the T is set against
             the straight part.
 
-            That is why the wordmark grew: cap height has to reach 0.65 of the
-            mark's height, and at 13px against a 20px mark it reached 0.47. The
-            wordmark is now 17px, the mark 1.11em of that (about 19px), and the
-            translate is the mark's height minus the cap — which also lifts it
-            the couple of pixels the owner asked for, because a shorter mark
-            hanging from the same baseline sits higher.
+            THE MARK IS BIGGER NOW, and getting there meant giving up the
+            stricter of two readings of the owner's original instruction.
+
+            He said the T's height should answer to the mark's vertical edge,
+            and this file read that as "equal heights". That reading pins the
+            size: the straight part is 0.65 of the image, so matching a 17px
+            cap to it FORCES an 18px mark and no larger. Then he asked for the
+            mark to be at least as big as the favicon, which the 18px version
+            is not — not really by box, since a tab renders a favicon at 16px,
+            but plainly by ink. The favicon fills its square; this chevron's
+            bottom third is empty space narrowing to a point, so the same box
+            carries visibly less mark.
+
+            Both wishes cannot hold at once. The one kept is the alignment he
+            described rather than the arithmetic this file inferred from it: the
+            mark's TOP EDGE is level with the top of the T, which is what
+            `translate-y = height - cap` does at any size. So the mark grew to
+            1.45em — about 25px against a 17px wordmark — and hangs further
+            below the line, which he had already said he was happy with.
+
+            The header's own padding grew with it. A mark hanging 0.75em under
+            the baseline in a bar padded for a 17px line would have sat on the
+            bottom border.
 
             Verified on a 4x screenshot, not by eye.
           */}
@@ -139,7 +156,7 @@ export function Header() {
             src="/assets/top-rated-logo.png"
             alt=""
             aria-hidden="true"
-            className="h-[1.11em] w-[1.11em] shrink-0 translate-y-[0.36em]"
+            className="h-[1.45em] w-[1.45em] shrink-0 translate-y-[0.75em]"
           />
           Top-Rated Team
         </Link>
