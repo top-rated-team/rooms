@@ -26,12 +26,25 @@ const WAVES = [
    * of one file in the same second is a merge nobody can check. So: at most one
    * route-adder and at most one body-adder per wave.
    */
-  { n: 1, keys: ["page-blog", "cases-filter", "footer-links"] },
+  /* `landed` is set when a wave's agents have reported AND their work is
+     committed. It is here so the published page stops offering a prompt for
+     work that is already in main — the owner reads that page, not this file,
+     and a re-run of a landed parcel is an agent rewriting a finished file. */
+  { n: 1, keys: ["page-blog", "cases-filter", "footer-links"], landed: true },
   { n: 2, keys: ["page-team", "door-white-label", "digest-trigger"] },
   { n: 3, keys: ["page-roi-calculator", "door-partner", "connector-gpt"] },
-  // Alone because it is last, not because it is dangerous. If wave 3 finishes
-  // early, this can be pulled forward into it — it adds no route.
+  // Alone because it is last of the site work, not because it is dangerous. If
+  // wave 3 finishes early, this can be pulled forward into it — it adds no route.
   { n: 4, keys: ["door-ai-builds-body"] },
+
+  /*
+   * THE FORK PROGRAMME. docs/fork-and-partners.md is the brief for all four and
+   * every prompt says to read it first. The order between these two waves is a
+   * dependency, not a preference: partner-setup writes the config that
+   * partner-catalogue reads, so the resolver exists before the page that fills it.
+   */
+  { n: 5, keys: ["partner-catalogue", "partner-usage-report", "legal-agent-upkeep"] },
+  { n: 6, keys: ["partner-setup"] },
 ];
 
 function prompt(key) {
@@ -131,6 +144,13 @@ const waveHtml = WAVES.map((wave) => {
       </article>`;
     })
     .join("\n");
+  if (wave.landed) {
+    return `    <section class="wave" data-landed>
+      <h2>Wave ${wave.n} — landed</h2>
+      <p class="waveNote">${wave.keys.join(", ")} — reported, reviewed and committed. Nothing to run here.</p>
+    </section>`;
+  }
+
   return `    <section class="wave">
       <h2>Wave ${wave.n}${wave.alone ? " — this one runs alone" : ""}</h2>
       <p class="waveNote">${
@@ -150,7 +170,7 @@ function oneLine(text) {
 
 fs.writeFileSync("docs/prompts.html", page(waveHtml));
 const total = WAVES.reduce((n, w) => n + w.keys.length, 0);
-console.log(`docs/prompts.html — ${total} prompts in ${WAVES.length} waves`);
+console.log(`docs/prompts.html — ${total} prompts in ${WAVES.length} waves (${WAVES.filter((w) => w.landed).reduce((n, w) => n + w.keys.length, 0)} landed)`);
 /*
  * The reminder exists because of a real failure, not as decoration.
  *
@@ -168,7 +188,11 @@ console.log("  he copies from the published page, and it is now behind by");
 console.log(`  whatever changed. ${total} prompts should appear there.`);
 
 function page(body) {
-  const TOTAL = WAVES.reduce((n, w) => n + w.keys.length, 0);
+  /* Counts what is still to run, not what has ever existed: a page that says
+     "14 of them" over eleven runnable prompts is a page that has to be counted
+     by hand. */
+  const runnable = WAVES.filter((w) => !w.landed).reduce((n, w) => n + w.keys.length, 0);
+  const landed = WAVES.filter((w) => w.landed).reduce((n, w) => n + w.keys.length, 0);
   return `<title>Prompts to Paste</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -197,6 +221,8 @@ function page(body) {
   .steps li::before{content:counter(s);position:absolute;left:0;top:.05em;font-family:var(--mono);font-size:.8rem;color:var(--ink3);border:1px solid var(--line2);border-radius:50%;width:1.7rem;height:1.7rem;display:grid;place-items:center}
   .cmd{background:var(--code);color:var(--codeInk);font-family:var(--mono);font-size:.82rem;line-height:1.7;padding:.9rem 1.1rem;border-radius:.4rem;overflow-x:auto;margin:.7rem 0 0;white-space:pre}
   .wave{margin-top:3.4rem}
+  .wave[data-landed] h2{color:var(--ink3)}
+  .wave[data-landed] .waveNote{font-family:var(--mono);font-size:.8rem}
   .waveNote{color:var(--ink2);font-size:.95rem;margin:.6rem 0 0;max-width:52ch}
   .parcel{background:var(--card);border:1px solid var(--line);border-radius:.5rem;margin-top:1.4rem;overflow:hidden}
   .parcel header{display:flex;flex-wrap:wrap;gap:.8rem;align-items:center;justify-content:space-between;padding:.9rem 1.1rem;border-bottom:1px solid var(--line)}
@@ -214,8 +240,8 @@ function page(body) {
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">${TOTAL} of them. Copy one, paste it into a fresh agent, and that is the whole job.
-  Nothing on this page needs reading twice.</p>
+  <p class="lede">${runnable} still to run${landed > 0 ? `, ${landed} landed` : ""}. Copy one, paste
+  it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
     <li>Open a terminal in the project.

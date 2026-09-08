@@ -26,6 +26,8 @@
   .steps li::before{content:counter(s);position:absolute;left:0;top:.05em;font-family:var(--mono);font-size:.8rem;color:var(--ink3);border:1px solid var(--line2);border-radius:50%;width:1.7rem;height:1.7rem;display:grid;place-items:center}
   .cmd{background:var(--code);color:var(--codeInk);font-family:var(--mono);font-size:.82rem;line-height:1.7;padding:.9rem 1.1rem;border-radius:.4rem;overflow-x:auto;margin:.7rem 0 0;white-space:pre}
   .wave{margin-top:3.4rem}
+  .wave[data-landed] h2{color:var(--ink3)}
+  .wave[data-landed] .waveNote{font-family:var(--mono);font-size:.8rem}
   .waveNote{color:var(--ink2);font-size:.95rem;margin:.6rem 0 0;max-width:52ch}
   .parcel{background:var(--card);border:1px solid var(--line);border-radius:.5rem;margin-top:1.4rem;overflow:hidden}
   .parcel header{display:flex;flex-wrap:wrap;gap:.8rem;align-items:center;justify-content:space-between;padding:.9rem 1.1rem;border-bottom:1px solid var(--line)}
@@ -43,8 +45,8 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">10 of them. Copy one, paste it into a fresh agent, and that is the whole job.
-  Nothing on this page needs reading twice.</p>
+  <p class="lede">11 still to run, 3 landed. Copy one, paste
+  it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
     <li>Open a terminal in the project.
@@ -58,195 +60,9 @@
     <li>Run the same two commands again. If they pass, commit. Then the next wave.</li>
   </ol>
 
-    <section class="wave">
-      <h2>Wave 1</h2>
-      <p class="waveNote">Start these 3 together. When all 3 have reported, run the two commands, then go to the next wave.</p>
-      <article class="parcel">
-        <header>
-          <h3>page-blog</h3>
-          <button class="copy" data-target="p-page-blog">Copy this prompt</button>
-        </header>
-        <p class="what">Five posts on top-rated.team are the standing search traffic of the old site, and the apex cannot move until this application answers on their exact URLs.</p>
-        <pre id="p-page-blog">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "page-blog".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/pages/blog.tsx
-  client/src/pages/blog-post.tsx
-  shared/blog.ts
-  scripts/build-blog.ts
-  data/blog
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  client/src/App.tsx
-      - a route for /blog
-      - a route for /blog/:slug
-  package.json
-      - one build script line
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  /blog lists the five posts newest first and /blog/&lt;slug&gt; renders one, at the EXACT slugs in
-  data/blog (two of them look truncated and are not: they are the live URLs). Generated the way
-  shared/cases.ts is — scripts/build-blog.ts reads data/blog/*.md and writes shared/blog.ts, and
-  the generated file carries the do-not-edit banner, because a post edited by hand stops
-  matching the page it was published at. Frontmatter carries slug, title, date, description,
-  sourceUrl and headings. Render the markdown with the site's own reading typography; do not add
-  a hero, an author box, share buttons, a related-posts rail or a newsletter form. Each post
-  sets its own &lt;title&gt; and meta description from the frontmatter and puts back what it found,
-  the way landing.tsx does. The index needs no search box and no tag filter — five posts do not
-  need finding. Add both URLs to sitemap.xml.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  Five posts on top-rated.team are the standing search traffic of the old site, and the apex
-  cannot move until this application answers on their exact URLs. They are already transcribed
-  in data/blog — fetched from the live pages and checked by a second agent — so this parcel is
-  about publishing them, not writing them.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-      <article class="parcel">
-        <header>
-          <h3>cases-filter</h3>
-          <button class="copy" data-target="p-cases-filter">Copy this prompt</button>
-        </header>
-        <p class="what">22 cases on one page with no way to say which service you came for.</p>
-        <pre id="p-cases-filter">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "cases-filter".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/pages/case-studies.tsx
-  client/src/components/site/CaseFilter.tsx
-
-SHARED FILES: none. You do not edit any file outside the list above.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  A filter on /case-studies that shows all cases or the cases for one service, driven by the
-  `doors` field that shared/cases.ts already derives. Read it from DOORS so a new door needs no
-  edit here, and show ONLY doors that actually have a case — five have none, and an option that
-  returns an empty list is a dead end the page put there itself. 'All' is the default and says
-  how many. The choice belongs in the URL (?service=google-ads) so a filtered view can be linked
-  and the back button works. No animation on filtering. Keyboard-operable, and the count updates
-  in a live region so the change is not silent to a screen reader.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  22 cases on one page with no way to say which service you came for. The owner asked for a
-  selector; the data is already there — every case in shared/cases.ts carries a derived `doors`
-  array.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-      <article class="parcel">
-        <header>
-          <h3>footer-links</h3>
-          <button class="copy" data-target="p-footer-links">Copy this prompt</button>
-        </header>
-        <p class="what">Three products of ours and two agent-facing files exist and nothing links to them.</p>
-        <pre id="p-footer-links">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "footer-links".
-
-Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/components/site/Footer.tsx
-
-SHARED FILES: none. You do not edit any file outside the list above.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  The footer gains: Google Ads, linking to /services/google-ads; AdGrant.AI, linking to
-  https://adgrant.ai; and Being.Marketing, linking to https://being.marketing — the last
-  rendered as the word 'Being.' followed by 'Marketing' struck through, which is how its owner
-  writes it. Use real markup (&lt;s&gt; or a line-through class), NOT the styled unicode look-alikes,
-  which screen readers read as gibberish and search engines index as noise. Also link /llms.txt
-  and /llms-full.txt, quietly, in the row that already carries the legal links — an agent-facing
-  site should say so, and the owner asked for it. External links open in a new tab with
-  rel="noopener noreferrer". Do not touch the identification line: 'Top-Rated Team (Danylo
-  Burykin SZČO)' is where the legal name is allowed to appear and it stays exactly as it is.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  Three products of ours and two agent-facing files exist and nothing links to them. llms.txt
-  and llms-full.txt are already served from client/public and already generated — they are
-  simply not reachable from a page.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
+    <section class="wave" data-landed>
+      <h2>Wave 1 — landed</h2>
+      <p class="waveNote">page-blog, cases-filter, footer-links — reported, reviewed and committed. Nothing to run here.</p>
     </section>
     <section class="wave">
       <h2>Wave 2</h2>
@@ -688,6 +504,299 @@ WHY IT EXISTS, so you can judge the edge cases yourself:
   The custom-AI door is sold on 'we build these' and shows nothing we have built. Six of them
   exist, and shared/cases.ts records that this door has no client case — which is true, and is
   why the portfolio is the evidence it can actually offer.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+    </section>
+    <section class="wave">
+      <h2>Wave 5</h2>
+      <p class="waveNote">Start these 3 together. When all 3 have reported, run the two commands, then go to the next wave.</p>
+      <article class="parcel">
+        <header>
+          <h3>partner-catalogue</h3>
+          <button class="copy" data-target="p-partner-catalogue">Copy this prompt</button>
+        </header>
+        <p class="what">docs/fork-and-partners.md: the whole fork plan rests on offers being data that carries contract identity, and shared/doors.ts already is that.</p>
+        <pre id="p-partner-catalogue">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "partner-catalogue".
+
+Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  shared/catalogue.ts
+  server/catalogue.test.ts
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  shared/doors.ts
+      - one import
+      - one exported resolver the pages call instead of DOORS directly
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  READ docs/fork-and-partners.md FIRST, all of it. A resolver that takes the door rows and an
+  operator config and returns the catalogue as that operator's deployment should show it. Two
+  modes per service, not per deployment, because a partner may want their Google Ads
+  white-labelled and our Ad Grants tool referred: REFERRAL keeps our legal name, terms, invoice
+  line and contact on that row, so the partner's client knows who does the work — today's grey
+  tier with the names swapped. WHITE LABEL puts the operator's identity on the row and ours
+  nowhere. A service the operator has switched off is a flag on the row, never a deletion, so
+  switching it back on later is the same flag. Where no operator is configured, the resolver
+  must return today's rows unchanged, byte for byte — this parcel may not alter what
+  ai.top-rated.team shows. Tests: with no operator the catalogue equals DOORS; in white-label
+  mode our legal name appears nowhere in the resolved output, asserted by searching the whole
+  structure rather than the fields you remembered; in referral mode a row names us and
+  priceForDoor returns null for it, which is the guarantee that already exists for the partner
+  tier; and an operator config that would have a room claim somebody is answerable who is not
+  fails rather than renders.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  docs/fork-and-partners.md: the whole fork plan rests on offers being data that carries
+  contract identity, and shared/doors.ts already is that. What is missing is any notion of an
+  operator other than us — so a fork shows our legal name on every row.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+      <article class="parcel">
+        <header>
+          <h3>partner-usage-report</h3>
+          <button class="copy" data-target="p-partner-usage-report">Copy this prompt</button>
+        </header>
+        <p class="what">We can only invoice a partner for what their deployment used, and a fork on their infrastructure is the only thing that knows.</p>
+        <pre id="p-partner-usage-report">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "partner-usage-report".
+
+Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  server/usage-report.ts
+  server/usage-report.test.ts
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  server/routes.ts
+      - one import
+      - one call to start the reporter
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  A reporter that posts volume to a configured endpoint on a schedule, and the endpoint that
+  receives it. WHAT IT SENDS: a deployment id, the operator it was set up as, and per billing
+  period the rooms opened plus, for each of OUR services used, the count of rooms and agent
+  turns. WHAT IT MAY NEVER SEND, and this is the whole of the parcel's difficulty: a message, a
+  channel name, a client's or lead's name, an email address, a room token, or the partner's own
+  prices. Build the payload by naming the fields you keep, never by deleting the ones you don't
+  — server/flygen.ts does exactly that for third-party personal data and is the pattern to copy.
+  The receiving endpoint must REJECT a payload carrying anything outside the allowlist rather
+  than store it, because a fork we do not control is what posts to it. Off unless an endpoint is
+  configured, defaulting to off. Tests: the payload contains none of the forbidden fields,
+  asserted field by field against a fixture room with messages and leads in it; the receiver
+  rejects an extended payload; a failed post is retried and then dropped rather than queued
+  forever; and nothing is sent when the endpoint is unset. docs/fork-and-partners.md has the
+  reasoning and the sentence that belongs in the partner terms.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  We can only invoice a partner for what their deployment used, and a fork on their
+  infrastructure is the only thing that knows. server/spend.ts already counts the right things
+  per room; nothing sends them anywhere.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+      <article class="parcel">
+        <header>
+          <h3>legal-agent-upkeep</h3>
+          <button class="copy" data-target="p-legal-agent-upkeep">Copy this prompt</button>
+        </header>
+        <p class="what">The AI Lawyer Agent answers from documents other people publish, and those documents change.</p>
+        <pre id="p-legal-agent-upkeep">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "legal-agent-upkeep".
+
+Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  scripts/refresh-corpora.ts
+  server/corpus-freshness.ts
+  server/corpus-freshness.test.ts
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  scripts/build-kb.ts
+      - one export of the corpus list
+      - one exported fetch entry point
+  package.json
+      - one script line
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  Keep the corpora current, and make the legal agent's sources editable. A script that
+  re-fetches every corpus and reports what changed, what it could not read, and what is now
+  stale — build-kb.ts already leaves a corpus untouched when a page fails, which is the
+  behaviour to preserve and surface rather than change. A freshness record per namespace that
+  the room can show: when it was last read, and which sources failed. ADDING A JURISDICTION OR A
+  NICHE is adding source URLs to the legal corpus, so the source list has to be data the
+  operator can extend rather than a constant in a script — that is what 'self-updating' means
+  here. WHAT IT MUST NOT DO, and the reason is in shared/roster.ts's own comment on that agent:
+  it may add sources and re-read them; it may NOT write its own. An agent that authors its
+  corpus drifts, and every sentence tracing to a document somebody else published is the whole
+  of why its answers are worth anything. Do not build a summariser, a rewriter or a 'learned'
+  cache. Tests: a re-fetch that fails leaves the previous corpus intact and marks it stale; a
+  namespace with no sources reports so rather than reporting fresh; and the freshness record
+  carries no chunk text.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  The AI Lawyer Agent answers from documents other people publish, and those documents change.
+  Its corpus was fetched once. An agent citing last quarter's User Agreement with today's
+  confidence is the one failure that matters in this subject.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+    </section>
+    <section class="wave">
+      <h2>Wave 6</h2>
+      <p class="waveNote">Start these 1 together. When all 1 have reported, run the two commands, then go to the next wave.</p>
+      <article class="parcel">
+        <header>
+          <h3>partner-setup</h3>
+          <button class="copy" data-target="p-partner-setup">Copy this prompt</button>
+        </header>
+        <p class="what">The brief asks for fast, and fast means no terminal after the deploy: fork, deploy from a blueprint, land on one page, fill it in, done.</p>
+        <pre id="p-partner-setup">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "partner-setup".
+
+Read these first, before you write anything: README.md, docs/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  client/src/pages/setup.tsx
+  shared/operator.ts
+  server/operator.ts
+  server/operator.test.ts
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  client/src/App.tsx
+      - a route for /setup
+  server/routes.ts
+      - one import
+      - two routes for reading and writing the operator config
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  ONE PAGE, and it is one page — read docs/fork-and-partners.md's install section and do not add
+  a step to it. With no operator configured every route redirects to /setup. It asks for:
+  display name, legal name, entity, terms URL and contact address; a model key or ours; which of
+  our services to offer and whether each is referral or white label; prices in the operator's
+  own words on the same ladder shape; and the address the deployment answers on, defaulting to
+  their own domain, because a white-label deployment on our subdomain is a contradiction. Saving
+  writes the config partner-catalogue reads, seeds the catalogue and marks the deployment set
+  up; /setup then becomes /partner, the same page, editable — that is the cabinet, and there is
+  no second interface to build. No build step and no restart: a change in the cabinet takes
+  effect on the next request. THE ONE THING IT MAY NOT DO is let an operator publish a claim
+  that is false of whoever is named — if a room says the operator is answerable for the work,
+  the operator has to be, and that is the same rule every other sentence on this site follows.
+  Tests: an unconfigured deployment redirects; a config missing a legal name is rejected with a
+  sentence a person can act on; the key is never returned in a response body or an error; and a
+  saved config round-trips through the resolver.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  The brief asks for fast, and fast means no terminal after the deploy: fork, deploy from a
+  blueprint, land on one page, fill it in, done. That page then becomes the partner's cabinet
+  rather than being thrown away.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.

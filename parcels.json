@@ -22,7 +22,7 @@
     "client/src/index.css"
   ],
   "//alone": "Parcels marked runAlone touch the room, the panel or the shell \u2014 everything reads those, and two agents in them at once produce a merge nobody can check. One agent, let it finish, then start the others.",
-  "//order": "Three at a time. Wave 1: page-blog, cases-filter, footer-links. Wave 2: page-team, door-white-label, digest-trigger. Wave 3: page-roi-calculator, door-partner, connector-gpt. Wave 4: door-ai-builds-body. NEVER two parcels adding a route to client/src/App.tsx in one wave, and never two adding an entry to doors/bodies.tsx \u2014 both are one-line additions the seam rule allows, but they share one working tree and two agents editing one line of one file at the same second is the merge nobody can check. The waves above already keep them apart; if you reorder, keep that.",
+  "//order": "Three at a time. Wave 1: page-blog, cases-filter, footer-links. Wave 2: page-team, door-white-label, digest-trigger. Wave 3: page-roi-calculator, door-partner, connector-gpt. Wave 4: door-ai-builds-body. NEVER two parcels adding a route to client/src/App.tsx in one wave, and never two adding an entry to doors/bodies.tsx \u2014 both are one-line additions the seam rule allows, but they share one working tree and two agents editing one line of one file at the same second is the merge nobody can check. The waves above already keep them apart; if you reorder, keep that. WAVES 5 AND 6 ARE THE FORK PROGRAMME, and their order is a dependency rather than a preference: partner-setup writes the config partner-catalogue reads, so the catalogue exists first. Read docs/fork-and-partners.md before any of the four \u2014 it carries the money model, the two modes, what a fork may report back, and the three decisions that are the owner's.",
   "parcels": {
     "page-blog": {
       "owns": [
@@ -162,6 +162,75 @@
       "runAlone": false,
       "why": "The custom-AI door is sold on 'we build these' and shows nothing we have built. Six of them exist, and shared/cases.ts records that this door has no client case \u2014 which is true, and is why the portfolio is the evidence it can actually offer.",
       "done": "A body for /services/ai-builds that shows the six builds in shared/builds.ts: this application, AdGrant.AI, Top Voice, WarmLike, the Upwork proposal agent and the Being.Marketing existential coach. THEY ARE A PORTFOLIO, NOT CASE STUDIES \u2014 there is no client and no metric, and inventing either is the one thing this repository has a test for. Show what each is, what we built in it, and a link where there is one; two have no public page and must not be given one. Read `unverifiedClaims` on each build and print nothing listed there: it is what a second agent could not confirm against the live product. Being.Marketing renders as 'Being.' plus 'Marketing' struck through, in real markup, linking to https://being.marketing and not to the /l/being path. External links open in a new tab. Follow ChatGptAdsBody.tsx for restraint."
+    },
+    "partner-catalogue": {
+      "owns": [
+        "shared/catalogue.ts",
+        "server/catalogue.test.ts"
+      ],
+      "seams": {
+        "shared/doors.ts": [
+          "one import",
+          "one exported resolver the pages call instead of DOORS directly"
+        ]
+      },
+      "runAlone": false,
+      "why": "docs/fork-and-partners.md: the whole fork plan rests on offers being data that carries contract identity, and shared/doors.ts already is that. What is missing is any notion of an operator other than us \u2014 so a fork shows our legal name on every row.",
+      "done": "READ docs/fork-and-partners.md FIRST, all of it. A resolver that takes the door rows and an operator config and returns the catalogue as that operator's deployment should show it. Two modes per service, not per deployment, because a partner may want their Google Ads white-labelled and our Ad Grants tool referred: REFERRAL keeps our legal name, terms, invoice line and contact on that row, so the partner's client knows who does the work \u2014 today's grey tier with the names swapped. WHITE LABEL puts the operator's identity on the row and ours nowhere. A service the operator has switched off is a flag on the row, never a deletion, so switching it back on later is the same flag. Where no operator is configured, the resolver must return today's rows unchanged, byte for byte \u2014 this parcel may not alter what ai.top-rated.team shows. Tests: with no operator the catalogue equals DOORS; in white-label mode our legal name appears nowhere in the resolved output, asserted by searching the whole structure rather than the fields you remembered; in referral mode a row names us and priceForDoor returns null for it, which is the guarantee that already exists for the partner tier; and an operator config that would have a room claim somebody is answerable who is not fails rather than renders."
+    },
+    "partner-usage-report": {
+      "owns": [
+        "server/usage-report.ts",
+        "server/usage-report.test.ts"
+      ],
+      "seams": {
+        "server/routes.ts": [
+          "one import",
+          "one call to start the reporter"
+        ]
+      },
+      "runAlone": false,
+      "why": "We can only invoice a partner for what their deployment used, and a fork on their infrastructure is the only thing that knows. server/spend.ts already counts the right things per room; nothing sends them anywhere.",
+      "done": "A reporter that posts volume to a configured endpoint on a schedule, and the endpoint that receives it. WHAT IT SENDS: a deployment id, the operator it was set up as, and per billing period the rooms opened plus, for each of OUR services used, the count of rooms and agent turns. WHAT IT MAY NEVER SEND, and this is the whole of the parcel's difficulty: a message, a channel name, a client's or lead's name, an email address, a room token, or the partner's own prices. Build the payload by naming the fields you keep, never by deleting the ones you don't \u2014 server/flygen.ts does exactly that for third-party personal data and is the pattern to copy. The receiving endpoint must REJECT a payload carrying anything outside the allowlist rather than store it, because a fork we do not control is what posts to it. Off unless an endpoint is configured, defaulting to off. Tests: the payload contains none of the forbidden fields, asserted field by field against a fixture room with messages and leads in it; the receiver rejects an extended payload; a failed post is retried and then dropped rather than queued forever; and nothing is sent when the endpoint is unset. docs/fork-and-partners.md has the reasoning and the sentence that belongs in the partner terms."
+    },
+    "legal-agent-upkeep": {
+      "owns": [
+        "scripts/refresh-corpora.ts",
+        "server/corpus-freshness.ts",
+        "server/corpus-freshness.test.ts"
+      ],
+      "seams": {
+        "scripts/build-kb.ts": [
+          "one export of the corpus list",
+          "one exported fetch entry point"
+        ],
+        "package.json": [
+          "one script line"
+        ]
+      },
+      "runAlone": false,
+      "why": "The AI Lawyer Agent answers from documents other people publish, and those documents change. Its corpus was fetched once. An agent citing last quarter's User Agreement with today's confidence is the one failure that matters in this subject.",
+      "done": "Keep the corpora current, and make the legal agent's sources editable. A script that re-fetches every corpus and reports what changed, what it could not read, and what is now stale \u2014 build-kb.ts already leaves a corpus untouched when a page fails, which is the behaviour to preserve and surface rather than change. A freshness record per namespace that the room can show: when it was last read, and which sources failed. ADDING A JURISDICTION OR A NICHE is adding source URLs to the legal corpus, so the source list has to be data the operator can extend rather than a constant in a script \u2014 that is what 'self-updating' means here. WHAT IT MUST NOT DO, and the reason is in shared/roster.ts's own comment on that agent: it may add sources and re-read them; it may NOT write its own. An agent that authors its corpus drifts, and every sentence tracing to a document somebody else published is the whole of why its answers are worth anything. Do not build a summariser, a rewriter or a 'learned' cache. Tests: a re-fetch that fails leaves the previous corpus intact and marks it stale; a namespace with no sources reports so rather than reporting fresh; and the freshness record carries no chunk text."
+    },
+    "partner-setup": {
+      "owns": [
+        "client/src/pages/setup.tsx",
+        "shared/operator.ts",
+        "server/operator.ts",
+        "server/operator.test.ts"
+      ],
+      "seams": {
+        "client/src/App.tsx": [
+          "a route for /setup"
+        ],
+        "server/routes.ts": [
+          "one import",
+          "two routes for reading and writing the operator config"
+        ]
+      },
+      "runAlone": false,
+      "why": "The brief asks for fast, and fast means no terminal after the deploy: fork, deploy from a blueprint, land on one page, fill it in, done. That page then becomes the partner's cabinet rather than being thrown away.",
+      "done": "ONE PAGE, and it is one page \u2014 read docs/fork-and-partners.md's install section and do not add a step to it. With no operator configured every route redirects to /setup. It asks for: display name, legal name, entity, terms URL and contact address; a model key or ours; which of our services to offer and whether each is referral or white label; prices in the operator's own words on the same ladder shape; and the address the deployment answers on, defaulting to their own domain, because a white-label deployment on our subdomain is a contradiction. Saving writes the config partner-catalogue reads, seeds the catalogue and marks the deployment set up; /setup then becomes /partner, the same page, editable \u2014 that is the cabinet, and there is no second interface to build. No build step and no restart: a change in the cabinet takes effect on the next request. THE ONE THING IT MAY NOT DO is let an operator publish a claim that is false of whoever is named \u2014 if a room says the operator is answerable for the work, the operator has to be, and that is the same rule every other sentence on this site follows. Tests: an unconfigured deployment redirects; a config missing a legal name is rejected with a sentence a person can act on; the key is never returned in a response body or an error; and a saved config round-trips through the resolver."
     }
   }
 }
