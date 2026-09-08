@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "UNLICENSED",
-  "description": "ChatGPT Ads conversion tracking setup — a Top-Rated Team section (ai.top-rated.team)",
+  "description": "ChatGPT Ads conversion tracking setup \u2014 a Top-Rated Team section (ai.top-rated.team)",
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
     "prebuild": "tsx scripts/build-llms.ts",
@@ -15,8 +15,10 @@
     "kb:fetch": "tsx scripts/build-kb.ts fetch",
     "kb:embed": "tsx scripts/build-kb.ts embed",
     "kb:build": "tsx scripts/build-kb.ts all",
+    "blog:build": "tsx scripts/build-blog.ts",
     "test": "tsx --test \"server/**/*.test.ts\"",
-    "verify": "npm run check && npm test && npm run build"
+    "verify": "npm run check && npm test && npm run build",
+    "cases:pdf": "tsx scripts/build-cases-pdf.ts && \"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf=docs/case-studies.pdf docs/case-studies.html"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
