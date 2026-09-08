@@ -11,11 +11,13 @@ import { DEFAULT_DOOR_ID, DOOR_BY_ID, DOOR_BY_SLUG, type DoorContract, type Door
  * taller than the pitch above it. On a door page the chrome links outnumbered
  * the links belonging to the offer about seven to one.
  *
- * What is left is the two things a footer is for: who runs this website, in the
- * name that would be on a contract, and how to reach them. Terms and an address
- * are the two links. Everything removed was either a page on another domain
- * that this site's visitor did not come for, or a list of services that is not
- * an offer and cannot be clicked anyway.
+ * What is left is who runs this website, in the name that would be on a
+ * contract, how to reach them, three products of ours that otherwise have no
+ * standing link from a page, and the two files an arriving agent reads. The
+ * identification line is the one place the legal name is allowed to appear, and
+ * it is not edited here. Everything else that used to live in this footer was
+ * either a page on another domain that this site's visitor did not come for, or
+ * a list of services that is not an offer and cannot be clicked anyway.
  *
  * THE PAGE THAT IS NOT OURS
  *
@@ -29,10 +31,9 @@ import { DEFAULT_DOOR_ID, DOOR_BY_ID, DOOR_BY_SLUG, type DoorContract, type Door
  * Which pages those are is not written down here. The footer reads the door out
  * of the address it is standing on and compares its contract with the contract
  * on the door that pays for the site. Hand a door to another company in
- * shared/doors.ts and this appears on it; take it back and it goes. No door is
- * named in this file, and neither is any company: every name below is read off
- * a row, so correcting a legal name is a change to that row and to nothing
- * else.
+ * shared/doors.ts and this appears on it; take it back and it goes. The partner
+ * name is read off that row, so correcting a legal name is a change to the row
+ * and to nothing else.
  * ------------------------------------------------------------------------- */
 
 /** The contract on the door that runs this site, read off the row rather than typed again. */
@@ -56,6 +57,8 @@ function useSomebodyElsesDoor(): DoorContract | null {
 }
 
 const LINK = "draw draw-on text-muted-foreground hover:text-foreground";
+/** Same row as Terms, without the always-on underline — filenames, not labels. */
+const LINK_QUIET = "draw text-muted-foreground hover:text-foreground [text-transform:none]";
 
 export function Footer() {
   const theirs = useSomebodyElsesDoor();
@@ -114,11 +117,38 @@ export function Footer() {
           </div>
         ) : null}
 
+        <nav
+          aria-label="Products"
+          className="type-note mb-[var(--s2)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]"
+        >
+          <Link href="/services/google-ads" data-testid="link-footer-google-ads" className={LINK}>
+            Google Ads
+          </Link>
+          <a
+            href="https://adgrant.ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="link-footer-adgrant"
+            className={LINK}
+          >
+            AdGrant.AI
+          </a>
+          <a
+            href="https://being.marketing"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="link-footer-being"
+            className={LINK}
+          >
+            Being.<s className="line-through">Marketing</s>
+          </a>
+        </nav>
+
         <div className="flex flex-wrap items-baseline justify-between gap-x-[var(--s4)] gap-y-[var(--s2)]">
           <p className="type-meta text-muted-foreground" data-testid="text-footer-operator">
             &copy; {year} {OURS.legalName} &mdash; Prague, Madeira, Kyiv, Bratislava, Batumi
           </p>
-          <nav className="type-meta flex items-baseline gap-[var(--s3)]">
+          <nav className="type-meta flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]">
             {/* The way back to a room you already kept. One place, in words, at
                 the end of the scroll — the site's only standing link to /w. The
                 page itself explains, in one sentence, why there are none when a
@@ -142,6 +172,15 @@ export function Footer() {
                 Contact
               </a>
             ) : null}
+            {/* Real <a>, not a wouter Link: these are files in client/public, and
+                a client-side route would 404 them. Filenames as written, so they
+                sit in this row without looking like a fourth legal page. */}
+            <a href="/llms.txt" data-testid="link-footer-llms" className={LINK_QUIET}>
+              llms.txt
+            </a>
+            <a href="/llms-full.txt" data-testid="link-footer-llms-full" className={LINK_QUIET}>
+              llms-full.txt
+            </a>
           </nav>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
-import AllCases from "@/components/site/Cases";
+import CaseFilter from "@/components/site/CaseFilter";
 import TalkToUs from "@/components/site/TalkToUs";
 import { CASES } from "@shared/cases";
 import { MAIN_SITE_URL } from "@shared/roster";
@@ -16,10 +16,9 @@ import { LINK, META, PAGE, READ_MUTED } from "@/components/site/doors/quiet";
  * application, which the apex migration will make a redirect back to here —
  * pointing a visitor at a page that is about to point back.
  *
- * It renders the same two results the home page does, from the same component,
- * so there is no second copy of a number to go stale. That is deliberately all
- * it renders: the fuller set still lives on top-rated.team and this page says
- * so rather than pretending to be the whole record.
+ * It renders every case in shared/cases.ts, and a filter that can show the
+ * ones for one service. The filter reads DOORS and the derived `doors` field
+ * on each case; this page does not list services by hand.
  *
  * When docs/apex-migration.md is carried out, /case-studies is one of the
  * fourteen addresses that has to keep answering, and this is the page that
@@ -52,17 +51,17 @@ export default function CaseStudies() {
             {CASES.length} accounts, and what was actually done in them.
           </h1>
           <p className={`mt-[var(--s3)] max-w-[62ch] ${READ_MUTED}`}>
-            Each one reads the same way: what was wrong, what it had to do, what was done — as the list it was — and
-            then the numbers. The list is the part worth reading. Percentages on their own only prove somebody is
-            willing to print percentages.
+            That is all of them, not a selection. Each one reads the same way: what was wrong, what it had to do, what
+            was done — as the list it was — and then the numbers. The list is the part worth reading. Percentages on
+            their own only prove somebody is willing to print percentages.
           </p>
         </section>
 
-        <AllCases />
+        <CaseFilter />
 
         <section className={`${PAGE} pt-[var(--s5)]`}>
           <p className={READ_MUTED}>
-            That is all of them, not a selection. They are also the ones published on{" "}
+            Every case here is one published on{" "}
             <a
               href={`${MAIN_SITE_URL}/case-studies`}
               target="_blank"
