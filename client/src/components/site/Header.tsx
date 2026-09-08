@@ -44,6 +44,20 @@ const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) =>
  */
 const LINK = "type-meta draw text-muted-foreground hover:text-foreground";
 
+/**
+ * A mark, not a word, so it does not take the underline the words take.
+ *
+ * `.draw` paints a 1px rule across the element's own width on hover. Under a
+ * glyph that reads as a strikethrough rather than as a link, which is what the
+ * owner saw. An icon signals with colour instead: muted at rest, the site's one
+ * accent on hover and on keyboard focus — and the focus ring is drawn
+ * explicitly, because losing `.draw` also loses the focus-visible state it
+ * carried.
+ */
+const MARK_LINK =
+  "text-muted-foreground transition-colors hover:text-primary focus-visible:text-primary " +
+  "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-[2px]";
+
 /*
  * "OPEN A ROOM" IS OUT OF THIS BAR, on the owner's instruction, and the helper
  * that scrolled to it went with it — it had no other caller.
@@ -138,13 +152,18 @@ export function Header() {
             the baseline in a bar padded for a 17px line would have sat on the
             bottom border.
 
+            RAISED AGAIN, by 0.11em, on the owner's instruction: he wants the
+            mark's top edge slightly ABOVE the top of the T rather than level
+            with it. The arithmetic is the same and one term moved — translate is
+            height minus cap minus that overhang.
+
             Verified on a 4x screenshot, not by eye.
           */}
           <img
             src="/assets/top-rated-logo.png"
             alt=""
             aria-hidden="true"
-            className="h-[1.45em] w-[1.45em] shrink-0 translate-y-[0.75em]"
+            className="h-[1.45em] w-[1.45em] shrink-0 translate-y-[0.64em]"
           />
           Top-Rated Team
         </Link>
@@ -198,7 +217,7 @@ export function Header() {
             className={`${LINK} inline-flex items-center`}
             aria-label="This site's source on GitHub"
           >
-            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-[1.15em] w-[1.15em] translate-y-[0.16em] fill-current">
+            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-[1.15em] w-[1.15em] translate-y-[0.07em] fill-current">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
             </svg>
           </a>

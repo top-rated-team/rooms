@@ -324,23 +324,34 @@ function DoorPage({ door }: { door: DoorDef }) {
           </p>
 
           <div className="mt-[var(--s4)] grid items-end gap-[var(--s4)] pb-[var(--s6)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)]">
-            <h1 className={DISPLAY} data-testid="text-door-headline">
-              {door.headline}
-            </h1>
+            {/*
+              THE ROOM SITS UNDER THE HEADLINE, in the wide column, on the
+              owner's instruction — he asked for it on the left so it is seen.
+              It is the most visible position on the page: the first thing after
+              the largest type, on the side the eye starts.
+
+              The panel's own action stays on the right, beside the paragraph
+              that explains what the panel is. That keeps the pair reading as
+              what it is — the offer, then the way to try it — rather than as
+              two buttons competing in one corner.
+            */}
+            <div>
+              <h1 className={DISPLAY} data-testid="text-door-headline">
+                {door.headline}
+              </h1>
+              {panelIsOpen ? <div className="mt-[var(--s3)]">{openRoomAction("hero")}</div> : null}
+            </div>
 
             <div>
               <p className={READ_MUTED} data-testid="text-door-blurb">
                 {door.blurb}
               </p>
 
-              {/* TWO ACTIONS, and the order is the argument: the room is what is
-                  being sold and the panel is the demonstration of it. A door
-                  with no panel still has no action here — the call is offered
+              {/* A door with no panel has no action here — the call is offered
                   once, below, beside the sentence that says why there is no
                   panel — because on that door the room is not ours to open. */}
               {panelIsOpen ? (
-                <div className="mt-[var(--s4)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s2)]">
-                  {openRoomAction("hero")}
+                <div className="mt-[var(--s4)]">
                   <button type="button" data-testid="button-door-ask" className={ACTION_QUIET} onClick={askInPanel}>
                     Put a question to the agent
                   </button>

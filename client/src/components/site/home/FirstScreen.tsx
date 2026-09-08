@@ -19,6 +19,7 @@ import { Fragment, lazy, Suspense, useState } from "react";
 import { Link } from "wouter";
 
 import { BOOK_A_CALL_URL, PROOF, WHATSAPP_NUMBER, WHATSAPP_URL } from "@shared/roster";
+import { useOpenRoom } from "@/hooks/use-open-room";
 import { useBooking } from "@/hooks/use-booking";
 
 
@@ -30,6 +31,7 @@ const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) =>
 export function FirstScreen() {
   const [messageOpen, setMessageOpen] = useState(false);
   const booking = useBooking();
+  const room = useOpenRoom();
 
   return (
     <section className="mx-auto grid max-w-[var(--page)] grid-cols-1 items-end gap-[var(--s4)] px-[var(--s3)] py-[var(--s5)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)] lg:py-[var(--s6)]">
@@ -212,39 +214,28 @@ export function FirstScreen() {
             to the header and to the ask section and never to the first screen,
             which is the one place every visitor sees.
 
-            It scrolls rather than opening a room on the spot, deliberately: the
-            section it lands on says in two sentences what a room is before it
-            offers one, and "open a room" pressed by somebody who has not read
-            that sentence is a room they will not come back to.
+            IT OPENS A ROOM. It used to scroll to the ask section, and he was
+            right that this is wrong: the button says open. The scroll was a
+            hedge — the worry was somebody arriving in a room without having
+            read what a room is — and the room answers that itself, in its own
+            arrival note, which is where it belongs rather than in a button that
+            declines to do what it says.
           */}
-          {/* A fourth way, and the only one on this screen that reaches a
-              person in a minute. The number is shown rather than hidden behind
-              a word — it is what somebody recognises, and on a desktop it is
-              what they copy. */}
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="link-home-whatsapp"
-            className="border-b border-border pb-[var(--s1)] text-muted-foreground hover:border-foreground hover:text-foreground"
+          <button
+            type="button"
+            data-testid="button-home-open-a-room"
+            onClick={() => void room.open()}
+            disabled={room.opening}
+            className="border-b border-border pb-[var(--s1)] text-muted-foreground hover:border-foreground hover:text-foreground disabled:opacity-50"
           >
-            {WHATSAPP_NUMBER}
-          </a>
-          <a
-            href="#panel"
-            data-testid="link-home-open-a-room"
-            onClick={(event) => {
-              const section = document.getElementById("panel");
-              if (!section || event.metaKey || event.ctrlKey || event.shiftKey) return;
-              event.preventDefault();
-              const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-              section.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
-            }}
-            className="border-b border-border pb-[var(--s1)] text-muted-foreground hover:border-foreground hover:text-foreground"
-          >
-            Open a room
-          </a>
+            {room.opening ? "Opening a room…" : "Open a room"}
+          </button>
         </p>
+        {room.error ? (
+          <p role="alert" className="type-note mt-[var(--s2)] text-destructive">
+            {room.error}
+          </p>
+        ) : null}
       </div>
 
       {messageOpen ? (
