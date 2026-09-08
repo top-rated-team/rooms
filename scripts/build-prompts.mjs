@@ -147,7 +147,23 @@ function oneLine(text) {
 }
 
 fs.writeFileSync("docs/prompts.html", page(waveHtml));
-console.log(`docs/prompts.html — ${WAVES.reduce((n, w) => n + w.keys.length, 0)} prompts in ${WAVES.length} waves`);
+const total = WAVES.reduce((n, w) => n + w.keys.length, 0);
+console.log(`docs/prompts.html — ${total} prompts in ${WAVES.length} waves`);
+/*
+ * The reminder exists because of a real failure, not as decoration.
+ *
+ * Writing this file and publishing the page the owner copies from are two
+ * steps, and for several days I did only the first. He ran a wave whose prompt
+ * had never reached him, the agent produced nothing, and it took him telling me
+ * "there is no home-room in the file I take everything from" to find it.
+ *
+ * Nothing here can publish for me — that is a tool call, not a command — so the
+ * only defence is that the step is impossible to forget quietly.
+ */
+console.log("");
+console.log("  REPUBLISH THE ARTIFACT. This file is not what the owner reads:");
+console.log("  he copies from the published page, and it is now behind by");
+console.log(`  whatever changed. ${total} prompts should appear there.`);
 
 function page(body) {
   const TOTAL = WAVES.reduce((n, w) => n + w.keys.length, 0);
