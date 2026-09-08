@@ -175,3 +175,44 @@ export interface ThreadPrice {
   /** Thread root, when this price sits under a specific turn. */
   parentId: string | null;
 }
+
+/* ---------------------- admitted outside-agent seats ---------------------- */
+/* Somebody else's agent, let into one thread. The secret that authenticates
+ * it is not this shape: that credential is shown once at admission and never
+ * stored on the client. The room link is a state handle. It is not a seat
+ * credential, and presenting it as one must not work. */
+
+export type SeatMode = "watch" | "suggest" | "act";
+
+export interface SeatRevocation {
+  on: string;
+  by: string;
+  reason: string;
+}
+
+/**
+ * An admitted outside agent as the room is allowed to see it. The member rail
+ * already renders `company`, `mode`, `thread`, `joinedOn`, `expiresOn`,
+ * `callsUsed` and `callsPerDay`. `boundParty` is who on our roster is
+ * answerable for the admission. The authenticating secret is never in here.
+ */
+export interface Seat {
+  id: string;
+  memberKey: string;
+  /** @handle in the thread. Not a roster id. */
+  handle: string;
+  displayName: string;
+  company: string;
+  mode: SeatMode;
+  /** The single thread it was admitted to, as the channel slug. */
+  thread: string;
+  channelId: string;
+  joinedOn: string;
+  expiresOn: string;
+  callsUsed: number;
+  callsPerDay: number;
+  /** Display name of the person on our side this seat is bound to. */
+  boundParty: string;
+  boundPartyKey: string;
+  revoked?: SeatRevocation;
+}
