@@ -289,13 +289,31 @@ export const DOORS: DoorDef[] = [
     path: "/services/google-ads",
     initials: "GA",
     tone: "bg-chart-1/10 text-chart-1",
-    headline: "Google Ads management",
+    /*
+     * THE OWNER'S NAME, and the router was taught to carry it rather than the
+     * name being cut to suit the router.
+     *
+     * It puts "chatgpt ads" and "paid ads" into this door's phrase table, where
+     * two other doors already own them. Measured, that used to cost two
+     * questions that worked: "Do you do ChatGPT Ads?" and "Can you audit our
+     * paid ads?" both stopped resolving and started asking the visitor which of
+     * three doors they meant. The fix is in server/ai/route-question.ts — a
+     * phrase several doors carry now scores a fraction of one only this door
+     * has — and it is a better scorer for every door, not a patch for this row.
+     */
+    headline: "Google Ads, ChatGPT Ads and Paid Ads",
     blurb:
-      "Search, Performance Max and Shopping, run by the people Google books to train other advertisers. Account structure, bidding and negatives — and the measurement underneath them, because bad data makes every bidding decision wrong.",
+      "Month-to-month management of the account — Google Ads first, and the same team on ChatGPT Ads, Meta and LinkedIn. Search, Performance Max and Shopping, run by the people Google books to train other advertisers. Account structure, bidding and negatives — and the measurement underneath them, because bad data makes every bidding decision wrong.",
     firstAgentId: "google-ads",
     agentLine:
       "The Google Ads Agent answers first, from Google's own Google Ads documentation, and cites the page it used: account structure, bidding, Performance Max, Shopping feeds and the conversion tracking underneath them. It does not audit an account it cannot see, and it does not say whether Google will approve an ad or lift a suspension.",
     starters: [
+      /* The buyer's own phrasing, and it earns its place mechanically as well
+         as editorially: server/ai/route-question.ts scores a door on the words
+         in its headline, blurb and starters, and "management" had drifted out
+         of all three when the headline was renamed — which sent "We need help
+         with paid ads management" to the Ad Grants door. */
+      "Can you take over management of our Google Ads account?",
       "Should we split PMax from Search, or let PMax absorb everything?",
       "How do I structure a $3K/month B2B SaaS account?",
       "Our CPA doubled after a bidding change — how do we diagnose it?",

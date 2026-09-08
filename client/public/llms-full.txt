@@ -110,14 +110,15 @@ and sends the invoice.
 Terms: https://top-rated.team/terms
 Contact: https://top-rated.team/contact
 
-### 3. Google Ads management
+### 3. Google Ads, ChatGPT Ads and Paid Ads
 
 https://ai.top-rated.team/services/google-ads
 
-Search, Performance Max and Shopping, run by the people Google books to train
-other advertisers. Account structure, bidding and negatives — and the
-measurement underneath them, because bad data makes every bidding decision
-wrong.
+Month-to-month management of the account — Google Ads first, and the same team
+on ChatGPT Ads, Meta and LinkedIn. Search, Performance Max and Shopping, run
+by the people Google books to train other advertisers. Account structure,
+bidding and negatives — and the measurement underneath them, because bad data
+makes every bidding decision wrong.
 
 Status: open, with a panel on the page.
 
@@ -130,8 +131,9 @@ Performance Max, Shopping feeds and the conversion tracking underneath them.
 It does not audit an account it cannot see, and it does not say whether Google
 will approve an ad or lift a suspension.
 
-Questions the panel offers. It prints the first four and puts the rest behind a "1 more" control:
+Questions the panel offers. It prints the first four and puts the rest behind a "2 more" control:
 
+- Can you take over management of our Google Ads account?
 - Should we split PMax from Search, or let PMax absorb everything?
 - How do I structure a $3K/month B2B SaaS account?
 - Our CPA doubled after a bidding change — how do we diagnose it?

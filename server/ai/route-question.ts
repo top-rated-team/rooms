@@ -187,28 +187,57 @@ function doorDocument(door: DoorDef): string {
   ].join("\n");
 }
 
-function phrasesOf(door: DoorDef): string[] {
-  const phrases = new Set<string>();
+/**
+ * A door's phrases, in two kinds, because they are not the same evidence.
+ *
+ * IDENTITY is what the door IS: the words of its id, and its short headline —
+ * the name a person would use for it. MENTIONS are everything else the headline
+ * happens to contain, which is every 2- and 3-gram of it.
+ *
+ * The distinction had no cost until a headline started naming other doors'
+ * subjects. "Google Ads, ChatGPT Ads and Paid Ads" mentions ChatGPT Ads, and
+ * the conversion-tracking door IS ChatGPT Ads. Flat scoring cannot tell those
+ * apart, and measured, it did not: "Do you do ChatGPT Ads?" came back as a
+ * three-way question instead of a door, with the mentioner two points behind
+ * the door that owns the subject.
+ *
+ * A door that IS the thing beats a door that mentions it. That is all this
+ * split encodes, and it is true of every door, not only of the renamed one.
+ */
+function phrasesOf(door: DoorDef): { identity: string[]; mentions: string[] } {
+  const identity = new Set<string>();
   const idWords = normalize(door.id.replace(/-/g, " "));
-  if (idWords) phrases.add(idWords);
-  const headline = normalize(door.headline);
-  if (headline) phrases.add(headline);
+  if (idWords) identity.add(idWords);
   const short = normalize(shortHeadline(door));
-  if (short) phrases.add(short);
+  if (short) identity.add(short);
+
+  const mentions = new Set<string>();
+  const headline = normalize(door.headline);
+  if (headline && !identity.has(headline)) mentions.add(headline);
 
   const headTokens = headline.split(/\s+/).filter(Boolean);
   for (let n = 2; n <= 3; n++) {
     for (let i = 0; i + n <= headTokens.length; i++) {
       const gram = headTokens.slice(i, i + n).join(" ");
-      if (gram.split(" ").some((w) => !STOP.has(w))) phrases.add(gram);
+      if (!identity.has(gram) && gram.split(" ").some((w) => !STOP.has(w))) mentions.add(gram);
     }
   }
-  return [...phrases];
+  return { identity: [...identity], mentions: [...mentions] };
 }
 
 interface Scored {
   door: DoorDef;
   score: number;
+}
+
+/**
+ * Exported for tests and for diagnosis, named so nobody routes with it. Same
+ * reason shared/roster.ts exports HOUSE_STYLE_FOR_TESTS: the scoring is the
+ * part of this file that goes wrong silently, and a green suite of exact
+ * starter matches proved that once already.
+ */
+export function scoreDoorsForTests(question: string): Scored[] {
+  return scoreDoors(question);
 }
 
 function scoreDoors(question: string): Scored[] {
@@ -223,6 +252,45 @@ function scoreDoors(question: string): Scored[] {
   for (const token of new Set(qTokens)) {
     df.set(token, docs.filter((d) => d.bag.has(token)).length);
   }
+
+  /*
+   * HOW MANY DOORS CARRY EACH PHRASE, which is the thing this scorer was not
+   * asking and needed to.
+   *
+   * Tokens have always been weighted by rarity a few lines below — a word in
+   * one door's bag is worth three times its idf, a word in every door is worth
+   * almost nothing. Phrases got a flat 5 or 8 no matter how many doors carried
+   * them, and that asymmetry is what makes a shared phrase decide a question it
+   * cannot possibly answer.
+   *
+   * It became load-bearing when the owner renamed the Google Ads door "Google
+   * Ads, ChatGPT Ads and Paid Ads". Every 2- and 3-gram of a headline enters
+   * the table, so that name puts "chatgpt ads" into a second door's phrases and
+   * "paid ads" into a third's. Measured before this change: "Do you do ChatGPT
+   * Ads?" and "Can you audit our paid ads?" stopped resolving to a door at all
+   * and started asking the visitor which of three they meant.
+   *
+   * A phrase in one door is a fact about that door. The same phrase in three is
+   * a fact about the vocabulary. Dividing by the number of carriers says
+   * exactly that, and it leaves a phrase nobody else uses worth what it always
+   * was.
+   */
+  const phraseDf = new Map<string, number>();
+  for (const d of docs) {
+    for (const phrase of new Set([...d.phrases.identity, ...d.phrases.mentions])) {
+      phraseDf.set(phrase, (phraseDf.get(phrase) ?? 0) + 1);
+    }
+  }
+
+  /* Identity is counted separately: "chatgpt ads" is one door's subject and
+     another door's passing mention, and only the first should be scarce. */
+  const identityDf = new Map<string, number>();
+  for (const d of docs) {
+    for (const phrase of new Set(d.phrases.identity)) {
+      identityDf.set(phrase, (identityDf.get(phrase) ?? 0) + 1);
+    }
+  }
+
   const n = docs.length;
 
   return docs.map(({ door, bag, phrases }) => {
@@ -254,11 +322,19 @@ function scoreDoors(question: string): Scored[] {
      * the whole fix: " google ad " is not inside " ... google ads ".
      */
     const padded = ` ${q} `;
-    for (const phrase of phrases) {
+    for (const phrase of phrases.identity) {
+      if (phrase.length < 4 || !padded.includes(` ${phrase} `)) continue;
+      if (phrase.split(" ").every((w) => STOP.has(w))) continue;
+      /* Being the thing is worth more than mentioning it, and worth less when
+         two doors are the same thing — which no two are today. */
+      score += 12 / (identityDf.get(phrase) ?? 1);
+    }
+
+    for (const phrase of phrases.mentions) {
       if (phrase.length < 4 || !padded.includes(` ${phrase} `)) continue;
       const words = phrase.split(" ").filter((w) => !STOP.has(w));
       if (words.length === 0) continue;
-      score += words.length >= 3 ? 8 : 5;
+      score += (words.length >= 3 ? 8 : 5) / (phraseDf.get(phrase) ?? 1);
     }
 
     for (const token of qTokens) {
