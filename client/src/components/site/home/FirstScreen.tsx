@@ -41,24 +41,26 @@ export function FirstScreen() {
         the market asks for. A headline that says "seven" has to be edited every
         time that happens, and will not be.
 
-        FIFTH PASS, and the two halves now do different jobs. The owner wanted
-        the opening to be about hybridising AI with digital experts for the
-        reader's own business. Said plainly that way it collides with the second
-        sentence, which already names people and AI agents — a two-sentence
-        headline that says the same thing twice is shorter than it looks and
-        weaker than either half.
+        SIXTH PASS, and the owner's two objections were both right.
 
-        So the first half carries the CATEGORY and the ADDRESSEE — hybrid,
-        digital services, and "shaped to your business", which is his "именно
-        твоего бизнеса" — and the second half stays the mechanism, which is what
-        hybrid actually means here. "Hybridise" as a verb was the other option
-        and it reads as a brochure; the adjective is his own word from an
-        earlier pass and it does the same work without asking anyone to admire
-        it.
+        "Hybrid digital services" is a pre-AI phrase: in marketing it means
+        cross-channel or cross-discipline, so a reader who knows the trade reads
+        it as the old thing. The fix is not a different adjective but a
+        different noun — HYBRID ATTACHES TO THE TEAM, not to the services.
+        "Hybrid team" in 2026 can only mean people and software working the same
+        job, which is what this is.
 
-        The count is gone for good: it was a ceiling, and White Label is the
-        door that breaks it. The list immediately below says how many there are
-        today, generated, so nobody has to remember.
+        He also wanted it as a verb and thought that was impossible. It is not,
+        and the verb was already his: "AI agent or Human? Hire both for less"
+        was one of the slogans he sent. "Hire" is the word his own market uses —
+        it is what the button says on Upwork, where the record on the right of
+        this screen comes from — so the headline is an instruction rather than a
+        label, and it is shorter for it: 71 characters against 95.
+
+        The count is gone for good, and that is settled rather than forgotten: a
+        number in a headline is a ceiling, and White Label is the door that
+        breaks it. The list immediately below prints how many there are today,
+        generated, so nobody has to remember.
 
         THE SECOND SENTENCE IS THE OWNER'S OWN SHORTER ONE. He tried three:
         "One AI room", then "One AI-human hybrid room behind all of them", then
@@ -71,19 +73,19 @@ export function FirstScreen() {
         which is the half he had just asked to bring forward.
       */}
       <h1 className="type-display m-0" data-testid="text-home-headline">
+        Hire a{" "}
         <Link
           href="/services"
           data-testid="link-headline-services"
-          /* ONLY THE TERM IS LINKED, not the whole sentence. At 68px the
-             sentence wraps onto three lines, and a 3px rule under all three
-             reads as damage rather than as a link — a render showed that
-             plainly. "Hybrid digital services" is the thing /services is a list
-             of, which also makes it the right amount of text to be a link. */
+          /* Two words, so the rule sits on one line at 68px. Linking the whole
+             sentence put a 3px underline across three wrapped lines with a
+             stub where the wrap fell, which a render showed reads as damage.
+             "hybrid team" is also the thing /services is a list of the work of. */
           className="underline decoration-[3px] underline-offset-[0.16em] decoration-line hover:decoration-foreground"
         >
-          Hybrid digital services
-        </Link>
-        , shaped to your business. One room for people and AI agents to deliver.
+          hybrid team
+        </Link>{" "}
+        for your business. People and AI agents in one room.
       </h1>
 
       <div>

@@ -216,3 +216,54 @@ export interface Seat {
   boundPartyKey: string;
   revoked?: SeatRevocation;
 }
+
+/* ------------------------- thread approval cards -------------------------- */
+/* One proposed change sitting in a thread. A person approves or declines it;
+ * the room keeps who and when. Nothing here writes to an ad account — that
+ * write is later work. The shape is the Top-Voice proposal card: a heading
+ * that says New or Edit, a before and after per field, and two buttons. */
+
+export type ThreadApprovalStatus = "pending" | "approved" | "declined";
+
+/**
+ * One field that would change. `from` is what is there now — including null
+ * or "" when the field is empty today, which the card prints as an em-dash.
+ * Omitting `from` is not the same as empty: that is a missing current value.
+ */
+export interface ApprovalChange {
+  field: string;
+  from: unknown;
+  to: unknown;
+}
+
+/**
+ * A proposed change in a thread, approved or not. `heading` is derived from
+ * `creates`, `kind` and `targetName` on the server, never typed twice.
+ * `decidedBy` / `decidedAt` are who pressed the button and when; both are
+ * null while pending. The same object is what a later visit reads.
+ */
+export interface ThreadApproval {
+  id: string;
+  /** The line the visitor reads first: "New campaign «Spring»" or "Edit campaign «Spring»". */
+  heading: string;
+  /** Why this was proposed, in one sentence. */
+  summary: string;
+  /** What kind of thing this acts on, in the buyer's words — "campaign", "ad group". */
+  kind: string;
+  /** True when applying this would create something, rather than edit what exists. */
+  creates: boolean;
+  /** The named thing it acts on, or the name it would get. Null when unnamed. */
+  targetName: string | null;
+  changes: ApprovalChange[];
+  status: ThreadApprovalStatus;
+  /** Who put this in the thread — an agent or a person, as a display name. */
+  proposedBy: string;
+  proposedAt: string;
+  /** Who approved or declined; null while pending. */
+  decidedBy: string | null;
+  /** ISO timestamp of the decision; null while pending. */
+  decidedAt: string | null;
+  channelId: string;
+  /** Thread root, when this sits under a specific turn. */
+  parentId: string | null;
+}

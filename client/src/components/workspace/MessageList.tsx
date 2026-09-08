@@ -4,6 +4,7 @@ import type { Channel, Member, Message } from "@shared/schema";
 import type { ThreadPrice } from "@shared/api";
 import type { TypingSignal } from "@/hooks/use-workspace";
 import { MessageItem } from "@/components/workspace/MessageItem";
+import { ApprovalCard, threadApprovalFromMeta } from "@/components/workspace/ApprovalCard";
 import { PriceCard, threadPriceFromMeta } from "@/components/workspace/PriceCard";
 import { cn } from "@/lib/utils";
 import { CHROME, FOCUS, LABEL, META, READ } from "@/components/workspace/room-style";
@@ -53,6 +54,14 @@ function starterQuestions(channel: Channel | null, doorAgentId?: string | null):
 
 function priceOn(message: Message): ThreadPrice | null {
   return threadPriceFromMeta({ price: message.meta?.price });
+}
+
+/* The approval-card parcel built and tested this and could not mount it: it did
+ * not own the room. Same handoff PriceCard arrived on, same shape — a card
+ * carried on a message's own meta, so a thread that holds one renders it
+ * instead of the message body. */
+function approvalOn(message: Message) {
+  return threadApprovalFromMeta({ approval: message.meta?.approval });
 }
 
 function nameForKey(key: string, members: Member[]): string {
@@ -283,6 +292,7 @@ export function MessageList({
             previous.authorKey === message.authorKey &&
             new Date(message.createdAt).getTime() - new Date(previous.createdAt).getTime() < RUN_WINDOW_MS;
           const price = priceOn(message);
+          const approval = approvalOn(message);
           const attached = pricesByParent.get(message.id) ?? [];
           const paidNotice = message.authorKind === "system" && Boolean(message.meta?.paid) && !price;
 
@@ -301,6 +311,8 @@ export function MessageList({
                 </p>
               ) : price ? (
                 <PriceCard price={price} />
+              ) : approval ? (
+                <ApprovalCard approval={approval} />
               ) : (
                 <MessageItem
                   message={message}
