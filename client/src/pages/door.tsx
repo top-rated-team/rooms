@@ -254,6 +254,43 @@ function DoorPage({ door }: { door: DoorDef }) {
     navigate(result.room.path);
   }, [createRoom, navigate, openingRoom]);
 
+  /*
+   * THE ROOM, IN EVERY SECTION OF THE PAGE, on the owner's instruction — and it
+   * replaces the nav item, which he had removed in the same breath. The reason
+   * he gave for both is one reason: a nav item points at a place, and this is an
+   * offer, so it belongs beside the offer rather than in the chrome.
+   *
+   * It repeats, and that is deliberate against this file's own older rule.
+   * "One action on the page" was written to stop a second "talk to a person"
+   * competing with the first, and it is still right about that. This is not a
+   * second call to action — it is the SAME one, said again where a reader who
+   * has scrolled past it can act on it. A door page runs to six screens; an
+   * offer made once at the top of it is an offer most readers never see.
+   *
+   * One handler, one error, one busy state, three call sites.
+   */
+  const openRoomAction = (where: "hero" | "panel" | "close") => (
+    <div>
+      <button
+        type="button"
+        /* Distinct per place: the same button rendered three times under one
+           id would make any assertion about "the" open-room button match
+           three, which is the kind of test that passes for the wrong reason. */
+        data-testid={`button-door-open-room-${where}`}
+        className={where === "hero" ? ACTION : ACTION_QUIET}
+        onClick={() => void openRoom()}
+        disabled={openingRoom}
+      >
+        {openingRoom ? "Opening a room…" : "Open a room"}
+      </button>
+      {roomError ? (
+        <p role="alert" className="type-note mt-[var(--s2)] text-destructive">
+          {roomError}
+        </p>
+      ) : null}
+    </div>
+  );
+
   const room = panel.stage === "kept" ? panel.room : null;
 
   return (
@@ -294,15 +331,15 @@ function DoorPage({ door }: { door: DoorDef }) {
                 {door.blurb}
               </p>
 
-              {/* One action on the page, and it is the thing the page is for.
-                  A door with no panel has nothing to ask, so it has no action
-                  here either — the call is offered once, below, beside the
-                  sentence that says why there is no panel. Two "talk to a
-                  person" links on one screen is the second call to action this
-                  direction exists to delete. */}
+              {/* TWO ACTIONS, and the order is the argument: the room is what is
+                  being sold and the panel is the demonstration of it. A door
+                  with no panel still has no action here — the call is offered
+                  once, below, beside the sentence that says why there is no
+                  panel — because on that door the room is not ours to open. */}
               {panelIsOpen ? (
-                <div className="mt-[var(--s4)]">
-                  <button type="button" data-testid="button-door-ask" className={ACTION} onClick={askInPanel}>
+                <div className="mt-[var(--s4)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s2)]">
+                  {openRoomAction("hero")}
+                  <button type="button" data-testid="button-door-ask" className={ACTION_QUIET} onClick={askInPanel}>
                     Put a question to the agent
                   </button>
                 </div>
@@ -446,20 +483,7 @@ function DoorPage({ door }: { door: DoorDef }) {
                       people already in it, the work written out as a checklist — and no signup, because the link in
                       your browser is the whole account.
                     </p>
-                    <button
-                      type="button"
-                      data-testid="button-door-open-room"
-                      className={`${ACTION} mt-[var(--s3)]`}
-                      onClick={() => void openRoom()}
-                      disabled={openingRoom}
-                    >
-                      {openingRoom ? "Opening a room…" : "Open a room"}
-                    </button>
-                    {roomError ? (
-                      <p role="alert" className="type-note mt-[var(--s2)] text-destructive">
-                        {roomError}
-                      </p>
-                    ) : null}
+                    <div className="mt-[var(--s3)]">{openRoomAction("panel")}</div>
                   </div>
                 </div>
               ) : (
@@ -617,9 +641,13 @@ function DoorPage({ door }: { door: DoorDef }) {
                 we run, and offers no second way in — the call above is the way
                 in, and it was offered once. */}
             {panelIsOpen ? (
-              <p className={READ}>
-                Ask first. It costs nothing, and it is the fastest way to find out whether you need us at all.
-              </p>
+              <>
+                <p className={READ}>
+                  Ask first if you would rather. It costs nothing, and it is the fastest way to find out whether you
+                  need us at all — but the room is the thing, and it opens without a question.
+                </p>
+                <div className="mt-[var(--s3)]">{openRoomAction("close")}</div>
+              </>
             ) : (
               <p className={READ_MUTED}>
                 There is no magic: just expertise, dedicated hours, and a systematic approach.

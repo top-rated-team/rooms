@@ -44,28 +44,16 @@ const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) =>
  */
 const LINK = "type-meta draw text-muted-foreground hover:text-foreground";
 
-/**
- * Take the reader to the panel and the room, wherever they are standing.
+/*
+ * "OPEN A ROOM" IS OUT OF THIS BAR, on the owner's instruction, and the helper
+ * that scrolled to it went with it — it had no other caller.
  *
- * The section carries id="panel" on the home page and on every door page that
- * has one, so on those this scrolls and the URL is left alone. Anywhere else —
- * /pricing, /case-studies — there is nothing to scroll to, so the href is
- * allowed to do its job and load the home page at that anchor.
- *
- * Not a wouter Link: a client-side navigation to "/#panel" changes the route
- * without the browser ever acting on the fragment, so the reader would arrive
- * at the top of the home page having asked for a section halfway down it.
+ * It was here for one turn and the objection is fair: a nav item is a wayfinder,
+ * and this one pointed at a section rather than a place, which made it the odd
+ * one out among six labels for pages and actions. Where it belongs is where the
+ * offer is, so it is now in the door pages' own sections, repeated, and on the
+ * first screen — see client/src/pages/door.tsx.
  */
-function scrollToPanel(event: React.MouseEvent<HTMLAnchorElement>) {
-  if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
-
-  const section = document.getElementById("panel");
-  if (!section) return;
-
-  event.preventDefault();
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  section.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
-}
 
 export function Header() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -190,12 +178,6 @@ export function Header() {
           <Link href="/services/white-label" data-testid="link-nav-white-label" className={LINK}>
             White label
           </Link>
-          {/* Before "Book a call" on the owner's instruction, and the order
-              argues something: the room is free and immediate, the call is
-              neither. The cheaper way in goes first. */}
-          <a href="/#panel" data-testid="link-nav-open-a-room" className={LINK} onClick={scrollToPanel}>
-            Open a room
-          </a>
           <a
             href={BOOK_A_CALL_URL}
             target="_blank"
@@ -267,17 +249,6 @@ export function Header() {
           <Link href="/services/white-label" onClick={close} data-testid="link-menu-white-label" className={LINK}>
             White label
           </Link>
-          <a
-            href="/#panel"
-            data-testid="link-menu-open-a-room"
-            className={LINK}
-            onClick={(event) => {
-              close();
-              scrollToPanel(event);
-            }}
-          >
-            Open a room
-          </a>
           <a
             href={BOOK_A_CALL_URL}
             target="_blank"
