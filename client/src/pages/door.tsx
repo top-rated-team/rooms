@@ -11,6 +11,7 @@ import {
   type DoorDef,
 } from "@shared/doors";
 import { BOOK_A_CALL_URL } from "@shared/roster";
+import { useBooking } from "@/hooks/use-booking";
 import AskWidget from "@/components/site/AskWidget";
 import { doorBody } from "@/components/site/doors/bodies";
 import {
@@ -238,6 +239,7 @@ function DoorPage({ door }: { door: DoorDef }) {
    * agent is an empty room, and on the partner's door it would be one of our
    * rooms wearing their name.
    */
+  const booking = useBooking();
   const [openingRoom, setOpeningRoom] = useState(false);
   const [roomError, setRoomError] = useState<string | null>(null);
 
@@ -495,12 +497,16 @@ function DoorPage({ door }: { door: DoorDef }) {
                     A call covers the same ground, and it is with a person who can say what this would actually
                     involve.
                   </p>
+                  {/* The popup, not a tab. Everything that says "Book a call" on the public site
+   goes through useBooking so the behaviour is decided once — and this anchor
+   was one of four that had been left as a plain link. */}
                   <a
                     href={BOOK_A_CALL_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     data-testid="link-door-book-call"
                     className={`${ACTION} mt-[var(--s3)]`}
+                    {...booking}
                   >
                     Talk to a person
                   </a>

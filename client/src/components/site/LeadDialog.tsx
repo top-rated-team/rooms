@@ -4,6 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowRight, Check, Loader2, X } from "lucide-react";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID, DOORS, type DoorDef } from "@shared/doors";
 import { BOOK_A_CALL_URL, EXPERTS, SERVICES, SERVICE_GROUPS, type ExpertDef } from "@shared/roster";
+import { useBooking } from "@/hooks/use-booking";
 import type { CreateWorkspaceResponse } from "@shared/api";
 
 const BTN_BASE =
@@ -119,6 +120,8 @@ async function readError(res: Response, fallback: string): Promise<string> {
 }
 
 export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
+  /* The popup rather than a tab, decided once in useBooking. */
+  const booking = useBooking();
   const [, navigate] = useLocation();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -322,7 +325,7 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
                   Continue in a workspace
                   {continuing ? null : <ArrowRight />}
                 </button>
-                <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={BTN_SECONDARY}>
+                <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={BTN_SECONDARY} {...booking}>
                   Book a call
                 </a>
                 <button type="button" className={BTN_GHOST} onClick={() => onOpenChange(false)}>
@@ -454,7 +457,7 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
                   {sending ? <Loader2 className="animate-spin" /> : null}
                   Send message
                 </button>
-                <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={BTN_SECONDARY}>
+                <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={BTN_SECONDARY} {...booking}>
                   Book a call instead
                 </a>
               </div>

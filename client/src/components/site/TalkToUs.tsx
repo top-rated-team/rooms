@@ -1,7 +1,8 @@
 import { lazy, Suspense, useState } from "react";
 import { Link } from "wouter";
 
-import { BOOK_A_CALL_URL } from "@shared/roster";
+import { CASES } from "@shared/cases";
+import { BOOK_A_CALL_URL, WHATSAPP_NUMBER, WHATSAPP_URL } from "@shared/roster";
 import { LINK, META, PAGE, READ_MUTED } from "@/components/site/doors/quiet";
 import { useBooking } from "@/hooks/use-booking";
 
@@ -77,11 +78,30 @@ export function TalkToUs({ className = "" }: TalkToUsProps) {
             <span className={`ml-[var(--s2)] ${META}`}>Goes to one inbox, answered by a person</span>
           </p>
 
+          {/* A fourth way, on the owner's instruction, and it is the only one
+              here that reaches a person in a minute rather than a day. The
+              number is shown rather than hidden behind a word: it is what
+              somebody recognises, and on a desktop it is what they copy. */}
+          <p className={ACTION_LINE}>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="link-whatsapp"
+              className={LINK}
+            >
+              {WHATSAPP_NUMBER}
+            </a>
+            <span className={`ml-[var(--s2)] ${META}`}>WhatsApp, straight to a person</span>
+          </p>
+
           <p className={ACTION_LINE}>
             <Link href="/case-studies" data-testid="link-case-studies" className={LINK}>
               Read the cases
             </Link>
-            <span className={`ml-[var(--s2)] ${META}`}>What the work did to two real accounts</span>
+            {/* Counted rather than written: it said "two real accounts" for as
+                long as there were two, and there are twenty-two. */}
+            <span className={`ml-[var(--s2)] ${META}`}>What the work did to {CASES.length} real accounts</span>
           </p>
         </div>
       </div>

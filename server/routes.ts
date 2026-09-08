@@ -448,6 +448,25 @@ export function registerRoutes(app: Express): void {
    *
    * Registered before anything else so no later handler can claim them first.
    */
+  /*
+   * A ROOM ADDRESS IS A CREDENTIAL, so it does not leave as a Referer.
+   *
+   * This matters now because the booking popup loads Google's scheduling embed
+   * INTO the page, and in a room that page's URL is the whole account. The
+   * modern browser default already sends only the origin cross-origin, so the
+   * token does not travel today — this makes it explicit, because a default is
+   * somebody else's decision and this one is ours. Same reasoning as the lead
+   * inbox further down, which links room addresses and has carried this header
+   * since it was written.
+   *
+   * server/index.ts already sets X-Robots-Tag for the same paths and is frozen,
+   * which is why this sits here rather than beside it.
+   */
+  app.use((req, res, next) => {
+    if (req.path.startsWith("/w/")) res.setHeader("Referrer-Policy", "no-referrer");
+    next();
+  });
+
   for (const stale of ["/work", "/use-case"]) {
     app.get(stale, (_req, res) => res.redirect(301, "/services"));
     app.get(`${stale}/:slug`, (req, res) => res.redirect(301, `/services/${encodeURIComponent(req.params.slug)}`));

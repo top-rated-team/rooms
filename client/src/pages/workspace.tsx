@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useRoute } from "wouter";
 import { AGENT_BY_ID, BOOK_A_CALL_URL, EXPERTS, MAIN_SITE_URL, type AgentDef, type ExpertDef } from "@shared/roster";
+import { useBooking } from "@/hooks/use-booking";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID, type DoorContract, type DoorDef } from "@shared/doors";
 import type { Channel, Message, TaskStatus } from "@shared/schema";
 import { useTheme } from "@/hooks/use-theme";
@@ -169,6 +170,8 @@ function ThemeToggle() {
  * is a word now. The hire is the button.
  */
 function TopBar({ workspaceName, ours }: { workspaceName: string | null; ours: boolean | null }) {
+  /* IN THE ROOM TOO, on the owner's instruction. The embed loads into a page whose URL is the whole account, so registerRoutes sets Referrer-Policy: no-referrer for /w/ — the address does not leave as a Referer */
+  const booking = useBooking();
   return (
     <header className="flex shrink-0 flex-wrap items-baseline gap-x-4 gap-y-2 px-5 py-4 sm:px-8">
       <a href={MAIN_SITE_URL} className="flex items-baseline gap-2" data-testid="link-logo">
@@ -187,7 +190,7 @@ function TopBar({ workspaceName, ours }: { workspaceName: string | null; ours: b
         </span>
       ) : null}
       <div className="ml-auto flex items-baseline gap-x-5">
-        <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={ACTION_QUIET} data-testid="button-book-call">
+        <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={ACTION_QUIET} data-testid="button-book-call" {...booking}>
           {ours === false ? `Call ${OUR_DISPLAY_NAME}` : "Book a call"}
         </a>
         <ThemeToggle />

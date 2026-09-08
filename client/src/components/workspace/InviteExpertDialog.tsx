@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { BOOK_A_CALL_URL, EXPERTS, type ExpertDef } from "@shared/roster";
+import { useBooking } from "@/hooks/use-booking";
 import { badgeForKey } from "@/components/workspace/MemberRail";
 import { cn } from "@/lib/utils";
 import { ACTION, ACTION_QUIET, CHROME, FOCUS, LABEL, LINK, META, READ } from "@/components/workspace/room-style";
@@ -101,6 +102,9 @@ export function InviteExpertDialog({
   doorId,
   offer,
 }: InviteExpertDialogProps) {
+  /* Same popup as everywhere else; see the note in workspace.tsx about /w/ and
+     the Referer. */
+  const booking = useBooking();
   const [memberKey, setMemberKey] = useState(offer?.memberKey ?? DEFAULT_EXPERT.memberKey);
   const [brief, setBrief] = useState(offer?.brief ?? "");
   const [picking, setPicking] = useState(false);
@@ -191,7 +195,7 @@ export function InviteExpertDialog({
               ) : null}
               <p className={cn(META, "mt-3 text-muted-foreground")}>
                 If it cannot wait a day,{" "}
-                <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={LINK}>
+                <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={LINK} {...booking}>
                   book a call
                 </a>{" "}
                 — it reaches the same people.
@@ -290,7 +294,7 @@ export function InviteExpertDialog({
                   <p className={cn(CHROME, "text-destructive")}>{failed}</p>
                   <p className={cn(META, "mt-1.5 text-muted-foreground")}>
                     Or{" "}
-                    <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={LINK}>
+                    <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={LINK} {...booking}>
                       book a call
                     </a>{" "}
                     and bring this room&apos;s link with you.

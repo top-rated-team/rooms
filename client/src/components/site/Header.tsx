@@ -253,9 +253,13 @@ export function Header() {
             href={BOOK_A_CALL_URL}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={close}
             data-testid="link-menu-book-a-call"
             className={LINK}
+            {...booking}
+            onClick={(event) => {
+              close();
+              booking.onClick(event);
+            }}
           >
             Book a call
           </a>

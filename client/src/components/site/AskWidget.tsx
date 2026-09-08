@@ -5,6 +5,7 @@ import type { AskEvent, KbStatus } from "@shared/api";
 import type { Citation } from "@shared/schema";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID, doorAgent, type DoorDef } from "@shared/doors";
 import { BOOK_A_CALL_URL } from "@shared/roster";
+import { useBooking } from "@/hooks/use-booking";
 
 const importAnswerMarkdown = () => import("@/components/site/AnswerMarkdown");
 const AnswerMarkdown = lazy(importAnswerMarkdown);
@@ -94,6 +95,8 @@ export interface AskWidgetProps {
 }
 
 export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMessage, onAskedForAPerson }: AskWidgetProps) {
+  /* The popup rather than a tab, decided once in useBooking. */
+  const booking = useBooking();
   // Which agent speaks first is the door's decision, not this component's.
   // Door 6 names none — nobody of ours answers in the partner's door — so the
   // chip falls back to the door's own initials rather than wearing an agent
@@ -447,8 +450,15 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
                       href={BOOK_A_CALL_URL}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={onAskedForAPerson}
                       className={`${BTN_SECONDARY_SM} mt-3`}
+                      {...booking}
+                      /* Both, in this order: record that the visitor asked for
+                         a person, then open the popup. Spreading `booking`
+                         alone replaced this handler and lost the signal. */
+                      onClick={(event) => {
+                        onAskedForAPerson?.();
+                        booking.onClick(event);
+                      }}
                     >
                       Book a call
                     </a>
@@ -468,8 +478,12 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
                 href={BOOK_A_CALL_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={onAskedForAPerson}
                 className={`${BTN_SECONDARY_SM} mt-3`}
+                {...booking}
+                onClick={(event) => {
+                  onAskedForAPerson?.();
+                  booking.onClick(event);
+                }}
               >
                 Book a call
               </a>
@@ -526,8 +540,12 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
                   href={BOOK_A_CALL_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={onAskedForAPerson}
                   className={BTN_GHOST_SM}
+                  {...booking}
+                  onClick={(event) => {
+                    onAskedForAPerson?.();
+                    booking.onClick(event);
+                  }}
                 >
                   Book a call
                 </a>

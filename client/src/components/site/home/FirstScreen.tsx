@@ -18,7 +18,7 @@ import { Fragment, lazy, Suspense, useState } from "react";
 
 import { Link } from "wouter";
 
-import { BOOK_A_CALL_URL, PROOF } from "@shared/roster";
+import { BOOK_A_CALL_URL, PROOF, WHATSAPP_NUMBER, WHATSAPP_URL } from "@shared/roster";
 import { useBooking } from "@/hooks/use-booking";
 
 
@@ -217,6 +217,19 @@ export function FirstScreen() {
             offers one, and "open a room" pressed by somebody who has not read
             that sentence is a room they will not come back to.
           */}
+          {/* A fourth way, and the only one on this screen that reaches a
+              person in a minute. The number is shown rather than hidden behind
+              a word — it is what somebody recognises, and on a desktop it is
+              what they copy. */}
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="link-home-whatsapp"
+            className="border-b border-border pb-[var(--s1)] text-muted-foreground hover:border-foreground hover:text-foreground"
+          >
+            {WHATSAPP_NUMBER}
+          </a>
           <a
             href="#panel"
             data-testid="link-home-open-a-room"

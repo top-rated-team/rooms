@@ -28,6 +28,7 @@
 import { type DoorDef } from "@shared/doors";
 import { PRICES, priceForDoor, type PriceRow } from "@shared/pricing";
 import { BOOK_A_CALL_URL, EXPERTS } from "@shared/roster";
+import { useBooking } from "@/hooks/use-booking";
 import { ACTION, ACTION_QUIET, META, META_PLAIN, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
 
 /**
@@ -94,6 +95,8 @@ function Row({ row }: { row: PriceRow }) {
  * having bought anything, so the same component serves both places.
  */
 export function BeforeYouBuy({ className = "" }: { className?: string }) {
+  /* The popup rather than a tab, decided once in useBooking. */
+  const booking = useBooking();
   return (
     <div data-testid="block-before-you-buy" className={className}>
       <p className={META}>Before you pay</p>
@@ -115,8 +118,7 @@ export function BeforeYouBuy({ className = "" }: { className?: string }) {
           target="_blank"
           rel="noopener noreferrer"
           data-testid="link-price-call"
-          className={ACTION}
-        >
+          className={ACTION} {...booking}>
           Book the introductory call
         </a>
         <a

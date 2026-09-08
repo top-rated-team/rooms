@@ -9,6 +9,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { AGENTS, AGENT_BY_ID, BOOK_A_CALL_URL, EXPERTS } from "@shared/roster";
+import { openBooking, prepareBooking } from "@/lib/booking";
 import type { Channel, Member } from "@shared/schema";
 import type { ConnectionStatus } from "@/hooks/use-workspace";
 import { Avatar, toneFor } from "@/components/workspace/Avatar";
@@ -217,7 +218,14 @@ export function Composer({
     }
     if (raw === "/call" || raw.startsWith("/call ")) {
       setValue("");
-      window.open(BOOK_A_CALL_URL, "_blank", "noopener,noreferrer");
+      /* The popup if the embed is loaded, a tab if it is not — the same order
+         useBooking uses for a click, written out here because a slash command
+         has no anchor to fall through to. The fetch is started on the way out
+         so a second /call in the same room gets the popup. */
+      if (!openBooking()) {
+        void prepareBooking();
+        window.open(BOOK_A_CALL_URL, "_blank", "noopener,noreferrer");
+      }
       return;
     }
     // A bare command is still being typed: keep it in the box rather than posting it.

@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 
 import type { CreateWorkspaceResponse } from "@shared/api";
 import { BOOK_A_CALL_URL } from "@shared/roster";
+import { useBooking } from "@/hooks/use-booking";
 import DoorCard from "@/components/site/DoorCard";
 import { ACTION_QUIET, DISPLAY, LINK, META, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
 import Footer from "@/components/site/Footer";
@@ -43,6 +44,8 @@ const INDEX_HEADLINE = `${countWord(PUBLIC_DOORS.length).charAt(0).toUpperCase()
  * a fetch and a redirect rather than an import.
  */
 export function Doors() {
+  /* The popup rather than a tab, decided once in useBooking. */
+  const booking = useBooking();
   const [, navigate] = useLocation();
   const [openingRoom, setOpeningRoom] = useState(false);
   const [roomError, setRoomError] = useState<string | null>(null);
@@ -140,8 +143,7 @@ export function Doors() {
                 target="_blank"
                 rel="noopener noreferrer"
                 data-testid="link-doors-book-call"
-                className={LINK}
-              >
+                className={LINK} {...booking}>
                 Take a call
               </a>
               .

@@ -810,4 +810,16 @@ export const PROOF = [
 ];
 
 export const BOOK_A_CALL_URL = "https://calendar.app.google/ucoG2E1L6KV7BPUD7";
+
+/**
+ * The owner's mobile, and the link opens a WhatsApp conversation rather than
+ * dialling. Both forms are here because they are read differently: the number
+ * is what a person recognises and can copy, and wa.me is what a tap should do.
+ *
+ * Published deliberately — he asked for it as a contact method beside the call
+ * and the inbox. Kept beside BOOK_A_CALL_URL so every surface that offers one
+ * can offer the other from the same import.
+ */
+export const WHATSAPP_NUMBER = "+420 774 654 822";
+export const WHATSAPP_URL = "https://wa.me/420774654822";
 export const MAIN_SITE_URL = "https://top-rated.team";
