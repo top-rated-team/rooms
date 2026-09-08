@@ -47,6 +47,7 @@ import {
   fanOutIfBridged,
   listBridgesForToken,
 } from "./bridge";
+import { startDigestSchedule } from "./schedule";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -1227,4 +1228,7 @@ export function registerRoutes(app: Express): void {
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: "Not found" });
   });
+
+  // Off unless WEEKLY_DIGEST is set. server/index.ts is frozen, so this is the mount.
+  startDigestSchedule();
 }

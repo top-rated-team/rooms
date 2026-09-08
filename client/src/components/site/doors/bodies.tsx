@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 
 import AdGrantDoor from "@/components/site/doors/AdGrantDoor";
 import ChatGptAdsBody from "@/components/site/doors/ChatGptAdsBody";
+import WhiteLabelBody from "@/components/site/doors/WhiteLabelBody";
 
 /**
  * The one exception to "a door is a row and nothing else".
@@ -32,6 +33,15 @@ export const DOOR_BODIES: Record<string, ComponentType> = {
    * to edit — the handoff it could not apply itself.
    */
   "ad-grants": AdGrantDoor,
+  /*
+   * White label earns a body because the row is two offers, the old page
+   * described one of them in sentences this application cannot stand behind,
+   * and a buyer arriving by this name needs four answers the row cannot hold:
+   * what is resold, what their client sees, whose name is on the room, and
+   * what happens if they stop. The source is the second offer — run this
+   * yourself — and it has to be linked, not summarised.
+   */
+  "white-label": WhiteLabelBody,
 };
 
 export function doorBody(doorId: string): ComponentType | undefined {
