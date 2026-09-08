@@ -11,8 +11,11 @@ import { CODE, DISPLAY, HEADING, META, META_PLAIN, NUMERAL, PAGE, READ, READ_MUT
  * front of the house.
  *
  * The copy is carried over from what those sections said on the home page —
- * client/src/components/site/WhyHuman.tsx, HowItWorks.tsx, ProofBand.tsx and
- * Faq.tsx, read at the start of this session — with three deliberate changes:
+ * WhyHuman.tsx, HowItWorks.tsx, ProofBand.tsx and Faq.tsx, which were the home
+ * page before the redesign and have since been deleted, since this file and the
+ * new home page had between them taken everything they said. They are in the
+ * history if the wording is ever wanted; the paths no longer exist. Three
+ * deliberate changes were made carrying it over:
  *
  * - The four statistics, the trainer badge and the star-rating vocabulary are
  *   gone. They are the marketplace-profile furniture the direction deletes, and
