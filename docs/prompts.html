@@ -45,7 +45,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">1 still to run, 12 landed. Copy one, paste
+  <p class="lede">0 still to run, 13 landed. Copy one, paste
   it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -80,83 +80,9 @@
       <h2>Wave 5 — landed</h2>
       <p class="waveNote">partner-catalogue, legal-agent-upkeep — reported, reviewed and committed. Nothing to run here.</p>
     </section>
-    <section class="wave">
-      <h2>Wave 6</h2>
-      <p class="waveNote">Start these 1 together. When all 1 have reported, run the two commands, then go to the next wave.</p>
-      <article class="parcel">
-        <header>
-          <h3>partner-setup</h3>
-          <button class="copy" data-target="p-partner-setup">Copy this prompt</button>
-        </header>
-        <p class="what">The brief asks for fast, and fast means no terminal after the deploy: fork, deploy from a blueprint, land on one page, fill it in, done.</p>
-        <pre id="p-partner-setup">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "partner-setup".
-
-Read these first, before you write anything: README.md, private/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/pages/setup.tsx
-  shared/operator.ts
-  server/operator.ts
-  server/operator.test.ts
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  client/src/App.tsx
-      - a route for /setup
-  server/routes.ts
-      - one import
-      - two routes for reading and writing the operator config
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  ONE PAGE, and it is one page — read private/fork-and-partners.md's install section and do not
-  add a step to it. With no operator configured every route redirects to /setup. It asks for:
-  display name, legal name, entity, terms URL and contact address; a model key or ours; which of
-  our services to offer and whether each is referral or white label; prices in the operator's
-  own words on the same ladder shape — theirs to set, and never sent anywhere; and the address
-  the deployment answers on, defaulting to their own domain, because a white-label deployment on
-  our subdomain is a contradiction. Saving writes the config partner-catalogue reads, seeds the
-  catalogue and marks the deployment set up; /setup then becomes /partner, the same page,
-  editable — that is the cabinet, and there is no second interface to build. No build step and
-  no restart: a change in the cabinet takes effect on the next request. THE ONE THING IT MAY NOT
-  DO is let an operator publish a claim that is false of whoever is named — if a room says the
-  operator is answerable for the work, the operator has to be, and that is the same rule every
-  other sentence on this site follows. Tests: an unconfigured deployment redirects; a config
-  missing a legal name is rejected with a sentence a person can act on; the key is never
-  returned in a response body or an error; and a saved config round-trips through the resolver.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  The brief asks for fast, and fast means no terminal after the deploy: fork, deploy from a
-  blueprint, land on one page, fill it in, done. That page then becomes the partner's cabinet
-  rather than being thrown away.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
+    <section class="wave" data-landed>
+      <h2>Wave 6 — landed</h2>
+      <p class="waveNote">partner-setup — reported, reviewed and committed. Nothing to run here.</p>
     </section>
 
   <footer>Generated from <code>parcels.json</code> by <code>scripts/build-prompts.mjs</code>. Change a parcel

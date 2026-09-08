@@ -49,6 +49,7 @@ import {
 } from "./bridge";
 import { startDigestSchedule } from "./schedule";
 import { connectorMcp, connectorRouter } from "./connector";
+import { operatorGate, readOperator, writeOperator } from "./operator";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -468,6 +469,11 @@ export function registerRoutes(app: Express): void {
     if (req.path.startsWith("/w/")) res.setHeader("Referrer-Policy", "no-referrer");
     next();
   });
+
+  app.use(operatorGate);
+
+  app.get("/api/operator", route(readOperator));
+  app.put("/api/operator", route(writeOperator));
 
   for (const stale of ["/work", "/use-case"]) {
     app.get(stale, (_req, res) => res.redirect(301, "/services"));

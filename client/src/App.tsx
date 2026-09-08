@@ -11,6 +11,7 @@ import Landing from "@/pages/landing";
 import Team from "@/pages/team";
 import RoiCalculator from "@/pages/roi-calculator";
 import NotFound from "@/pages/not-found";
+import Setup from "@/pages/setup";
 
 /* The landing page is paid traffic and bounces on latency, so the workspace —
  * chat, websocket client, markdown renderer — is a separate chunk it never
@@ -49,6 +50,9 @@ export default function App() {
         <Route path="/w/:token" component={Workspace} />
         {/* /w with nothing after it: the rooms this browser remembers. */}
         <Route path="/w" component={Workspace} />
+        {/* /setup and /partner are one page: the form, then the same form as the cabinet. */}
+        <Route path="/setup" component={Setup} />
+        <Route path="/partner" component={Setup} />
         <Route component={NotFound} />
       </Switch>
     </Suspense>
