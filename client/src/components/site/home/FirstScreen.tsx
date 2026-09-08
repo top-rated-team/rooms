@@ -72,21 +72,50 @@ export function FirstScreen() {
         are named. "One AI room" named the software and left out the contractor,
         which is the half he had just asked to bring forward.
       */}
-      <h1 className="type-display m-0" data-testid="text-home-headline">
-        Hire a{" "}
-        <Link
-          href="/services"
-          data-testid="link-headline-services"
-          /* Two words, so the rule sits on one line at 68px. Linking the whole
-             sentence put a 3px underline across three wrapped lines with a
-             stub where the wrap fell, which a render showed reads as damage.
-             "hybrid team" is also the thing /services is a list of the work of. */
-          className="underline decoration-[3px] underline-offset-[0.16em] decoration-line hover:decoration-foreground"
-        >
-          hybrid team
-        </Link>{" "}
-        for your business. People and AI agents in one room.
-      </h1>
+      <div>
+        <h1 className="type-display m-0" data-testid="text-home-headline">
+          Hire a{" "}
+          <Link
+            href="/services"
+            data-testid="link-headline-services"
+            /* Two words, so the rule sits on one line at 68px. Linking the whole
+               sentence put a 3px underline across three wrapped lines with a
+               stub where the wrap fell, which a render showed reads as damage.
+               "hybrid team" is also the thing /services is a list of the work of. */
+            className="underline decoration-[3px] underline-offset-[0.16em] decoration-line hover:decoration-foreground"
+          >
+            hybrid team
+          </Link>{" "}
+          for your business.
+        </h1>
+
+      {/*
+        THE MECHANISM DROPS TO READING SIZE, and that is the answer to "make it
+        fit one line" rather than shrinking the title.
+        
+        The arithmetic: "People + AI agents in one room." is 31 characters, which
+        at the 68px display size is about 1,050px of line. The left column at
+        1440 is about 730px. Fitting it would have meant roughly 48px — a third
+        off the whole headline, which is not the small adjustment that was asked
+        for and would have cost the first line its weight.
+        
+        So the sentence keeps its words and changes its rank. The claim is the
+        headline; this is what the claim means, and it belongs at the size
+        things are read at. It fits one line with room to spare, and it gives
+        the first screen a hierarchy it did not have when both sentences were
+        one flat 68px block.
+        
+        No fourth type size was added to do it: this is --type-body, the same
+        size as the paragraph on the right.
+
+        It shares the h1's wrapper rather than standing as its own grid child:
+        as a sibling it claimed a second row and dragged the right-hand
+        paragraph down with it.
+      */}
+        <p className="type-body mt-[var(--s2)] font-display font-medium" data-testid="text-home-mechanism">
+          People + AI agents in one room.
+        </p>
+      </div>
 
       <div>
         {/* The owner's rewrite, with two clauses corrected against the code.
@@ -137,7 +166,7 @@ export function FirstScreen() {
           </a>
         </p>
         <p className="type-meta mt-[var(--s1)] text-muted-foreground">
-          Prague, Madeira, Kyiv, Bratislava, Batumi. In the global paid ads and martech markets since 2017.
+          Prague, Madeira, Kyiv, Bratislava, Batumi. In the global paid ads and IT dev markets since 2017.
         </p>
         {/*
           IT USED TO SCROLL TO THE PANEL, and the panel was one door's agent.

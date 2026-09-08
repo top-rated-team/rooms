@@ -664,7 +664,7 @@ export const SERVICE_GROUPS: ServiceDef["group"][] = ["Paid Ads", "Measurement",
 export const PROOF = [
   { value: "5,872", label: "Hours on Upwork" },
   { value: "100%", label: "Job success score" },
-  { value: "$2M+", label: "Ad spend managed" },
+  { value: "$2M+", label: "Budgets optimized" },
   { value: "15+", label: "Years in paid ads" },
 ];
 

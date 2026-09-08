@@ -141,16 +141,22 @@ export function Header() {
           <Link href="/services" data-testid="link-nav-services" className={LINK}>
             Services
           </Link>
+          <Link href="/case-studies" data-testid="link-nav-cases" className={LINK}>
+            Case studies
+          </Link>
           <Link href="/pricing" data-testid="link-nav-pricing" className={LINK}>
             Pricing
+          </Link>
+          <Link href="/services/white-label" data-testid="link-nav-white-label" className={LINK}>
+            White label
           </Link>
           <a
             href={BOOK_A_CALL_URL}
             target="_blank"
             rel="noopener noreferrer"
             data-testid="link-nav-book-a-call"
-            {...booking}
             className={LINK}
+            {...booking}
           >
             Book a call
           </a>
@@ -162,7 +168,23 @@ export function Header() {
           >
             Leave a message
           </button>
-          <button type="button" data-testid="button-theme-toggle" onClick={() => setTheme(next)} className={LINK}>
+          {/*
+            THE THEME IS THE ONE ITEM IN SENTENCE CASE, on the owner's
+            instruction, and the distinction it draws is real: the six items
+            before it are LABELS for places and actions, where this one is the
+            current STATE of the page.
+
+            `[text-transform:none!important]` rather than `normal-case`: .type-meta rides
+            on this button through LINK, so both rules are one class deep and
+            the winner is whichever the stylesheet emits last. A screenshot
+            showed DARK still shouting after the first attempt.
+          */}
+          <button
+            type="button"
+            data-testid="button-theme-toggle"
+            onClick={() => setTheme(next)}
+            className={`${LINK} [text-transform:none!important]`}
+          >
             {next === "dark" ? "Dark" : "Light"}
             <span className="sr-only"> theme</span>
           </button>
@@ -194,7 +216,10 @@ export function Header() {
             Pricing
           </Link>
           <Link href="/case-studies" onClick={close} data-testid="link-menu-cases" className={LINK}>
-            Cases
+            Case studies
+          </Link>
+          <Link href="/services/white-label" onClick={close} data-testid="link-menu-white-label" className={LINK}>
+            White label
           </Link>
           <a
             href={BOOK_A_CALL_URL}
@@ -224,7 +249,7 @@ export function Header() {
               close();
             }}
             data-testid="button-menu-theme"
-            className={`${LINK} text-left`}
+            className={`${LINK} [text-transform:none!important] text-left`}
           >
             {next === "dark" ? "Dark" : "Light"}
             <span className="sr-only"> theme</span>

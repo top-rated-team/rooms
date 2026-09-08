@@ -472,6 +472,23 @@
   font-family: var(--font-read);
 }
 
+/* THE ONE EXEMPTION, and it has to be written at this specificity to exist.
+ *
+ * .font-display is declared far above, and the comment there says it makes
+ * "reading size, display face" expressible. On a <p> it did not: the rule
+ * immediately above is three selectors deep and beat it, so every paragraph
+ * carrying .font-display was quietly set in the serif anyway. Two were — the
+ * per-door price in Ladder, which asks for tabular-nums in the same breath and
+ * so obviously meant the sans, and the line under the headline on the home
+ * page. A screenshot of the second is what finally showed it.
+ *
+ * Kept as an exemption rather than by dropping the <p>: the tag is right for a
+ * sentence, and a <div> chosen to dodge a selector is the kind of fix that gets
+ * undone by the next person who reads the markup and sees no reason for it. */
+:root:has([data-site-chrome]) :is(p, li, dd, blockquote, figcaption).font-display {
+  font-family: var(--font-sans);
+}
+
 /* ============================================================================
  * THE PANEL, OUT OF ITS BOX
  *
