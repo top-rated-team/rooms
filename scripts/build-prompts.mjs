@@ -38,12 +38,15 @@ const WAVES = [
   { n: 4, keys: ["door-ai-builds-body"] },
 
   /*
-   * THE FORK PROGRAMME. docs/fork-and-partners.md is the brief for all four and
-   * every prompt says to read it first. The order between these two waves is a
+   * THE FORK PROGRAMME. docs/fork-and-partners.md is the brief for all three and
+   * every prompt says to read it first. It was four: partner-usage-report is
+   * gone because the fork is free and reports nothing back, which was the
+   * owner's decision and took the parcel, the endpoint and the whole privacy
+   * question with it. The order between these two waves is a
    * dependency, not a preference: partner-setup writes the config that
    * partner-catalogue reads, so the resolver exists before the page that fills it.
    */
-  { n: 5, keys: ["partner-catalogue", "partner-usage-report", "legal-agent-upkeep"] },
+  { n: 5, keys: ["partner-catalogue", "legal-agent-upkeep"] },
   { n: 6, keys: ["partner-setup"] },
 ];
 

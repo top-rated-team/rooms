@@ -822,4 +822,14 @@ export const BOOK_A_CALL_URL = "https://calendar.app.google/ucoG2E1L6KV7BPUD7";
  */
 export const WHATSAPP_NUMBER = "+420 774 654 822";
 export const WHATSAPP_URL = "https://wa.me/420774654822";
+
+/**
+ * The source. `rooms` and not `top-rated.team`: the repository was renamed and
+ * the old path only answers through GitHub's redirect, which stops working the
+ * day somebody creates a repository at the old name.
+ *
+ * It is private at the time of writing, so this link 404s for a visitor until
+ * it is opened — see docs/repo-move.md for what publishing the history exposes.
+ */
+export const GITHUB_URL = "https://github.com/top-rated-team/rooms";
 export const MAIN_SITE_URL = "https://top-rated.team";
