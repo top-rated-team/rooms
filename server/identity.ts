@@ -45,6 +45,7 @@ import {
   getBinding,
   getWhatsappNote,
   hydrateIdentityStore,
+  listBindingsByPerson,
   putBinding,
   putWhatsappNote,
   resetIdentityStoreForTests,
@@ -87,7 +88,8 @@ const LINKEDIN_USERINFO = "https://api.linkedin.com/v2/userinfo";
  * developer portal. Even then, LinkedIn documents `email` and
  * `email_verified` as optional fields that may be absent from any response.
  * Room binding still stores only `sub` and a name. Booking reads the address
- * when it is there, and treats its absence as a booking with no address.
+ * when it is there, and treats its absence as no address at all — a hold, not
+ * a calendar write.
  */
 export const LINKEDIN_SCOPE = "openid profile email";
 const MEMBER_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -186,6 +188,19 @@ export function resetIdentityForTests(): void {
 /** Test seam: the stored row, so cases can assert what is NOT on it. */
 export function storedBindingForTests(workspaceId: string): StoredBinding | undefined {
   return getBinding(workspaceId);
+}
+
+/**
+ * Test seam: where a LinkedIn write actually lands. putBinding indexes by
+ * person (`linkedin:${sub}`), not by a workspace id the booking path never
+ * has. Looking up a made-up workspace id cannot prove a booking did not claim
+ * a room.
+ */
+export async function storedBindingsForPersonForTests(
+  provider: StoredBinding["provider"],
+  providerId: string,
+): Promise<StoredBinding[]> {
+  return listBindingsByPerson(provider, providerId);
 }
 
 /* -------------------------------- allowance ------------------------------- */

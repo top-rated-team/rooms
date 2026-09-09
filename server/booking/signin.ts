@@ -7,8 +7,9 @@
  * is not a room claim and is never written into room_bindings.
  *
  * THE ADDRESS MAY NOT ARRIVE. LinkedIn documents email as optional. Signed in
- * with no address lands on the same write as no address at all: attendees []
- * and notify false. It is not an error.
+ * with no address lands where no address at all lands: a hold from hold.ts, a
+ * wa.me code, and no calendar write until the message proves it. It is not an
+ * error. Off a house host that path is refused, as POST /api/booking refuses it.
  *
  * THE DRAFT SURVIVES THE ROUND TRIP. OAuth takes the page away. The pending
  * row keeps the day and time they already picked; the callback re-checks the
@@ -27,6 +28,7 @@ import {
   type BookingLinkedInBooker,
   type BookingLinkedInSession,
   type CreateBookingResponse,
+  type HoldBookingResponse,
 } from "@shared/api";
 import {
   bookingLinkedInRedirectUri,
@@ -36,7 +38,13 @@ import {
   linkedinCredentials,
 } from "../identity";
 import { createBookingEvent, SLOT_TAKEN_LINE } from "./calendar";
-import { slotIsHeld } from "./hold";
+import {
+  ADDRESS_REQUIRED_LINE,
+  holdToResponse,
+  placeHold,
+  slotIsHeld,
+  whatsappGateAllowed,
+} from "./hold";
 import {
   SLOT_MINUTES,
   getBookingSlots,
@@ -50,6 +58,7 @@ import { getPrimaryCalendar } from "../unipile/calendar";
 import { available, unavailableLine } from "../unipile/client";
 
 const PENDING_MS = 15 * 60_000;
+const RETURN_ORIGIN = "https://booking.invalid";
 
 /**
  * One sentence, and the six things whose absence makes this fail. Shown on
@@ -69,6 +78,7 @@ interface PendingBookingLinkedIn {
   draft: BookingDraft;
   returnPath: string;
   redirectUri: string;
+  host: string | undefined;
   createdAt: number;
 }
 
@@ -101,8 +111,9 @@ export function bookingLinkedInAvailability(): BookingLinkedInAvailability {
 
 /**
  * Relative path back to the page the popup was on. Protocol-relative and
- * off-site values become `/`, so the OAuth return cannot be used as an
- * open redirect.
+ * off-site values become `/`, including a path that only becomes
+ * protocol-relative after URL normalisation, so the OAuth return cannot be
+ * used as an open redirect.
  */
 export function sanitizeBookingReturnPath(raw: string | undefined): string {
   const value = (raw ?? "/").trim() || "/";
@@ -110,20 +121,52 @@ export function sanitizeBookingReturnPath(raw: string | undefined): string {
   if (value.startsWith("//")) return "/";
   if (value.includes("://")) return "/";
   if (value.includes("\\")) return "/";
-  return value;
+  try {
+    const decoded = decodeURIComponent(value);
+    if (decoded.startsWith("//") || decoded.includes("://") || decoded.includes("\\")) {
+      return "/";
+    }
+    const url = new URL(value, RETURN_ORIGIN);
+    if (url.origin !== RETURN_ORIGIN) return "/";
+    if (url.username || url.password) return "/";
+    if (!url.pathname.startsWith("/") || url.pathname.startsWith("//")) return "/";
+    return `${url.pathname}${url.search}${url.hash}` || "/";
+  } catch {
+    return "/";
+  }
 }
 
 function withSessionQuery(returnPath: string, sessionId: string): string {
-  const url = new URL(returnPath, "https://booking.invalid");
+  const safe = sanitizeBookingReturnPath(returnPath);
+  const url = new URL(safe, RETURN_ORIGIN);
+  if (url.origin !== RETURN_ORIGIN || url.pathname.startsWith("//")) {
+    const fallback = new URL("/", RETURN_ORIGIN);
+    fallback.searchParams.set(BOOKING_LINKEDIN_SESSION_QUERY, sessionId);
+    return `${fallback.pathname}${fallback.search}`;
+  }
   url.searchParams.set(BOOKING_LINKEDIN_SESSION_QUERY, sessionId);
-  return `${url.pathname}${url.search}${url.hash}`;
+  const out = `${url.pathname}${url.search}${url.hash}`;
+  if (out.startsWith("//") || url.pathname.startsWith("//")) {
+    const fallback = new URL("/", RETURN_ORIGIN);
+    fallback.searchParams.set(BOOKING_LINKEDIN_SESSION_QUERY, sessionId);
+    return `${fallback.pathname}${fallback.search}`;
+  }
+  return out;
 }
 
+/**
+ * The session is a bearer token for a name, an address and a LinkedIn
+ * profile. Spend it on first read so a referrer, a shared link or history
+ * cannot read it again.
+ */
 export function getBookingLinkedInSession(idRaw: string): BookingLinkedInSession | null {
   sweep();
   const id = idRaw.trim();
   if (!id) return null;
-  return sessions.get(id)?.session ?? null;
+  const row = sessions.get(id);
+  if (!row) return null;
+  sessions.delete(id);
+  return row.session;
 }
 
 export type BookingLinkedInStart = { ok: true; url: string } | { ok: false; line: string };
@@ -139,6 +182,7 @@ export function startBookingLinkedIn(input: {
   topic?: string;
   returnPath?: string;
   publicBaseUrl: string;
+  host?: string;
 }): BookingLinkedInStart {
   const creds = linkedinCredentials();
   if (!creds) return { ok: false, line: BOOKING_LINKEDIN_UNCONFIGURED_LINE };
@@ -161,6 +205,7 @@ export function startBookingLinkedIn(input: {
     },
     returnPath: sanitizeBookingReturnPath(input.returnPath),
     redirectUri,
+    host: input.host?.trim() || undefined,
     createdAt: Date.now(),
   });
   return {
@@ -191,8 +236,10 @@ async function writeSignedInBooking(
   booker: BookingLinkedInBooker,
   fetchImpl: typeof fetch,
   now: Date,
+  host: string | undefined,
 ): Promise<
   | { ok: true; body: CreateBookingResponse }
+  | { ok: true; hold: HoldBookingResponse }
   | { ok: false; status: 409; body: BookingConflictResponse }
   | { ok: false; status: 503; error: string }
 > {
@@ -215,6 +262,30 @@ async function writeSignedInBooking(
   }
 
   const email = booker.email ?? undefined;
+  if (!email) {
+    if (!whatsappGateAllowed(host)) {
+      return { ok: false, status: 503, error: ADDRESS_REQUIRED_LINE };
+    }
+    const held = placeHold(
+      {
+        date: draft.date,
+        time: draft.time,
+        name: booker.name || draft.name,
+        topic: draft.topic,
+        timezone: primary.calendar.timezone,
+        startsAt: starts.toISOString(),
+      },
+      now.getTime(),
+    );
+    if ("taken" in held) {
+      const wider = await getBookingSlots(draft.date, 14, { fetchImpl, now });
+      const days = wider.ok ? wider.body.days : slots.body.days;
+      return { ok: false, status: 409, body: { error: SLOT_TAKEN_LINE, days } };
+    }
+    invalidateSlotsCache();
+    return { ok: true, hold: holdToResponse(held) };
+  }
+
   const created = await createBookingEvent(
     {
       calendarId: primary.calendar.id,
@@ -251,8 +322,7 @@ export interface BookingLinkedInComplete {
 
 /**
  * Finishes the booking OIDC exchange. Never calls putBinding. Re-checks the
- * slot before writing. A missing email is a booking with attendees [] and
- * notify false, not an error screen.
+ * slot before writing. A missing email is a hold, not a calendar event.
  */
 export async function completeBookingLinkedIn(input: {
   code?: string;
@@ -260,8 +330,10 @@ export async function completeBookingLinkedIn(input: {
   error?: string;
   fetchImpl?: typeof fetch;
   now?: Date;
+  host?: string;
 }): Promise<BookingLinkedInComplete> {
-  sweep();
+  const now = input.now ?? new Date();
+  sweep(now.getTime());
   const state = input.state?.trim();
   if (!state) return { redirectTo: "/", sessionId: null };
 
@@ -270,7 +342,7 @@ export async function completeBookingLinkedIn(input: {
   if (!row) return { redirectTo: "/", sessionId: null };
 
   const fetchImpl = input.fetchImpl ?? fetch;
-  const now = input.now ?? new Date();
+  const host = input.host?.trim() || row.host;
 
   if (input.error || !input.code?.trim()) {
     const sessionId = putSession({
@@ -290,7 +362,11 @@ export async function completeBookingLinkedIn(input: {
     const sessionId = putSession({
       draft: row.draft,
       booker: emptyBooker(),
-      result: { booked: false, invited: false, error: "LinkedIn sign-in did not finish. The time you picked is still here." },
+      result: {
+        booked: false,
+        invited: false,
+        error: "LinkedIn sign-in did not finish. The time you picked is still here.",
+      },
     });
     return { redirectTo: withSessionQuery(row.returnPath, sessionId), sessionId };
   }
@@ -301,7 +377,15 @@ export async function completeBookingLinkedIn(input: {
     profileUrl: exchanged.member.profileUrl,
   };
 
-  const written = await writeSignedInBooking(row.draft, booker, fetchImpl, now);
+  const written = await writeSignedInBooking(row.draft, booker, fetchImpl, now, host);
+  if (written.ok && "hold" in written) {
+    const sessionId = putSession({
+      draft: row.draft,
+      booker,
+      result: written.hold,
+    });
+    return { redirectTo: withSessionQuery(row.returnPath, sessionId), sessionId };
+  }
   if (written.ok) {
     const sessionId = putSession({
       draft: row.draft,

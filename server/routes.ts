@@ -1332,8 +1332,9 @@ export function registerRoutes(app: Express): void {
    * GET /api/room-access/:token opens it. An address typed into a room the
    * caller is already inside is POST /api/workspaces/:token/room-address.
    *
-   * Defects 1 and 2 that sealed this block are repaired here. Defect 3 is
-   * booking LinkedIn and stays sealed below.
+   * Defects 1 and 2 that sealed this block are repaired here. Booking
+   * LinkedIn is unsealed: a sign-in with no address is a hold, not a
+   * calendar write.
    */
 
   app.get(
@@ -1461,20 +1462,6 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
-  /* ------------------------------------------------------------------------
-   * SEALED UNTIL REPAIRED — /api/booking/linkedin/*
-   *
-   * Room-access is unsealed: visitorEmail is no longer read, links live in
-   * the database, and the mailed URL is PUBLIC_BASE_URL. Booking LinkedIn
-   * still has defect 3: a sign-in whose userinfo omits the optional email
-   * claim writes a calendar event with no attendee, instead of the
-   * hold-and-prove gate, including on a fork where POST /api/booking refuses
-   * the same booking. Nothing below answers until that is fixed.
-   * ---------------------------------------------------------------------- */
-  app.use("/api/booking/linkedin", (_req, res) => {
-    res.status(404).json({ error: "Not found" });
-  });
-
   /* ---------------------- room bridges (WhatsApp, ChatWoot, Slack, ClickUp) ---------------------- */
   /*
    * One route to connect or disconnect, and the inbound webhook from the other
@@ -1591,6 +1578,7 @@ export function registerRoutes(app: Express): void {
     route(async (req, res) => {
       const sessionId = typeof req.query.session === "string" ? req.query.session : "";
       if (sessionId) {
+        res.setHeader("Cache-Control", "no-store");
         const session = getBookingLinkedInSession(sessionId);
         if (!session) {
           res.status(404).json({ error: "That sign-in has expired. Pick a time again." });
@@ -1614,6 +1602,7 @@ export function registerRoutes(app: Express): void {
         topic: typeof req.query.topic === "string" ? req.query.topic : "",
         returnPath: typeof req.query.return === "string" ? req.query.return : "/",
         publicBaseUrl: publicBaseUrl(req),
+        host: publicBaseUrl(req),
       });
       if (!start.ok) {
         res.status(503).json({ error: start.line });
@@ -1630,6 +1619,7 @@ export function registerRoutes(app: Express): void {
         code: typeof req.query.code === "string" ? req.query.code : undefined,
         state: typeof req.query.state === "string" ? req.query.state : undefined,
         error: typeof req.query.error === "string" ? req.query.error : undefined,
+        host: publicBaseUrl(req),
       });
       res.redirect(302, result.redirectTo);
     }),

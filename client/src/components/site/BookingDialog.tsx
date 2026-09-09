@@ -4,6 +4,7 @@ import { Check, ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
 
 import {
   bookSlot,
+  bookingTopic,
   cachedSlots,
   CONFIRMED_POLL_MS,
   CONFIRMED_TIMEOUT_MS,
@@ -20,7 +21,13 @@ import {
   type SlotDay,
   type SlotsPayload,
 } from "@/lib/booking";
-import type { BookingConfirmedResponse, HoldBookingResponse } from "@shared/api";
+import type {
+  BookingConfirmedResponse,
+  BookingLinkedInAvailability,
+  BookingLinkedInSession,
+  HoldBookingResponse,
+} from "@shared/api";
+import { BOOKING_LINKEDIN_SESSION_QUERY } from "@shared/api";
 import { isHouseHost } from "@shared/operator";
 
 import { BookingQr } from "./BookingQr";
@@ -47,6 +54,12 @@ const WEEKDAY_LABELS = weekdayLabels();
 export interface BookingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+/** True when the page is the OAuth return. The host must open the popup. */
+export function bookingLinkedInReturnPending(): boolean {
+  if (typeof window === "undefined") return false;
+  return Boolean(new URLSearchParams(window.location.search).get(BOOKING_LINKEDIN_SESSION_QUERY)?.trim());
 }
 
 type Phase =
@@ -77,6 +90,8 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
   const [focusedDate, setFocusedDate] = useState<string | null>(null);
   const [monthLoading, setMonthLoading] = useState(false);
   const [monthError, setMonthError] = useState<string | null>(null);
+  const [linkedin, setLinkedin] = useState<BookingLinkedInAvailability | null>(null);
+  const [bookerEmail, setBookerEmail] = useState<string | null>(null);
   const pollAbort = useRef<AbortController | null>(null);
   const slotsRef = useRef<SlotsPayload | null>(slots);
   slotsRef.current = slots;
@@ -109,32 +124,91 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
     setFocusedDate(null);
     setMonthLoading(false);
     setMonthError(null);
+    setLinkedin(null);
+    setBookerEmail(null);
 
     let cancelled = false;
     setLoading(cachedSlots() == null);
-    void loadSlots()
-      .then((payload) => {
+
+    void loadLinkedInAvailability().then((availability) => {
+      if (!cancelled) setLinkedin(availability);
+    });
+
+    void (async () => {
+      const returning = await takeLinkedInSessionFromUrl();
+      try {
+        const payload = await loadSlots();
         if (cancelled) return;
         const floor = payload.days[0]?.date ?? null;
-        const picked = firstDayWithASlot(payload.days);
+        const draft = returning && returning.session ? returning.session.draft : null;
+        const picked = draft?.date ?? firstDayWithASlot(payload.days);
         setSlots(payload);
         setLoadError(null);
         setFloorDate(floor);
-        setDate((current) => current ?? picked);
-        setFocusedDate((current) => current ?? picked);
+        setDate(picked);
+        setFocusedDate(picked);
         const origin = parseStamp(picked ?? floor);
         if (origin) {
           setViewYear(origin.year);
           setViewMonth(origin.month);
         }
-      })
-      .catch((error: unknown) => {
+        if (draft?.time) {
+          setTime(draft.time);
+        }
+      } catch (error: unknown) {
         if (cancelled) return;
         setLoadError(error instanceof Error ? error.message : "Times could not be loaded just now.");
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+
+      if (cancelled || !returning) return;
+      if (returning.error || !returning.session) {
+        setFormError(returning.error ?? "That sign-in has expired. Pick a time again.");
+        return;
+      }
+      const session = returning.session;
+      if (session.booker.email) {
+        setBookerEmail(session.booker.email);
+        setEmail(session.booker.email);
+      }
+      const result = session.result;
+      if (result.booked) {
+        setPhase({
+          kind: "done",
+          booked: {
+            booked: true,
+            startsAt: result.startsAt,
+            timezone: result.timezone,
+            meetUrl: result.meetUrl,
+            invited: result.invited,
+            whatsapp: { url: "", code: "" },
+          },
+          viaWhatsApp: false,
+        });
+        return;
+      }
+      if ("held" in result && result.held) {
+        setPhase({ kind: "waiting", hold: result, openedWhatsApp: false });
+        const controller = new AbortController();
+        pollAbort.current = controller;
+        void pollHoldConfirmed(result.whatsapp.code, controller.signal).then((confirmed) => {
+          if (controller.signal.aborted) return;
+          if (confirmed.confirmed) {
+            setPhase({
+              kind: "done",
+              booked: bookedFromHold(result, confirmed),
+              viaWhatsApp: true,
+            });
+          } else {
+            setPhase({ kind: "expired", code: result.whatsapp.code });
+          }
+        });
+        return;
+      }
+      if ("days" in result && result.days) applyDays(result.days);
+      if ("error" in result && result.error) setFormError(result.error);
+    })();
 
     return () => {
       cancelled = true;
@@ -357,7 +431,7 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
           </Dialog.Close>
 
           {phase.kind === "done" ? (
-            <DoneView booked={phase.booked} email={email.trim() || null} viaWhatsApp={phase.viaWhatsApp} />
+            <DoneView booked={phase.booked} email={email.trim() || bookerEmail} viaWhatsApp={phase.viaWhatsApp} />
           ) : phase.kind === "waiting" ? (
             <WaitingView hold={phase.hold} openedWhatsApp={phase.openedWhatsApp} />
           ) : phase.kind === "expired" ? (
@@ -444,15 +518,6 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                     to hand over an address without typing it. They belong
                     together because they are one decision — how we reach you —
                     and stacking them read as three separate steps.
-
-                    The LinkedIn button is on screen and disabled. It is shown
-                    rather than hidden because the owner asked for it now and
-                    because a visitor deciding whether to type an address
-                    should see the alternative that is coming; it says why it
-                    is off rather than looking broken. It turns on when the
-                    LinkedIn app is live — see section 3.1 of
-                    docs/specs/unipile-rooms-and-booking.md, which also carries
-                    what it must do with the profile it gets back.
                   */}
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div className="min-w-0 flex-1">
@@ -484,18 +549,28 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                       {sending ? <Loader2 className="animate-spin" /> : null}
                       Book
                     </button>
-                    <button
-                      type="button"
-                      disabled
-                      data-testid="button-booking-linkedin"
-                      title="Not on yet. It turns on when the LinkedIn app is live."
-                      className={`${BTN_SECONDARY} shrink-0 disabled:cursor-not-allowed disabled:opacity-50`}
-                    >
-                      Sign in with LinkedIn
-                    </button>
+                    {linkedin?.available === true && date && time ? (
+                      <a
+                        href={linkedinStartHref({ date, time })}
+                        data-testid="button-booking-linkedin"
+                        className={`${BTN_SECONDARY} shrink-0`}
+                      >
+                        Sign in with LinkedIn
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled
+                        data-testid="button-booking-linkedin"
+                        title={linkedinButtonTitle(linkedin, Boolean(date && time))}
+                        className={`${BTN_SECONDARY} shrink-0 disabled:cursor-not-allowed disabled:opacity-50`}
+                      >
+                        Sign in with LinkedIn
+                      </button>
+                    )}
                   </div>
                   <p id="booking-email-hint" className="mt-1.5 text-xs text-muted-foreground">
-                    {emailHint(offerWhatsAppGate())}
+                    {emailHint(offerWhatsAppGate(), linkedin)}
                   </p>
                   {emailError ? (
                     <p id="booking-email-error" className="mt-1.5 text-xs text-destructive" role="alert">
@@ -782,11 +857,133 @@ function dayClassName({ selected, past, empty }: { selected: boolean; past: bool
   return "m-0.5 min-h-9 w-[calc(100%-0.25rem)] rounded-md text-sm tabular-nums text-foreground hover-elevate active-elevate-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 }
 
-function emailHint(whatsappGate: boolean): string {
+function emailHint(whatsappGate: boolean, linkedin: BookingLinkedInAvailability | null): string {
+  const signInOn = linkedin?.available === true;
   if (whatsappGate) {
-    return "An address gets you a calendar invite and any reminder. Sign in with LinkedIn does the same without typing it, and is not on yet. With neither, the slot is held for five minutes while you send a WhatsApp message. The call is booked only after that message arrives.";
+    if (signInOn) {
+      return "An address gets you a calendar invite and any reminder. Sign in with LinkedIn does the same without typing it. With neither, the slot is held for five minutes while you send a WhatsApp message. The call is booked only after that message arrives.";
+    }
+    return "An address gets you a calendar invite and any reminder. With neither, the slot is held for five minutes while you send a WhatsApp message. The call is booked only after that message arrives.";
   }
-  return "An address is required — type it, or sign in with LinkedIn when that is on. This page does not take a booking without one.";
+  if (signInOn) {
+    return "An address is required — type it, or sign in with LinkedIn. This page does not take a booking without one.";
+  }
+  return "An address is required. This page does not take a booking without one.";
+}
+
+function linkedinButtonTitle(
+  linkedin: BookingLinkedInAvailability | null,
+  hasPick: boolean,
+): string | undefined {
+  if (linkedin && !linkedin.available) return linkedin.unavailableLine;
+  if (linkedin?.available === true && !hasPick) return "Pick a day and a time first.";
+  return undefined;
+}
+
+function linkedinStartHref(input: { date: string; time: string }): string {
+  const params = new URLSearchParams({
+    date: input.date,
+    time: input.time,
+    name: "Visitor",
+    topic: bookingTopic(),
+    return: `${window.location.pathname}${window.location.search}${window.location.hash}`,
+  });
+  return `/api/booking/linkedin?${params.toString()}`;
+}
+
+async function loadLinkedInAvailability(): Promise<BookingLinkedInAvailability | null> {
+  try {
+    const res = await fetch("/api/booking/linkedin", {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      credentials: "same-origin",
+    });
+    const text = await res.text();
+    const raw = text ? (JSON.parse(text) as unknown) : null;
+    return parseLinkedInAvailability(raw);
+  } catch {
+    return null;
+  }
+}
+
+function parseLinkedInAvailability(value: unknown): BookingLinkedInAvailability | null {
+  if (typeof value !== "object" || value === null) return null;
+  const record = value as Record<string, unknown>;
+  if (record.available === true) return { available: true };
+  if (record.available === false && typeof record.unavailableLine === "string") {
+    return { available: false, unavailableLine: record.unavailableLine };
+  }
+  return null;
+}
+
+async function takeLinkedInSessionFromUrl(): Promise<
+  { session: BookingLinkedInSession; error: null } | { session: null; error: string } | null
+> {
+  if (typeof window === "undefined") return null;
+  const url = new URL(window.location.href);
+  const id = url.searchParams.get(BOOKING_LINKEDIN_SESSION_QUERY)?.trim() ?? "";
+  if (!id) return null;
+  url.searchParams.delete(BOOKING_LINKEDIN_SESSION_QUERY);
+  const next = `${url.pathname}${url.search}${url.hash}`;
+  window.history.replaceState(null, "", next || "/");
+
+  try {
+    const res = await fetch(`/api/booking/linkedin?session=${encodeURIComponent(id)}`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      credentials: "same-origin",
+    });
+    const text = await res.text();
+    const raw = text ? (JSON.parse(text) as unknown) : null;
+    if (!res.ok) {
+      return {
+        session: null,
+        error: errorFromBody(raw, "That sign-in has expired. Pick a time again."),
+      };
+    }
+    const session = parseLinkedInSession(raw);
+    if (!session) {
+      return { session: null, error: "That sign-in could not be read. Pick a time again." };
+    }
+    return { session, error: null };
+  } catch {
+    return { session: null, error: "Could not reach the server. Check your connection and try again." };
+  }
+}
+
+function parseLinkedInSession(value: unknown): BookingLinkedInSession | null {
+  if (typeof value !== "object" || value === null) return null;
+  const record = value as Record<string, unknown>;
+  if (typeof record.draft !== "object" || record.draft === null) return null;
+  const draft = record.draft as Record<string, unknown>;
+  if (
+    typeof draft.date !== "string" ||
+    typeof draft.time !== "string" ||
+    typeof draft.name !== "string" ||
+    typeof draft.topic !== "string"
+  ) {
+    return null;
+  }
+  if (typeof record.booker !== "object" || record.booker === null) return null;
+  const booker = record.booker as Record<string, unknown>;
+  if (
+    (booker.name !== null && typeof booker.name !== "string") ||
+    (booker.email !== null && typeof booker.email !== "string") ||
+    (booker.profileUrl !== null && typeof booker.profileUrl !== "string")
+  ) {
+    return null;
+  }
+  if (typeof record.result !== "object" || record.result === null) return null;
+  const result = record.result as BookingLinkedInSession["result"];
+  return {
+    draft: { date: draft.date, time: draft.time, name: draft.name, topic: draft.topic },
+    booker: {
+      name: typeof booker.name === "string" ? booker.name : null,
+      email: typeof booker.email === "string" ? booker.email : null,
+      profileUrl: typeof booker.profileUrl === "string" ? booker.profileUrl : null,
+    },
+    result,
+  };
 }
 
 function descriptionFor(

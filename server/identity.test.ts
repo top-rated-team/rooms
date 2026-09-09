@@ -31,6 +31,7 @@ import {
   startLinkedIn,
   startWhatsApp,
   storedBindingForTests,
+  storedBindingsForPersonForTests,
   saveWhatsAppNote,
   claimStateForWorkspace,
   BIND_CODE_RE,
@@ -225,6 +226,9 @@ describe("what may be stored", () => {
     assert.equal(stored.provider, "linkedin");
     assert.equal(stored.providerId, "linkedin:782bbtaQ");
     assert.equal(stored.displayName, "Ada Example");
+    const byPerson = await storedBindingsForPersonForTests("linkedin", "linkedin:782bbtaQ");
+    assert.equal(byPerson.length, 1);
+    assert.equal(byPerson[0]?.workspaceId, WORKSPACE);
     const dumped = JSON.stringify(stored);
     assert.equal(dumped.includes("liau_should_never_be_kept"), false);
     assert.equal(dumped.includes("lirt_should_never_be_kept"), false);

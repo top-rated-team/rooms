@@ -404,12 +404,16 @@ export type BookingConfirmedResponse =
  * GET /api/booking/linkedin — whether the button can work, and after the
  * callback, what the popup learns about the signed-in booker.
  *
- * `email` is null when LinkedIn omitted the optional claim. That is a booked
- * call without an invite, not an error: the event is created with
- * attendees: [] and notify: false, the same write as no address at all.
+ * `email` is null when LinkedIn omitted the optional claim. That is the
+ * normal no-address case, not an error: nothing is written to the calendar.
+ * On a house host the slot is held and a WhatsApp code is planted, the same
+ * as leaving the field blank. Off a house host the same booking is refused.
  *
  * `profileUrl` is null when userinfo did not carry a LinkedIn profile page.
  * It is never built from a name.
+ *
+ * Signing in hands over an address. It is not a channel to write on. A
+ * reminder is never sent as a LinkedIn message.
  */
 export type BookingLinkedInAvailability =
   | { available: true }
@@ -421,6 +425,9 @@ export interface BookingLinkedInBooker {
   profileUrl: string | null;
 }
 
+/** No address from LinkedIn: the same hold as leaving the field blank. */
+export type BookingLinkedInHeld = HoldBookingResponse;
+
 export type BookingLinkedInResult =
   | {
       booked: true;
@@ -429,8 +436,10 @@ export type BookingLinkedInResult =
       meetUrl: string | null;
       invited: boolean;
     }
+  | BookingLinkedInHeld
   | {
       booked: false;
+      held?: false;
       invited: false;
       error?: string;
       days?: BookingDay[];
