@@ -31,16 +31,25 @@ export function AdGrantLogo({ className, title }: { className?: string; title?: 
       focusable="false"
       data-testid="adgrant-logo"
     >
-      {/* The A's left leg and the I's stem, one colour, one pen. */}
-      <g stroke={YELLOW} strokeWidth="22" strokeLinecap="round" fill="none">
-        <path d="M30 74 L52 26" />
-        <path d="M78 74 L78 34" />
+      {/* Geometry read off the reference at 940px and scaled to this 96 grid:
+          bar 19 wide, the A's feet at x=16 and x=58 with the apex at 37, the I
+          at x=79. The first pass put the feet at 30 and 66 with a 22 bar, and
+          at header size the two legs merged into one blob with no counter —
+          the letter has to survive at 18 pixels, which is the only size it is
+          ever actually used at. */}
+      <g strokeWidth="19" strokeLinecap="round" fill="none">
+        {/* The A's left leg, and the I's stem. */}
+        <g stroke={YELLOW}>
+          <path d="M37 27 L16 67" />
+          <path d="M79 67 L79 31" />
+        </g>
+        {/* The A's right leg, over the left where they cross. */}
+        <path d="M31 27 L58 67" stroke={BLUE} />
       </g>
-      {/* The A's right leg, over the left where they cross. */}
-      <path d="M44 26 L66 74" stroke={BLUE} strokeWidth="22" strokeLinecap="round" fill="none" />
-      {/* The two terminals that make it a logotype rather than three sticks. */}
-      <circle cx="30" cy="74" r="11" fill={GREEN} />
-      <circle cx="78" cy="34" r="11" fill={GREEN} />
+      {/* Terminals exactly half the bar wide, so they read as caps on the
+          strokes rather than as circles beside them. */}
+      <circle cx="16" cy="67" r="9.5" fill={GREEN} />
+      <circle cx="79" cy="31" r="9.5" fill={GREEN} />
     </svg>
   );
 }
