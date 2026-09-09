@@ -3,22 +3,23 @@
  * QR of that link) that opens WhatsApp with a pre-filled message carrying the
  * room's address, sent to us.
  *
- * WAHA (https://waha.devlike.pro/) is already running on another host. This
- * file talks to it over its HTTP API, with `X-Api-Key`, and never pretends the
- * host is here. When the host is down, unconfigured, or the session has no
- * number yet, the probe fails with a sentence — the identity layer then keeps
- * the LinkedIn route and prints that sentence. There is no dead button.
+ * Our own number is learned from Unipile — GET /api/v1/accounts/{id} — so the
+ * wa.me link has a destination. The visitor still taps that link and messages
+ * us. We do not connect their WhatsApp. When Unipile is down, unconfigured, or
+ * the account has no number, the probe fails with a sentence — the identity
+ * layer then keeps the LinkedIn route and prints that sentence. There is no
+ * dead button.
  *
  * This is not the two-way bridge. It does not send a reply, does not read a
  * contact list, and does not log a phone number. The only number it needs is
  * ours, so a wa.me link has somewhere to go; that number is not stored.
  */
 
-import { clearTimeout, setTimeout } from "node:timers";
+import { WHATSAPP_URL } from "@shared/roster";
+import { available, unipileRequest } from "./unipile/client";
+import { whatsappAccountId } from "./unipile/accounts";
 
-const PROBE_MS = 2_500;
-
-/** Printed when the WAHA host cannot be used. Identity keeps the LinkedIn route. */
+/** Printed when WhatsApp cannot be used. Identity keeps the LinkedIn route. */
 export const WAHA_UNAVAILABLE_LINE =
   "WhatsApp is not reachable from this page right now, so LinkedIn is the way to bind this room.";
 
@@ -32,22 +33,9 @@ export type WahaProbe =
   | { ok: true; digits: string }
   | { ok: false; line: string };
 
-function wahaBaseUrl(): string | null {
-  const raw = process.env.WAHA_BASE_URL?.trim();
-  if (!raw) return null;
-  return raw.replace(/\/+$/, "");
-}
-
-function wahaSession(): string {
-  const raw = process.env.WAHA_SESSION?.trim();
-  return raw && raw.length > 0 ? raw : "default";
-}
-
-function wahaHeaders(): Record<string, string> {
-  const headers: Record<string, string> = { Accept: "application/json" };
-  const key = process.env.WAHA_API_KEY?.trim();
-  if (key) headers["X-Api-Key"] = key;
-  return headers;
+function publishedDigits(): string | null {
+  const match = /wa\.me\/(\d+)/.exec(WHATSAPP_URL);
+  return match?.[1] ?? null;
 }
 
 /** Digits only, which is what wa.me wants. */
@@ -56,6 +44,48 @@ export function digitsFromMeId(id: string): string | null {
   const beforeAt = trimmed.includes("@") ? trimmed.slice(0, trimmed.indexOf("@")) : trimmed;
   const digits = beforeAt.replace(/\D/g, "");
   return digits.length >= 8 ? digits : null;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (value === null || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
+
+/**
+ * Pull digits off a Unipile account body without keeping the body. Phone
+ * numbers live in connection_params; the accounts parser drops that field,
+ * so this probe reads it once and returns only digits.
+ */
+export function digitsFromUnipileAccount(body: unknown): string | null {
+  const record = asRecord(body);
+  if (!record) return null;
+
+  const params = asRecord(record.connection_params);
+  if (params) {
+    const im = asRecord(params.im);
+    const fromIm = im && typeof im.phone_number === "string" ? digitsFromMeId(im.phone_number) : null;
+    if (fromIm) return fromIm;
+    if (typeof params.phone_number === "string") {
+      const fromParams = digitsFromMeId(params.phone_number);
+      if (fromParams) return fromParams;
+    }
+  }
+
+  if (typeof record.id === "string") {
+    const fromId = digitsFromMeId(record.id);
+    if (fromId) return fromId;
+  }
+  return null;
+}
+
+function sourceIsOk(body: unknown): boolean {
+  const record = asRecord(body);
+  if (!record) return false;
+  const sources = Array.isArray(record.sources) ? record.sources : [];
+  return sources.some((source) => {
+    const row = asRecord(source);
+    return row?.status === "OK";
+  });
 }
 
 /**
@@ -67,50 +97,34 @@ export function waMeUrl(digits: string, text: string): string {
   return `https://wa.me/${n}?text=${encodeURIComponent(text)}`;
 }
 
-interface MeBody {
-  id?: unknown;
-  pushName?: unknown;
-}
-
-function meDigits(body: unknown): string | null {
-  if (body === null) return null;
-  if (typeof body !== "object") return null;
-  const record = body as MeBody & { me?: MeBody };
-  const id = record.id ?? record.me?.id;
-  if (typeof id !== "string") return null;
-  return digitsFromMeId(id);
-}
-
 /**
- * Asks WAHA who we are. A timeout, a 5xx, a missing session or a session with
- * no number are all the same fact to the visitor: WhatsApp is not a route
- * right now. The raw body is not logged — it can carry a phone number.
+ * Asks Unipile who we are on our own WhatsApp account. A timeout, a 5xx, a
+ * missing account or an account with no number are all the same fact to the
+ * visitor: WhatsApp is not a route right now. The raw body is not logged — it
+ * can carry a phone number.
  */
 export async function probeWaha(fetchImpl: typeof fetch = fetch): Promise<WahaProbe> {
-  const base = wahaBaseUrl();
-  if (!base) return { ok: false, line: WAHA_UNCONFIGURED_LINE };
+  if (!available()) return { ok: false, line: WAHA_UNCONFIGURED_LINE };
 
-  const session = encodeURIComponent(wahaSession());
-  const url = `${base}/api/sessions/${session}/me`;
-  const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(), PROBE_MS);
-
+  const accountId = whatsappAccountId();
   try {
-    const res = await fetchImpl(url, { method: "GET", headers: wahaHeaders(), signal: ac.signal });
-    if (!res.ok) return { ok: false, line: WAHA_UNAVAILABLE_LINE };
-    let body: unknown;
-    try {
-      body = await res.json();
-    } catch {
+    const result = await unipileRequest<unknown>(
+      {
+        method: "GET",
+        path: `/accounts/${encodeURIComponent(accountId)}`,
+      },
+      fetchImpl,
+    );
+    if (!result.ok) {
+      if (result.error.status === 404) return { ok: false, line: WAHA_DISCONNECTED_LINE };
       return { ok: false, line: WAHA_UNAVAILABLE_LINE };
     }
-    const digits = meDigits(body);
+    if (!sourceIsOk(result.body)) return { ok: false, line: WAHA_DISCONNECTED_LINE };
+    const digits = digitsFromUnipileAccount(result.body) ?? publishedDigits();
     if (!digits) return { ok: false, line: WAHA_DISCONNECTED_LINE };
     return { ok: true, digits };
   } catch {
     return { ok: false, line: WAHA_UNAVAILABLE_LINE };
-  } finally {
-    clearTimeout(timer);
   }
 }
 

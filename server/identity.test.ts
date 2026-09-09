@@ -5,7 +5,8 @@
  *
  * The cases that have to stay true: an unbound room keeps the anonymous
  * allowance; a failed or abandoned identification writes nothing; the stored
- * row carries no token and no phone number; and a down WAHA host degrades to
+ * row carries no token and no phone number; a typed number is a note not a
+ * proof; the first binding is the owner; and unavailable WhatsApp degrades to
  * LinkedIn with a sentence, never to a dead button.
  */
 
@@ -29,9 +30,11 @@ import {
   startLinkedIn,
   startWhatsApp,
   storedBindingForTests,
+  saveWhatsAppNote,
+  claimStateForWorkspace,
   BIND_CODE_RE,
 } from "./identity";
-import { WAHA_UNAVAILABLE_LINE, probeWaha, qrSvg, waMeUrl } from "./waha";
+import { WAHA_UNAVAILABLE_LINE, WAHA_UNCONFIGURED_LINE, digitsFromUnipileAccount, probeWaha, qrSvg, waMeUrl } from "./waha";
 
 const WORKSPACE = "ws_identity_test";
 const TOKEN = "tokIdentityTestToken12";
@@ -256,7 +259,7 @@ describe("what may be stored", () => {
     assert.ok(nonce);
     assert.match(text, /tokIdentityTestToken12/, "the pre-filled message carries the room address");
 
-    const inbound = acceptWhatsAppInbound(
+    const inbound = await acceptWhatsAppInbound(
       {
         event: "message",
         payload: {
@@ -296,7 +299,7 @@ describe("what may be stored", () => {
     if (!start.ok) return;
     const text = decodeURIComponent(new URL(start.offer.url).searchParams.get("text") ?? "");
 
-    const inbound = acceptWhatsAppInbound(
+    const inbound = await acceptWhatsAppInbound(
       { payload: { from: "15555550999@c.us", pushName: "", body: text } },
       undefined,
     );
@@ -307,7 +310,7 @@ describe("what may be stored", () => {
   });
 });
 
-describe("a down WAHA host", () => {
+describe("unavailable WhatsApp", () => {
   it("degrades to the LinkedIn route with a sentence, never a dead button", async () => {
     const state = await bindingStateForWorkspace(
       WORKSPACE,
@@ -371,14 +374,36 @@ describe("inbound extraction", () => {
 });
 
 describe("WAHA helpers", () => {
-  it("treats a down host as unavailable without throwing", async () => {
-    process.env.WAHA_BASE_URL = "https://waha.example.test";
+  it("treats Unipile as unavailable without throwing", async () => {
+    process.env.UNIPILE_DSN = "api1.example.test:13111";
+    process.env.UNIPILE_API_KEY = "test-unipile-key";
     const probe = await probeWaha(async () => {
       throw new Error("ECONNREFUSED");
     });
     assert.equal(probe.ok, false);
     if (probe.ok) return;
     assert.equal(probe.line, WAHA_UNAVAILABLE_LINE);
+  });
+
+  it("says WhatsApp is not configured when Unipile env vars are missing", async () => {
+    delete process.env.UNIPILE_DSN;
+    delete process.env.UNIPILE_API_KEY;
+    const probe = await probeWaha(async () => {
+      throw new Error("should not be called");
+    });
+    assert.equal(probe.ok, false);
+    if (probe.ok) return;
+    assert.equal(probe.line, WAHA_UNCONFIGURED_LINE);
+  });
+
+  it("reads our digits from Unipile's account body and does not keep the body", () => {
+    const digits = digitsFromUnipileAccount({
+      id: "acct",
+      type: "WHATSAPP",
+      sources: [{ id: "im", status: "OK" }],
+      connection_params: { im: { phone_number: "420774654822" } },
+    });
+    assert.equal(digits, "420774654822");
   });
 
   it("builds a click-to-chat URL and a QR of it", () => {
@@ -388,5 +413,66 @@ describe("WAHA helpers", () => {
     assert.ok(svg && svg.startsWith("<svg "), "the QR has to be real SVG, not a third-party image");
     assert.match(svg, /<rect /);
     assert.equal(svg.includes("15555550100"), false, "the number is in the modules, not as text in the markup");
+  });
+});
+
+describe("the first binding is the owner", () => {
+  it("does not let a second bind replace the first", async () => {
+    const start = startLinkedIn({
+      workspaceId: WORKSPACE,
+      token: TOKEN,
+      publicBaseUrl: "https://example.test",
+    });
+    assert.equal(start.ok, true);
+    if (!start.ok) return;
+    const state = new URL(start.url).searchParams.get("state");
+    assert.ok(state);
+    const first = await completeLinkedIn({
+      state,
+      code: "ok-code",
+      fetchImpl: async (url) => {
+        const href = String(url);
+        if (href.includes("accessToken")) return jsonResponse(200, { access_token: "liau", expires_in: 3600 });
+        return jsonResponse(200, { sub: "owner-sub", name: "Ada Example" });
+      },
+    });
+    assert.equal(first.bound, true);
+    const owner = storedBindingForTests(WORKSPACE);
+    assert.equal(owner?.providerId, "linkedin:owner-sub");
+
+    const startAgain = startLinkedIn({
+      workspaceId: WORKSPACE,
+      token: TOKEN,
+      publicBaseUrl: "https://example.test",
+    });
+    assert.equal(startAgain.ok, true);
+    if (!startAgain.ok) return;
+    const state2 = new URL(startAgain.url).searchParams.get("state");
+    assert.ok(state2);
+    await completeLinkedIn({
+      state: state2,
+      code: "ok-code-2",
+      fetchImpl: async (url) => {
+        const href = String(url);
+        if (href.includes("accessToken")) return jsonResponse(200, { access_token: "liau2", expires_in: 3600 });
+        return jsonResponse(200, { sub: "other-sub", name: "Someone Else" });
+      },
+    });
+    const still = storedBindingForTests(WORKSPACE);
+    assert.equal(still?.providerId, "linkedin:owner-sub");
+    assert.equal(still?.displayName, "Ada Example");
+    assert.equal(claimStateForWorkspace(WORKSPACE).canRename, true);
+  });
+});
+
+describe("a number typed by hand", () => {
+  it("is a note, not a claim, and does not raise the allowance", async () => {
+    const claim = await saveWhatsAppNote(WORKSPACE, "+420 774 654 822");
+    assert.equal(claim.bound, false);
+    assert.equal(claim.canRename, false);
+    assert.equal(claim.owner, null);
+    assert.equal(claim.whatsappNote, "+420 774 654 822");
+    assert.equal(storedBindingForTests(WORKSPACE), undefined);
+    assert.equal(allowanceForWorkspace(WORKSPACE).level, "anonymous");
   });
 });

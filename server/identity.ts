@@ -14,31 +14,47 @@
  *
  *   - LinkedIn, through the official Sign In with LinkedIn (OpenID Connect)
  *     authorization screen. Nothing scraped, nothing session-based.
- *   - WhatsApp, through WAHA on another host: a wa.me link or a QR of that
- *     link opens WhatsApp with a pre-filled message carrying this room's
- *     address, sent to us.
+ *   - WhatsApp, through Unipile on our own number only: a wa.me link or a QR
+ *     of that link opens WhatsApp with a pre-filled message carrying this
+ *     room's address, sent to us. The visitor still taps a wa.me link. We
+ *     do not connect their WhatsApp.
  *
  * WHAT IS STORED. The minimum that answers "is this the same person": an
  * opaque provider id and the display name they chose to give. The LinkedIn
  * access token is used once to read those two fields and then dropped. A
  * WhatsApp phone number is hashed before anything keeps it, and is never
- * logged. Failed or abandoned identification writes nothing.
+ * logged. Failed or abandoned identification writes nothing. A number typed
+ * by hand is a note, stored apart from a binding, and is not a proof.
  *
  * THE ADDRESS STAYS A BEARER CREDENTIAL. Binding adds a second fact about the
  * room. It does not start asking for a password, and it does not stop the
  * link from opening the room. robots.txt, noindex and the sitemap already
  * treat /w/ as a credential; this file does not undo that.
  *
- * WHERE THIS LIVES. In memory, in this process — the same constraint
- * server/spend.ts has, because this parcel does not own shared/schema.ts.
- * Bindings vanish on restart. Nothing a visitor reads claims otherwise.
+ * WHERE THIS LIVES. server/identity-store.ts. In memory when there is no
+ * database; in room_bindings when there is one and the table exists. The
+ * first binding on a room is its owner.
  */
 
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { customAlphabet, nanoid } from "nanoid";
-import type { RoomAccessLevel, RoomBindingProvider, RoomBindingState } from "@shared/api";
+import type { RoomAccessLevel, RoomBindingState, RoomClaimState } from "@shared/api";
 import { storage } from "./storage";
 import { MAX_TURNS_PER_HOUR, monthlyBudgetUsd } from "./spend";
+import {
+  getBinding,
+  getWhatsappNote,
+  hydrateIdentityStore,
+  putBinding,
+  putWhatsappNote,
+  resetIdentityStoreForTests,
+  type StoredBinding,
+} from "./identity-store";
+export { hydrateIdentityStore };
+import {
+  registerInboundMatcher,
+  type AcceptedInboundMessage,
+} from "./unipile/inbound";
 import {
   WAHA_UNAVAILABLE_LINE,
   probeWaha,
@@ -101,19 +117,31 @@ const bindCode = customAlphabet(BIND_CODE_ALPHABET, BIND_CODE_LENGTH);
 /** Exported so the test reads the pattern the webhook uses, never a copy of it. */
 export const BIND_CODE_RE = new RegExp(`\\bRoom-bind ([${BIND_CODE_ALPHABET}]{${BIND_CODE_LENGTH}})\\b`);
 
-/** Per-process pepper so a stored WhatsApp id is not a reversible phone number. */
-const HASH_PEPPER = randomBytes(32);
+/**
+ * Pepper, so a stored WhatsApp id is not a reversible phone number.
+ *
+ * It used to be `randomBytes(32)` per process, which was right while bindings
+ * lived in a Map and died with the process. They are a table now, so the same
+ * chat hashes to a different value after every restart. Nothing reads it back
+ * today — no query filters on providerId — but `room_bindings` carries an index
+ * on (provider, providerId), and the first person to write "which other rooms
+ * does this person own" would get a query that works for LinkedIn, whose `sub`
+ * is stable, and silently misses every WhatsApp row.
+ *
+ * So: set ROOM_HASH_PEPPER and the value is durable. Leave it unset and the
+ * per-process fallback stands, which is safe but not comparable across a
+ * restart — and the boot log says so rather than leaving it to be discovered.
+ */
+const HASH_PEPPER = (() => {
+  const configured = process.env.ROOM_HASH_PEPPER?.trim();
+  if (configured) return Buffer.from(configured, "utf8");
+  console.log(
+    "[identity] no ROOM_HASH_PEPPER — WhatsApp identifiers are per-process and do not compare across a restart",
+  );
+  return randomBytes(32);
+})();
 
 /* --------------------------------- records -------------------------------- */
-
-interface StoredBinding {
-  workspaceId: string;
-  provider: RoomBindingProvider;
-  /** Opaque. LinkedIn `sub`, or a hash of a WhatsApp chat id. Never a phone, never a token. */
-  providerId: string;
-  displayName: string;
-  boundAt: string;
-}
 
 interface PendingLinkedIn {
   workspaceId: string;
@@ -129,27 +157,31 @@ interface PendingWhatsApp {
   createdAt: number;
 }
 
-const bindings = new Map<string, StoredBinding>();
 const pendingLinkedIn = new Map<string, PendingLinkedIn>();
 const pendingWhatsApp = new Map<string, PendingWhatsApp>();
 const pendingWhatsAppByNonce = new Map<string, string>();
+let inboundMatcherInstalled = false;
+let uninstallInbound: (() => void) | null = null;
 
 export function resetIdentityForTests(): void {
-  bindings.clear();
+  resetIdentityStoreForTests();
   pendingLinkedIn.clear();
   pendingWhatsApp.clear();
   pendingWhatsAppByNonce.clear();
+  uninstallInbound?.();
+  uninstallInbound = null;
+  inboundMatcherInstalled = false;
 }
 
 /** Test seam: the stored row, so cases can assert what is NOT on it. */
 export function storedBindingForTests(workspaceId: string): StoredBinding | undefined {
-  return bindings.get(workspaceId);
+  return getBinding(workspaceId);
 }
 
 /* -------------------------------- allowance ------------------------------- */
 
 export function accessLevelFor(workspaceId: string): RoomAccessLevel {
-  return bindings.has(workspaceId) ? "signed-in" : "anonymous";
+  return getBinding(workspaceId) ? "signed-in" : "anonymous";
 }
 
 export function turnsPerHourFor(level: RoomAccessLevel): number {
@@ -351,7 +383,7 @@ export async function completeLinkedIn(input: {
     const displayName = displayNameFromUserInfo(info);
     if (!sub || !displayName) return { token: pending.token, bound: false };
 
-    bindings.set(pending.workspaceId, {
+    await putBinding({
       workspaceId: pending.workspaceId,
       provider: "linkedin",
       providerId: `linkedin:${sub}`,
@@ -477,40 +509,103 @@ export type WhatsAppInboundResult =
   | { accepted: true; bound: boolean }
   | { accepted: false; reason: "unauthorized" };
 
-/**
- * A message arrived at our number. If it carries a live bind code AND a
- * display name the sender chose, the matching room is bound. Otherwise the
- * room is left exactly as it was. The chat id is hashed; the raw payload is
- * not logged.
- */
-export function acceptWhatsAppInbound(
-  raw: unknown,
-  webhookSecret: string | undefined,
-): WhatsAppInboundResult {
-  if (!webhookSecretOk(webhookSecret)) return { accepted: false, reason: "unauthorized" };
+async function bindFromWhatsAppFields(fields: InboundFields): Promise<boolean> {
   sweepPending();
-  const fields = extractWhatsAppInbound(raw);
-  if (!fields) return { accepted: true, bound: false };
   const match = BIND_CODE_RE.exec(fields.body);
-  if (!match) return { accepted: true, bound: false };
+  if (!match) return false;
   const nonce = match[1];
   const workspaceId = pendingWhatsAppByNonce.get(nonce);
-  if (!workspaceId) return { accepted: true, bound: false };
+  if (!workspaceId) return false;
   const pending = pendingWhatsApp.get(workspaceId);
   pendingWhatsApp.delete(workspaceId);
   pendingWhatsAppByNonce.delete(nonce);
-  if (!pending || pending.nonce !== nonce) return { accepted: true, bound: false };
+  if (!pending || pending.nonce !== nonce) return false;
   const displayName = fields.pushName.trim();
-  if (!displayName) return { accepted: true, bound: false };
+  if (!displayName) return false;
 
-  bindings.set(workspaceId, {
+  await putBinding({
     workspaceId,
     provider: "whatsapp",
     providerId: `whatsapp:${opaqueWhatsAppId(fields.chatId)}`,
     displayName,
     boundAt: new Date().toISOString(),
   });
-  return { accepted: true, bound: true };
+  return true;
+}
+
+/**
+ * A message arrived at our number. If it carries a live bind code AND a
+ * display name the sender chose, the matching room is bound. Otherwise the
+ * room is left exactly as it was. The chat id is hashed; the raw payload is
+ * not logged.
+ *
+ * Kept for the WAHA-shaped webhook that is still registered. Unipile inbound
+ * goes through installIdentityInbound() and hashes Unipile's chat_id the same way.
+ */
+export async function acceptWhatsAppInbound(
+  raw: unknown,
+  webhookSecret: string | undefined,
+): Promise<WhatsAppInboundResult> {
+  if (!webhookSecretOk(webhookSecret)) return { accepted: false, reason: "unauthorized" };
+  const fields = extractWhatsAppInbound(raw);
+  if (!fields) return { accepted: true, bound: false };
+  const bound = await bindFromWhatsAppFields(fields);
+  return { accepted: true, bound };
+}
+
+function onUnipileIdentityMessage(message: AcceptedInboundMessage): void {
+  const pushName = message.sender.attendeeName?.trim() ?? "";
+  void bindFromWhatsAppFields({
+    chatId: message.chatId,
+    pushName,
+    body: message.message,
+  });
+}
+
+/** Register once with Unipile's inbound dispatcher. Idempotent. */
+export function installIdentityInbound(): void {
+  if (inboundMatcherInstalled) return;
+  inboundMatcherInstalled = true;
+  uninstallInbound = registerInboundMatcher(onUnipileIdentityMessage);
+}
+
+export async function saveWhatsAppNote(workspaceId: string, number: string): Promise<RoomClaimState> {
+  await hydrateIdentityStore();
+  const trimmed = number.trim();
+  if (trimmed) {
+    await putWhatsappNote({
+      workspaceId,
+      number: trimmed,
+      addedAt: new Date().toISOString(),
+    });
+  }
+  return claimStateForWorkspace(workspaceId);
+}
+
+export async function claimStateForToken(token: string): Promise<RoomClaimState | null> {
+  const state = await storage.getWorkspaceByToken(token);
+  if (!state) return null;
+  await hydrateIdentityStore();
+  return claimStateForWorkspace(state.workspace.id);
+}
+
+export function claimStateForWorkspace(workspaceId: string): RoomClaimState {
+  const stored = getBinding(workspaceId);
+  const note = getWhatsappNote(workspaceId);
+  if (!stored) {
+    return {
+      bound: false,
+      canRename: false,
+      owner: null,
+      whatsappNote: note?.number ?? null,
+    };
+  }
+  return {
+    bound: true,
+    canRename: true,
+    owner: { provider: stored.provider, displayName: stored.displayName },
+    whatsappNote: note?.number ?? null,
+  };
 }
 
 /* --------------------------------- the offer -------------------------------- */
@@ -545,7 +640,7 @@ function toPublicState(
   needsIdentify: boolean,
   probe: WahaProbe,
 ): RoomBindingState {
-  const stored = bindings.get(workspaceId);
+  const stored = getBinding(workspaceId);
   const routes = routeAvailability(probe);
   if (!stored) {
     return {
@@ -573,10 +668,11 @@ export async function bindingStateForToken(
 ): Promise<RoomBindingState | null> {
   const state = await storage.getWorkspaceByToken(token);
   if (!state) return null;
+  await hydrateIdentityStore();
   const own = visitorPastedOwnMaterial(
     state.messages.filter((message) => message.authorKind === "visitor").map((message) => message.body),
   );
-  return toPublicState(state.workspace.id, own && !bindings.has(state.workspace.id), await probe());
+  return toPublicState(state.workspace.id, own && !getBinding(state.workspace.id), await probe());
 }
 
 export async function bindingStateForWorkspace(
@@ -584,6 +680,7 @@ export async function bindingStateForWorkspace(
   visitorBodies: string[],
   probe: () => Promise<WahaProbe> = probeWaha,
 ): Promise<RoomBindingState> {
+  await hydrateIdentityStore();
   const own = visitorPastedOwnMaterial(visitorBodies);
-  return toPublicState(workspaceId, own && !bindings.has(workspaceId), await probe());
+  return toPublicState(workspaceId, own && !getBinding(workspaceId), await probe());
 }

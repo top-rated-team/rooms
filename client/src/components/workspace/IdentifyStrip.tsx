@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
-import type { RoomBindingState } from "@shared/api";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { RoomBindingState, RoomClaimState } from "@shared/api";
 import { ApiError, apiRequest } from "@/lib/apiRequest";
 import { cn } from "@/lib/utils";
-import { ACTION, ACTION_QUIET, CHROME, LABEL, META, READ } from "@/components/workspace/room-style";
+import { ACTION, ACTION_QUIET, CHROME, FOCUS, LABEL, META, READ } from "@/components/workspace/room-style";
 
 /**
  * The strip that asks a visitor to bind the room once the room holds something
@@ -11,7 +11,7 @@ import { ACTION, ACTION_QUIET, CHROME, LABEL, META, READ } from "@/components/wo
  * It is a request, not a gate. The address in the URL remains a bearer
  * credential; binding adds a second fact about the room and does not stop
  * anyone who has the link from opening it. Two routes, and the strip will not
- * render a button for a route that cannot work: if WAHA is down, LinkedIn
+ * render a button for a route that cannot work: if WhatsApp is down, LinkedIn
  * stays, with a sentence saying why.
  */
 
@@ -188,3 +188,112 @@ export function IdentifyStrip({ token }: IdentifyStripProps) {
 }
 
 export default IdentifyStrip;
+
+/**
+ * The room name the owner already reads, made editable in place once a claim
+ * exists. An unclaimed room keeps the name it was given at creation. No panel,
+ * no settings screen, no modal for one text field.
+ *
+ * Wired from the sidebar and the desktop top bar — those files are not this
+ * parcel's, so callers pass token and the current name.
+ */
+export function RoomNameControl({
+  token,
+  name,
+  className,
+}: {
+  token: string;
+  name: string;
+  className?: string;
+}) {
+  const [claim, setClaim] = useState<RoomClaimState | null>(null);
+  const [draft, setDraft] = useState(name);
+  const [saving, setSaving] = useState(false);
+  const focused = useRef(false);
+
+  useEffect(() => {
+    if (!focused.current) setDraft(name);
+  }, [name]);
+
+  useEffect(() => {
+    const ac = new AbortController();
+    void apiRequest<RoomClaimState>("GET", `/api/workspaces/${encodeURIComponent(token)}/claim`, undefined, {
+      signal: ac.signal,
+    })
+      .then((next) => setClaim(next))
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setClaim(null);
+      });
+    return () => ac.abort();
+  }, [token]);
+
+  const save = useCallback(async () => {
+    const next = draft.trim();
+    if (!claim?.canRename) return;
+    if (!next || next === name) {
+      setDraft(name);
+      return;
+    }
+    setSaving(true);
+    try {
+      const renamed = await apiRequest<{ name: string }>("PATCH", `/api/workspaces/${encodeURIComponent(token)}`, {
+        name: next,
+      });
+      setDraft(renamed.name);
+    } catch {
+      setDraft(name);
+    } finally {
+      setSaving(false);
+    }
+  }, [claim?.canRename, draft, name, token]);
+
+  if (!claim?.canRename) {
+    return (
+      <p className={cn(CHROME, "truncate font-medium", className)} title={name}>
+        {name}
+      </p>
+    );
+  }
+
+  return (
+    <form
+      className={cn("min-w-0", className)}
+      onSubmit={(event) => {
+        event.preventDefault();
+        void save();
+      }}
+    >
+      <label className="sr-only" htmlFor={`room-name-${token}`}>
+        Room name
+      </label>
+      <input
+        id={`room-name-${token}`}
+        type="text"
+        value={draft}
+        maxLength={120}
+        disabled={saving}
+        onChange={(event) => setDraft(event.target.value)}
+        onFocus={() => {
+          focused.current = true;
+        }}
+        onBlur={() => {
+          focused.current = false;
+          void save();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            setDraft(name);
+            (event.target as HTMLInputElement).blur();
+          }
+        }}
+        className={cn(
+          CHROME,
+          FOCUS,
+          "w-full truncate bg-transparent font-medium text-foreground",
+        )}
+        data-testid="input-room-name"
+      />
+    </form>
+  );
+}

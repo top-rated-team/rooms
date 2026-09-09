@@ -10,6 +10,8 @@ import {
   inviteMemberSchema,
   postMessageSchema,
   updateTaskSchema,
+  updateWorkspaceSchema,
+  claimNoteSchema,
   type Channel,
   type Citation,
   type Lead,
@@ -38,7 +40,7 @@ import { llmReady, streamAgentAnswer } from "./ai/agentRuntime";
 import { kbStatus } from "./ai/kb";
 import { routeQuestion } from "./ai/route-question";
 import { ASK_LEDGER_KEY, askBudgetUsd, askLedgerKey, claimAgentTurn, guardAgentTurn, recordTurnCost } from "./spend";
-import { acceptWhatsAppInbound, bindingStateForToken, completeLinkedIn, startLinkedIn, startWhatsApp } from "./identity";
+import { acceptWhatsAppInbound, bindingStateForToken, claimStateForToken, claimStateForWorkspace, completeLinkedIn, hydrateIdentityStore, installIdentityInbound, saveWhatsAppNote, startLinkedIn, startWhatsApp } from "./identity";
 import { listBoosters } from "./flygen";
 import {
   acceptBridgeInbound,
@@ -680,6 +682,27 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
+  app.patch(
+    "/api/workspaces/:token",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      await hydrateIdentityStore();
+      const claim = claimStateForWorkspace(state.workspace.id);
+      if (!claim.canRename) {
+        res.status(403).json({ error: "This room has no owner yet, so its name cannot be changed." });
+        return;
+      }
+      const parsed = updateWorkspaceSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const workspace = await storage.renameWorkspace(state.workspace.id, parsed.data.name);
+      if (!workspace) return notFound(res, "Workspace not found");
+      broadcast(state.workspace.token, { type: "workspace", workspace: { name: workspace.name } });
+      res.json({ name: workspace.name });
+    }),
+  );
+
   /* ----------------------------- boosters ----------------------------- */
   /* Read-only inventory of rented accounts. Capacity, not members: this list
    * is never written into `state.members`. Fetch and display; nothing here
@@ -1174,6 +1197,9 @@ export function registerRoutes(app: Express): void {
 
   /* ---------------------- room identity (two routes) ---------------------- */
 
+  installIdentityInbound();
+  void hydrateIdentityStore();
+
   app.get(
     "/api/workspaces/:token/identity",
     route(async (req, res) => {
@@ -1182,6 +1208,30 @@ export function registerRoutes(app: Express): void {
       const binding = await bindingStateForToken(state.workspace.token);
       if (!binding) return notFound(res, "Workspace not found");
       res.json(binding);
+    }),
+  );
+
+  app.get(
+    "/api/workspaces/:token/claim",
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const claim = await claimStateForToken(state.workspace.token);
+      if (!claim) return notFound(res, "Workspace not found");
+      res.json(claim);
+    }),
+  );
+
+  app.post(
+    "/api/workspaces/:token/claim",
+    identityLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const parsed = claimNoteSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const claim = await saveWhatsAppNote(state.workspace.id, parsed.data.number);
+      res.json(claim);
     }),
   );
 
@@ -1240,7 +1290,7 @@ export function registerRoutes(app: Express): void {
     "/api/identity/whatsapp/inbound",
     identityWebhookLimit,
     route(async (req, res) => {
-      const result = acceptWhatsAppInbound(req.body, req.get("x-webhook-secret") ?? undefined);
+      const result = await acceptWhatsAppInbound(req.body, req.get("x-webhook-secret") ?? undefined);
       if (!result.accepted) {
         res.status(401).json({ error: "Not found" });
         return;

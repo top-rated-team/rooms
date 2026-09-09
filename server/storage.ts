@@ -90,6 +90,8 @@ export interface Storage {
   updateTask(id: string, patch: TaskPatch): Promise<Task | null>;
   createLead(input: NewLead): Promise<Lead>;
   touchWorkspace(id: string): Promise<void>;
+  /** Rename a room. Only the owner may call this; the route enforces that. */
+  renameWorkspace(id: string, name: string): Promise<Workspace | null>;
 }
 
 export type StorageMode = "postgres" | "memory";
@@ -473,6 +475,14 @@ class MemoryStorage implements Storage {
     if (workspace) this.workspaces.set(id, { ...workspace, lastActiveAt: new Date() });
   }
 
+  async renameWorkspace(id: string, name: string): Promise<Workspace | null> {
+    const workspace = this.workspaces.get(id);
+    if (!workspace) return null;
+    const updated: Workspace = { ...workspace, name, lastActiveAt: new Date() };
+    this.workspaces.set(id, updated);
+    return updated;
+  }
+
   private stateOf(workspace: Workspace): WorkspaceState {
     const id = workspace.id;
     return {
@@ -595,6 +605,15 @@ class PgStorage implements Storage {
   async touchWorkspace(id: string): Promise<void> {
     await this.db.update(workspaces).set({ lastActiveAt: new Date() }).where(eq(workspaces.id, id));
   }
+
+  async renameWorkspace(id: string, name: string): Promise<Workspace | null> {
+    const updated = await this.db
+      .update(workspaces)
+      .set({ name, lastActiveAt: new Date() })
+      .where(eq(workspaces.id, id))
+      .returning();
+    return updated[0] ?? null;
+  }
 }
 
 /* ------------------------------- selection -------------------------------- */
@@ -636,4 +655,5 @@ export const storage: Storage = {
   updateTask: (id, patch) => resolve().store.updateTask(id, patch),
   createLead: (input) => resolve().store.createLead(input),
   touchWorkspace: (id) => resolve().store.touchWorkspace(id),
+  renameWorkspace: (id, name) => resolve().store.renameWorkspace(id, name),
 };

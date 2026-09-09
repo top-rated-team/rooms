@@ -220,3 +220,4 @@ export type Member = typeof members.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type Task = typeof tasks.$inferSelect & { repeat?: TaskRepeat | null };
 export type Lead = typeof leads.$inferSelect;
+export * from "./schema-rooms";

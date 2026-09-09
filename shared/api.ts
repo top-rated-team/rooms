@@ -49,7 +49,9 @@ export type ServerEvent =
   | { type: "channel"; channel: Channel }
   | { type: "typing"; memberKey: string; channelId: string }
   | { type: "presence"; memberKey: string; presence: "online" | "away" | "offline" }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string }
+  /** The owner renamed the room. Other people in it see the new name without reloading. */
+  | { type: "workspace"; workspace: { name: string } };
 
 export type ClientEvent =
   | { type: "ping" }
@@ -119,6 +121,33 @@ export interface RoomBindingState {
     /** Set when WhatsApp cannot be offered; the strip keeps LinkedIn and prints this. */
     unavailableLine?: string;
   };
+}
+
+/**
+ * Whether this room has an owner, and whether a number on it is a note or a
+ * proof. A typed number is never the same fact as a number that messaged us.
+ */
+export interface RoomClaimState {
+  bound: boolean;
+  /** True only when a claim exists. An unclaimed room has no owner, so it cannot be renamed. */
+  canRename: boolean;
+  owner: {
+    provider: RoomBindingProvider;
+    displayName: string;
+  } | null;
+  /**
+   * A number someone typed. Shown as a note. Null when none has been added.
+   * A WhatsApp proof is `owner.provider === "whatsapp"` and never appears here.
+   */
+  whatsappNote: string | null;
+}
+
+export interface RenameWorkspaceInput {
+  name: string;
+}
+
+export interface ClaimNoteInput {
+  number: string;
 }
 
 /* ---------------------- rented accounts (boosters) ---------------------- */
