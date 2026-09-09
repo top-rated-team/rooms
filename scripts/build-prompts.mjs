@@ -62,6 +62,12 @@ const WAVES = [
    */
   { n: 13, keys: ["room-login"], alone: true },
   { n: 14, keys: ["booking-signin-fix"], alone: true },
+  /* The flags are set and mostly ignored. A sweep found seventy-five surfaces
+     where a LinkedIn service or agent still reaches a visitor despite
+     hidden: true, and the list is docs/review/2026-09-09-interrupted-reviews.md
+     rather than something this parcel has to rediscover. It runs alone because
+     it touches the room panel and the connector, which everything reads. */
+  { n: 15, keys: ["linkedin-quiet"], alone: true },
 ];
 
 function prompt(key) {
