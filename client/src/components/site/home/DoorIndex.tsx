@@ -1,8 +1,8 @@
 import { Link } from "wouter";
 
 import { DOOR_TIERS, type DoorDef } from "@shared/doors";
-import { LISTED_DOORS, PUBLIC_DOORS, isPublicDoor } from "@/components/site/GatedOffers";
-import { countWord, firstSentence } from "@/components/site/home/doorText";
+import { LISTED_DOORS, isPublicDoor } from "@/components/site/GatedOffers";
+import { firstSentence } from "@/components/site/home/doorText";
 
 /* ---------------------------------------------------------------------------
  * THE INDEX
@@ -24,10 +24,11 @@ import { countWord, firstSentence } from "@/components/site/home/doorText";
  *
  * A row links to its door only when the row says that door has a page.
  *
- * It lists LISTED_DOORS — all of them — and counts PUBLIC_DOORS, which is the
- * ones we sell. A partner's row is on the page, labelled Partner, and is not
- * counted in a sentence about how many services Top-Rated Team has. Both facts
- * are true at once and the page says both. The tier rule in GatedOffers.tsx is the only
+ * It lists LISTED_DOORS — all of them. The heading used to count PUBLIC_DOORS,
+ * the ones we sell, so that a partner's row could be on the page and labelled
+ * Partner without being counted in a sentence about how many services
+ * Top-Rated Team has. The owner replaced the count with a name, which removes
+ * the arithmetic and the question with it. The tier rule in GatedOffers.tsx is the only
  * place the split may be decided, and this page is open to anyone: printing the
  * grey row here would name the partner and their offer on the front page, which
  * is exactly what the email step on /services exists to withhold — and what the
@@ -46,8 +47,7 @@ export function DoorIndex() {
     <section id="doors" className="mx-auto max-w-[var(--page)] scroll-mt-[var(--s3)] px-[var(--s3)] pt-[var(--s6)]">
       <div className="grid grid-cols-1 items-baseline gap-[var(--s3)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)]">
         <h2 className="type-body m-0 font-display font-medium">
-          {countWord(PUBLIC_DOORS.length).replace(/^./, (c) => c.toUpperCase())} services. Pick the one that sounds like your
-          problem.
+          Top-Rated Digital Services. Pick the one that sounds like your enquiry.
         </h2>
         <p className="type-body m-0 text-muted-foreground">
           Most paid ads accounts we open have been handed to the platform&rsquo;s own automation and to agents somebody

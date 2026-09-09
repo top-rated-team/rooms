@@ -665,7 +665,7 @@ function DoorPage({ door }: { door: DoorDef }) {
                 <div className="mt-[var(--s3)]">{roomMenu("close")}</div>
               </>
             ) : (
-              <p className={READ_MUTED}>
+              <p className={`${READ_MUTED} lg:whitespace-nowrap`}>
                 There is no magic: just expertise, dedicated hours, and a systematic approach.
               </p>
             )}

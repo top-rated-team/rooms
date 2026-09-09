@@ -226,7 +226,7 @@ export function ChatGptAdsBody() {
             The documentation is good and public. The API surface is small. What you are paying for is the decision at
             the top, the hands on a live system in the middle, and the verification at the end.
           </p>
-          <p className={`mt-[var(--s2)] ${READ}`}>
+          <p className={`mt-[var(--s2)] ${READ} lg:whitespace-nowrap`}>
             There is no magic: just expertise, dedicated hours, and a systematic approach.
           </p>
         </div>

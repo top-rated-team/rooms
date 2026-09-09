@@ -173,7 +173,7 @@ export function Footer() {
 
         <div className="flex flex-wrap items-baseline justify-between gap-x-[var(--s4)] gap-y-[var(--s2)]">
           <p className="type-meta text-muted-foreground" data-testid="text-footer-operator">
-            &copy; {year} {OURS.legalName} &mdash; Prague, Madeira, Kyiv, Bratislava, Batumi
+            &copy; 2017&ndash;{year} {OURS.legalName} &mdash; Prague, Madeira, Kyiv, Bratislava, Batumi
           </p>
           <nav className="type-meta flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]">
             {/* The way back to a room you already kept. One place, in words, at

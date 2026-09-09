@@ -120,10 +120,14 @@ export function Landing() {
             <p className="type-body m-0">
               Ask first. It costs nothing, and it is the fastest way to find out whether you need us at all.
             </p>
-            <p className="type-note mt-[var(--s2)] text-muted-foreground">
-              There is no magic: just expertise, dedicated hours, and a systematic approach.
-            </p>
           </div>
+          {/* Outside the 44ch measure and set not to wrap on a wide screen: the
+              owner wants it read as one line, and 76 characters at this size is
+              about 540px against a page that is far wider. It still wraps on a
+              phone, where a nowrap would push the page sideways. */}
+          <p className="type-note mt-[var(--s2)] text-muted-foreground lg:whitespace-nowrap">
+            There is no magic: just expertise, dedicated hours, and a systematic approach.
+          </p>
         </section>
       </main>
       <Footer />
