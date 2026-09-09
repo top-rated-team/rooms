@@ -107,3 +107,29 @@ describe("visitorLine", () => {
     );
   });
 });
+
+describe("the two new corpora keep to their own documentation", () => {
+  it("draws the Google Ads API corpus only from developers.google.com, and Unipile's only from developer.unipile.com", async () => {
+    const { readFileSync } = await import("node:fs");
+    const cases = [
+      ["data/kb/kb.google-ads-api.json", "developers.google.com"],
+      ["data/kb/kb.unipile-api.json", "developer.unipile.com"],
+    ] as const;
+
+    for (const [file, host] of cases) {
+      const corpus = JSON.parse(readFileSync(file, "utf8")) as { chunks: { url?: string }[] };
+      assert.ok(corpus.chunks.length > 50, `${file} has too few chunks to be a corpus`);
+      for (const chunk of corpus.chunks) {
+        assert.ok(chunk.url, `${file} has a chunk with no source URL, and a citation is the point`);
+        assert.equal(new URL(chunk.url).host, host, `${file} carries a chunk from ${chunk.url}`);
+      }
+    }
+  });
+
+  it("says a 429 is busy rather than unreachable, because only one of those is actionable", () => {
+    assert.equal(
+      visitorLine({ type: "errors/too_many_requests", status: 429 }),
+      "Too many requests just now. Try again in a moment.",
+    );
+  });
+});

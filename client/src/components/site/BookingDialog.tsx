@@ -478,6 +478,15 @@ function DayGrid({
   const focusable = focusableDays(year, month, floorDate);
   const tabStop = (focusedDate && focusable.includes(focusedDate) ? focusedDate : null) ?? selectedDate ?? focusable[0] ?? null;
   const monthName = formatMonthHeading(year, month);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!tabStop) return;
+    const grid = gridRef.current;
+    if (!grid || !grid.contains(document.activeElement)) return;
+    const cell = grid.querySelector(`[data-booking-day="${tabStop}"]`);
+    if (cell instanceof HTMLElement && cell !== document.activeElement) cell.focus();
+  }, [tabStop]);
 
   function moveTo(next: string) {
     onFocusDay(next);
@@ -563,6 +572,7 @@ function DayGrid({
       </div>
 
       <div
+        ref={gridRef}
         role="grid"
         aria-labelledby="booking-month-label"
         data-testid="grid-booking-days"

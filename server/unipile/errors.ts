@@ -54,6 +54,11 @@ export const OPERATOR_ALERT_TYPES = new Set<UnipileErrorKind>([
 const KNOWN = new Set<string>(UNIPILE_ERROR_TYPES);
 
 const VISITOR_UNREACHABLE = "Unipile could not be reached.";
+/* A 429 is not unreachable, it is throttled, and the difference is the only
+   thing a visitor can act on. Seen for real: the tenant returned 429 while the
+   booking widget was being checked, and the popup said the service could not
+   be reached — which reads as broken rather than as busy. */
+const VISITOR_BUSY = "Too many requests just now. Try again in a moment.";
 const VISITOR_UNAVAILABLE = "This service is not available right now.";
 const VISITOR_NOT_CONNECTED = "That account is not connected.";
 
@@ -96,8 +101,9 @@ export function visitorLine(error: UnipileError): string {
     case "errors/network_down":
     case "errors/service_unavailable":
     case "errors/request_timeout":
-    case "errors/too_many_requests":
       return VISITOR_UNREACHABLE;
+    case "errors/too_many_requests":
+      return VISITOR_BUSY;
     default:
       return VISITOR_UNAVAILABLE;
   }
