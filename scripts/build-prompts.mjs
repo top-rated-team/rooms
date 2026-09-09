@@ -14,40 +14,37 @@ const REPO = "~/Documents/ChatGPT Ads";
 
 const WAVES = [
   /*
-   * PROGRAMME TWO. The eleven waves of programme one are landed; their manifest
-   * is kept in docs/parcels-programme-1.json for the record.
+   * PROGRAMME THREE. Programme two's thirteen parcels are landed and kept in
+   * docs/parcels-programme-2.json; programme one's nineteen are in
+   * docs/parcels-programme-1.json. Neither is for running.
    *
-   * Three at a time, and the ordering rule that matters here is not the one it
-   * was last time. Programme one's rule was "never two doors in one wave",
-   * because every door appended a Corpus to scripts/build-kb.ts. These parcels
-   * do not build corpora; what they collide on instead is a route in App.tsx
-   * and an entry in doors/bodies.tsx. Both are one-line additions the seam rule
-   * permits — but they share one working tree, and two agents editing one line
-   * of one file in the same second is a merge nobody can check. So: at most one
-   * route-adder and at most one body-adder per wave.
+   * The ordering here is a DEPENDENCY CHAIN rather than a preference, which is
+   * what differs from the last two programmes. Three links:
+   *
+   *   1. unipile-core is wave one, alone. Four parcels import its client, and a
+   *      parcel that writes its own because the shared one did not exist yet is
+   *      four incompatible error mappers and four opinions about where an API
+   *      key may live.
+   *   2. booking-server and booking-dialog run together and build to the
+   *      request and response shapes fixed in section 3 of
+   *      docs/specs/unipile-rooms-and-booking.md. Fixing them in writing first
+   *      is what makes running them in parallel safe.
+   *   3. room-identity precedes login-create-room: the claim dialog the site's
+   *      new menu opens is the one room-identity builds.
+   *
+   * And one standing rule that shapes everything else: AT MOST ONE PARCEL PER
+   * WAVE MAY TOUCH server/routes.ts, and the same for shared/api.ts. Three
+   * parcels here need a route, so they are in three different waves for that
+   * reason alone.
    */
-  /* `landed` is set when a wave's agents have reported AND their work is
-     committed. It is here so the published page stops offering a prompt for
-     work that is already in main — the owner reads that page, not this file,
-     and a re-run of a landed parcel is an agent rewriting a finished file. */
-  { n: 1, keys: ["page-blog", "cases-filter", "footer-links"], landed: true },
-  { n: 2, keys: ["page-team", "door-white-label", "digest-trigger"], landed: true },
-  { n: 3, keys: ["page-roi-calculator", "door-partner", "connector-gpt"], landed: true },
-  // Alone because it is last of the site work, not because it is dangerous. If
-  // wave 3 finishes early, this can be pulled forward into it — it adds no route.
-  { n: 4, keys: ["door-ai-builds-body"], landed: true },
-
-  /*
-   * THE FORK PROGRAMME. private/fork-and-partners.md is the brief for all three and
-   * every prompt says to read it first. It was four: partner-usage-report is
-   * gone because the fork is free and reports nothing back, which was the
-   * owner's decision and took the parcel, the endpoint and the whole privacy
-   * question with it. The order between these two waves is a
-   * dependency, not a preference: partner-setup writes the config that
-   * partner-catalogue reads, so the resolver exists before the page that fills it.
-   */
-  { n: 5, keys: ["partner-catalogue", "legal-agent-upkeep"], landed: true },
-  { n: 6, keys: ["partner-setup"], landed: true },
+  { n: 1, keys: ["unipile-core"], alone: true },
+  { n: 2, keys: ["unipile-messaging", "adgrant-front"] },
+  { n: 3, keys: ["booking-server", "booking-dialog"] },
+  /* Alone because the manifest marks it runAlone: it writes into the room, the
+     storage layer and the identity layer, and everything reads those. */
+  { n: 4, keys: ["room-identity"], alone: true },
+  { n: 5, keys: ["login-create-room"], alone: true },
+  { n: 6, keys: ["chatwoot-inbox"], alone: true },
 ];
 
 function prompt(key) {
@@ -58,7 +55,17 @@ function prompt(key) {
   const lines = [];
   lines.push(`You are working in ${REPO}, branch main. One parcel, called "${key}".`);
   lines.push("");
-  lines.push("Read these first, before you write anything: README.md, private/doors.md, shared/doors.ts.");
+  lines.push("Read these first, before you write anything, in this order:");
+  lines.push("  docs/specs/unipile-rooms-and-booking.md — this programme's brief. Every Unipile");
+  lines.push("    endpoint it touches, transcribed with the URL it came from. Four decisions already");
+  lines.push("    made, with the reasoning, so you do not spend your wave relitigating them. The");
+  lines.push("    request and response shapes two parcels build to in parallel. And the rule the");
+  lines.push("    owner set: every message is checked for who it is from, who it is to and which");
+  lines.push("    chat it is in. Do not work from a paraphrase of the owner's request instead. Three");
+  lines.push("    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,");
+  lines.push("    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.");
+  lines.push("    A paraphrase would not, and you would find out after building on all three.");
+  lines.push("  README.md, private/doors.md, shared/doors.ts.");
   lines.push("Then read three files next to the ones you are about to change.");
   lines.push("");
   lines.push("WHAT YOU OWN. These files, and nothing else in the repository:");

@@ -1,0 +1,221 @@
+{
+  "//": "Who may touch what, written down BEFORE anyone starts. Two parcels claiming one file is the failure this file exists to prevent, and it costs one second to catch here instead of four hours in a merge. Read docs/parallel-dev.md first. THIS IS PROGRAMME TWO \u2014 the nineteen parcels of programme one are all landed and are kept in docs/parcels-programme-1.json for the record, not for running.",
+  "//seams": "Files everything needs. A parcel may ADD up to three lines to one of these and delete none, and must declare which lines up front. Two one-line additions merge by keeping both; two thirty-line edits merge into something nobody can verify. TWO STATED EXCEPTIONS, because the three-line grammar would make them unusable: scripts/build-kb.ts admits one appended Corpus const plus this door's name on the CORPORA line, and shared/roster.ts admits one whole appended agent entry. Both are appends at the end of a list, which is the shape that merges. A THIRD EXCEPTION, added for programme two: client/src/components/site/doors/bodies.tsx is the registry that maps a door id to its page body, and a door parcel adds exactly one entry to it. One line, same grammar as the other two exceptions \u2014 and it is why no two body-adding parcels share a wave.",
+  "seams": [
+    "client/src/App.tsx",
+    "client/src/pages/landing.tsx",
+    "shared/doors.ts",
+    "shared/roster.ts",
+    "shared/api.ts",
+    "shared/schema.ts",
+    "server/routes.ts",
+    "server/ai/agentRuntime.ts",
+    "scripts/build-kb.ts",
+    "package.json",
+    "client/src/components/site/doors/bodies.tsx"
+  ],
+  "//frozen": "Nobody edits these during a parallel run. A change here invalidates every parcel at once.",
+  "frozen": [
+    "client/index.html",
+    "server/index.ts",
+    "render.yaml",
+    "client/src/index.css"
+  ],
+  "//alone": "Parcels marked runAlone touch the room, the panel or the shell \u2014 everything reads those, and two agents in them at once produce a merge nobody can check. One agent, let it finish, then start the others.",
+  "//order": "Three at a time. Wave 1: page-blog, cases-filter, footer-links. Wave 2: page-team, door-white-label, digest-trigger. Wave 3: page-roi-calculator, door-partner, connector-gpt. Wave 4: door-ai-builds-body. NEVER two parcels adding a route to client/src/App.tsx in one wave, and never two adding an entry to doors/bodies.tsx \u2014 both are one-line additions the seam rule allows, but they share one working tree and two agents editing one line of one file at the same second is the merge nobody can check. The waves above already keep them apart; if you reorder, keep that. WAVES 5 AND 6 ARE THE FORK PROGRAMME, and their order is a dependency rather than a preference: partner-setup writes the config partner-catalogue reads, so the catalogue exists first. Read private/fork-and-partners.md before any of the four \u2014 it carries the money model, the two modes, what a fork may report back, and the three decisions that are the owner's.",
+  "parcels": {
+    "page-blog": {
+      "owns": [
+        "client/src/pages/blog.tsx",
+        "client/src/pages/blog-post.tsx",
+        "shared/blog.ts",
+        "scripts/build-blog.ts",
+        "data/blog"
+      ],
+      "seams": {
+        "client/src/App.tsx": [
+          "a route for /blog",
+          "a route for /blog/:slug"
+        ],
+        "package.json": [
+          "one build script line"
+        ]
+      },
+      "runAlone": false,
+      "why": "Five posts on top-rated.team are the standing search traffic of the old site, and the apex cannot move until this application answers on their exact URLs. They are already transcribed in data/blog \u2014 fetched from the live pages and checked by a second agent \u2014 so this parcel is about publishing them, not writing them.",
+      "done": "/blog lists the five posts newest first and /blog/<slug> renders one, at the EXACT slugs in data/blog (two of them look truncated and are not: they are the live URLs). Generated the way shared/cases.ts is \u2014 scripts/build-blog.ts reads data/blog/*.md and writes shared/blog.ts, and the generated file carries the do-not-edit banner, because a post edited by hand stops matching the page it was published at. Frontmatter carries slug, title, date, description, sourceUrl and headings. Render the markdown with the site's own reading typography; do not add a hero, an author box, share buttons, a related-posts rail or a newsletter form. Each post sets its own <title> and meta description from the frontmatter and puts back what it found, the way landing.tsx does. The index needs no search box and no tag filter \u2014 five posts do not need finding. Add both URLs to sitemap.xml."
+    },
+    "cases-filter": {
+      "owns": [
+        "client/src/pages/case-studies.tsx",
+        "client/src/components/site/CaseFilter.tsx"
+      ],
+      "seams": {},
+      "runAlone": false,
+      "why": "22 cases on one page with no way to say which service you came for. The owner asked for a selector; the data is already there \u2014 every case in shared/cases.ts carries a derived `doors` array.",
+      "done": "A filter on /case-studies that shows all cases or the cases for one service, driven by the `doors` field that shared/cases.ts already derives. Read it from DOORS so a new door needs no edit here, and show ONLY doors that actually have a case \u2014 five have none, and an option that returns an empty list is a dead end the page put there itself. 'All' is the default and says how many. The choice belongs in the URL (?service=google-ads) so a filtered view can be linked and the back button works. No animation on filtering. Keyboard-operable, and the count updates in a live region so the change is not silent to a screen reader."
+    },
+    "footer-links": {
+      "owns": [
+        "client/src/components/site/Footer.tsx"
+      ],
+      "seams": {},
+      "runAlone": false,
+      "why": "Three products of ours and two agent-facing files exist and nothing links to them. llms.txt and llms-full.txt are already served from client/public and already generated \u2014 they are simply not reachable from a page.",
+      "done": "The footer gains: Google Ads, linking to /services/google-ads; AdGrant.AI, linking to https://adgrant.ai; and Being.Marketing, linking to https://being.marketing \u2014 the last rendered as the word 'Being.' followed by 'Marketing' struck through, which is how its owner writes it. Use real markup (<s> or a line-through class), NOT the styled unicode look-alikes, which screen readers read as gibberish and search engines index as noise. Also link /llms.txt and /llms-full.txt, quietly, in the row that already carries the legal links \u2014 an agent-facing site should say so, and the owner asked for it. External links open in a new tab with rel=\"noopener noreferrer\". Do not touch the identification line: 'Top-Rated Team (Danylo Burykin SZ\u010cO)' is where the legal name is allowed to appear and it stays exactly as it is."
+    },
+    "page-team": {
+      "owns": [
+        "client/src/pages/team.tsx",
+        "client/src/components/site/TeamGrid.tsx"
+      ],
+      "seams": {
+        "client/src/App.tsx": [
+          "a route for /team"
+        ]
+      },
+      "runAlone": false,
+      "why": "One of the four addresses blocking the apex move. It exists on top-rated.team today and has to keep working when this application answers on that domain.",
+      "done": "/team in the new design, at the same URL. docs/specs/team.md is the spec \u2014 it was written from the live page and then corrected by a second agent, so read its whole 'problems' record, not only its summary. Two things in it are decisions rather than facts and the spec says so: whether to keep individual names (the owner does not want his full legal name across the internet \u2014 see the identification rule in the footer) and whether to keep the '11-50' team-size tile, which the site cannot substantiate. Take the conservative reading of both and leave a comment saying you did. Set the page's own title and meta description. Add /team to sitemap.xml. Do not add photographs that this repository does not have."
+    },
+    "door-white-label": {
+      "owns": [
+        "client/src/components/site/doors/WhiteLabelBody.tsx"
+      ],
+      "seams": {
+        "client/src/components/site/doors/bodies.tsx": [
+          "one entry in DOOR_BODIES"
+        ]
+      },
+      "runAlone": false,
+      "why": "White Label is in the top navigation, is the door a reselling agency arrives looking for by name, and is the only door whose old page on top-rated.team sold something this one does not yet describe. It renders as a headline and a price today because no parcel ever owned its body.",
+      "done": "A body for /services/white-label, mounted through DOOR_BODIES. docs/specs/white-label.md is the spec, written from the live page. It contains a section naming sentences on the old page that this application cannot stand behind \u2014 those do not get carried over, and the ones you drop should be named in a comment so nobody restores them. What the body must answer, because an agency asks all four: what is actually resold, what their client sees and does not see, whose name is on the room, and what happens to the relationship if they stop. Read shared/doors.ts's white-label row first and contradict none of it. Follow ChatGptAdsBody.tsx for structure and restraint \u2014 no cards, no chips, no icons. The price row already renders from shared/pricing.ts; do not print a second figure. LINK THE SOURCE. The white-label offer is 'run this yourself', so the page says so and links GITHUB_URL from shared/roster.ts \u2014 the repository is the fork target and private/fork-and-partners.md is what the page's claims about it must agree with: the fork is FREE, nothing phones home, there is no commission and no licence key, and what is paid for is help at the published prices. Do not promise a public repository in the present tense if it is still private when you write the page \u2014 say what it is and let the link be the link."
+    },
+    "digest-trigger": {
+      "owns": [
+        "server/schedule.ts",
+        "server/schedule.test.ts"
+      ],
+      "seams": {
+        "server/routes.ts": [
+          "one import",
+          "one call to start the schedule"
+        ]
+      },
+      "runAlone": false,
+      "why": "server/digest.ts is written and tested and nothing calls it. runWeeklyDigest exists, composes a real digest and is exercised by ten tests; no timer anywhere invokes it, so no room has ever received one.",
+      "done": "A weekly trigger that calls runWeeklyDigest for each room that should get one. Read server/digest.ts first \u2014 it already decides what a digest says, when a week has passed and what happens on a second call in the same week, so this parcel adds WHEN, not WHAT. It writes into the room and posts nowhere outside it: the room's arrival note promises 'Nothing here posts anywhere by itself' and that promise is about the outside world, which this must not break. One timer for the process, not one per room. It must survive a restart without double-posting \u2014 digest.ts already guards the same week, so lean on that rather than inventing state. Off unless an environment variable turns it on, defaulting to off, so a deploy cannot start writing into live rooms before the owner has decided. Tests: fires once a week, does not fire twice, does not fire for a room with nothing to say, and does not start at all when the variable is unset. server/index.ts is FROZEN \u2014 mount from registerRoutes."
+    },
+    "page-roi-calculator": {
+      "owns": [
+        "client/src/pages/roi-calculator.tsx",
+        "shared/roi.ts",
+        "server/roi.test.ts"
+      ],
+      "seams": {
+        "client/src/App.tsx": [
+          "a route for /roi-calculator"
+        ]
+      },
+      "runAlone": false,
+      "why": "A working tool on the old site and the third of the four addresses blocking the apex. It also prints money, which makes it the one page on this list where being approximately right is the same as being wrong.",
+      "done": "/roi-calculator, same URL, new design. docs/specs/roi-calculator.md carries the inputs, the outputs and the exact arithmetic recovered from the original's own JavaScript. THE ARITHMETIC IS THE DELIVERABLE: put every formula in shared/roi.ts as pure functions and test them in server/roi.test.ts against the worked examples in the spec \u2014 a calculator whose numbers nobody checked is worse than no calculator, because a visitor will quote them back. If the spec marks a formula as unrecovered, do not guess: leave that output out and say in a comment which one and why. Compute in the browser and submit nothing anywhere. Carry over the original's own assumption and disclaimer wording, and print it where the numbers are, not in a footnote. tabular-nums on every figure."
+    },
+    "door-partner": {
+      "owns": [
+        "client/src/components/site/doors/PartnerBody.tsx"
+      ],
+      "seams": {
+        "client/src/components/site/doors/bodies.tsx": [
+          "one entry in DOOR_BODIES"
+        ]
+      },
+      "runAlone": false,
+      "why": "The partner door currently says, three separate times on one page, that another company invoices it and we take no share. The owner has twice asked for that tone to stop, and the page still has no description of the two products the partner actually runs.",
+      "done": "A body for /services/linkedin-growth. It describes top-voice.ai and warmlike.com \u2014 shared/builds.ts has both, generated and verified, and PARTNER_BUILDS is exactly those two in order; use the `forPartner` field, which was written for this page. Both links open in a new tab with rel=\"noopener noreferrer\", on the owner's instruction. THE TONE IS THE POINT: the page repeats the same disclosure three times ('Maksymenko LinkedIn Growth invoices you directly\u2026', 'Another company contracts with you\u2026', and again under 'Who you would be buying from'). Say it ONCE, plainly, where a buyer needs it \u2014 which is next to the money \u2014 and delete the other two. Also fix a real slip: the body prints 'Top-Rated Team (Danylo Burykin SZ\u010cO)' in running copy, and the legal form belongs only in the footer identification line, Terms, the room footer and invoices. Body copy says 'Top-Rated Team'. Do not print a price: shared/pricing.ts resolves this door to no row at all and that is deliberate."
+    },
+    "connector-gpt": {
+      "owns": [
+        "server/connector",
+        "client/public/.well-known",
+        "docs/connector.md"
+      ],
+      "seams": {
+        "server/routes.ts": [
+          "one import",
+          "two mount lines"
+        ]
+      },
+      "runAlone": false,
+      "why": "The owner's first priority for a custom GPT and a Claude connector is a general Top-Rated Team one: it should be able to explain the company and its services and invite somebody into a room. Everything it needs already exists \u2014 the doors, the pricing rows, the cases, the grounded ask endpoint and room creation \u2014 and none of it is reachable from outside a browser.",
+      "done": "A read-mostly public surface plus the two manifests that let a custom GPT and an MCP client use it. Endpoints, all under /api/connector: the services (from shared/doors.ts), the published price rows (from shared/pricing.ts, EXACTLY as written \u2014 no arithmetic, no ranges), the case studies (from shared/cases.ts), and a grounded question that reuses the same path /api/ask uses. Room creation is the one write, and it goes through the same POST /api/workspaces the site uses, so the room-creation rate limit applies unchanged. Serve an OpenAPI 3.1 document for the GPT and an MCP server for Claude over the same handlers \u2014 one implementation, two front doors, or the two will drift. THE SPEND GUARD IS NOT OPTIONAL: server/spend.ts already bounds /api/ask per IP and globally, and the connector must go through it rather than around it, or the monthly budget becomes a suggestion. Nothing here exposes a room token, a lead, a member or anything under /w/. Write docs/connector.md with the exact steps to install it in a custom GPT and in Claude."
+    },
+    "door-ai-builds-body": {
+      "owns": [
+        "client/src/components/site/doors/AiBuildsBody.tsx"
+      ],
+      "seams": {
+        "client/src/components/site/doors/bodies.tsx": [
+          "one entry in DOOR_BODIES"
+        ]
+      },
+      "runAlone": false,
+      "why": "The custom-AI door is sold on 'we build these' and shows nothing we have built. Six of them exist, and shared/cases.ts records that this door has no client case \u2014 which is true, and is why the portfolio is the evidence it can actually offer.",
+      "done": "A body for /services/ai-builds that shows the six builds in shared/builds.ts: this application, AdGrant.AI, Top Voice, WarmLike, the Upwork proposal agent and the Being.Marketing existential coach. THEY ARE A PORTFOLIO, NOT CASE STUDIES \u2014 there is no client and no metric, and inventing either is the one thing this repository has a test for. Show what each is, what we built in it, and a link where there is one; two have no public page and must not be given one. Read `unverifiedClaims` on each build and print nothing listed there: it is what a second agent could not confirm against the live product. Being.Marketing renders as 'Being.' plus 'Marketing' struck through, in real markup, linking to https://being.marketing and not to the /l/being path. External links open in a new tab. Follow ChatGptAdsBody.tsx for restraint."
+    },
+    "partner-catalogue": {
+      "owns": [
+        "shared/catalogue.ts",
+        "server/catalogue.test.ts"
+      ],
+      "seams": {
+        "shared/doors.ts": [
+          "one import",
+          "one exported resolver the pages call instead of DOORS directly"
+        ]
+      },
+      "runAlone": false,
+      "why": "private/fork-and-partners.md: the whole fork plan rests on offers being data that carries contract identity, and shared/doors.ts already is that. What is missing is any notion of an operator other than us \u2014 so a fork shows our legal name on every row.",
+      "done": "READ private/fork-and-partners.md FIRST, all of it. A resolver that takes the door rows and an operator config and returns the catalogue as that operator's deployment should show it. Two modes per service, not per deployment, because a partner may want their Google Ads white-labelled and our Ad Grants tool named: NAMED keeps our legal name, terms, invoice line and contact on that row, so the partner's client knows who does the work \u2014 today's grey tier with the names swapped. WHITE LABEL puts the operator's identity on the row and ours nowhere. A service the operator has switched off is a flag on the row, never a deletion, so switching it back on later is the same flag. Where no operator is configured, the resolver must return today's rows unchanged, byte for byte \u2014 this parcel may not alter what ai.top-rated.team shows. Tests: with no operator the catalogue equals DOORS; in white-label mode our legal name appears nowhere in the resolved output, asserted by searching the whole structure rather than the fields you remembered; in named mode a row names us and priceForDoor returns null for it, which is the guarantee that already exists for the partner tier; and an operator config that would have a room claim somebody is answerable who is not fails rather than renders. THE FORK IS FREE AND REPORTS NOTHING BACK \u2014 there is no usage counting, no deployment id and no endpoint anywhere in this parcel or any other. If you find yourself wanting one, re-read the money section of private/fork-and-partners.md: the commission model was cut and the reporting went with it."
+    },
+    "legal-agent-upkeep": {
+      "owns": [
+        "scripts/refresh-corpora.ts",
+        "server/corpus-freshness.ts",
+        "server/corpus-freshness.test.ts"
+      ],
+      "seams": {
+        "scripts/build-kb.ts": [
+          "one export of the corpus list",
+          "one exported fetch entry point"
+        ],
+        "package.json": [
+          "one script line"
+        ]
+      },
+      "runAlone": false,
+      "why": "The AI Lawyer Agent answers from documents other people publish, and those documents change. Its corpus was fetched once. An agent citing last quarter's User Agreement with today's confidence is the one failure that matters in this subject.",
+      "done": "Keep the corpora current, and make the legal agent's sources editable. A script that re-fetches every corpus and reports what changed, what it could not read, and what is now stale \u2014 build-kb.ts already leaves a corpus untouched when a page fails, which is the behaviour to preserve and surface rather than change. A freshness record per namespace that the room can show: when it was last read, and which sources failed. ADDING A JURISDICTION OR A NICHE is adding source URLs to the legal corpus, so the source list has to be data the operator can extend rather than a constant in a script \u2014 that is what 'self-updating' means here. WHAT IT MUST NOT DO, and the reason is in shared/roster.ts's own comment on that agent: it may add sources and re-read them; it may NOT write its own. An agent that authors its corpus drifts, and every sentence tracing to a document somebody else published is the whole of why its answers are worth anything. Do not build a summariser, a rewriter or a 'learned' cache. Tests: a re-fetch that fails leaves the previous corpus intact and marks it stale; a namespace with no sources reports so rather than reporting fresh; and the freshness record carries no chunk text."
+    },
+    "partner-setup": {
+      "owns": [
+        "client/src/pages/setup.tsx",
+        "shared/operator.ts",
+        "server/operator.ts",
+        "server/operator.test.ts"
+      ],
+      "seams": {
+        "client/src/App.tsx": [
+          "a route for /setup"
+        ],
+        "server/routes.ts": [
+          "one import",
+          "two routes for reading and writing the operator config"
+        ]
+      },
+      "runAlone": false,
+      "why": "The brief asks for fast, and fast means no terminal after the deploy: fork, deploy from a blueprint, land on one page, fill it in, done. That page then becomes the partner's cabinet rather than being thrown away.",
+      "done": "ONE PAGE, and it is one page \u2014 read private/fork-and-partners.md's install section and do not add a step to it. With no operator configured every route redirects to /setup. It asks for: display name, legal name, entity, terms URL and contact address; a model key or ours; which of our services to offer and whether each is referral or white label; prices in the operator's own words on the same ladder shape \u2014 theirs to set, and never sent anywhere; and the address the deployment answers on, defaulting to their own domain, because a white-label deployment on our subdomain is a contradiction. Saving writes the config partner-catalogue reads, seeds the catalogue and marks the deployment set up; /setup then becomes /partner, the same page, editable \u2014 that is the cabinet, and there is no second interface to build. No build step and no restart: a change in the cabinet takes effect on the next request. THE ONE THING IT MAY NOT DO is let an operator publish a claim that is false of whoever is named \u2014 if a room says the operator is answerable for the work, the operator has to be, and that is the same rule every other sentence on this site follows. Tests: an unconfigured deployment redirects; a config missing a legal name is rejected with a sentence a person can act on; the key is never returned in a response body or an error; and a saved config round-trips through the resolver."
+    }
+  }
+}
