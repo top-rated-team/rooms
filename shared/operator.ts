@@ -122,7 +122,21 @@ export function isHouseHost(hostOrUrl: string): boolean {
   const host = hostnameOf(hostOrUrl);
   if (!host) return false;
   if ((HOUSE_HOSTS as readonly string[]).includes(host)) return true;
-  return host.endsWith(".top-rated.team");
+  if (host.endsWith(".top-rated.team")) return true;
+  /*
+   * The platform's own address for this service is ours too, not a fork's.
+   *
+   * render.yaml sets healthCheckPath: / and Render's checker arrives on the
+   * *.onrender.com host, so without this line the health check on an
+   * unconfigured deployment is answered with a 302 to /setup. It survives that
+   * today — the service is green — but a health check that passes because the
+   * platform happens to follow redirects is a health check waiting to fail
+   * after somebody changes an unrelated default.
+   *
+   * A partner's fork is on a partner's domain, which is the whole point of the
+   * setup page asking for one. It is never on our onrender host.
+   */
+  return host.endsWith(".onrender.com");
 }
 
 export function asOperatorConfig(write: OperatorWrite): OperatorConfig {

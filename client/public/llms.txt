@@ -1,4 +1,4 @@
-# Top-Rated Team — ai.top-rated.team
+# Top-Rated Team — top-rated.team
 
 > Paid advertising, the measurement under it, and the custom AI around both.
 > Eight offers a visitor can read here, and one room behind all of them. Where
@@ -31,21 +31,21 @@ make.
 
 ## Offers
 
-- [Free expert audit of your paid ads accounts](https://ai.top-rated.team/services/paid-ads-audit): Here a person is not the risk — a person is the tool for fixing what the AI got wrong. Not open yet. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
-- [Conversion tracking for ChatGPT Ads and Paid Ads](https://ai.top-rated.team/services/chatgpt-ads): The one part of paid ads any AI agent still can't finish for you. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
-- [Google Ads, ChatGPT Ads and Paid Ads](https://ai.top-rated.team/services/google-ads): Month-to-month management of the account — Google Ads first, and the same team on ChatGPT Ads, Meta and LinkedIn. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
-- [LinkedIn Ads for B2B](https://ai.top-rated.team/services/linkedin-ads): Account-based targeting, lead gen forms, the Insight Tag, and a closed loop from spend to pipeline in your CRM — so the report says revenue rather than form fills. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
-- [Google Ad Grant AI setup through the official Google Ads API](https://ai.top-rated.team/services/ad-grants): Campaigns, ad groups, keywords, ads and extensions are generated from your own website and written into your Google Ads account through the official Google Ads API — under a manager-account link you can remove, not a tool signed in as you. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
-- [LinkedIn automation — with a written legal assessment](https://ai.top-rated.team/services/linkedin-automation): What is and is not allowed where you are gets written down before anything runs — by our AI lawyer agent, from the platforms' own published rules with every page it used cited, or by a qualified lawyer on their own paper where you need the opinion signed. Lawyer or our AI lawyer agent: end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
-- [Custom AI builds](https://ai.top-rated.team/services/ai-builds): The agent you are talking to is the thing itself: an assistant grounded in one body of knowledge, wired into one stack, that hands the work to a person where it runs out. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
-- [White label — our work under your name](https://ai.top-rated.team/services/white-label): Two ways round. Not open yet. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
+- [Free expert audit of your paid ads accounts](https://top-rated.team/services/paid-ads-audit): Here a person is not the risk — a person is the tool for fixing what the AI got wrong. Not open yet. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
+- [Conversion tracking for ChatGPT Ads and Paid Ads](https://top-rated.team/services/chatgpt-ads): The one part of paid ads any AI agent still can't finish for you. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
+- [Google Ads, ChatGPT Ads and Paid Ads](https://top-rated.team/services/google-ads): Month-to-month management of the account — Google Ads first, and the same team on ChatGPT Ads, Meta and LinkedIn. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
+- [LinkedIn Ads for B2B](https://top-rated.team/services/linkedin-ads): Account-based targeting, lead gen forms, the Insight Tag, and a closed loop from spend to pipeline in your CRM — so the report says revenue rather than form fills. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
+- [Google Ad Grant AI setup through the official Google Ads API](https://top-rated.team/services/ad-grants): Campaigns, ad groups, keywords, ads and extensions are generated from your own website and written into your Google Ads account through the official Google Ads API — under a manager-account link you can remove, not a tool signed in as you. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
+- [LinkedIn automation — with a written legal assessment](https://top-rated.team/services/linkedin-automation): What is and is not allowed where you are gets written down before anything runs — by our AI lawyer agent, from the platforms' own published rules with every page it used cited, or by a qualified lawyer on their own paper where you need the opinion signed. Lawyer or our AI lawyer agent: end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
+- [Custom AI builds](https://top-rated.team/services/ai-builds): The agent you are talking to is the thing itself: an assistant grounded in one body of knowledge, wired into one stack, that hands the work to a person where it runs out. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
+- [White label — our work under your name](https://top-rated.team/services/white-label): Two ways round. Not open yet. Ours end to end; invoiced by Top-Rated Team (Danylo Burykin SZČO).
 
 ## Pages
 
-- [Home](https://ai.top-rated.team/): what the company does, the panel, and the index of the offers.
-- [The index](https://ai.top-rated.team/services): every offer above as one row, with the company that would invoice it.
-- [robots.txt](https://ai.top-rated.team/robots.txt): what crawlers are asked to leave alone.
-- [sitemap.xml](https://ai.top-rated.team/sitemap.xml): the addresses handed to crawlers.
+- [Home](https://top-rated.team/): what the company does, the panel, and the index of the offers.
+- [The index](https://top-rated.team/services): every offer above as one row, with the company that would invoice it.
+- [robots.txt](https://top-rated.team/robots.txt): what crawlers are asked to leave alone.
+- [sitemap.xml](https://top-rated.team/sitemap.xml): the addresses handed to crawlers.
 
 ## Not in this file
 
@@ -57,11 +57,10 @@ make.
 - Prices, budgets, timelines and promised results. No page publishes any of
   them, and the agents are instructed to say that pricing and scope come from
   a person rather than produce a figure.
-- More offers than the eight listed. https://ai.top-rated.team/services asks
-  for an email address before it names them, they are absent from sitemap.xml,
-  and their pages are noindex — so a file at the root does not name them
-  either.
+- More offers than the eight listed. https://top-rated.team/services asks for
+  an email address before it names them, they are absent from sitemap.xml, and
+  their pages are noindex — so a file at the root does not name them either.
 
 ## Optional
 
-- [llms-full.txt](https://ai.top-rated.team/llms-full.txt): every offer's full description, the agent that answers it, the questions its panel offers, the company that signs it, and the argument the conversion-tracking page makes at length.
+- [llms-full.txt](https://top-rated.team/llms-full.txt): every offer's full description, the agent that answers it, the questions its panel offers, the company that signs it, and the argument the conversion-tracking page makes at length.

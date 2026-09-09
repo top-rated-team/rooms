@@ -61,11 +61,12 @@ import {
 
 /**
  * The canonical origin, spelled the way robots.txt, sitemap.xml and
- * render.yaml's PUBLIC_BASE_URL spell it. Deliberately not read from the
+ * render.yaml's PUBLIC_BASE_URL spell it. The apex since 9 September 2026 —
+ * ai.top-rated.team keeps answering and 301s its pages here. Deliberately not read from the
  * environment: these files are committed, and a build host carrying a different
  * value would rewrite every address in them.
  */
-const ORIGIN = "https://ai.top-rated.team";
+const ORIGIN = "https://top-rated.team";
 
 const PUBLIC_DIR = path.resolve(import.meta.dirname, "..", "client", "public");
 
@@ -339,7 +340,7 @@ function indexLine(door: DoorDef): string {
 
 function shortIndex(): string {
   return `${paragraphs(
-    "# Top-Rated Team — ai.top-rated.team",
+    "# Top-Rated Team — top-rated.team",
     quoted(SUMMARY),
     wrap(
       "This is the short index. llms-full.txt beside it is the same material at length. Both are written by " +
@@ -429,7 +430,7 @@ function fullEntry(door: DoorDef, position: number): string {
 
 function fullText(): string {
   return `${paragraphs(
-    "# Top-Rated Team — ai.top-rated.team, in full",
+    "# Top-Rated Team — top-rated.team, in full",
     quoted(SUMMARY),
     wrap(
       "This is the long version of llms.txt. Every offer below is a row in shared/doors.ts, and every claim " +

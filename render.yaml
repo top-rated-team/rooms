@@ -48,8 +48,12 @@ services:
       #
       # PORT is set by Render itself. Do not add it here — server/index.ts already
       # reads process.env.PORT and binds 0.0.0.0.
+      # The apex. Everything the app builds an absolute address from reads this,
+      # and it is also what turns the ai.top-rated.team redirect on: see the host
+      # handover at the top of registerRoutes. Changing it in the dashboard is
+      # what moves the site; this line only decides where a FRESH blueprint lands.
       - key: PUBLIC_BASE_URL
-        value: https://ai.top-rated.team
+        value: https://top-rated.team
       - key: OPENAI_API_KEY
         sync: false        # paste it in the dashboard; never in this file
       - key: OPENAI_CHAT_MODEL

@@ -452,6 +452,60 @@ export function registerRoutes(app: Express): void {
    * Registered before anything else so no later handler can claim them first.
    */
   /*
+   * THE SUBDOMAIN HANDS ITS PAGES TO THE APEX.
+   *
+   * Both hosts point at this one Render service, so the move from
+   * ai.top-rated.team to top-rated.team cannot be done in DNS alone — the
+   * redirect has to happen here.
+   *
+   * FOUR THINGS IT DELIBERATELY DOES NOT DO, and each is a way this goes wrong:
+   *
+   * GET and HEAD only. A 301 on a POST is a trap: many clients re-issue it as a
+   * GET and drop the body, so a webhook would arrive empty and succeed.
+   *
+   * Never /api/. The subdomain keeps its job — WAHA and ChatWoot post to it, the
+   * connector answers on it, and the owner asked for ai. to stay the technical
+   * address. Those must not move.
+   *
+   * FROM A NAMED LIST OF HOSTS, not from "anything that is not canonical".
+   * render.yaml sets healthCheckPath: /, and Render's checker arrives with its
+   * own host — redirecting everything unrecognised would answer that check with
+   * a 301 to another domain and could have the service marked unhealthy. The
+   * list is the one legacy host and nothing else.
+   *
+   * And it is INERT until PUBLIC_BASE_URL names somewhere else. Shipping it
+   * today changes nothing; it starts working the moment that variable is set to
+   * the apex in the Render dashboard, and stops if it is set back. There is no
+   * separate switch to remember.
+   */
+  const LEGACY_HOSTS = new Set(
+    (process.env.LEGACY_HOSTS ?? "ai.top-rated.team")
+      .split(",")
+      .map((h) => h.trim().toLowerCase())
+      .filter(Boolean),
+  );
+
+  app.use((req, res, next) => {
+    if (req.method !== "GET" && req.method !== "HEAD") return next();
+    if (req.path.startsWith("/api/")) return next();
+
+    const canonical = process.env.PUBLIC_BASE_URL?.trim().replace(/\/+$/, "");
+    if (!canonical) return next();
+
+    let canonicalHost: string;
+    try {
+      canonicalHost = new URL(canonical).host.toLowerCase();
+    } catch {
+      return next();
+    }
+
+    const seen = (req.get("host") ?? "").toLowerCase();
+    if (!seen || seen === canonicalHost || !LEGACY_HOSTS.has(seen)) return next();
+
+    res.redirect(301, `${canonical}${req.originalUrl}`);
+  });
+
+  /*
    * A ROOM ADDRESS IS A CREDENTIAL, so it does not leave as a Referer.
    *
    * This matters now because the booking popup loads Google's scheduling embed

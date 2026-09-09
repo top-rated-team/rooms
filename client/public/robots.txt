@@ -1,4 +1,4 @@
-# ai.top-rated.team
+# top-rated.team
 
 User-agent: *
 Allow: /
@@ -8,4 +8,4 @@ Allow: /
 Disallow: /w/
 Disallow: /api/
 
-Sitemap: https://ai.top-rated.team/sitemap.xml
+Sitemap: https://top-rated.team/sitemap.xml
