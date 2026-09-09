@@ -35,14 +35,20 @@ const WAVES = [
    * And the standing rule, unchanged: AT MOST ONE PARCEL PER WAVE TOUCHES server/routes.ts,
    * and the same for shared/api.ts and shared/schema.ts.
    */
-  { n: 4, keys: ["room-identity"], alone: true, landed: true },
-  { n: 5, keys: ["login-create-room"], alone: true },
-  { n: 6, keys: ["chatwoot-inbox"], alone: true },
-  /* Three at once and no seam shared between them: one touches package.json, one touches
-     scripts/build-kb.ts, and the third touches nothing outside its single file. */
-  { n: 7, keys: ["adgrant-content", "dev-agents-kb", "booking-picker"] },
-  { n: 8, keys: ["adgrant-generate", "dev-agents"] },
+  /* Waves 4 to 8 are landed and their parcels are retired to
+     docs/parcels-programme-3-landed.json, so they no longer appear here — a
+     re-run of a landed parcel is an agent rewriting a finished file. */
   { n: 9, keys: ["adgrant-site"], alone: true },
+  /*
+   * The booking popup's last two pieces, and they are two waves rather than
+   * one because they change the same dialog and the same booking server.
+   * booking-gate first: it turns the WhatsApp step from a receipt into a gate,
+   * which is what makes the sentence under the field true. booking-linkedin
+   * second, and it is blocked on the owner's LinkedIn app being approved
+   * anyway — the button is already on screen and disabled.
+   */
+  { n: 10, keys: ["booking-gate"], alone: true },
+  { n: 11, keys: ["booking-linkedin"], alone: true },
 ];
 
 function prompt(key) {
