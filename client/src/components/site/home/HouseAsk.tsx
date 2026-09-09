@@ -396,7 +396,7 @@ export function HouseAsk() {
                     data-testid="button-house-ask-leave-a-message"
                     className="border-b border-border pb-[var(--s1)] text-muted-foreground hover:border-foreground hover:text-foreground"
                   >
-                    Leave a message
+                    Message us
                   </button>
                 </p>
               ) : null}

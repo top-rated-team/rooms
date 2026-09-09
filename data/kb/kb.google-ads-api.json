@@ -1,0 +1,945 @@
+{
+ "namespace": "google-ads-api",
+ "builtAt": "2026-09-09T15:49:55.039Z",
+ "documents": 20,
+ "chunks": [
+  {
+   "id": "google-ads/api/docs/get-started/dev-token#0",
+   "title": "Developer Token — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/get-started/dev-token?hl=en",
+   "heading": "Developer Token — Google Ads API > Page Summary",
+   "text": "- A developer token is required to make calls to the Google Ads API and is a 22-character alphanumeric string obtained from the API Center page of your Google Ads manager account.\n\n- Each developer token has an access level (Test, Basic, or Standard) which determines the number of API calls and the environment (test or production) it can be used in.\n\n- Generally, a company only needs one developer token, but individual developers and companies creating new tools can apply for a new one if necessary.\n\n- Both companies and individual developers can apply for a developer token, providing specific details during the application process.\n\n- Applying for a developer token involves selecting or creating a Google Ads manager account and then completing the API Access form in the API Center.\n\nKey Point: A developer token is a prerequisite to making Google Ads API calls."
+  },
+  {
+   "id": "google-ads/api/docs/get-started/dev-token#1",
+   "title": "Developer Token — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/get-started/dev-token?hl=en",
+   "heading": "Developer Token — Google Ads API > Page Summary",
+   "text": "Key Point: A developer token is a prerequisite to making Google Ads API calls.\n\nThe developer token is a 22-character long alphanumeric string that lets\nyour app connect to the Google Ads API. You can obtain one by signing up for one on the\nAPI Center page of your Google Ads manager account. Whenever you make an API\ncall, you send the developer token as part of the request by setting the\ndeveloper-token http or gRPC header.\n\nEach developer token is assigned an access level which controls\nthe number of API calls you can make per day with the token, as well as the\nenvironment to which you can make calls."
+  },
+  {
+   "id": "google-ads/api/docs/get-started/dev-token#2",
+   "title": "Developer Token — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/get-started/dev-token?hl=en",
+   "heading": "Developer Token — Google Ads API > Page Summary",
+   "text": "When you sign up for a developer token, you may be granted Explorer Access\nlevel by default. This lets you make calls against production accounts, but with\ncertain restrictions. In certain cases where we aren't able to review your\ndeveloper token application automatically, we may grant your developer token a\nTest Account Access level instead. This allows you make API calls against\ntest accounts only. To remove the restrictions of explorer and test account\naccess levels, you must request Basic Access level or Standard Access\nlevel for your developer token. Once your developer token application is\nreviewed and approved, your developer token will be granted the appropriate\naccess level."
+  },
+  {
+   "id": "google-ads/api/docs/get-started/dev-token#3",
+   "title": "Developer Token — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/get-started/dev-token?hl=en",
+   "heading": "Developer Token — Google Ads API > Do you need a new developer token?",
+   "text": "Whether you should sign up for a new developer token or not depends on a few\nfactors. Here are some common scenarios:"
+  },
+  {
+   "id": "google-ads/api/docs/get-started/dev-token#4",
+   "title": "Developer Token — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/get-started/dev-token?hl=en",
+   "heading": "Developer Token — Google Ads API > Do you need a new developer token? > Next steps",
+   "text": "Your company has never used the Google Ads API before and you want to develop\n your own apps\n\nSign up for a new developer token. Learn more\n\nYour company is actively using or has used the Google Ads API in the past\n\nGoogle usually grants one developer token per company, so if your company\n already uses the Google Ads API, then you should reuse your existing developer\n token. Learn more\n\nYour company already uses the Google Ads API but is also developing a new\n product or tool\n\nIf you're certain that you cannot use your existing developer token, then\n you can apply for a new one explaining your use case in the application.\n For the rest of this guide, you can use your existing developer\n token. Learn more\n\nYour company uses a third-party app\n\nYou need a developer token only if you're developing your own app. If you\n use a third-party app or service, then the developer of that app needs to\n get a developer token for the app. If you're unclear about your case,\n contact\n the API compliance team."
+  },
+  {
+   "id": "google-ads/api/docs/get-started/dev-token#5",
+   "title": "Developer Token — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/get-started/dev-token?hl=en",
+   "heading": "Developer Token — Google Ads API > Who can apply for a developer token?",
+   "text": "Both companies and individual developers can apply for a developer token. The\nfollowing table summarizes what details you need to provide when signing up for\nthe developer token.\n\nIf you are\n Then provide the following developer details\n Additional notes\n\nA developer representing your company or a product team\n Your company name and your company URL\n Google usually grants one developer token per company, but approves\n separate developer tokens for separate tools on a case-by-case basis.\n\nAn individual developer not representing a company\n Specify your company name as Individual. You can\n provide alternate URLs such as your GitHub profile URL or LinkedIn profile\n URL instead of a company URL.\n You need some form of online presence and must provide Google with a URL\n that helps us assess what you are planning to do with Google Ads API. Generic URLs\n such as test.com and example.com are not\n accepted."
+  },
+  {
+   "id": "google-ads/api/docs/get-started/dev-token#6",
+   "title": "Developer Token — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/get-started/dev-token?hl=en",
+   "heading": "Developer Token — Google Ads API > How to apply for a developer token",
+   "text": "There are two steps when applying for a developer token."
+  },
+  {
+   "id": "google-ads/api/docs/get-started/dev-token#7",
+   "title": "Developer Token — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/get-started/dev-token?hl=en",
+   "heading": "Developer Token — Google Ads API > How to apply for a developer token > Step 1: Select or create a Google Ads manager account",
+   "text": "If you already have a Google Ads manager account, select it when applying for the\ndeveloper token. If this manager account is not already linked to your other\naccounts, we recommend putting it at the root of your account hierarchy to ease\nthe token review process and simplify account management later on.\n\nIf you don't have a manager account, you can follow the Help Center\ninstructions to create one.\n\nNote: You must use an email address that hasn't already been associated with a\nGoogle Ads account to create your manager account."
+  },
+  {
+   "id": "google-ads/api/docs/get-started/dev-token#8",
+   "title": "Developer Token — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/get-started/dev-token?hl=en",
+   "heading": "Developer Token — Google Ads API > How to apply for a developer token > Step 2: Apply for access to the Google Ads API",
+   "text": "Note that the developer token review process can take some time to complete.\nLearn more.\n\n- Navigate to https://ads.google.com/aw/apicenter\nin your web browser. Sign in to your Google Ads manager account if prompted.\n\nAccess API Center\n\n- Complete the API Access form and accept the Terms and Conditions.\n\n- Ensure that your information is correct and your company's website URL is\nfunctioning. If the website is not live, Google might not be able to process\nyour application and reject it.\n\n- Ensure that the API contact email you provide leads to a regularly monitored\ninbox. Google's API compliance team might reach out to this email address\nduring the review process for clarifications. If you can't be reached,\nGoogle might not continue with your application.\n\nYou can edit your API contact email in the API Center. Keep this\ninformation up-to-date, even after the application process, so Google can\nsend you important service announcements.\n\nAfter you've completed the application process, the developer token appears in\nyour API Center with one of the following outcomes:"
+  },
+  {
+   "id": "google-ads/api/docs/get-started/dev-token#9",
+   "title": "Developer Token — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/get-started/dev-token?hl=en",
+   "heading": "Developer Token — Google Ads API > How to apply for a developer token > Step 2: Apply for access to the Google Ads API",
+   "text": "After you've completed the application process, the developer token appears in\nyour API Center with one of the following outcomes:\n\n- Your developer token has Explorer Access level with an Approved\nstatus. This means that Google was able to automatically review and approve\nyour developer token application for Explorer Access level. You can start\nmaking API calls against your production account or\ntest account.\n\n- Your developer token has Test Account Access level with a Pending\nApproval status. This means that Google was unable to automatically review\nand approve your developer token application for Explorer Access level. You\ncan start making API calls against test accounts. Once you\nhave completed this guide, we encourage you to check out how to apply for\nBasic Access level"
+  },
+  {
+   "id": "google-ads/api/docs/get-started/dev-token#10",
+   "title": "Developer Token — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/get-started/dev-token?hl=en",
+   "heading": "Developer Token — Google Ads API > Verify if you are signed into a Google Ads manager account",
+   "text": "You must sign in to your Google Ads manager account to access your developer token,\nand it cannot be a Google Ads test manager account.\n\nTo verify if you are signed in to the Google Ads manager account, follow these\nsteps:\n\n- Navigate to https://ads.google.com/aw/apicenter\nin your web browser.\n\n- If you are logged into a customer account, the page will display\nThe API Center is only available to manager accounts..\n\n- If Test account appears in red in the upper right corner, your account\nis either a test manager or a test\nadvertiser."
+  },
+  {
+   "id": "google-ads/api/docs/get-started/dev-token#11",
+   "title": "Developer Token — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/get-started/dev-token?hl=en",
+   "heading": "Developer Token — Google Ads API > Where to find your developer token",
+   "text": "You can find the developer token, if it exists, in the API Center page of\nyour Google Ads manager account.\n\nAccess API Center"
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#0",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > Page Summary",
+   "text": "- Google Ads API developer tokens have an access level determining production account access and operation limits, and \"permissible use\" defining allowed API features.\n\n- There are three access levels: Test Account Access for test accounts with a 15,000 operation limit, Basic Access for test and production accounts with a 15,000 operation limit, and Standard Access for test and production accounts with an unlimited operation limit.\n\n- You start with Test Account Access and can apply to increase your access level through additional steps.\n\n- Permissible use, applicable to Basic and Standard Access, is based on intended API use and determines specific feature access like ad creation/management, reporting, or keyword research.\n\nEach Google Ads API developer token is assigned an access level and \"permissible use.\"\nThe access level determines whether you can affect production accounts and\nthe number of operations and requests that you can execute daily.\nPermissible use determines the specific Google Ads API features that the developer\ntoken is allowed to use."
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#1",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > Access levels",
+   "text": "There are four different developer token access levels listed in order in the\ntable. If you don't already have Google Ads API access, you can start by signing up to obtain a developer token with Test\nAccount Access level. You can increase the access level by completing some\nadditional steps in the application.\n\nAccess level\n Can access...\n Daily operation limit1\n How to apply\n How long do reviews typically take?\n\nTest Account Access level\n Test accounts\n 15,000 operations / day\n Instructions\n\nExplorer Access level\n Test and production accounts\n\n2,880 operations / day for production accounts\n\n15,000 operations / day for test accounts\n\nInstructions\n\nBasic Access level\n Test and production accounts\n 15,000 operations / day for both test and production accounts\n Instructions\n 5 business days\n\nStandard Access level\n Test and production accounts\n Unlimited operations / day for both test and production accounts\n Instructions\n 10 business days\n\n1 \"Per day\" is based on a sliding 24 hour time period in which API\nrequests were made with your developer token. Your application will receive an\nerror if it exceeds the request limit for your access level within the last 24\nhours."
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#2",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > Test Account Access level",
+   "text": "After you've completed the initial sign-up for the Google Ads API, you're issued a\ndeveloper token with the Test Account Access level. This means that the\ndeveloper token can only make Google Ads API requests against test accounts.\n\nImportant: Refer to the test account\nguide to learn more about how to create a\ntest account."
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#3",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > Test Account Access level > How to apply for Test Account Access level",
+   "text": "Complete the Google Ads API sign-up\non the Google Ads web interface to automatically be granted the Test Account Access\nlevel."
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#4",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > Explorer Access level",
+   "text": "After you've completed the initial sign-up for the Google Ads API, Google may\nautomatically upgrade your developer token from Test Account Access\nlevel to the Explorer Access level in some cases.\nExplorer Access level allows the developer token to make Google Ads API requests\nagainst both test accounts and production accounts. Production accounts are\nany accounts that serve real, live Google ads—test accounts don't serve\nads.\n\nExplorer Access level allows the developer token to execute up to 2,880\noperations per day against production accounts. This is sufficient for most\ndevelopers to get started with the API and build basic automation.\n\nExplorer Access level restricts access to the following features. If you need to\nuse these features, you need to apply for Basic Access level or\nStandard Access level.\n\nRestricted Functionality\n Restricted Services and Methods\n\nAccount creation\n CustomerService.CreateCustomerClient\n\nUser management\n CustomerUserAccessInvitationService\n\nCustomerUserAccessService\n\nPlanning\n\nKeywordPlanService\n\nKeywordPlanIdeaService\n\nKeywordPlanCampaignService\n\nKeywordPlanCampaignKeywordService\n\nKeywordPlanAdGroupService\n\nKeywordPlanAdGroupKeywordService"
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#5",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > Explorer Access level",
+   "text": "KeywordPlanIdeaService\n\nKeywordPlanCampaignService\n\nKeywordPlanCampaignKeywordService\n\nKeywordPlanAdGroupService\n\nKeywordPlanAdGroupKeywordService\n\nAudienceInsightsService\n\nKeywordPlanIdeaService\n\nReachPlanService\n\nAccount Billing and Payment\n\nPaymentsAccountService\n\nBillingSetupService\n\nAccountBudgetProposalService\n\nInvoiceService"
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#6",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > Explorer Access level > How to apply for Explorer Access level",
+   "text": "Complete the Google Ads API sign-up on the Google Ads web interface. In\nsome cases, Google may automatically upgrade your developer token to the\nExplorer Access level once you complete the signup."
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#7",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > Basic Access level",
+   "text": "Basic Access level allows the developer token to make Google Ads API requests against\nboth test accounts and production accounts. Production accounts are any\naccounts that serve real, live Google ads—test accounts don't serve ads.\n\nBasic Access level allows the developer token to execute up to 15,000 operations\nper day. This is sufficient for most developers."
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#8",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > Basic Access level > How to apply for Basic Access level",
+   "text": "If you have a developer token with Test Account Access level or Explorer Access,\nyou can apply for Basic Access level as follows:\n\n- Navigate to the API Center in your web browser. Sign in to\nyour Google Ads manager account if prompted.\n\nAccess API Center\n\n- Verify that your Access level is either Test Account or\nExplorer.\n\n- Ensure that the API Contact Email in the API center is up-to-date. You\nwon't be able to complete the application process without a valid, regularly\nchecked email address. Ensure you have linked all of your active Google Ads\naccounts to the Google Ads manager account with the API token.\n\n- Click the drop-down arrow next to the Access level and click the\nApply for Basic Access link."
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#9",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > Basic Access level > Complete the brand verification of Google Cloud projects",
+   "text": "Note: Brand verification is optional and is used only as a signal for faster\ndetermination of Ads API Basic Access eligibility. You don't need to complete\nbrand verification if you already have an approved developer token and aren't\nnewly applying for Basic Access level.\nGoogle Ads API uses the brand verification status of Google Cloud projects associated\nwith a developer token while reviewing the applications for Basic Access level.\nYou can complete the brand verification process in your Google Cloud project to\nexpedite the review process of your basic access application. In some cases,\nGoogle may also ask you to complete brand verification in your Google Cloud\nprojects as a prerequisite to processing your basic access application. Refer to\nthe brand verification guide to learn\nmore."
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#10",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > Standard Access level",
+   "text": "Standard Access level allows the developer token to execute an unlimited number\nof operations per day for most services. This includes but is not limited to\nGoogleAdsService Search and\nSearchStream. For more details\non limits and exceptions to Standard Access level, see API\nquotas.\n\nThe Standard Access level are only granted to developers who require unlimited\nGoogle Ads API operations, such as large companies or tools that serve many users."
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#11",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > Standard Access level > How to apply for Standard Access level",
+   "text": "If you have a developer token with Basic Access level, you can apply for\nStandard Access level as follows:\n\n- Navigate to the API Center in your web browser. Sign in to\nyour Google Ads manager account if prompted.\n\nAccess API Center\n\n- Verify that your Access level is Basic.\n\n- Ensure that the API Contact Email in the API center is up-to-date. You\nwon't be able to complete the application process without a valid, regularly\nchecked email address. Ensure you have linked all of your active Google Ads\naccounts to the Google Ads manager account with the API token.\n\n- Click the drop-down arrow next to the Access level and click the\nApply for Standard Access link.\n\nIf your tool is used by external users, be prepared to provide demo sign-in\naccess to your tool. Note that your tool must comply with the Required Minimum\nFunctionality."
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#12",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > API quotas and system rate limits",
+   "text": "Regardless of the access level, all API operations are subject to system rate\nlimits, which restricts how many operations you may perform in a period of time,\nthat is the number of operations per hour. To learn more about how to handle\nrate limit errors, see error\ntypes.\n\nIndividual services may enforce additional limits and quota restrictions due to\nreasons such as product design limitations, product policy restrictions, API\nperformance and latency considerations. See the documentation about API\nquotas to learn more about these restrictions."
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#13",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > Permissible use",
+   "text": "Permissible use only applies to developer tokens with Basic Access and Standard\nAccess levels. Permissible use is allocated based on intended use of the\nGoogle Ads API. These permissions determine which features of the API a developer token\ncan be used for, as elaborated in the following table:\n\nPermissible Use\n\nDescription\n\nAd creation / management\n\nProvide access to all services of the API for creating and managing\n Google Ads campaigns, ad groups, ads, and keywords.\n\nReporting\n\nOnly make GoogleAdsService.Search\n or GoogleAdsService.SearchStream\n requests, or read-only calls. This is for developers who only use the API to\n request stats.\n\nResearching keywords and recommendations\n\nAllow the developer token to access RecommendationService,\n KeywordPlanIdeaService,\n and KeywordPlanService.\n This is only used by tools requiring suggestions to help facilitate the\n creation and management of Google Ads campaigns."
+  },
+  {
+   "id": "google-ads/api/docs/api-policy/access-levels#14",
+   "title": "Access Levels and Permissible Use — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en",
+   "heading": "Access Levels and Permissible Use — Google Ads API > Permissible use > How to change permissible use",
+   "text": "If your developer token has been approved for either the Basic Access level or\nStandard Access level, you can fill out the application to update permissible\nuse. Fill out the application if you would like to update your\npermissible use or grant your clients access to your tool."
+  },
+  {
+   "id": "google-ads/api/docs/oauth/overview#0",
+   "title": "Use OAuth 2.0 to Access Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/oauth/overview?hl=en",
+   "heading": "Use OAuth 2.0 to Access Google Ads API > Page Summary",
+   "text": "- Google Ads API utilizes the OAuth 2.0 protocol for authentication and authorization, allowing your app to access user accounts without handling login information.\n\n- In addition to OAuth 2.0 credentials, a developer token is also required to make Google Ads API calls.\n\n- While all Google-supported OAuth 2.0 scenarios work, this guide focuses on the most common ones for Google Ads API developers.\n\n- The recommended OAuth 2.0 approach depends on your specific application scenario, such as integrating with existing Google APIs, managing your own accounts, or managing accounts on behalf of other users.\n\nNote: In addition to the OAuth 2.0 credentials, you also need a developer\ntoken to make API calls.\nJust like other Google APIs, Google Ads API also uses the OAuth 2.0\nprotocol for authentication and authorization. OAuth 2.0\nenables your Google Ads API client app to access a user's Google Ads account without having\nto handle or store the user's login info.\n\nBroadly speaking, all the OAuth 2.0 authorization\nscenarios that Google supports also works with\nGoogle Ads API. However, we will focus on a handful of scenarios that are most common\nfor Google Ads API developers."
+  },
+  {
+   "id": "google-ads/api/docs/oauth/overview#1",
+   "title": "Use OAuth 2.0 to Access Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/oauth/overview?hl=en",
+   "heading": "Use OAuth 2.0 to Access Google Ads API > Page Summary",
+   "text": "Scenario\n Recommended approach\n\nMy app already uses one or more Google APIs. I have already built\n support for OAuth 2.0 workflows for my app, and just need to add Google Ads API\n functionality to my existing app.\n\n- Make sure your authorized user or your service account has access\n to the Google Ads API accounts you are making API calls to. Learn more about\n the Google Ads access model.\n\n- Refer to the\n multi-user authentication workflow or the\n service account workflow depending on the approach you are using\n with the rest of the Google APIs that your app is using.\n\nI am building an app that manages Google Ads accounts that I already have\n access to. If I need to manage new Google Ads accounts in the future, I will\n gain access to those accounts by linking them under my Google Ads Manager\n account.\n\nOR\n\nSomeone will invite\n me to manage those accounts.\n\nUse service account workflow.\n\nIf you have organizational policies that prevent you from using\n service accounts, then use\n single-user authentication workflow as a fallback."
+  },
+  {
+   "id": "google-ads/api/docs/oauth/overview#2",
+   "title": "Use OAuth 2.0 to Access Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/oauth/overview?hl=en",
+   "heading": "Use OAuth 2.0 to Access Google Ads API > Page Summary",
+   "text": "If you have organizational policies that prevent you from using\n service accounts, then use\n single-user authentication workflow as a fallback.\n\nI am building an app that manages Google Ads accounts on behalf of other\n users. My app will build a user screen that lets the logged in users to\n connect to their Google Ads accounts and authorize my app to manage those\n accounts on their behalf.\n Use multi-user authentication.\n\nTo review and revoke access for third-party applications connected to your\nGoogle Account, visit your\nGoogle Account permissions page."
+  },
+  {
+   "id": "google-ads/api/docs/concepts/call-structure#0",
+   "title": "API Call Structure — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en",
+   "heading": "API Call Structure — Google Ads API > Page Summary",
+   "text": "- Google Ads API calls can be made using either gRPC (preferred) or REST.\n\n- Resource names identify most objects in the API and also serve as URLs for the REST interface.\n\n- Composite IDs are used for objects whose IDs are not globally unique, constructed by prepending the parent ID and a tilde.\n\n- Required request headers include Authorization (OAuth2 access token) and developer-token.\n\n- The login-customer-id header specifies the customer ID for the authorized customer, particularly required when accessing accounts through a manager account.\n\nThis guide describes the common structure of all API calls.\n\nIf you're using a client library to interact with the API, you won't need to\nknow the underlying request details. However, some knowledge about the API call\nstructure can come in handy when testing and debugging.\n\nGoogle Ads API is a gRPC API, with REST bindings. This means\nthat there are two ways of making calls to the API.\n\nPreferred:\n\n- Create the body of the request as a protocol buffer.\n\n- Send it to the server using HTTP/2.\n\n- Deserialize the response to a protocol buffer.\n\n- Interpret the results.\n\nMost of our documentation describes using gRPC.\n\nOptional:"
+  },
+  {
+   "id": "google-ads/api/docs/concepts/call-structure#1",
+   "title": "API Call Structure — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en",
+   "heading": "API Call Structure — Google Ads API > Page Summary",
+   "text": "- Deserialize the response to a protocol buffer.\n\n- Interpret the results.\n\nMost of our documentation describes using gRPC.\n\nOptional:\n\n- Create the body of request as a JSON object.\n\n- Send it to the server using HTTP 1.1.\n\n- Deserialize the response as a JSON object.\n\n- Interpret the results.\n\nRefer to the REST interface guide for more information\non using REST.\n\nNote: This guide describes the structure and transport headers common to both\ngRPC and REST protocols."
+  },
+  {
+   "id": "google-ads/api/docs/concepts/call-structure#2",
+   "title": "API Call Structure — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en",
+   "heading": "API Call Structure — Google Ads API > Page Summary > Resource names",
+   "text": "Most objects in the API are identified by their resource name strings. These\nstrings also serve as URLs when using the REST interface. See the REST\ninterface's Resource Names for their\nstructure.\n\nKey Point: Check out the resources\ndocumentation, for all supported resources\nand their path representation (resource_name). The same format is used for\nother services."
+  },
+  {
+   "id": "google-ads/api/docs/concepts/call-structure#3",
+   "title": "API Call Structure — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en",
+   "heading": "API Call Structure — Google Ads API > Page Summary > Composite IDs",
+   "text": "If the ID of an object is not globally unique, a composite ID for that object is\nconstructed by prepending its parent ID and a tilde (~).\n\nFor example, since an ad group ad ID is not globally unique, we prepend its\nparent object (ad group) ID to it to make a unique composite ID:\n\n- AdGroupId of 123 + ~ + AdGroupAdId of 45678 = composite ad\ngroup ad ID of 123~45678."
+  },
+  {
+   "id": "google-ads/api/docs/concepts/call-structure#4",
+   "title": "API Call Structure — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en",
+   "heading": "API Call Structure — Google Ads API > Request headers",
+   "text": "These are the HTTP headers (or grpc\nmetadata) that accompany\nthe body in the request:"
+  },
+  {
+   "id": "google-ads/api/docs/concepts/call-structure#5",
+   "title": "API Call Structure — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en",
+   "heading": "API Call Structure — Google Ads API > Request headers > Authorization",
+   "text": "You must include an OAuth2 access token in the form of Authorization: Bearer\nYOUR_ACCESS_TOKEN that identifies either a manager account acting on behalf of\na client, or an advertiser directly managing their own account. Directions for\nretrieving an access token can be found in the OAuth2\nguide. An access token is valid for an hour after you\nacquire it; when it expires, refresh the access token to retrieve a new one.\nNote that our client libraries automatically refresh expired tokens.\n\nIf you encounter authorization errors, ensure you are using the correct\ncredentials and have sufficient permissions. A USER_PERMISSION_DENIED error\nindicates that the authenticated user may not have access to the customer\naccount specified in the request. Refer to Google Ads Access\nLevels for details on managing\npermissions."
+  },
+  {
+   "id": "google-ads/api/docs/concepts/call-structure#6",
+   "title": "API Call Structure — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en",
+   "heading": "API Call Structure — Google Ads API > Request headers > developer-token",
+   "text": "A developer token is a 22-character string that uniquely identifies a Google Ads API\ndeveloper. An example developer token string is ABcdeFGH93KL-NOPQ_STUv. The\ndeveloper token should be included in the form of developer-token :\nABcdeFGH93KL-NOPQ_STUv."
+  },
+  {
+   "id": "google-ads/api/docs/concepts/call-structure#7",
+   "title": "API Call Structure — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en",
+   "heading": "API Call Structure — Google Ads API > Request headers > login-customer-id",
+   "text": "This is the customer ID of the authorized customer to use in the request,\nwithout hyphens (-). If your access to the customer account is through a\nmanager account, this header is required and must be set to the customer ID of\nthe manager account. If you fail to include login-customer-id when you\nauthenticate through a manager account, this results in an\nAuthorizationError.USER_PERMISSION_DENIED error. Review Common Errors for more information on this error\ntype. For a detailed explanation of how account access is resolved, refer to the\nOAuth access model guide.\n\nKey Term: The operating customer is the customer ID in the request payload.\nFor example, the operating customer in the following CampaignBudgetService request is 1234567890:\n\n```text only\nhttps://googleads.googleapis.com/v25/customers/1234567890/campaignBudgets:mutate\n```\n\nSetting the login-customer-id is equivalent to choosing an account in the\nGoogle Ads UI after signing in or clicking on your profile image at the top\nright. If you don't include this header, it defaults to the operating\ncustomer."
+  },
+  {
+   "id": "google-ads/api/docs/concepts/call-structure#8",
+   "title": "API Call Structure — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en",
+   "heading": "API Call Structure — Google Ads API > Request headers > login-customer-id",
+   "text": "Note: You can retrieve the list of accounts that are directly accessible with\nyour OAuth credentials by issuing a\nCustomerService.ListAccessibleCustomers\nrequest. The login-customer-id is not required for this request type, and has\nno effect on the list of customers returned."
+  },
+  {
+   "id": "google-ads/api/docs/concepts/call-structure#9",
+   "title": "API Call Structure — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en",
+   "heading": "API Call Structure — Google Ads API > Request headers > linked-customer-id",
+   "text": "This header is required and used by partners (such as third-party app analytics\nproviders or data partners) when acting on a linked Google Ads account. This header\nmust specify the Customer ID of the Google Ads account that has the\nproduct link.\n\nConsider the scenario where a partner needs to make API calls to a Google Ads\naccount based on a product link.\n\n- Advertiser: The Google Ads account being managed or updated by the API\ncall. The ID of the Advertiser account is specified in the request. In REST,\nthis is the customerId path parameter (for example,\ncustomers/1111111111/...), and in gRPC, this is the\ncustomer_id field in the request.\n\n- Partner: The partner account (for example, a third-party app analytics\nprovider or data partner).\n\n- Linked account: The Google Ads account that has an established\nproduct link with\nPartner, granting Partner access to Advertiser.\n\nA user who has access to Partner makes API calls to act on entities in\nAdvertiser (for example, to upload conversions or manage user lists). Linked\naccount can be Advertiser itself, or a manager account of Advertiser.\n\nThe request headers must be set as follows:"
+  },
+  {
+   "id": "google-ads/api/docs/concepts/call-structure#10",
+   "title": "API Call Structure — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en",
+   "heading": "API Call Structure — Google Ads API > Request headers > linked-customer-id",
+   "text": "The request headers must be set as follows:\n\n- Authorization: An OAuth2 token for a user who has access to Partner.\n\n- developer-token: The developer token for the API application,\ntypically associated with Partner.\n\n- login-customer-id: The Customer ID of Partner. The authenticated user\nmust have access to this account.\n\n- linked-customer-id: The Customer ID of Linked account. This header\nsignals that the authorization for this request relies on Linked account's\nproduct link with Partner.\n\nThere are two linking scenarios:\n\n- If Advertiser has a direct product link with Partner, then Linked account\nis Advertiser, and linked-customer-id must be set to\nAdvertiser's customer ID.\n\n- If Advertiser is managed by a manager account that has a product link with\nPartner, then Linked account is the manager account, and\nlinked-customer-id must be set to the manager's customer ID.\n\nExample 1: Direct link\n\nIf Advertiser 1111111111 has a direct link with Partner 2222222222, and\nthe API call is targeting customers/1111111111/...:\n\n```\nAuthorization: Bearer YOUR_ACCESS_TOKEN\ndeveloper-token: YOUR_DEVELOPER_TOKEN\nlogin-customer-id: 2222222222\nlinked-customer-id: 1111111111\n```"
+  },
+  {
+   "id": "google-ads/api/docs/concepts/call-structure#11",
+   "title": "API Call Structure — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en",
+   "heading": "API Call Structure — Google Ads API > Request headers > linked-customer-id",
+   "text": "Example 2: Manager link\n\nIf Advertiser 1111111111 is managed by Manager 3333333333, Manager\n3333333333 has a link with Partner 2222222222, and the API call is\ntargeting customers/1111111111/...:\n\n```\nAuthorization: Bearer YOUR_ACCESS_TOKEN\ndeveloper-token: YOUR_DEVELOPER_TOKEN\nlogin-customer-id: 2222222222\nlinked-customer-id: 3333333333\n```"
+  },
+  {
+   "id": "google-ads/api/docs/concepts/call-structure#12",
+   "title": "API Call Structure — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en",
+   "heading": "API Call Structure — Google Ads API > Response headers",
+   "text": "The following headers (or grpc\ntrailing-metadata) are\nreturned with the response body. We recommend that you log these values for\ndebugging purposes."
+  },
+  {
+   "id": "google-ads/api/docs/concepts/call-structure#13",
+   "title": "API Call Structure — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en",
+   "heading": "API Call Structure — Google Ads API > Response headers > request-id",
+   "text": "The request-id is a string that uniquely identifies this request."
+  },
+  {
+   "id": "google-ads/api/rest/auth#0",
+   "title": "Authorization and HTTP Headers — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/rest/auth?hl=en",
+   "heading": "Authorization and HTTP Headers — Google Ads API > Page Summary",
+   "text": "- When calling the Google Ads API, you need both OAuth 2.0 application credentials and a developer token.\n\n- If making API calls with a Google Ads manager account, you must specify a login-customer-id header.\n\n- You can use desktop/web app flows or service accounts to obtain OAuth 2.0 credentials.\n\n- A developer token is required in the developer-token HTTP header for every API call.\n\n- The request-id response header uniquely identifies an API request and is useful for debugging.\n\nNote: If you are new to the Google Ads API, we recommend reading the Getting\nStarted guide first, which covers how to\nset up your account and make your first API call. Make sure to follow the curl\ntab.\n\nYou need both OAuth 2.0 credentials and a developer token\nwhen calling the Google Ads API. If you're making API calls with a Google Ads manager\naccount, you also need to specify a login-customer-id header with each\nrequest. This page describes how to set these values and documents several\nadditional API-specific HTTP headers that are sent and received when using the\nREST interface."
+  },
+  {
+   "id": "google-ads/api/rest/auth#1",
+   "title": "Authorization and HTTP Headers — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/rest/auth?hl=en",
+   "heading": "Authorization and HTTP Headers — Google Ads API > OAuth 2.0 credentials",
+   "text": "The Google Ads API uses OAuth 2.0 for authorizing API requests. Both OAuth 2.0 user\nauthentication flow and service\naccount flow are supported. For more details,\nsee OAuth 2.0 in the Google Ads API.\n\nIf you are new to Google APIs, you can use gcloud\nCLI or the OAuth 2.0\nPlayground to experiment with OAuth\n2.0 credentials and the Google Ads API before writing code for your app.\n\nWe recommend that you use one of the OAuth 2.0 libraries available at\nhttps://oauth.net/code/ to implement the OAuth 2.0\nauthorization workflows. However, we have listed the curl instructions in case\nyou need to implement it yourself."
+  },
+  {
+   "id": "google-ads/api/rest/auth#2",
+   "title": "Authorization and HTTP Headers — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/rest/auth?hl=en",
+   "heading": "Authorization and HTTP Headers — Google Ads API > OAuth 2.0 credentials > Service accounts",
+   "text": "Follow the steps to configure a Google Cloud project for the Google Ads API. Record the service\naccount email and service account key. Next, follow the common\ninstructions in the Service\nAccounts guide to set\nup the service account to access your Google Ads account."
+  },
+  {
+   "id": "google-ads/api/rest/auth#3",
+   "title": "Authorization and HTTP Headers — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/rest/auth?hl=en",
+   "heading": "Authorization and HTTP Headers — Google Ads API > OAuth 2.0 credentials > Service accounts",
+   "text": "When you have the service account email and service account key,\nfollow the Using OAuth 2.0 for Server to Server\nApplications\nguide to generate a JWT claim set, which can then be exchanged to obtain\nan OAuth 2.0 access token. Make sure to select the HTTP/REST tab while\nfollowing the guide. The OAuth 2.0 scope to use for Google Ads API access is\nhttps://www.googleapis.com/auth/adwords. In addition, you can skip the\nsub parameter when constructing the JWT claim set, because the setup steps\ngrant the service account direct access to the Google Ads account, thus avoiding\nthe need to impersonate a Google Ads user.\n\nYou then use the access token in the Authorization HTTP header of\nevery API call to the Google Ads API:\n\n```\nGET /v25/customers:listAccessibleCustomers HTTP/1.1\nHost: googleads.googleapis.com\nAuthorization: Bearer ACCESS_TOKEN\ndeveloper-token: DEVELOPER_TOKEN\n```"
+  },
+  {
+   "id": "google-ads/api/rest/auth#4",
+   "title": "Authorization and HTTP Headers — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/rest/auth?hl=en",
+   "heading": "Authorization and HTTP Headers — Google Ads API > Request headers",
+   "text": "The following sections describe the HTTP headers required or used when making\nrequests to the Google Ads API."
+  },
+  {
+   "id": "google-ads/api/rest/auth#5",
+   "title": "Authorization and HTTP Headers — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/rest/auth?hl=en",
+   "heading": "Authorization and HTTP Headers — Google Ads API > Request headers > Developer token",
+   "text": "The Google Ads API also requires a developer token to make calls to the API. If you\nalready have a developer token, you can find it by navigating to\nhttps://ads.google.com/aw/apicenter. Sign\nin to your Google Ads manager account if prompted. If you don't have one, follow the\ninstructions to sign up for a developer\ntoken.\n\nYou must include your developer token value in the developer-token HTTP header\nof every API call to the Google Ads API:\n\n```\nGET /v25/customers:listAccessibleCustomers HTTP/1.1\nHost: googleads.googleapis.com\nAuthorization: Bearer ACCESS_TOKEN\ndeveloper-token: DEVELOPER_TOKEN\n```"
+  },
+  {
+   "id": "google-ads/api/rest/auth#6",
+   "title": "Authorization and HTTP Headers — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/rest/auth?hl=en",
+   "heading": "Authorization and HTTP Headers — Google Ads API > Request headers > Login customer ID",
+   "text": "For Google Ads API calls made by a manager to a client account (that is, when logging\nin as a manager to make API calls to one of its client accounts), you also need\nto supply the login-customer-id HTTP header. This value represents the Google Ads\ncustomer ID of the manager making the API call.\n\nIncluding this header is equivalent to choosing an account in the Google Ads UI\nafter signing in or clicking your profile image at the top right corner of the\npage. When specifying the customer ID, be sure to remove any hyphens (—). For\nexample: 1234567890, not 123-456-7890. Refer to the Google Ads access model\nguide to learn more about login customer ID.\n\n```\nGET /v25/customers:listAccessibleCustomers HTTP/1.1\nHost: googleads.googleapis.com\nAuthorization: Bearer ACCESS_TOKEN\ndeveloper-token: DEVELOPER_TOKEN\nlogin-customer-id: MANAGER_CUSTOMER_ID\n```\n\nKey Point: If you're not authorizing as a manager account--in other words, if\nyour OAuth 2.0 credentials are for a user of the target Google Ads client account\ndirectly--you don't need to supply a login-customer-id header."
+  },
+  {
+   "id": "google-ads/api/rest/auth#7",
+   "title": "Authorization and HTTP Headers — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/rest/auth?hl=en",
+   "heading": "Authorization and HTTP Headers — Google Ads API > Request headers > Linked customer ID",
+   "text": "The Linked customer ID header is used by partners (such as third-party app\nanalytics providers or data partners) when acting on a linked Google Ads account.\nSee the API Call Structure\nguide for more details.\n\n```\nAuthorization: Bearer ACCESS_TOKEN\ndeveloper-token: DEVELOPER_TOKEN\nlogin-customer-id: PARTNER_CUSTOMER_ID\nlinked-customer-id: ADVERTISER_CUSTOMER_ID\n```"
+  },
+  {
+   "id": "google-ads/api/rest/auth#8",
+   "title": "Authorization and HTTP Headers — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/rest/auth?hl=en",
+   "heading": "Authorization and HTTP Headers — Google Ads API > Response headers",
+   "text": "The following headers are returned in HTTP responses from the API."
+  },
+  {
+   "id": "google-ads/api/rest/auth#9",
+   "title": "Authorization and HTTP Headers — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/rest/auth?hl=en",
+   "heading": "Authorization and HTTP Headers — Google Ads API > Response headers > Request ID",
+   "text": "The request-id is a string that uniquely identifies the API request. When\ndebugging or troubleshooting problems with specific API calls, the request-id\nis an important identifier to have handy when contacting Google developer\nsupport.\n\nTip: To view response headers, including google-ads-request-id, when using\ncurl, add the -i or --include flag to your command.\n\n```\nrequest-id: 2a5Cj89VV7CNhya1DZjjrC\n```"
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/budgets/overview#0",
+   "title": "Campaign Budgets Overview — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/budgets/overview?hl=en",
+   "heading": "Campaign Budgets Overview — Google Ads API > Page Summary",
+   "text": "- Average daily budgets manage spending for Google Ads campaigns.\n\n- This guide covers managing campaign budgets using the Google Ads API.\n\n- Key actions with campaign budgets include creation, sharing, assignment, and removal.\n\n- The guide also covers tracking performance and understanding restrictions and errors related to campaign budgets.\n\nThere are two types of campaign budgets:\naverage daily budgets and\ncampaign total budgets,\nwhich are used to manage the amount of money spent for your Google Ads campaigns.\n\nThis guide describes everything you need to know to work with campaign budgets\nin the Google Ads API:\n\n- Create a budget\n\n- Share a budget with one or more campaigns\n\n- Assign a budget to one or more campaigns\n\n- Remove budgets\n\n- Track performance\n\n- Restrictions and errors"
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/budgets/overview#1",
+   "title": "Campaign Budgets Overview — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/budgets/overview?hl=en",
+   "heading": "Campaign Budgets Overview — Google Ads API > Average daily budget",
+   "text": "This is the average amount you're willing to spend per day for this campaign.\nYou can set an average daily budget with\namount_micros of\nCampaignBudget.\n\nGoogle Ads will try to spend your budget evenly throughout the month, using your\naverage daily budget as a baseline. For example, if your average daily budget\nis $100, Google Ads will aim to show $100 worth of ads each day. On some days, you\nmight spend less than $100, and on others you might spend more, but over the\ncourse of a month, you won't pay more than your daily budget times 30.4 (the\naverage number of days in a month)."
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/budgets/overview#2",
+   "title": "Campaign Budgets Overview — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/budgets/overview?hl=en",
+   "heading": "Campaign Budgets Overview — Google Ads API > Campaign total budget",
+   "text": "This is the total amount you're willing to spend over the entire duration of\nthe campaign. You can set a campaign total budget with\ntotal_amount_micros of\nCampaignBudget. Campaign total budgets are\navailable for Demand Gen, Search, Standard Shopping, Performance Max, and\nYouTube campaigns with specific start and end dates. This option is ideal when\nyou have a set amount you want to spend over a specific period.\n\nCampaign total budgets are available for campaigns using the following bidding\nstrategy types:\n\n- Demand Gen: Maximize conversions, Target CPA, Maximize conversion value,\nTarget ROAS, Maximize clicks, Manual CPC\n\n- Performance Max: Target ROAS, Maximize conversion value, Target CPA,\nMaximize conversions\n\n- Search: Target ROAS, Maximize conversion value, Target CPA, Maximize\nconversions, Maximize clicks, Target impression share, Manual CPC\n\n- Shopping: Target ROAS, Maximize clicks, Manual CPC\n\n- Video (Read-only in the Google Ads API): Target CPM, Target CPV"
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/create-campaigns#0",
+   "title": "Create Campaigns — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/create-campaigns?hl=en",
+   "heading": "Create Campaigns — Google Ads API > Page Summary",
+   "text": "- The best way to set up new campaigns in the API is to use the Add Campaigns code example in the Basic Operations folder of your client library, which handles authentication and walks through required settings like budget, bidding, type, and dates.\n\n- Display Expansion on Search campaigns can help you get additional conversions on the Google Display Network using unspent Search budgets at similar cost per conversion as Search, and you can enable this by setting the target_content_network field to true.\n\n- You can use the CampaignGroupService to create campaign groups for tracking the overall performance of multiple campaigns with similar goals.\n\n- Each campaign can only belong to one campaign group at a time, and campaigns with shared budgets cannot be added to a campaign group."
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/create-campaigns#1",
+   "title": "Create Campaigns — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/create-campaigns?hl=en",
+   "heading": "Create Campaigns — Google Ads API > Add campaigns",
+   "text": "The best way to set up new campaigns in the API is to use the Add Campaigns\ncode example in the Basic Operations folder of your\nclient library. The sample handles all the background authentication tasks for\nyou and walks you through the settings required for establishing a new campaign,\nincluding the budget, bidding strategy, campaign type, start & end dates, and\nmore."
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/create-campaigns#2",
+   "title": "Create Campaigns — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/create-campaigns?hl=en",
+   "heading": "Create Campaigns — Google Ads API > Display Expansion on Search campaigns",
+   "text": "Display Expansion on Search\ncampaigns can help you get\nadditional conversions on the Google Display Network using unspent Search\nbudgets at similar cost per conversion as Search. You can enable Display\nExpansion on Search campaigns by setting the\ntarget_content_network\nfield of the campaign's\nnetwork_settings to true.\n\nThe sample creates a shared CampaignBudget\nfor use with the new campaign. Check out the\ncampaign budgets guide for other budget\noptions."
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/create-campaigns#3",
+   "title": "Create Campaigns — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/create-campaigns?hl=en",
+   "heading": "Create Campaigns — Google Ads API > Campaign groups",
+   "text": "You can use the CampaignGroupService to\ncreate campaign groups for\ntracking the overall performance of multiple campaigns with similar goals.\n\nThe first step is to create a campaign group. Next, add the campaigns you want\nto track to this campaign group. You can pick any combinations of Search,\nShopping, Display, or Video campaigns, subject to the following restrictions:\n\n- Each campaign can only belong to one campaign group at a time.\n\n- You can't add campaigns with shared budgets to a campaign group.\n\nNote: Performance targets are\nnot supported in the Google Ads API."
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/create-ad-groups#0",
+   "title": "Create Ad Groups — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/create-ad-groups?hl=en",
+   "heading": "Create Ad Groups — Google Ads API > Page Summary",
+   "text": "- The best way to set up new ad groups in the API is to use the \"Add Ad Groups\" code example in the Basic Operations folder of your client library.\n\n- The sample code handles background authentication and guides you through the settings required for creating an ad group.\n\n- This example demonstrates how to add ad groups to a campaign and set optional values like CPC bids.\n\n- Code examples are provided in Java, C#, PHP, Python, Ruby, and Perl."
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/create-ad-groups#1",
+   "title": "Create Ad Groups — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/create-ad-groups?hl=en",
+   "heading": "Create Ad Groups — Google Ads API > Add ad groups",
+   "text": "The best way to set up new ad groups in the API is to use the Add Ad Groups\ncode example in the Basic Operations folder of your client\nlibrary. The sample handles all the background authentication tasks for you, and\nwalks you through the settings required for creating an ad group."
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/search-campaigns/getting-started#0",
+   "title": "Get started with Search campaigns — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/search-campaigns/getting-started?hl=en",
+   "heading": "Get started with Search campaigns — Google Ads API > Page Summary",
+   "text": "- Search campaigns on Google Search and partner sites allow programmatic management through the Google Ads API.\n\n- To create a valid and active Search campaign, mandatory resources like CampaignBudget, Campaign, AdGroup, AdGroupAd, and AdGroupCriterion are required.\n\n- Creating a Search campaign involves steps such as setting a budget and bidding strategy, creating ad groups, adding keywords, and creating Responsive Search Ads.\n\n- Best practices for Search campaigns include pausing during setup, using shared negative keyword lists, and implementing conversion tracking.\n\nSearch campaigns allow you to show text ads on Google Search results pages\nand Google partner sites. With the Google Ads API, you can create, manage, and optimize\nthese campaigns programmatically.\n\nSearch campaigns are ideal when you want to reach users actively searching for\nspecific keywords related to your business.\n\nThis guide walks you through all the steps necessary to build your first Search\ncampaign."
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/search-campaigns/getting-started#1",
+   "title": "Get started with Search campaigns — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/search-campaigns/getting-started?hl=en",
+   "heading": "Get started with Search campaigns — Google Ads API > Prerequisites",
+   "text": "Before creating a Search campaign, verify you have the following:\n\n- A valid production Google Ads account\n\n- An approved billing setup\n\n- Access to the Google Ads API"
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/search-campaigns/getting-started#2",
+   "title": "Get started with Search campaigns — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/search-campaigns/getting-started?hl=en",
+   "heading": "Get started with Search campaigns — Google Ads API > Required Resources",
+   "text": "When you create a Search campaign, a bulk mutate request provides a way to\ncreate multiple required resources simultaneously. This means you can establish\na valid, serving campaign with just one request. Although you don't have to\ncreate every resource in a single bulk request, the following resources are\nmandatory for your Search campaign to be valid and active:\n\n- CampaignBudget\n\n- Campaign\n\n- AdGroup\n\n- AdGroupAd\n\n- AdGroupCriterion"
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/search-campaigns/getting-started#3",
+   "title": "Get started with Search campaigns — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/search-campaigns/getting-started?hl=en",
+   "heading": "Get started with Search campaigns — Google Ads API > Resource Hierarchy",
+   "text": "The Object hierarchy chart demonstrates the organizational structure of a\nSearch campaign."
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/search-campaigns/getting-started#4",
+   "title": "Get started with Search campaigns — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/search-campaigns/getting-started?hl=en",
+   "heading": "Get started with Search campaigns — Google Ads API > Create a Search campaign",
+   "text": "To create a Search campaign using the Google Ads API, follow these steps:\n\n- Create a Campaign Budget\n\n- Create or use an existing CampaignBudget. You can use an\naverage daily budget or a campaign total\nbudget. Campaign total budgets are\nonly available for campaigns with a set start and end date. See Create\nCampaign Budgets for details.\nThis resource can be shared across campaigns.\n\n- Create the Search Campaign\n\n- Set the AdvertisingChannelType to SEARCH\n\n- Set a bidding strategy (e.g., ManualCpc, TargetCpa)\n\n- Link the created CampaignBudget from the previous step\n\n- Create Ad Groups\n\n- Create an AdGroup. An AdGroup is a container for ads and\nkeywords.\n\n- Add keywords (Ad Group Criteria)\n\n- Create AdGroupCriterion resources to define the keywords for\ntargeting.\n\n- Create Responsive Search Ads\n\n- Create a ResponsiveSearchAd. ResponsiveSearchAds are contained\nin Ads, which are contained in AdGroupAds. For more\ninformation about ResponsiveSearchAds, see\nAbout responsive search ads."
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/search-campaigns/getting-started#5",
+   "title": "Get started with Search campaigns — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/search-campaigns/getting-started?hl=en",
+   "heading": "Get started with Search campaigns — Google Ads API > Code example to create a Search campaign",
+   "text": "The following code example demonstrates how to create a complete Search\ncampaign. It covers:\n\n- Create a Campaign and a CampaignBudget.\n\n- Set the bidding strategy.\n\n- Populate the campaign with AdGroups, AdGroupAds (including\nResponsiveSearchAds), and AdGroupCriterions.\n\n- How to optionally geotarget your audiences with a\nCampaignCriterion object."
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/search-campaigns/getting-started#6",
+   "title": "Get started with Search campaigns — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/search-campaigns/getting-started?hl=en",
+   "heading": "Get started with Search campaigns — Google Ads API > Code example to create a Search campaign > Java",
+   "text": "```\nThis example is not yet available in Java; you can take a look at the other languages.\n```"
+  },
+  {
+   "id": "google-ads/api/docs/campaigns/search-campaigns/getting-started#7",
+   "title": "Get started with Search campaigns — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/campaigns/search-campaigns/getting-started?hl=en",
+   "heading": "Get started with Search campaigns — Google Ads API > Best Practices",
+   "text": "- Pause new campaigns or ads during setup: This prevents them from serving while\nincomplete, creating a better user experience and campaign performance from the\nstart.\n\n- Use shared negative keyword lists:\nThese help you exclude irrelevant search queries, improving traffic quality and\nad spend efficiency.\n\n- Implement conversion tracking: This lets you\nmeasure actions that align with your business goals (like sales or sign-ups)\nand optimize your campaigns accordingly."
+  },
+  {
+   "id": "google-ads/api/docs/targeting/criteria#0",
+   "title": "Criteria — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/targeting/criteria?hl=en",
+   "heading": "Criteria — Google Ads API > Page Summary",
+   "text": "- Targeting and exclusion of various criteria are supported by the CampaignCriterionService, AdGroupCriterionService, and CustomerNegativeCriterionService.\n\n- The CampaignCriterionService allows for campaign-level targeting and bid modifiers for various criteria types.\n\n- The AdGroupCriterionService enables targeting and exclusion at the ad group level for a range of criteria.\n\n- Negative targeting at the account level is supported by the CustomerNegativeCriterionService for specific criteria types.\n\nTargeting criteria can be set at three different levels:\n\n- At the campaign level.\n\n- At the ad group level.\n\n- At the customer level.\n\nNote: customer-level criteria can only be negative.\nNot all criteria types can be set at all levels: some, for example, can be set\nonly at the campaign level.\n\nAdditionally, some criteria can only be used for negative targeting, and some\ncan only be used for positive targeting.\n\nThe following table describes the allowed usage of all criterion types:\n\nCampaign\n Ad group\n Customer\n\nType\n Positive?\n Negative?\n Available levels\n Notes\n\nAd schedule\n ✅\n ❌\n\n- Campaign\n\nAge range\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\nApp payment model\n ✅\n ❌\n\n- Ad group"
+  },
+  {
+   "id": "google-ads/api/docs/targeting/criteria#1",
+   "title": "Criteria — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/targeting/criteria?hl=en",
+   "heading": "Criteria — Google Ads API > Page Summary",
+   "text": "Type\n Positive?\n Negative?\n Available levels\n Notes\n\nAd schedule\n ✅\n ❌\n\n- Campaign\n\nAge range\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\nApp payment model\n ✅\n ❌\n\n- Ad group\n\nAudience\n ✅\n ❌\n\n- Ad group\n\nRefer to the audience targeting guide for Demand Gen campaigns.\n\nBrand list\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\nCarrier\n ✅\n ❌\n\n- Campaign\n\nCombined audience\n ✅\n ❌\n\n- Campaign\n\n- Ad group\n\nSee the Help Center article about combined audiences.\n\nContent label\n ❌\n ✅\n\n- Campaign\n\n- Customer\n\nCustom affinity\n ✅\n ❌\n\n- Campaign\n\n- Ad group\n\nDefined by CustomAffinityInfo resources. See the article about custom audiences.\n\nCustom audience\n ✅\n ❌\n\n- Campaign\n\n- Ad group\n\nDefined by CustomAudience resources. See the article about custom audiences.\n\nCustom intent\n ✅\n ❌\n\n- Ad group\n\nDefined by CustomIntentInfo resources. See the article about custom intent criteria.\n\nDevice\n ✅\n ❌\n\n- Campaign\n\nExtended demographic\n ✅\n ✅\n\n- Campaign\n\nGender\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\nIncome range\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\nIP block\n ✅\n ✅\n\n- Campaign\n\n- Customer\n\nKeyword\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\nAt the campaign level, you can only exclude keywords.\n\nKeyword theme\n ✅\n ✅\n\n- Campaign\n\nLanguage\n ✅\n ❌\n\n- Campaign"
+  },
+  {
+   "id": "google-ads/api/docs/targeting/criteria#2",
+   "title": "Criteria — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/targeting/criteria?hl=en",
+   "heading": "Criteria — Google Ads API > Page Summary",
+   "text": "- Customer\n\nKeyword\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\nAt the campaign level, you can only exclude keywords.\n\nKeyword theme\n ✅\n ✅\n\n- Campaign\n\nLanguage\n ✅\n ❌\n\n- Campaign\n\n- Ad group\n\nLife event\n ✅\n ✅\n\n- Campaign\n\nListing group\n ✅\n ❌\n\n- Ad group\n\nTree-based structure for Hotel Ads and Shopping campaigns.\n See the guide.\n\nListing scope\n ✅\n ❌\n\n- Campaign\n\nLocal service ID\n ✅\n ❌\n\n- Campaign\n\nRepresents a service type for Local Services Campaigns.\n\nLocation\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\nSee the guide about location targeting.\n\nLocation group\n ✅\n ❌\n\n- Campaign\n\nTarget multiple geographic regions using a distance radius. See the guide about location targeting.\n\nMobile app category\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\n- Customer\n\nMobile application\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\n- Customer\n\nMobile device\n ✅\n ❌\n\n- Campaign\n\nNegative keyword list\n ❌\n ✅\n\n- Customer\n\nOperating system version\n ✅\n ❌\n\n- Campaign\n\nParental status\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\nAt the campaign level, only negative targeting is supported.\n\nPlacement\n ❌\n ✅\n\n- Campaign\n\n- Ad group\n\n- Customer\n\nLimits on URL length (250 chars) and depth (2 levels). adsenseformobileapps.com not allowed.\n\nPlacement list\n ❌\n ✅\n\n- Customer"
+  },
+  {
+   "id": "google-ads/api/docs/targeting/criteria#3",
+   "title": "Criteria — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/targeting/criteria?hl=en",
+   "heading": "Criteria — Google Ads API > Page Summary",
+   "text": "- Ad group\n\n- Customer\n\nLimits on URL length (250 chars) and depth (2 levels). adsenseformobileapps.com not allowed.\n\nPlacement list\n ❌\n ✅\n\n- Customer\n\nLets you manage a list of placements to exclude across multiple campaigns.\n\nProximity\n ✅\n ❌\n\n- Campaign\n\nCreated using an address or latitude-longitude and a radius. See the guide about location targeting.\n\nTopic\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\nUser interest\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\nVerify the availabilities are\n compatible with the campaign type. Some user interest options are only\n available for specific campaign types.\n\nUser list\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\nUse the ID of the user list.\n\nVideo lineup\n ✅\n ✅\n\n- Campaign\n\nWebpage\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\nUsed to target or exclude specific pages on an advertiser's website\n based on conditions. Setting a Webpage criterion as\n negative is used to implement URL exclusions.\n\nYouTube channel\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\n- Customer\n\nYouTube video\n ✅\n ✅\n\n- Campaign\n\n- Ad group\n\n- Customer"
+  },
+  {
+   "id": "google-ads/api/docs/targeting/criteria#4",
+   "title": "Criteria — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/targeting/criteria?hl=en",
+   "heading": "Criteria — Google Ads API > Audience Info targeting criteria",
+   "text": "You can target audiences at the ad group level using AudienceInfo criteria. Set the\naudience field on an\nAdGroupCriterion to the resource name of the\naudience you want to target."
+  },
+  {
+   "id": "google-ads/api/docs/targeting/criteria#5",
+   "title": "Criteria — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/targeting/criteria?hl=en",
+   "heading": "Criteria — Google Ads API > Audience Info targeting criteria > Inspecting MutateAudienceResult for audience_id",
+   "text": "When creating an audience with AudienceService.MutateAudiences, each operation returns a\nMutateAudienceResult. You can inspect\nMutateAudienceResult to obtain the audience_id either by parsing the\nreturned resource_name or by inspecting the mutable audience object when\nresponse_content_type is set to MUTABLE_RESOURCE:\n\n```python\n# Inspect MutateAudienceResult to get audience_id\nfor result in response.results:\n    resource_name = result.resource_name\n    # Format: customers/{customer_id}/audiences/{audience_id}\n    audience_id = resource_name.split(\"/\")[-1]\n    print(f\"Created audience with resource_name '{resource_name}' and audience_id '{audience_id}'.\")\n\n    # If response_content_type is MUTABLE_RESOURCE, you can access result.audience.id directly:\n    if result.audience and result.audience.id:\n        print(f\"Audience ID from mutable resource: {result.audience.id}\")\n```"
+  },
+  {
+   "id": "google-ads/api/docs/ads/create-ads#0",
+   "title": "Create Ads — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/ads/create-ads?hl=en",
+   "heading": "Create Ads — Google Ads API > Page Summary",
+   "text": "- The document provides code examples in Java, C#, and Python for creating a Responsive Search Ad campaign using the Google Ads API.\n\n- The examples cover the complete process including creating a budget, campaign, ad group, Responsive Search Ad, keywords, and geo-targeting.\n\n- Optional steps for creating and linking a customizer attribute for dynamic ad text are included.\n\n- The code examples demonstrate error handling for Google Ads API exceptions and follow best practices like initially pausing the campaign.\n\nYou can create a Responsive Search Ad."
+  },
+  {
+   "id": "google-ads/api/docs/ads/create-ads#1",
+   "title": "Create Ads — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/ads/create-ads?hl=en",
+   "heading": "Create Ads — Google Ads API > Add responsive search ad",
+   "text": "The best way to set up new ads in the API is to use the Add Responsive Search Ad\ncode example in the Basic Operations folder of your client library. The sample\nhandles all the background authentication tasks for you, and walks you through\ncreating responsive search ads."
+  },
+  {
+   "id": "google-ads/api/docs/responsive-search-ads/create-responsive-search-ads#0",
+   "title": "Creating Responsive Search Ads — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/responsive-search-ads/create-responsive-search-ads?hl=en",
+   "heading": "Creating Responsive Search Ads — Google Ads API > Page Summary",
+   "text": "- This document provides code examples in Java, C#, and Python for creating responsive search ads using the Google Ads API.\n\n- The process involves several steps, including creating a campaign budget, campaign, ad group, keywords, geo targets, and the responsive search ad itself.\n\n- Responsive search ads require at least three headlines, at least two descriptions, and at least one final URL, and can utilize ad customizers for dynamic content.\n\n- The code walkthrough covers creating customizer attributes and linking them, setting up budgets, campaigns, and ad groups, building the ad with various elements, and adding keywords and geo targeting.\n\n- The examples utilize various Google Ads API service clients and demonstrate mutate requests and error handling.\n\nBelow you can see code examples showing how to create responsive search ads. As\nwith other ads, ad creation is accomplished using\nAdGroupAdService.MutateAdGroupAds\n. A ResponsiveSearchAdInfo requires\nat least three headlines, at least two descriptions, and at least one final URL."
+  },
+  {
+   "id": "google-ads/api/docs/assets/overview#0",
+   "title": "Assets — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/overview?hl=en",
+   "heading": "Assets — Google Ads API > Page Summary",
+   "text": "- Assets are shareable units of data used to build different types of ads across various formats.\n\n- Key API objects related to assets include Asset, AssetSet, and objects representing linkages between assets, asset sets, campaigns, ad groups, and customers.\n\n- Some asset types can be directly linked to ads, while others are linked to customers, campaigns, or ad groups through specific linkage objects.\n\n- Certain asset types can be linked to particular types of asset sets using CampaignAssetSet, CustomerAssetSet, or AdGroupAssetSet linkage objects.\n\nAssets are units of shareable data—such as images, videos, headlines, and\ndescriptions—that are used to construct different types of ads across\nmultiple formats, such as display, YouTube, app store, and others."
+  },
+  {
+   "id": "google-ads/api/docs/assets/overview#1",
+   "title": "Assets — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/overview?hl=en",
+   "heading": "Assets — Google Ads API > Objects",
+   "text": "The most basic objects in the API are the following:\n\n- Asset: A unit of shareable advertising data\n\n- AssetType: The kind of content the asset contains—for example,\ntext or image\n\n- AssetFieldType: How the asset is used—for example, a text asset\ntype can be used as a headline or a description asset field type\n\n- AssetSet: A collection of assets centered around a theme or organized by\ncampaign\n\n- AssetSetType: The class of the asset set\n\nThere are objects that represent links among assets, asset sets, ad groups,\ncampaigns, and customers:\n\n- Linkages to assets\n\n- CustomerAsset: The link between a customer and an asset\n\n- CampaignAsset: The link between a campaign and an asset\n\n- AdGroupAsset: The link between an ad group and an asset\n\n- AssetSetAsset: The link between an asset set and an asset\n\n- Linkages to asset sets\n\n- CustomerAssetSet: The link between a customer and an asset set\n\n- CampaignAssetSet: The link between a campaign and an asset set\n\n- AdGroupAssetSet: The link between an ad group and an asset set"
+  },
+  {
+   "id": "google-ads/api/docs/assets/overview#2",
+   "title": "Assets — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/overview?hl=en",
+   "heading": "Assets — Google Ads API > Objects > Campaign assets example",
+   "text": "Here's a visual representation of how some of the objects can be linked. The\nexample starts with campaigns at the top, but the same hierarchy also applies to\ncustomers and ad groups.\n\nDiagram of campaign asset sets\n\nBefore you create a CampaignAssetSet, you must first create a\nCampaign and an AssetSet containing\none or more assets. You can assemble assets to create an inventory for all\napplicable ad formats in your campaign, or let Google Ads mix and match available\nassets based on which channel the ad is being served: YouTube, Gmail, Search,\nand others.\n\nKey Point: A Campaign can link to one or more CampaignAssetSet objects, but\neach CampaignAssetSet can be linked to only one Campaign."
+  },
+  {
+   "id": "google-ads/api/docs/assets/overview#3",
+   "title": "Assets — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/overview?hl=en",
+   "heading": "Assets — Google Ads API > Asset types linked to ads",
+   "text": "Some asset types can be linked directly to ads.\n\nAsset type\n AssetFieldType\n Ad type\n\nVideo\n YOUTUBE_VIDEO\n App ad\nApp engagement ad\nLocal ad\nResponsive display ad\n\nMedia bundle\n MEDIA_BUNDLE\nCUSTOM_LAYOUT\n App ad\nDisplay upload Ad\n\nImage\n MARKETING_IMAGE\nSQUARE_MARKETING_IMAGE\nLOGO\nLANDSCAPE_LOGO\nPORTRAIT_MARKETING_IMAGE\nCLASSIC_DISPLAY_IMAGE\n App ad\nApp engagement ad\nLocal ad\nResponsive display ad\nDemand Gen multi-asset ad\n\nText\n HEADLINE\nLONG_HEADLINE\nDESCRIPTION\nMANDATORY_AD_TEXT\nCALL_TO_ACTION_SELECTION\nBUSINESS_NAME\n App ad\nApp engagement ad\nLocal ad\nResponsive display ad\nResponsive search ad\nSmart campaign ad\n\nCall to Action\n CALL_TO_ACTION\n Local ad\nResponsive display ad"
+  },
+  {
+   "id": "google-ads/api/docs/assets/overview#4",
+   "title": "Assets — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/overview?hl=en",
+   "heading": "Assets — Google Ads API > Asset types linked to customers, campaigns, and ad groups",
+   "text": "Some types of assets can be linked to customers, campaigns, or ad groups through\nlinkage objects.\n\nNote: For BUSINESS_MESSAGE assets:\n- Each customer can have only one\nactive business message asset.\n- At the campaign and ad group levels, you\ncan assign only one active business message asset for each message provider\ntype.\n\nAsset type\n AssetFieldType\n Linkage\n Mutable\n\nBusiness message\n BUSINESS_MESSAGE\n AdGroupAsset\nCampaignAsset\nCustomerAsset\n Yes\n\nText\n BUSINESS_NAME\n CampaignAsset\nCustomerAsset\n No\n\nImage\n AD_IMAGE\n AdGroupAsset\nCampaignAsset\n No\n\nImage\n BUSINESS_LOGO\n CampaignAsset\nCustomerAsset\n No\n\nLead form\n LEAD_FORM\n CampaignAsset\n Yes\n\nPromotion\n PROMOTION\n AdGroupAsset\nCampaignAsset\nCustomerAsset\n Yes\n\nCallout\n CALLOUT\n AdGroupAsset\nCampaignAsset\nCustomerAsset\n Yes\n\nStructured snippet\n STRUCTURED_SNIPPET\n AdGroupAsset\nCampaignAsset\nCustomerAsset\n Yes\n\nSitelink\n SITELINK\n AdGroupAsset\nCampaignAsset\nCustomerAsset\n Yes\n\nMobile app\n MOBILE_APP\n AdGroupAsset\nCampaignAsset\nCustomerAsset\n Yes\n\nHotel callout\n HOTEL_CALLOUT\n AdGroupAsset\nCampaignAsset\nCustomerAsset\n Yes\n\nCall\n CALL\n AdGroupAsset\nCampaignAsset\nCustomerAsset\n Yes"
+  },
+  {
+   "id": "google-ads/api/docs/assets/overview#5",
+   "title": "Assets — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/overview?hl=en",
+   "heading": "Assets — Google Ads API > Asset types linked to customers, campaigns, and ad groups",
+   "text": "Hotel callout\n HOTEL_CALLOUT\n AdGroupAsset\nCampaignAsset\nCustomerAsset\n Yes\n\nCall\n CALL\n AdGroupAsset\nCampaignAsset\nCustomerAsset\n Yes\n\nPrice\n PRICE\n AdGroupAsset\nCampaignAsset\nCustomerAsset\n Yes"
+  },
+  {
+   "id": "google-ads/api/docs/assets/overview#6",
+   "title": "Assets — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/overview?hl=en",
+   "heading": "Assets — Google Ads API > Asset types linked to customers, campaigns, and ad groups > Location assets",
+   "text": "Location assets are handled differently from other asset types. See Location\nassets for details."
+  },
+  {
+   "id": "google-ads/api/docs/assets/overview#7",
+   "title": "Assets — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/overview?hl=en",
+   "heading": "Assets — Google Ads API > Asset types linked to customers, campaigns, and ad groups > Text customization",
+   "text": "Assets generated by text customization (formerly automatically created assets)\ncannot be modified. The\nAssetSource indicates whether an\nasset was user-created or was automatically generated by the system. Mutable\ntypes like sitelink can't be linked to assets created by text customization."
+  },
+  {
+   "id": "google-ads/api/docs/assets/overview#8",
+   "title": "Assets — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/overview?hl=en",
+   "heading": "Assets — Google Ads API > Asset types linked to asset sets",
+   "text": "Certain asset types can be linked to specific types of asset sets.\n\nAssetType\n AssetSetType\n Linkage\n Mutable\n\nPAGE_FEED\n PAGE_FEED\n CampaignAssetSet\n Yes\n\nDYNAMIC_EDUCATION\n DYNAMIC_EDUCATION\n CampaignAssetSet\n Yes\n\nDYNAMIC_CUSTOM\n DYNAMIC_CUSTOM\n CampaignAssetSet\n Yes\n\nDYNAMIC_HOTELS_AND_RENTALS\n DYNAMIC_HOTELS_AND_RENTALS\n CampaignAssetSet\n Yes\n\nDYNAMIC_REAL_ESTATE\n DYNAMIC_REAL_ESTATE\n CampaignAssetSet\n Yes\n\nDYNAMIC_LOCAL\n DYNAMIC_LOCAL\n CampaignAssetSet\n Yes\n\nDYNAMIC_FLIGHTS\n DYNAMIC_FLIGHTS\n CampaignAssetSet\n Yes\n\nDYNAMIC_JOBS\n DYNAMIC_JOBS\n CampaignAssetSet\n Yes\n\nDYNAMIC_TRAVEL\n DYNAMIC_TRAVEL\n CampaignAssetSet\n Yes\n\nLOCATION\n LOCATION_SYNC\n CustomerAssetSet\nCampaignAssetSet\nAdGroupAssetSet\n No (system generated)\n\nGMB_DYNAMIC_LOCATION_GROUP\n CampaignAssetSet\nAdGroupAssetSet\n\nCHAIN_DYNAMIC_LOCATION_GROUP\n CampaignAssetSet\nAdGroupAssetSet\n\nSTATIC_LOCATION_GROUP\n CampaignAssetSet\nAdGroupAssetSet"
+  },
+  {
+   "id": "google-ads/api/docs/assets/working-with-assets#0",
+   "title": "Asset creation and usage — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/working-with-assets?hl=en",
+   "heading": "Asset creation and usage — Google Ads API > Page Summary",
+   "text": "- Most asset types must be created using the AssetService before use in an ad, with TextAsset being the exception as it can be created inline during ad creation.\n\n- Once an asset is uploaded using AssetService, it cannot be changed or removed programmatically, and associations with ads must be managed through ad-level operations.\n\n- The API returns a MutateAssetResult containing the resource name of a newly created asset, which is used to reference the asset when creating asset-based ads.\n\n- Different ad and campaign types support specific asset types, and for most, existing assets are added by referencing their resource names.\n\n- Recommendations can suggest assets to add to campaigns or identify areas to update existing assets to improve ad strength.\n\nMost asset types must be created using the\nAssetService before they can be used in an ad.\nThe TextAsset type is the exception as it is\ncreated inline during ad creation. All other types must first be uploaded to an\nadvertiser's account before they can be used."
+  },
+  {
+   "id": "google-ads/api/docs/assets/working-with-assets#1",
+   "title": "Asset creation and usage — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/working-with-assets?hl=en",
+   "heading": "Asset creation and usage — Google Ads API > Asset Association Levels",
+   "text": "Assets are made available for serving by linking them to different entities in\nyour Google Ads account hierarchy. The level of association depends on the asset\ntype and the campaign type. Common resources for managing these links include:\n\n- CustomerAsset:\nFor assets linked at the account level.\n\n- CampaignAsset:\nFor assets linked to a specific campaign.\n\n- AdGroupAsset:\nFor assets linked to a specific ad group.\n\n- AssetGroupAsset:\nFor assets linked to an asset group within\nPerformance Max campaigns.\n\nThe specific service and resource to use will depend on what you are trying to\nachieve."
+  },
+  {
+   "id": "google-ads/api/docs/assets/working-with-assets#2",
+   "title": "Asset creation and usage — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/working-with-assets?hl=en",
+   "heading": "Asset creation and usage — Google Ads API > Asset Association Levels > Performance Max brand assets",
+   "text": "While many assets in Performance Max campaigns are linked to asset\ngroups using AssetGroupAsset, Business Name and Business Logo assets\nare an exception if brand guidelines are enabled for the campaign. In this case,\nthey are linked directly at the campaign level using\nCampaignAsset with the field\ntypes BUSINESS_NAME and LOGO, respectively. If brand guidelines are\ndisabled for the campaign, then these assets must be attached using\nAssetGroupAsset. See\nAssets in Performance Max for more details."
+  },
+  {
+   "id": "google-ads/api/docs/assets/working-with-assets#3",
+   "title": "Asset creation and usage — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/working-with-assets?hl=en",
+   "heading": "Asset creation and usage — Google Ads API > Create an asset",
+   "text": "Unique names are required when creating image and media bundle assets. If you\nsupply an existing name, a new name will be created by appending a unique\nstring to the existing name. We strongly recommend that you use unique names\nthat are descriptive to make it easier to manage and identify individual assets\nas your collection grows.\n\nKey Point: The AssetService only supports\ncreate operations. Once an asset is uploaded to an advertiser's account, it\ncannot be changed or removed programmatically. You must use ad-level operations\nto manage associations between individual assets and ads.\nThe following example shows how to create a new image asset from a URL of raw\nimage data."
+  },
+  {
+   "id": "google-ads/api/docs/assets/working-with-assets#4",
+   "title": "Asset creation and usage — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/working-with-assets?hl=en",
+   "heading": "Asset creation and usage — Google Ads API > Create an asset > Java",
+   "text": "```java\nprivate void runExample(GoogleAdsClient googleAdsClient, long customerId) throws IOException {\n  byte[] imageData = ByteStreams.toByteArray(new URL(IMAGE_URL).openStream());\n\n  // Create the image asset.\n  ImageAsset imageAsset = ImageAsset.newBuilder().setData(ByteString.copyFrom(imageData)).build();\n\n  // Creates an asset.\n  Asset asset =\n      Asset.newBuilder()\n          // Provide a unique friendly name to identify your asset.\n          // When there is an existing image asset with the same content but a different name, the\n          // new name will be dropped silently.\n          .setName(\"Marketing Image\")\n          .setType(AssetType.IMAGE)\n          .setImageAsset(imageAsset)\n          .build();\n\n  // Creates the operation.\n  AssetOperation operation = AssetOperation.newBuilder().setCreate(asset).build();\n\n  // Creates the service client.\n  try (AssetServiceClient assetServiceClient =\n      googleAdsClient.getLatestVersion().createAssetServiceClient()) {\n    // Issues a mutate request to add the asset.\n    MutateAssetsResponse response =\n        assetServiceClient.mutateAssets(Long.toString(customerId), ImmutableList.of(operation));\n    // Prints the result.\n    System.out.printf(\n        \"The image asset with resource name '%s' was created.%n\",\n        response.getResults(0).getResourceName());\n  }\n}UploadImageAsset.java\n```"
+  },
+  {
+   "id": "google-ads/api/docs/assets/working-with-assets#5",
+   "title": "Asset creation and usage — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/working-with-assets?hl=en",
+   "heading": "Asset creation and usage — Google Ads API > Create an asset > Java",
+   "text": "After the asset has been created, the API returns a\nMutateAssetResult object that contains the\nresource name of the new ImageAsset. This resource\nname is used to reference the ImageAsset when creating an asset-based ad.\n\nYou can retrieve a list of existing assets and their resource names by querying\nthe GoogleAdsService. See\nFetching asset attribute and metrics\nfor more details."
+  },
+  {
+   "id": "google-ads/api/docs/assets/working-with-assets#6",
+   "title": "Asset creation and usage — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/working-with-assets?hl=en",
+   "heading": "Asset creation and usage — Google Ads API > Use the asset in an ad",
+   "text": "Different ad and campaign types support different asset types as shown in the\nfollowing table:\n\nAd/Campaign types and the asset types they support\n\nAppAd\n\nTextAsset\n\nImageAsset\n\nVideoAsset\n\nMediaBundleAsset\n\nAppEngagementAd\n\nTextAsset\n\nImageAsset\n\nVideoAsset\n\nDemand Gen\n\nTextAsset\n\nImageAsset\n\nVideoAsset\n\nDemandGenCarouselCardAsset\n\nDisplayUploadAd\n\nMediaBundleAsset\n\nPerformance Max campaign\n\nTextAsset\n\nImageAsset\n\nVideoAsset\n\nMediaBundleAsset\n\nYoutubeVideoAsset\n\nCallToActionAsset\n\nResponsiveDisplayAd\n\nTextAsset\n\nImageAsset\n\nVideoAsset\n\nResponsiveSearchAd\n\nTextAsset (for Headlines, Descriptions in the ad creative)\n\nThe following asset types can be linked at the Customer, Campaign, or Ad Group level using CustomerAsset, CampaignAsset, or AdGroupAsset, respectively, to serve with the ad as extensions:\n\n- SitelinkAsset\n\n- CalloutAsset\n\n- StructuredSnippetAsset\n\n- CallAsset\n\n- LeadFormAsset\n\n- PriceAsset\n\n- PromotionAsset\n\n- MobileAppAsset\n\n- ImageAsset (for Image Extensions)\n\n- HotelCalloutAsset\n\nNote: Location assets and Affiliate Location assets are managed differently, often through CustomerAssetSet or CampaignAssetSet. See Location Assets for details."
+  },
+  {
+   "id": "google-ads/api/docs/assets/working-with-assets#7",
+   "title": "Asset creation and usage — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/working-with-assets?hl=en",
+   "heading": "Asset creation and usage — Google Ads API > Use the asset in an ad",
+   "text": "Each of these ad types has fields for setting the various asset types that\nit supports. For TextAsset, a new string asset is\ncreated inline within the ad. For all other asset types, existing assets are\nadded to the ad by referencing their resource names.\n\nThe following example demonstrates adding a TextAsset\nand an ImageAsset to a\nResponsiveDisplayAd. The\nTextAsset is created inline as the ad's headlines\nand description. The ImageAsset is specified by\na resource name.\n\nNote: Multiple ads can refer to the same underlying asset, enabling sharing and\nreuse of their content within an advertiser's account. The logo image resource\nnames in the following example can be referenced by multiple ads across\ndifferent campaigns within the advertiser's account."
+  },
+  {
+   "id": "google-ads/api/docs/assets/working-with-assets#8",
+   "title": "Asset creation and usage — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/assets/working-with-assets?hl=en",
+   "heading": "Asset creation and usage — Google Ads API > Asset recommendations",
+   "text": "Recommendations can improve\nyour assets in a couple ways:\n\n- They can suggest assets for you, which you can add to your campaign by\ncalling\nRecommendationService.ApplyRecommendation.\nFor example, you can retrieve CALLOUT_ASSET, SITELINK_ASSET,\nCALL_ASSET, LEAD_FORM_ASSET and RESPONSIVE_SEARCH_AD_ASSET\nrecommendations, and then apply them to attach the recommended assets to the\nrelevant campaign, ad group, or ad.\n\n- They can help you identify areas where you can update your assets to\nimprove the overall strength of your responsive search ads or your\nPerformance Max campaigns. For example, you can retrieve\nIMPROVE_PERFORMANCE_MAX_AD_STRENGTH\nrecommendations to see which asset groups should be updated to improve their\nstrength.\n\nVisit the Optimization score and recommendations\nguide for more information."
+  },
+  {
+   "id": "google-ads/api/samples/add-sitelinks#0",
+   "title": "Add sitelinks — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/samples/add-sitelinks?hl=en",
+   "heading": "Add sitelinks — Google Ads API > Page Summary",
+   "text": "- The code examples demonstrate how to add sitelinks to a campaign using assets in various programming languages.\n\n- Sitelink assets are created first, defining the text, descriptions, and URLs (including mobile-specific URLs).\n\n- These sitelink assets are then linked to a specific campaign using CampaignAsset operations.\n\n- The process involves using the AssetService and CampaignAssetService to mutate assets and campaign assets, respectively."
+  },
+  {
+   "id": "google-ads/api/docs/mutating/overview#0",
+   "title": "Mutating Resources — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/mutating/overview?hl=en",
+   "heading": "Mutating Resources — Google Ads API > Page Summary",
+   "text": "- The Google Ads API offers resource-specific services for mutating individual resource types like campaigns.\n\n- The GoogleAdsService.Mutate endpoint provides benefits like grouping actions across different resource services and using temporary resource names.\n\n- You can use GoogleAdsService.Mutate to perform linked operations, such as creating a complete campaign structure in a single request.\n\n- Generally, cross-account mutation is not permitted unless the account is the manager of the client that created the object.\n\nThe Google Ads API provides a few different ways for mutating resources, depending on\nyour use case. Each resource has a corresponding service that lets you\nspecify mutate operations for that specific resource type. For example, the\nCampaign resource has a corresponding\nCampaignService.MutateCampaigns\nendpoint for mutating campaigns.\n\nAnother option is the\nGoogleAdsService.Mutate endpoint,\nwhich essentially wraps a series of individual mutate calls on the resource\nservices and provides the following benefits:\n\n- Grouped actions across different resource services. Normal calls can only\nexecute operations against a single resource service."
+  },
+  {
+   "id": "google-ads/api/docs/mutating/overview#1",
+   "title": "Mutating Resources — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/mutating/overview?hl=en",
+   "heading": "Mutating Resources — Google Ads API > Page Summary",
+   "text": "- Grouped actions across different resource services. Normal calls can only\nexecute operations against a single resource service.\n\n- Temporary resource names. Combine operations to create an entity and its\nchild entities in a single request.\n\nWith these two properties, you can use\nGoogleAdsService.Mutate to, for\nexample, create an entire campaign structure only if every step along the way\nsucceeds.\n\nKey Point: Generally, cross-account mutating is not allowed; an account cannot\nmutate objects that it didn't create, unless it is the manager of the client that\ncreated the object."
+  },
+  {
+   "id": "google-ads/api/docs/mutating/bulk-mutate#0",
+   "title": "Bulk Mutates — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/mutating/bulk-mutate?hl=en",
+   "heading": "Bulk Mutates — Google Ads API > Page Summary",
+   "text": "- The GoogleAdsService.Mutate endpoint allows you to operate on different types of entities or use a single endpoint for all supported mutate operations.\n\n- You can see the full list of supported operations on the reference page for MutateOperation.\n\n- Each MutateGoogleAdsRequest accepts a repeated MutateOperation, with each operation including a single operation for one resource type.\n\n- To perform multiple operations in a single GoogleAdsService.Mutate call, you would create a MutateOperation entity for each resource type and pass them together.\n\n- This endpoint supports partial failure and validate-only features.\n\nIf you need to operate on different types of entities at the same time or\nprefer to write against a single endpoint rather than using a separate endpoint\nper resource type, then you can use the\n GoogleAdsService.Mutate\n endpoint for all supported mutate operations.\n\nNote: You can see the full list of supported operations on the reference page\nfor MutateOperation."
+  },
+  {
+   "id": "google-ads/api/docs/mutating/bulk-mutate#1",
+   "title": "Bulk Mutates — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/mutating/bulk-mutate?hl=en",
+   "heading": "Bulk Mutates — Google Ads API > Mutate operations",
+   "text": "Each MutateGoogleAdsRequest\n accepts a repeated MutateOperation, each of\nwhich can include a single operation for one resource type. To create one\ncampaign and one ad group in a single\n GoogleAdsService.Mutate call,\n you would need to create two MutateOperation\n entities (one for the CampaignOperation,\nthe other for the AdGroupOperation),\n and then pass both to\nGoogleAdsService."
+  },
+  {
+   "id": "google-ads/api/docs/mutating/bulk-mutate#2",
+   "title": "Bulk Mutates — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/mutating/bulk-mutate?hl=en",
+   "heading": "Bulk Mutates — Google Ads API > Mutate operations > Ruby",
+   "text": "```ruby\nmutate_operation1 = client.operation(:Mutate)\nmutate_operation2 = client.operation(:Mutate)\n\ncampaign_operation = client.operation(:Campaign)\nad_group_operation = client.operation(:AdGroup)\n\n# Do some setup here to get campaign_operation and ad_group_operation into the\n# state you would want them for a regular mutate call to their respective\n# services.\n\nmutate_operation1.campaign_operation = campaign_operation\nmutate_operation2.ad_group_operation = ad_group_operation\n\ngoogle_ads_service.mutate(customer_id, [mutate_operation1, mutate_operation2])\n```\n\nLike other services, this endpoint supports\npartial failure and\nvalidate-only."
+  },
+  {
+   "id": "google-ads/api/docs/mutating/best-practices#0",
+   "title": "Mutate Best Practices — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/mutating/best-practices?hl=en",
+   "heading": "Mutate Best Practices — Google Ads API > Page Summary",
+   "text": "- GoogleAdsService.Mutate supports temporary resource names using negative IDs to reference newly created resources within the same request.\n\n- When using temporary resource names, ensure they are used after being defined, are unique within a single request, and are not remembered across requests.\n\n- Grouping operations of the same resource type together in your Mutate calls can improve API performance and prevent timeouts.\n\n- Setting response_content_type to MUTABLE_RESOURCE in your mutate request returns mutable attributes of created or updated objects, avoiding additional search or searchStream requests, but increases the response payload size."
+  },
+  {
+   "id": "google-ads/api/docs/mutating/best-practices#1",
+   "title": "Mutate Best Practices — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/mutating/best-practices?hl=en",
+   "heading": "Mutate Best Practices — Google Ads API > Temporary resource names",
+   "text": "GoogleAdsService.Mutate supports\n temporary resource names that can be referenced later\non in the same request. This lets you, for example, create a campaign and\nits associated ad groups, ads, keywords, and so forth all in a single request.\n\nYou can do this by specifying the new resource's resource_name to use a\nnegative ID. For example, suppose you create a campaign and specify its resource name\nas customers/<YOUR_CUSTOMER_ID>/campaigns/-1. When you create the\nad group in a later operation, you can then reference it by that resource name\nand the -1 you specified will be replaced by the actual ID of the created\ncampaign automatically.\n\nHere are some things to keep in mind when using temporary resource names:\n\n- A temporary resource name can only be used after it's been defined in a\nresource. In the following example, the ad group operation would have to\nappear after the campaign operation in the list of operations.\n\n- Temporary resource names are not remembered across jobs or mutate requests.\nTo reference a resource created in a previous job or mutate request, use its\nactual resource name."
+  },
+  {
+   "id": "google-ads/api/docs/mutating/best-practices#2",
+   "title": "Mutate Best Practices — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/mutating/best-practices?hl=en",
+   "heading": "Mutate Best Practices — Google Ads API > Temporary resource names",
+   "text": "- For a single job or mutate request, each temporary resource name must use a\nunique negative number, even if they are from different resource types. If\na temporary ID is reused in a single job or mutate request, then an error\nis returned."
+  },
+  {
+   "id": "google-ads/api/docs/mutating/best-practices#3",
+   "title": "Mutate Best Practices — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/mutating/best-practices?hl=en",
+   "heading": "Mutate Best Practices — Google Ads API > Temporary resource names > Example",
+   "text": "Suppose you want to add a campaign, an ad group, and an ad in a single API\nrequest. You would create a structure for your request analogous to the\nfollowing:\n\n```javascript\nmutate_operations: [\n  {\n    campaign_operation: {\n      create: {\n        resource_name: \"customers/<YOUR_CUSTOMER_ID>/campaigns/-1\",\n        ...\n      }\n    }\n  },\n  {\n    ad_group_operation: {\n      create: {\n        resource_name: \"customers/<YOUR_CUSTOMER_ID>/adGroups/-2\",\n        campaign: \"customers/<YOUR_CUSTOMER_ID>/campaigns/-1\"\n        ...\n      }\n    }\n  },\n  {\n    ad_group_ad_operation: {\n      create: {\n        ad_group: \"customers/<YOUR_CUSTOMER_ID>/adGroups/-2\"\n        ...\n      }\n    }\n  },\n]\n```\n\nA new temporary ID is used for the ad group, since we can't reuse the -1 that\nwe used for the campaign. We also reference this ad group when creating an ad\ngroup ad. The ad group itself references the resource name we established for\nthe campaign in an earlier operation in the request, while resource_name in\nad_group_ad_operation is not necessary since no further operation is\nreferencing it."
+  },
+  {
+   "id": "google-ads/api/docs/mutating/best-practices#4",
+   "title": "Mutate Best Practices — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/mutating/best-practices?hl=en",
+   "heading": "Mutate Best Practices — Google Ads API > Group same-type operations",
+   "text": "When using GoogleAdsService.Mutate,\n it is important to group operations\ntogether according to their resource in the repeated operations array. This\nmutate method essentially serves as a way to automatically sequentially call\neach individual resource's own mutate method. To do this, it reads in operations\nuntil it finds one for a different type of resources, then batches all the\nsame-type operations together in one request.\n\nFor example, if you have 5 campaign operations, followed by 10 ad group\noperations in the repeated operations field in your Mutate call, then the\nsystem will perform two total calls in the backend, one to the\n CampaignService\nfor 5 operations, and the next to the AdGroupService\n for 10 operations.\nHowever, if you were to group them differently, performance could be a lot\nworse. If you only create 2 campaigns and 2 ad groups, but weave them so the\noperations are ordered as [campaign, ad group, campaign, ad group], then this\nwill result in four total calls in the backend. This will result in slower API\nperformance and in extreme cases can even lead to timeouts."
+  },
+  {
+   "id": "google-ads/api/docs/mutating/best-practices#5",
+   "title": "Mutate Best Practices — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/mutating/best-practices?hl=en",
+   "heading": "Mutate Best Practices — Google Ads API > Group same-type operations",
+   "text": "Key Point: Group all operations on the same type of resource together in your\nGoogleAdsService.Mutate calls."
+  },
+  {
+   "id": "google-ads/api/docs/mutating/best-practices#6",
+   "title": "Mutate Best Practices — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/mutating/best-practices?hl=en",
+   "heading": "Mutate Best Practices — Google Ads API > Retrieve mutable attributes from the response",
+   "text": "If you set the response_content_type of your mutate request to\nMUTABLE_RESOURCE,\nthe response will contain the values of all mutable fields for every object\ncreated or updated by the request. Use this feature to avoid an additional\nsearch or searchStream request after each mutate request.\n\nNote: The additional information returned when you request the\nMUTABLE_RESOURCE response type will increase the size of the response payload.\nOnly use this feature when your application needs the additional information\nreturned.\nIf you don't set the response_content_type, then the Google Ads API defaults to\nRESOURCE_NAME_ONLY and the response will only contain the resource name of\neach created or updated resource.\n\nHere's an example of retrieving a mutable resource from an API call:"
+  },
+  {
+   "id": "google-ads/api/docs/mutating/best-practices#7",
+   "title": "Mutate Best Practices — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/mutating/best-practices?hl=en",
+   "heading": "Mutate Best Practices — Google Ads API > Retrieve mutable attributes from the response > Java",
+   "text": "```java\nprivate String createExperimentArms(\n    GoogleAdsClient googleAdsClient, long customerId, long campaignId, String experiment) {\n  List<ExperimentArmOperation> operations = new ArrayList<>();\n  operations.add(\n      ExperimentArmOperation.newBuilder()\n          .setCreate(\n              // The \"control\" arm references an already-existing campaign.\n              ExperimentArm.newBuilder()\n                  .setControl(true)\n                  .addCampaigns(ResourceNames.campaign(customerId, campaignId))\n                  .setExperiment(experiment)\n                  .setName(\"control arm\")\n                  .setTrafficSplit(40)\n                  .build())\n          .build());\n  operations.add(\n      ExperimentArmOperation.newBuilder()\n          .setCreate(\n              // In standard campaign experiments, creating the treatment arm automatically\n              // generates a draft campaign that you can modify before starting the experiment.\n              ExperimentArm.newBuilder()\n                  .setControl(false)\n                  .setExperiment(experiment)\n                  .setName(\"experiment arm\")\n                  .setTrafficSplit(60)\n                  .build())\n          .build());\n\n  try (ExperimentArmServiceClient experimentArmServiceClient =\n      googleAdsClient.getLatestVersion().createExperimentArmServiceClient()) {\n    // Constructs the mutate request.\n    MutateExperimentArmsRequest mutateRequest =\n        MutateExperimentArmsRequest.newBuilder()\n            .setCustomerId(Long.toString(customerId))\n            .addAllOperations(operations)\n            // We want to fetch the draft campaign IDs from the treatment arm, so the easiest way\n            // to do that is to have the response return the newly created entities.\n            .setResponseContentType(ResponseContentType.MUTABLE_RESOURCE)\n            .build();\n\n    // Sends the mutate request.\n    MutateExperimentArmsResponse response =\n        experimentArmServiceClient.mutateExperimentArms(mutateRequest);\n\n    // Results always return in the order that you specify them in the request. Since we created\n    // the treatment arm last, it will be the last result.  If you don't remember which arm is the\n    // treatment arm, you can always filter the query in the next section with\n    // `experiment_arm.control = false`.\n    MutateExperimentArmResult controlArmResult = response.getResults(0);\n    MutateExperimentArmResult treatmentArmResult =\n        response.getResults(response.getResultsCount() - 1);\n\n    System.out.printf(\n        \"Created control arm with resource name '%s'%n\", controlArmResult.getResourceName());\n    System.out.printf(\n        \"Created treatment arm with resource name '%s'%n\", treatmentArmResult.getResourceName());\n\n    return treatmentArmResult.getExperimentArm().getInDesignCampaigns(0);\n  }\n}\nCreateSearchCustomExperiment.java\n```"
+  },
+  {
+   "id": "google-ads/api/docs/batch-processing/temporary-ids#0",
+   "title": "Using temporary IDs — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/batch-processing/temporary-ids?hl=en",
+   "heading": "Using temporary IDs — Google Ads API > Page Summary",
+   "text": "- BatchJobService supports temporary IDs by specifying a negative ID for a new resource's resource_name.\n\n- Temporary resource names can only be used after they are defined within the same job or mutate request and are not remembered across different jobs or requests.\n\n- Each temporary resource name in a single job or mutate request must use a unique negative number, regardless of resource type.\n\n- Referencing a new resource using its temporary ID in a later operation within the same request will automatically replace the temporary ID with the actual ID.\n\nA powerful feature of BatchJobService is that\nit supports the use of temporary IDs.\n\nYou can do this by specifying the new resource's resource_name to use a\nnegative ID. For example, suppose you create a campaign and specify its resource name\nas customers/<YOUR_CUSTOMER_ID>/campaigns/-1. When you create the\nad group in a later operation, you can then reference it by that resource name\nand the -1 you specified will be replaced by the actual ID of the created\ncampaign automatically.\n\nHere are some things to keep in mind when using temporary resource names:"
+  },
+  {
+   "id": "google-ads/api/docs/batch-processing/temporary-ids#1",
+   "title": "Using temporary IDs — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/batch-processing/temporary-ids?hl=en",
+   "heading": "Using temporary IDs — Google Ads API > Page Summary",
+   "text": "Here are some things to keep in mind when using temporary resource names:\n\n- A temporary resource name can only be used after it's been defined in a\nresource. In the following example, the ad group operation would have to\nappear after the campaign operation in the list of operations.\n\n- Temporary resource names are not remembered across jobs or mutate requests.\nTo reference a resource created in a previous job or mutate request, use its\nactual resource name.\n\n- For a single job or mutate request, each temporary resource name must use a\nunique negative number, even if they are from different resource types. If\na temporary ID is reused in a single job or mutate request, then an error\nis returned."
+  },
+  {
+   "id": "google-ads/api/docs/batch-processing/temporary-ids#2",
+   "title": "Using temporary IDs — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/batch-processing/temporary-ids?hl=en",
+   "heading": "Using temporary IDs — Google Ads API > Page Summary > Example",
+   "text": "Suppose you want to add a campaign, an ad group, and an ad in a single API\nrequest. You would create a structure for your request analogous to the\nfollowing:\n\n```javascript\nmutate_operations: [\n  {\n    campaign_operation: {\n      create: {\n        resource_name: \"customers/<YOUR_CUSTOMER_ID>/campaigns/-1\",\n        ...\n      }\n    }\n  },\n  {\n    ad_group_operation: {\n      create: {\n        resource_name: \"customers/<YOUR_CUSTOMER_ID>/adGroups/-2\",\n        campaign: \"customers/<YOUR_CUSTOMER_ID>/campaigns/-1\"\n        ...\n      }\n    }\n  },\n  {\n    ad_group_ad_operation: {\n      create: {\n        ad_group: \"customers/<YOUR_CUSTOMER_ID>/adGroups/-2\"\n        ...\n      }\n    }\n  },\n]\n```\n\nA new temporary ID is used for the ad group, since we can't reuse the -1 that\nwe used for the campaign. We also reference this ad group when creating an ad\ngroup ad. The ad group itself references the resource name we established for\nthe campaign in an earlier operation in the request, while resource_name in\nad_group_ad_operation is not necessary since no further operation is\nreferencing it."
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#0",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary",
+   "text": "- The Google Ads API enforces various limits on operations and request types, including daily API operations, mutate requests, and service-specific requests.\n\n- Daily API usage is based on the number of get requests and mutate operations per developer token, with limits varying by access level.\n\n- gRPC message size for responses is limited to 64 MB; exceeding this may require reducing selected fields, using streaming, or sending fewer operations in mutate requests.\n\n- Mutate requests are limited to 10,000 operations per request, in addition to counting against the daily operation quota.\n\n- Specific services like Planning, Conversion Upload, Billing, Account Budget, Keyword Planning, Audience Insights, Conversion Adjustment Upload, Customer User Access, and User Data have their own particular limits and considerations.\n\nThe Google Ads API enforces limits on API operations, such as the number of operations\nthat can be sent in a single mutate request. The following table summarizes some\nof the important limits and quotas to be aware of.\n\nRequest Type, Limitation, and Error Code\n\nOperations with Explorer Access level\n\n2,880 API operations per day against production accounts"
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#1",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary",
+   "text": "Request Type, Limitation, and Error Code\n\nOperations with Explorer Access level\n\n2,880 API operations per day against production accounts\n\n15,000 API operations per day against test accounts\n\nRESOURCE_EXHAUSTED\n\nOperations with Basic Access level\n\n15,000 API operations per day against both test and production accounts\n\nRESOURCE_EXHAUSTED\n\nMutate requests\n\n10,000 mutate operations per request\n\n100 action operations per request\n\nTOO_MANY_MUTATE_OPERATIONS\n\nTOO_MANY_ACTION_OPERATIONS\n\nPlanning Service requests\n\n1 QPS\n\nRESOURCE_EXHAUSTED\n\nConversion Upload Service requests\n\n2,000 conversions per request\n\nTOO_MANY_CONVERSIONS_IN_REQUEST\n\nBilling and Account Budget Service requests\n\n1 operation per mutate request\n\nTOO_MANY_MUTATE_OPERATIONS"
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#2",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > Daily API operation limits",
+   "text": "Daily API usage limits are based on the number of API operations made\nper developer token. API operations are the total sum of get requests and mutate\noperations. The limits for daily API operations depends on the access level of\nthe developer token. The Access Levels and Permissible Use guide\noutlines the specific API operation limits for each access level.\n\nRequests that violate these limits are rejected with the error:\nRESOURCE_EXHAUSTED."
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#3",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > gRPC limitations",
+   "text": "All of the Google Ads API client libraries use gRPC for generating\nrequests and responses. By default, gRPC has a message size of 4 MB, but our\nclient libraries set the max message size to\n64 MB in order to increase efficiency.\n\nResponses must not exceed this limit. For example, a search request that\nincludes a lot of fields may generate a response that exceeds 64 MB in size. To\navoid this limit, you can reduce the number of selected fields, or use\nstreaming. For mutates, send fewer operations per request.\n\nRequests that violate this limitation will not generate a\nGoogleAdsError, but will generate a 429 Resource Exhausted gRPC\nerror. Refer to the list of gRPC error codes and messages."
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#4",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > Mutate requests",
+   "text": "In addition to counting against the user's daily operation quota, a mutate\nrequest cannot contain more than 10,000 operations per request.\n\nRequests that violate this limitation are rejected with the error:\nTOO_MANY_MUTATE_OPERATIONS.\n\nAdditional limits and considerations for specific services and request types are\noutlined next."
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#5",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > Search requests",
+   "text": "A Search or SearchStream request counts as one operation against the user's\ndaily operation quota. One SearchStream request counts as one API operation\nirrespective of the number of batches."
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#6",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > Paginated requests",
+   "text": "Paginated requests (for example, requests that contain a valid\nnext_page_token) are not counted against a user's daily operation quota.\nHowever, pagination requests that contain an expired or invalid page token will\ngenerate an exception and will count against the daily operation quota.\n\nFor more details on pagination, refer to Paging through results."
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#7",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > Other types of requests",
+   "text": "A request that is not a Get, Mutate, Search, or SearchStream request\ncounts as one operation against the user's daily operation quota.\n\nA few examples of such requests include:\n\n- BatchJobService.ListMutateJobResults\n\n- ConversionUploadService.UploadCallConversions\n\n- ConversionUploadService.UploadClickConversions\n\n- OfflineUserDataJobService.AddOfflineUserDataJobOperations\n\n- OfflineUserDataJobService.CreateOfflineUserDataJob\n\n- UserDataService.UploadUserData"
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#8",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > Requests that return API exceptions",
+   "text": "Requests that are rejected with a GoogleAdsFailure still count\nagainst the user's daily operation quota.\n\nRequests that fail but don't return a GoogleAdsFailure, such as from\nan error at the network level, won't count against the user's daily operation\nquota since the requests would never reach the service. An example of this is a\nnetwork connectivity failure."
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#9",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > Keyword planning service",
+   "text": "Due to cost and complexity, the following Keyword Planning service methods are\nsubject to separate limits from other types of requests.\n\n- Limited to 1 request per second per CID:\n\n- KeywordPlanIdeaService.GenerateKeywordIdeas\n\n- KeywordPlanIdeaService.GenerateKeywordHistoricalMetrics\n\n- KeywordPlanIdeaService.GenerateKeywordForecastMetrics\n\nRequests that violate these limitations are rejected with the error:\n RESOURCE_EXHAUSTED.\n\n- 1 QPS is calculated as 60 requests per 60 seconds.\n\n- Limited to 2 requests per second per CID:\n\n- KeywordPlanIdeaService.GenerateAdGroupTheme\n\nKeep in mind these limits when creating a keyword plan.\n\nKeyword Plan Object\nMaximum Number\n\nKeywordPlan per account\n10,000\n\nKeywordPlanAdGroup per KeywordPlan\n200\n\nKeywordPlanAdGroupKeyword per KeywordPlan\n10,000\n\nKeywordPlanCampaignKeyword (negative keywords)\n1,000\n\nKeywordPlanCampaign per KeywordPlan\n1"
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#10",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > Audience insights service",
+   "text": "The following methods within AudienceInsightsService are\nsubject to specific quota limits.\n\n- Limited to approximately 200 requests per day per CID:\n\n- AudienceInsightsService.GenerateAudienceCompositionInsights\n\n- AudienceInsightsService.GenerateSuggestedTargetingInsights\n\n- Limited to 2 requests per second per developer token:\n\n- AudienceInsightsService.GenerateTargetingSuggestionMetrics"
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#11",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > Conversion upload service",
+   "text": "- Limited to 2,000 call or click conversions per request:\n\n- ConversionUploadService.UploadCallConversions\n\n- ConversionUploadService.UploadClickConversions\n\nRequests that violate these limits are rejected with the error:\n TOO_MANY_CONVERSIONS_IN_REQUEST."
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#12",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > Conversion adjustment upload service",
+   "text": "- Limited to 2,000 conversion adjustments per request:\n\n- ConversionAdjustmentUploadService.UploadConversionAdjustments\n\nRequests that violate these limits are rejected with the error:\n TOO_MANY_ADJUSTMENTS_IN_REQUEST."
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#13",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > Conversion value rules",
+   "text": "- Limited to 100,000 conversion value rules per account.\n\nRequests that violate this limit are rejected with the error\nResourceCountLimitExceededError.ACCOUNT_LIMIT.\n\nNote: Conversion value rules created using the Google Ads API are only active if they\nare part of a conversion value rule set that includes the\nConversionValueRule resource names in its\nconversion_value_rules field, and which has the\nConversionValueRuleSet status set to\nENABLED. Conversion value rules that are not part of any conversion value rule\nset are not visible in the Google Ads UI and can only be managed using the API.\nIf a ConversionValueRuleSet with an\nattachment_type of CUSTOMER already exists for the account, you must add\nany new conversion value rules to that set for them to become active. If no\nsuch conversion value rule set exists, you must create one and add your\nconversion value rules to it as described in\nCreate rule sets."
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#14",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > Billing and account budget services",
+   "text": "- Mutates can only be made against accounts configured for monthly invoicing.\n\nRequests that violate this limitation are rejected with the error:\nMUTATE_NOT_ALLOWED.\n\n- Only 1 operation is permitted for mutate requests.\n\nRequests that violate this limitation are rejected with the error:\nTOO_MANY_MUTATE_OPERATIONS.\n\n- You should wait at least 12 hours between budget order changes to the\nsame account. Making changes before 12 hours have elapsed may result in\nunrecoverable failures which can only be resolved by your Google Ads account\nrepresentative."
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#15",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > Invitations to customer accounts",
+   "text": "New users can be invited to existing client accounts with the\nCustomerUserAccessService. Because this feature sends invitation\nemails to other users, it has the potential to be misused, and thus there are\nlimitations to its behavior:\n\n- Users cannot receive more than one pending invitation for the same client\naccount. If a subsequent request is made to send an invitation to a user\nthat already has a pending invitation, this error is returned:\nACCESS_INVITATION_ERROR_EMAIL_ADDRESS_ALREADY_HAS_PENDING_INVITATION.\n\n- Client accounts cannot have more than 70 invitations pending at one time.\nIf a request is sent that causes this value to be exceeded, this error is\nreturned:\nACCESS_INVITATION_ERROR_PENDING_INVITATIONS_LIMIT_EXCEEDED."
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#16",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > User data",
+   "text": "User data is managed with the UserDataService and the\nOfflineUserDataJobService.\n\nEach UserData object in a create or remove operation pertains to\na single end-user. The user_identifiers field within a single\nUserData object is limited to a maximum of 20 identifiers. Exceeding this\nlimit in a single UserData object will result in an\nOfflineUserDataJobError.TOO_MANY_USER_IDENTIFIERS or\nUserDataError.TOO_MANY_USER_IDENTIFIERS error."
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#17",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > User data > Handle users with more than 20 identifiers",
+   "text": "If a single end-user possesses more than 20 identifiers that you need to upload,\nyou should distribute these identifiers across multiple UserData objects. To\nmake sure Google can associate all these identifiers with the same end-user,\neach UserData object for that user must include at least one common\nuser_identifier, such as the same hashed_email, hashed_phone_number, or\nthird_party_user_id. Google uses these shared identifiers to link and merge\nthe information from the separate UserData operations to the correct end-user\nprofile.\n\nIf you rely on PII such as hashed emails or phone numbers, ensure they are\nnormalized and hashed according to the Google Ads API requirements (SHA-256, lowercase, no\nwhitespace) to prevent linkage failures.\n\nFor example, if a user has 30 email addresses, you can send two UserData\nobjects.\n\n- UserData 1: {third_party_user_id: \"user123\", hashed_email: \"email1@...\", ... hashed_email: \"email19@...\"}\n\n- UserData 2: {third_party_user_id: \"user123\", hashed_email: \"email20@...\", ... hashed_email: \"email30@...\"}\n\nThe total limit for user_identifiers across all operations in a single\nOfflineUserDataJob remains 100,000."
+  },
+  {
+   "id": "google-ads/api/docs/best-practices/quotas#18",
+   "title": "API Limits and Quotas — Google Ads API",
+   "url": "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en",
+   "heading": "API Limits and Quotas — Google Ads API > Page Summary > Other types of limits",
+   "text": "A repeated field, such as a list of operations, that has too many items in a\nrequest can incur the error: REQUEST_SIZE_LIMIT_EXCEEDED. This same\nerror message can also be due to other issues.\n\nIf you encounter this limitation and are making requests that use a repeated\nfield, try reducing the number of items in the repeated field by deploying a\nlist of operations in a mutate request.\n\nWhen making a GAQL query, the maximum number of items within an IN\nclause is 20,000. If you exceed that limit, a\nFILTER_HAS_TOO_MANY_VALUES error is returned."
+  }
+ ]
+}

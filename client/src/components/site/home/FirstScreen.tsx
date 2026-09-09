@@ -129,20 +129,37 @@ export function FirstScreen() {
         as a sibling it claimed a second row and dragged the right-hand
         paragraph down with it.
       */}
-        {/* The mark sits in the line rather than above it, at the size the
-            header uses relative to its own wordmark, so the two read as the
-            same object at two scales. aria-hidden and empty alt: the words
-            beside it already say whose room this is, and a screen reader
-            announcing "Top-Rated Team logo" before them says it twice. */}
+        {/*
+          NOT A FLEX CONTAINER, and that was a real bug of mine. Making this
+          paragraph `flex` to seat the mark gave the text an anonymous flex item
+          with min-width:auto, which refuses to shrink below its max-content
+          width — so on a phone the line did not wrap, it pushed the whole page
+          sideways and clipped the standfirst with it. An inline image in normal
+          text flow wraps the way text does, which is what a paragraph should do.
+
+          THE MARK'S TOP EDGE IS LEVEL WITH THE TOP OF THE D, not above it, on
+          the owner's instruction. Same arithmetic the header carries: the image
+          sits on the baseline, so its top is its own height above it, and
+          translate-y = height − cap-height brings that top to the cap line.
+          Outfit's cap is about 0.70em and the mark is 1.1em, so 0.4em. The
+          header adds a further 0.11em of overhang because there he asked for
+          slightly above; here he asked for level, so there is no overhang term.
+
+          The size steps down on a phone so the line holds: 44 characters at the
+          19px body size is about 410px against roughly 342px of content width.
+          !important because .type-body in the frozen index.css is a plain class
+          selector and beats a Tailwind utility of equal specificity — the first
+          attempt at this shrank nothing at all, silently.
+        */}
         <p
-          className="type-body mt-[var(--s2)] flex items-baseline gap-[var(--s2)] font-display font-medium"
+          className="type-body mt-[var(--s2)] ps-[0.25rem] font-display font-medium [font-size:clamp(0.82rem,3.5vw,var(--type-body))!important]"
           data-testid="text-home-mechanism"
         >
           <img
             src="/assets/top-rated-logo.png"
             alt=""
             aria-hidden="true"
-            className="h-[1.1em] w-[1.1em] shrink-0 translate-y-[0.18em]"
+            className="me-[0.35em] inline-block h-[1.1em] w-[1.1em] translate-y-[0.4em]"
           />
           Digital Experts + any AI agents in one room.
         </p>
@@ -224,7 +241,20 @@ export function FirstScreen() {
           looking like body text. Stating the class on each one is the only
           version of this that cannot drift.
         */}
-        <div className="mt-[var(--s3)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]">
+        {/* ONE LINE, on a phone as well as a desktop, on the owner's
+            instruction. Three actions and the room control is itself two, so
+            the row is nowrap with a size that steps down with the viewport and
+            stops at the label size — the same clamp the mechanism line above
+            uses, and !important for the same reason: .type-meta lives in the
+            frozen index.css and beats a Tailwind utility of equal specificity.
+            The gap closes by a step on a phone and opens again from sm. Below
+            360 it wraps again rather than overflowing: at 320 the four actions
+            do not fit at any size worth reading, and a line that runs off the
+            edge is worse than a line that wraps. Measured at 320, 360, 375, 390
+            and 430 with a real mobile viewport, not with --window-size, which
+            does not apply the viewport meta and reports overflow that is not
+            there — it told me the LIVE site was broken too. */}
+        <div className="mt-[var(--s3)] flex flex-nowrap items-baseline gap-x-[var(--s2)] gap-y-[var(--s1)] whitespace-nowrap [font-size:clamp(0.66rem,3vw,var(--type-meta))!important] max-[359px]:flex-wrap sm:gap-x-[var(--s3)]">
           <RoomMenu className={ACTION_LOUD} testId="button-home-open-a-room" />
           <a
             href={BOOK_A_CALL_URL}
@@ -242,7 +272,7 @@ export function FirstScreen() {
             data-testid="button-home-leave-a-message"
             className={ACTION_QUIET}
           >
-            Leave a message
+            Message us
           </button>
         </div>
       </div>

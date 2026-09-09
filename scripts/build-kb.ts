@@ -703,8 +703,132 @@ const MERCHANT_CENTER: Corpus = {
   ],
 };
 
+/**
+ * Google Ads API — how to authenticate and mutate, not how to run a campaign.
+ *
+ * Deliberately not `google-ads` and not `ad-grants`. Those corpora are about
+ * bidding, structure and grant policy. An agent asked how to get a developer
+ * token, set `login-customer-id`, or write a campaign through a mutate must
+ * not answer out of a page about Target CPA. This file is only
+ * developers.google.com/google-ads/api, and only the pages that cover access
+ * levels and the developer token, OAuth2 and the login-customer-id header,
+ * the mutate services for campaign budget, campaign, ad group, keyword,
+ * responsive search ad and sitelink, temporary resource ids, batching, and
+ * the quota. `?hl=en` for the same reason as GOOGLE_ADS above.
+ *
+ * HTML, not markdown: Google still publishes no `.md` twin for these pages.
+ * `extractArticleBody` already knows `devsite-article-body` on this host.
+ */
+const GOOGLE_ADS_API: Corpus = {
+  namespace: "google-ads-api",
+  file: "kb.google-ads-api.json",
+  label: "Google Ads API — developers.google.com/google-ads/api (auth, mutate, quota)",
+  htmlPages: [
+    // Access levels and the developer token
+    { title: "Developer Token", url: "https://developers.google.com/google-ads/api/docs/get-started/dev-token?hl=en" },
+    { title: "Access Levels and Permissible Use", url: "https://developers.google.com/google-ads/api/docs/api-policy/access-levels?hl=en" },
+    // OAuth2 and the login-customer-id header
+    { title: "Use OAuth 2.0 to Access Google Ads API", url: "https://developers.google.com/google-ads/api/docs/oauth/overview?hl=en" },
+    { title: "API Call Structure", url: "https://developers.google.com/google-ads/api/docs/concepts/call-structure?hl=en" },
+    { title: "Authorization and HTTP Headers", url: "https://developers.google.com/google-ads/api/rest/auth?hl=en" },
+    // Mutate: budget, campaign, ad group, keyword, RSA, sitelink
+    { title: "Campaign Budgets Overview", url: "https://developers.google.com/google-ads/api/docs/campaigns/budgets/overview?hl=en" },
+    { title: "Create campaigns", url: "https://developers.google.com/google-ads/api/docs/campaigns/create-campaigns?hl=en" },
+    { title: "Create Ad Groups", url: "https://developers.google.com/google-ads/api/docs/campaigns/create-ad-groups?hl=en" },
+    { title: "Get started with Search campaigns", url: "https://developers.google.com/google-ads/api/docs/campaigns/search-campaigns/getting-started?hl=en" },
+    { title: "Criteria", url: "https://developers.google.com/google-ads/api/docs/targeting/criteria?hl=en" },
+    { title: "Create Ads", url: "https://developers.google.com/google-ads/api/docs/ads/create-ads?hl=en" },
+    { title: "Creating Responsive Search Ads", url: "https://developers.google.com/google-ads/api/docs/responsive-search-ads/create-responsive-search-ads?hl=en" },
+    { title: "Assets", url: "https://developers.google.com/google-ads/api/docs/assets/overview?hl=en" },
+    { title: "Asset creation and usage", url: "https://developers.google.com/google-ads/api/docs/assets/working-with-assets?hl=en" },
+    { title: "Add sitelinks", url: "https://developers.google.com/google-ads/api/samples/add-sitelinks?hl=en" },
+    // Temporary resource ids and batching
+    { title: "Mutating Resources", url: "https://developers.google.com/google-ads/api/docs/mutating/overview?hl=en" },
+    { title: "Bulk Mutates", url: "https://developers.google.com/google-ads/api/docs/mutating/bulk-mutate?hl=en" },
+    { title: "Mutate Best Practices", url: "https://developers.google.com/google-ads/api/docs/mutating/best-practices?hl=en" },
+    { title: "Using temporary IDs", url: "https://developers.google.com/google-ads/api/docs/batch-processing/temporary-ids?hl=en" },
+    // Quota
+    { title: "API Limits and Quotas", url: "https://developers.google.com/google-ads/api/docs/best-practices/quotas?hl=en" },
+  ],
+};
+
+/**
+ * Unipile API — accounts, hosted auth, chats, messages, calendars, events
+ * and webhooks. Markdown twins: every page on developer.unipile.com serves
+ * `<url>.md`, and the index is /llms.txt. The rendered HTML is JavaScript,
+ * so these are markdownPages, not htmlPages.
+ *
+ * Enumerated rather than indexed: parseIndex only expands
+ * developers.openai.com/ads paths, so an `index:` here would expand to
+ * nothing. The list is the four subjects this corpus is for, taken from
+ * the live llms.txt on 2026-09-09. LinkedIn search, posts, jobs and the
+ * n8n tutorials are absent on purpose — they are not what the next-wave
+ * agent is asked.
+ *
+ * Unipile's own index now lists a calendar webhook page. The programme
+ * brief said calendar was not among the webhook sources; the published
+ * docs as of this fetch do include one, so it is in the list.
+ */
+const UNIPILE_API: Corpus = {
+  namespace: "unipile-api",
+  file: "kb.unipile-api.json",
+  label: "Unipile API — developer.unipile.com (accounts, chats, calendars, webhooks)",
+  markdownPages: [
+    // How the API is called: DSN, X-API-KEY, the error envelope
+    { title: "Getting Started", url: "https://developer.unipile.com/docs/getting-started.md" },
+    { title: "API Usage", url: "https://developer.unipile.com/docs/api-usage.md" },
+    { title: "Provider Limits and Restrictions", url: "https://developer.unipile.com/docs/provider-limits-and-restrictions.md" },
+    // Accounts and hosted auth
+    { title: "Connection methods", url: "https://developer.unipile.com/docs/connect-accounts.md" },
+    { title: "Hosted auth wizard", url: "https://developer.unipile.com/docs/hosted-auth.md" },
+    { title: "Custom authentication", url: "https://developer.unipile.com/docs/native-auth.md" },
+    { title: "WhatsApp Guide", url: "https://developer.unipile.com/docs/whatsapp.md" },
+    { title: "List all accounts", url: "https://developer.unipile.com/reference/accountscontroller_listaccounts.md" },
+    { title: "Connect an account (native authentication)", url: "https://developer.unipile.com/reference/accountscontroller_createaccount.md" },
+    { title: "Retrieve an account", url: "https://developer.unipile.com/reference/accountscontroller_getaccountbyid.md" },
+    { title: "Reconnect an account", url: "https://developer.unipile.com/reference/accountscontroller_reconnectaccount.md" },
+    { title: "Delete an account", url: "https://developer.unipile.com/reference/accountscontroller_deleteaccount.md" },
+    { title: "Connect an account (hosted authentication)", url: "https://developer.unipile.com/reference/hostedcontroller_requestlink.md" },
+    // Chats and messages
+    { title: "Message object", url: "https://developer.unipile.com/docs/message-payload.md" },
+    { title: "Send Messages", url: "https://developer.unipile.com/docs/send-messages.md" },
+    { title: "Retrieving messages", url: "https://developer.unipile.com/docs/get-messages.md" },
+    { title: "Users overview", url: "https://developer.unipile.com/docs/users-overview.md" },
+    { title: "Retrieving users", url: "https://developer.unipile.com/docs/retrieving-users.md" },
+    { title: "List all chats", url: "https://developer.unipile.com/reference/chatscontroller_listallchats.md" },
+    { title: "Start a new chat", url: "https://developer.unipile.com/reference/chatscontroller_startnewchat.md" },
+    { title: "Retrieve a chat", url: "https://developer.unipile.com/reference/chatscontroller_getchat.md" },
+    { title: "List all messages from a chat", url: "https://developer.unipile.com/reference/chatscontroller_listchatmessages.md" },
+    { title: "Send a message in a chat", url: "https://developer.unipile.com/reference/chatscontroller_sendmessageinchat.md" },
+    { title: "List all attendees from a chat", url: "https://developer.unipile.com/reference/chatscontroller_listattendees.md" },
+    { title: "Retrieve a message", url: "https://developer.unipile.com/reference/messagescontroller_getmessage.md" },
+    { title: "List all messages", url: "https://developer.unipile.com/reference/messagescontroller_listallmessages.md" },
+    { title: "Retrieve an attendee", url: "https://developer.unipile.com/reference/chatattendeescontroller_getattendeebyid.md" },
+    { title: "Retrieve a profile", url: "https://developer.unipile.com/reference/userscontroller_getprofilebyidentifier.md" },
+    // Calendars and events
+    { title: "Calendars & Events", url: "https://developer.unipile.com/docs/calendars-and-events.md" },
+    { title: "Google OAuth", url: "https://developer.unipile.com/docs/google-oauth.md" },
+    { title: "Microsoft OAuth", url: "https://developer.unipile.com/docs/microsoft-oauth.md" },
+    { title: "List all calendars", url: "https://developer.unipile.com/reference/calendarscontroller_listcalendars.md" },
+    { title: "Retrieve a calendar", url: "https://developer.unipile.com/reference/calendarscontroller_getcalendar.md" },
+    { title: "Retrieve all events from a calendar", url: "https://developer.unipile.com/reference/calendarscontroller_listcalendareventsbycalendar.md" },
+    { title: "Create an event", url: "https://developer.unipile.com/reference/calendarscontroller_createcalendarevent.md" },
+    { title: "Retrieve an event", url: "https://developer.unipile.com/reference/calendarscontroller_getcalendarevent.md" },
+    { title: "Edit an event", url: "https://developer.unipile.com/reference/calendarscontroller_editcalendarevent.md" },
+    { title: "Delete an event", url: "https://developer.unipile.com/reference/calendarscontroller_deletecalendarevent.md" },
+    // Webhooks
+    { title: "Webhooks overview", url: "https://developer.unipile.com/docs/webhooks-2.md" },
+    { title: "Account status updates", url: "https://developer.unipile.com/docs/account-lifecycle.md" },
+    { title: "New messages", url: "https://developer.unipile.com/docs/new-messages-webhook.md" },
+    { title: "Calendar webhook", url: "https://developer.unipile.com/docs/calendar-webhook.md" },
+    { title: "List all webhooks", url: "https://developer.unipile.com/reference/webhookscontroller_listwebhooks.md" },
+    { title: "Create a webhook", url: "https://developer.unipile.com/reference/webhookscontroller_createwebhook.md" },
+    { title: "Delete a webhook", url: "https://developer.unipile.com/reference/webhookscontroller_deletewebhook.md" },
+  ],
+};
+
 /** Exported for scripts/refresh-corpora.ts, which re-reads every one of them. */
-export const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS, LINKEDIN_AUTOMATION, AI_BUILDS, ADGRANT_AI, LEGAL, META_ADS, MERCHANT_CENTER];
+export const CORPORA: Corpus[] = [CHATGPT_ADS, GOOGLE_ADS, AD_GRANTS, LINKEDIN_ADS, LINKEDIN_AUTOMATION, AI_BUILDS, ADGRANT_AI, LEGAL, META_ADS, MERCHANT_CENTER, GOOGLE_ADS_API, UNIPILE_API];
 /* -------------------------------- chunking -------------------------------- */
 
 const TARGET_CHARS = 1200;

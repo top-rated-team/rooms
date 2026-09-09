@@ -73,7 +73,7 @@ export function TalkToUs({ className = "" }: TalkToUsProps) {
 
           <p className={ACTION_LINE}>
             <button type="button" onClick={() => setMessageOpen(true)} data-testid="button-leave-a-message" className={LINK}>
-              Leave a message
+              Message us
             </button>
             <span className={`ml-[var(--s2)] ${META}`}>Goes to one inbox, answered by a person</span>
           </p>

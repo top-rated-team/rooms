@@ -291,7 +291,7 @@ function DoorPage({ door }: { door: DoorDef }) {
           <div className="mt-[var(--s4)] grid items-end gap-[var(--s4)] pb-[var(--s6)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)]">
             {/*
               THE ACTIONS MIRROR THE HOME PAGE: the room first, then Book a call,
-              then Leave a message. Ask AI agent stays, quieter, because this
+              then Message us. Ask AI agent stays, quieter, because this
               page is still the place you ask. The control is the fused one —
               return to a room this browser remembers, or start a new one stamped
               with this door.
@@ -330,7 +330,7 @@ function DoorPage({ door }: { door: DoorDef }) {
                     className={ACTION_QUIET}
                     onClick={() => setMessageOpen(true)}
                   >
-                    Leave a message
+                    Message us
                   </button>
                 </div>
               ) : null}
