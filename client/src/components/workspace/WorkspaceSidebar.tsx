@@ -4,6 +4,7 @@ import type { Channel, Member } from "@shared/schema";
 import type { ConnectionStatus } from "@/hooks/use-workspace";
 import { cn } from "@/lib/utils";
 import { ACTION_QUIET, CHROME, FOCUS, LABEL, LINK, META } from "@/components/workspace/room-style";
+import { badgeForKey, hoverForKey } from "@/components/workspace/MemberRail";
 
 /* ---------------------------------------------------------------------------
  * The rail of channels, on the sunk ground the front page uses for its panel
@@ -37,14 +38,19 @@ interface RowProps {
   unread: number;
   onClick: () => void;
   testId: string;
+  /* What the member rail says on hover, on the row a phone user is likelier to
+     reach. A native title, for the reason MemberRail gives: no state, no portal
+     and no decision about touch. */
+  title?: string;
   children: ReactNode;
 }
 
-function Row({ active, unread, onClick, testId, children }: RowProps) {
+function Row({ active, unread, onClick, testId, title, children }: RowProps) {
   return (
     <button
       type="button"
       onClick={onClick}
+      title={title}
       data-testid={testId}
       className={cn(
         CHROME,
@@ -115,7 +121,13 @@ export function WorkspaceSidebar({
     const extras = members
       .filter((m) => m.kind === "expert" && !covered.has(m.memberKey))
       .map((m) => ({ channel: null as Channel | null, memberKey: m.memberKey }));
-    return [...rows, ...extras];
+    /* Whoever signs the room's contract is the first name in this list. It
+       holds no visitor — the extras are experts — so the owner is the top row
+       rather than the second one the member rail prints. The rest keep the
+       order their channels arrived in. */
+    const all = [...rows, ...extras];
+    const owner = (row: { memberKey: string }) => badgeForKey(row.memberKey, "expert") === "Owner";
+    return [...all.filter(owner), ...all.filter((row) => !owner(row))];
   }, [dmChannels, members]);
 
   /* The agents in this room, and — behind one line — the rest of the roster. */
@@ -179,7 +191,7 @@ export function WorkspaceSidebar({
           Add a channel
         </button>
 
-        <GroupLabel>People</GroupLabel>
+        <GroupLabel>Experts</GroupLabel>
         {dmRows.map(({ channel, memberKey }) => {
           const member = memberByKey.get(memberKey);
           const expert = EXPERTS.find((e) => e.memberKey === memberKey);
@@ -191,6 +203,7 @@ export function WorkspaceSidebar({
               unread={channel ? (unread[channel.id] ?? 0) : 0}
               onClick={() => (channel ? onSelectChannel(channel.id) : onOpenDm(memberKey))}
               testId={`link-dm-${memberKey}`}
+              title={hoverForKey(memberKey, "expert")}
             >
               {name}
             </Row>

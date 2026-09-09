@@ -371,12 +371,16 @@ interface MemberRowProps {
  * in this project with a standing instruction not to complicate it. The same
  * text is on the person's DM, where a phone can read it.
  */
-function hoverFor(member: Member): string | undefined {
-  if (member.kind === "agent") return AGENT_BY_ID[member.memberKey.replace(/^agent:/, "")]?.title;
-  const expert = EXPERT_BY_KEY[member.memberKey];
+export function hoverForKey(memberKey: string, kind: MemberKind): string | undefined {
+  if (kind === "agent") return AGENT_BY_ID[memberKey.replace(/^agent:/, "")]?.title;
+  const expert = EXPERT_BY_KEY[memberKey];
   if (!expert) return undefined;
   const specialties = expert.specialties?.length ? ` — ${expert.specialties.join(", ")}` : "";
   return `${expert.title}${specialties}`;
+}
+
+function hoverFor(member: Member): string | undefined {
+  return hoverForKey(member.memberKey, member.kind);
 }
 
 function MemberRow({ member, detail, viewer, company, onOpenDm, onRevoke }: MemberRowProps) {
