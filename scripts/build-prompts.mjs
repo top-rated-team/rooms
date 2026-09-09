@@ -38,7 +38,7 @@ const WAVES = [
    * reason alone.
    */
   { n: 1, keys: ["unipile-core"], alone: true, landed: true },
-  { n: 2, keys: ["unipile-messaging", "adgrant-front"] },
+  { n: 2, keys: ["unipile-messaging", "adgrant-front"], landed: true },
   { n: 3, keys: ["booking-server", "booking-dialog"] },
   /* Alone because the manifest marks it runAlone: it writes into the room, the
      storage layer and the identity layer, and everything reads those. */
