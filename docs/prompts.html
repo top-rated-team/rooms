@@ -45,7 +45,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">3 still to run, 5 landed. Copy one, paste
+  <p class="lede">9 still to run. Copy one, paste
   it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -60,18 +60,6 @@
     <li>Run the same two commands again. If they pass, commit. Then the next wave.</li>
   </ol>
 
-    <section class="wave" data-landed>
-      <h2>Wave 1 — landed</h2>
-      <p class="waveNote">unipile-core — reported, reviewed and committed. Nothing to run here.</p>
-    </section>
-    <section class="wave" data-landed>
-      <h2>Wave 2 — landed</h2>
-      <p class="waveNote">unipile-messaging, adgrant-front — reported, reviewed and committed. Nothing to run here.</p>
-    </section>
-    <section class="wave" data-landed>
-      <h2>Wave 3 — landed</h2>
-      <p class="waveNote">booking-server, booking-dialog — reported, reviewed and committed. Nothing to run here.</p>
-    </section>
     <section class="wave">
       <h2>Wave 4 — this one runs alone</h2>
       <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
@@ -84,7 +72,12 @@
         <pre id="p-room-identity">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "room-identity".
 
 Read these first, before you write anything, in this order:
-  docs/specs/unipile-rooms-and-booking.md — this programme's brief. Every Unipile
+  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
+    content API and what was captured through it; the six statements in that material
+    that are wrong against Google's current documentation, each with the page that
+    contradicts it; why "generate and upload" is two products with a Google approval
+    between them; and the answer to the owner's question about per-agent limits.
+  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
     endpoint it touches, transcribed with the URL it came from. Four decisions already
     made, with the reasoning, so you do not spend your wave relitigating them. The
     request and response shapes two parcels build to in parallel. And the rule the
@@ -212,7 +205,12 @@ WHEN YOU FINISH, report exactly this:
         <pre id="p-login-create-room">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "login-create-room".
 
 Read these first, before you write anything, in this order:
-  docs/specs/unipile-rooms-and-booking.md — this programme's brief. Every Unipile
+  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
+    content API and what was captured through it; the six statements in that material
+    that are wrong against Google's current documentation, each with the page that
+    contradicts it; why "generate and upload" is two products with a Google approval
+    between them; and the answer to the owner's question about per-agent limits.
+  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
     endpoint it touches, transcribed with the URL it came from. Four decisions already
     made, with the reasoning, so you do not spend your wave relitigating them. The
     request and response shapes two parcels build to in parallel. And the rule the
@@ -311,7 +309,12 @@ WHEN YOU FINISH, report exactly this:
         <pre id="p-chatwoot-inbox">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "chatwoot-inbox".
 
 Read these first, before you write anything, in this order:
-  docs/specs/unipile-rooms-and-booking.md — this programme's brief. Every Unipile
+  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
+    content API and what was captured through it; the six statements in that material
+    that are wrong against Google's current documentation, each with the page that
+    contradicts it; why "generate and upload" is two products with a Google approval
+    between them; and the answer to the owner's question about per-agent limits.
+  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
     endpoint it touches, transcribed with the URL it came from. Four decisions already
     made, with the reasoning, so you do not spend your wave relitigating them. The
     request and response shapes two parcels build to in parallel. And the rule the
@@ -376,6 +379,619 @@ WHY IT EXISTS, so you can judge the edge cases yourself:
   that as deliberate, so nothing on the site claims a bridge the room does not offer. What is
   actually missing is two things: the panel is not mounted, and the design asks the owner to
   paste one conversation id per room, which does not scale past him doing it by hand.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+    </section>
+    <section class="wave">
+      <h2>Wave 7</h2>
+      <p class="waveNote">Start these 3 together. When all 3 have reported, run the two commands, then go to the next wave.</p>
+      <article class="parcel">
+        <header>
+          <h3>adgrant-content</h3>
+          <button class="copy" data-target="p-adgrant-content">Copy this prompt</button>
+        </header>
+        <p class="what">adgrant.ai holds 23 written pages and 12 starter templates behind an unauthenticated JSON API, and a rebuilt site needs that material in this repository rather than fetched from Google App Engine at runtime.</p>
+        <pre id="p-adgrant-content">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "adgrant-content".
+
+Read these first, before you write anything, in this order:
+  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
+    content API and what was captured through it; the six statements in that material
+    that are wrong against Google's current documentation, each with the page that
+    contradicts it; why "generate and upload" is two products with a Google approval
+    between them; and the answer to the owner's question about per-agent limits.
+  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
+    endpoint it touches, transcribed with the URL it came from. Four decisions already
+    made, with the reasoning, so you do not spend your wave relitigating them. The
+    request and response shapes two parcels build to in parallel. And the rule the
+    owner set: every message is checked for who it is from, who it is to and which
+    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
+    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
+    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
+    A paraphrase would not, and you would find out after building on all three.
+  README.md, private/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  scripts/build-adgrant.ts
+  data/adgrant
+  shared/adgrant.ts
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  package.json
+      - one build script line
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  A build script and a generated module, in the shape scripts/build-blog.ts and
+  scripts/build-cases.ts already use - read both before writing a line, and match them: a script
+  reads sources into data/, writes shared/&lt;thing&gt;.ts, and the generated file carries the
+  do-not-edit banner. THE FETCH. GET
+  https://adgrant.ai/api/content/pages?category={glossary|case-studies|tricks}&amp;pageSize=100 for
+  the index, then GET https://adgrant.ai/api/content/page/{category}/{slug} for each body, and
+  GET https://adgrant.ai/api/templates plus /api/templates/stats. No auth. Keep per page: slug,
+  category, title, topic, niche, excerpt, bodyMarkdown, metaTitle, metaDescription, keywords,
+  heroImage, heroImageAlt, relatedLinks, publishedAt. Write each page to
+  data/adgrant/&lt;category&gt;/&lt;slug&gt;.md with that as frontmatter and the markdown as the body, so a
+  correction is a diff a person can read and review. The script is re-runnable and must not
+  clobber a local correction silently: if a fetched body differs from the one on disk, say so
+  and leave the disk copy, unless run with a flag that says to take theirs. THE SIX CORRECTIONS,
+  each verified against Google's live pages and each listed in the brief section 1 with the URL
+  - apply every one, in the markdown, with a note in the frontmatter saying what was corrected
+  and against which page. (1) The 5% CTR rule deactivates after TWO CONSECUTIVE months, not one.
+  (2) $10,000 / $2 / 30 days is 166.7 clicks a day, not 329 - 329 is the dollar budget - and the
+  dependent impressions figure is wrong with it; two pages in this corpus currently contradict
+  each other by a factor of two. (3) The two-ads-per-ad-group rule stopped applying to grantees
+  on 30 June 2022; two ad GROUPS per campaign is what is still required. (4) The remarketing
+  list minimum was never 500. (5) Ad Rank has no published formula and Google does not name
+  Quality Score in it. (6) The Ad Grant website policies link is dead; the live page is
+  support.google.com/nonprofits/answer/1657899. ALSO: the whole bypass-the-$2-cap framing
+  assumes manual CPC is the default, and it has not been for accounts created since 22 April
+  2019 - rewrite the framing, do not delete the fact. AND STRIP EVERY UNSOURCED PERCENTAGE: 600+
+  accounts I've managed, 30-50% of incremental clicks, 15-25% higher CTR, 15-40% conversion
+  lift, and any sibling. They repeat verbatim across all fifteen generated pages and none is
+  sourced. There is a real number to use instead and the script must expose it:
+  /api/templates/stats returns 4,539 accounts processed, 16,575 campaigns, 3,142,469 keywords,
+  with medians. Put the stats in the generated module as data. Do not invent a replacement
+  figure for anything you delete - a sentence with no number is fine. Tests: the generated
+  module parses, every page has a slug and a body, no page contains any of the stripped phrases,
+  and the six corrections are each asserted by a test that fails if the wrong wording comes back
+  on a refetch.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  adgrant.ai holds 23 written pages and 12 starter templates behind an unauthenticated JSON API,
+  and a rebuilt site needs that material in this repository rather than fetched from Google App
+  Engine at runtime. It also needs it CORRECTED: the pages are one machine-generated batch and
+  six statements in them are wrong against Google's current documentation. Carrying them into a
+  better typeface without fixing them would mean more people believing them.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+      <article class="parcel">
+        <header>
+          <h3>dev-agents-kb</h3>
+          <button class="copy" data-target="p-dev-agents-kb">Copy this prompt</button>
+        </header>
+        <p class="what">Two agents in the next wave answer about the Google Ads API and about Unipile, and an agent with useKb set and nothing to read retrieves nothing at all - silently.</p>
+        <pre id="p-dev-agents-kb">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "dev-agents-kb".
+
+Read these first, before you write anything, in this order:
+  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
+    content API and what was captured through it; the six statements in that material
+    that are wrong against Google's current documentation, each with the page that
+    contradicts it; why "generate and upload" is two products with a Google approval
+    between them; and the answer to the owner's question about per-agent limits.
+  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
+    endpoint it touches, transcribed with the URL it came from. Four decisions already
+    made, with the reasoning, so you do not spend your wave relitigating them. The
+    request and response shapes two parcels build to in parallel. And the rule the
+    owner set: every message is checked for who it is from, who it is to and which
+    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
+    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
+    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
+    A paraphrase would not, and you would find out after building on all three.
+  README.md, private/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  data/kb/kb.google-ads-api.json
+  data/kb/kb.unipile-api.json
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  scripts/build-kb.ts
+      - one appended Corpus const for the Google Ads API
+      - one appended Corpus const for Unipile
+      - both names on the CORPORA line
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  Two corpora, built the way every other corpus in data/kb is built. Read scripts/build-kb.ts
+  end to end first: how a Corpus is declared, what the fetch and chunking do, what the guards
+  check. THE SEAM IS WIDENED FOR THIS PARCEL AND ONLY THIS ONE. The stated exception admits one
+  appended Corpus const; this parcel appends two, plus both names on the CORPORA line. That is
+  the same merge shape - a contiguous append at the end of a list - and no other parcel in this
+  wave touches that file. Do not take it as licence to restructure anything in it. NAMESPACES:
+  google-ads-api and unipile-api. Note they are deliberately NOT google-ads and not the existing
+  ad-grants: those are corpora about running campaigns, and an agent asked how to authenticate
+  against the API must not answer out of a page about bidding. SOURCES. For Google Ads:
+  developers.google.com/google-ads/api - the access levels and developer token pages, OAuth2 and
+  the login-customer-id header, the mutate services for campaign budget, campaign, ad group,
+  keyword, responsive search ad and sitelink, temporary resource ids, batching, and the quota
+  page. For Unipile: developer.unipile.com - and note it serves a markdown twin at &lt;url&gt;.md with
+  an index at /llms.txt, which is the reliable way to read it because the rendered pages are
+  JavaScript. Cover accounts and hosted auth, chats and messages, calendars and events, and
+  webhooks. Every chunk must carry its source URL, because an agent that cites a page a reader
+  can open is the whole point and there is a test in this repository that enforces it per
+  corpus. Run the existing corpus guards and satisfy them: no chunk shorter than the minimum
+  letter count, no chunk from one corpus carrying another's host, entities decoded. Report the
+  chunk count per namespace in your handoff, and report honestly if a section could not be
+  fetched rather than shipping a corpus with a hole in it.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  Two agents in the next wave answer about the Google Ads API and about Unipile, and an agent
+  with useKb set and nothing to read retrieves nothing at all - silently. shared/roster.ts says
+  it outright: an agent answering out of the wrong documentation would be worse than one that
+  admits it has nothing. So the corpora exist first, in their own wave, and the agents that read
+  them come after.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+      <article class="parcel">
+        <header>
+          <h3>booking-picker</h3>
+          <button class="copy" data-target="p-booking-picker">Copy this prompt</button>
+        </header>
+        <p class="what">The booking popup works and the owner does not like how it asks for a date.</p>
+        <pre id="p-booking-picker">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "booking-picker".
+
+Read these first, before you write anything, in this order:
+  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
+    content API and what was captured through it; the six statements in that material
+    that are wrong against Google's current documentation, each with the page that
+    contradicts it; why "generate and upload" is two products with a Google approval
+    between them; and the answer to the owner's question about per-agent limits.
+  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
+    endpoint it touches, transcribed with the URL it came from. Four decisions already
+    made, with the reasoning, so you do not spend your wave relitigating them. The
+    request and response shapes two parcels build to in parallel. And the rule the
+    owner set: every message is checked for who it is from, who it is to and which
+    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
+    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
+    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
+    A paraphrase would not, and you would find out after building on all three.
+  README.md, private/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  client/src/components/site/BookingDialog.tsx
+
+SHARED FILES: none. You do not edit any file outside the list above.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  A two-pane picker. On a wide screen: a month grid of days on the left, and the times for the
+  selected day on the right. On a phone the same two panes stack, grid above times, because a
+  7-column grid and a column of times side by side at 375px is neither. Nothing else about the
+  popup changes - not the email field, not the WhatsApp deep link, not the polling, not the 409
+  redraw, not the expired-code retry. FOUR THINGS THAT ARE ALREADY RIGHT AND MUST SURVIVE. (1) A
+  day with nothing free is PRESENT with an empty array, at four layers, and each layer is
+  pinned: server/booking/slots.ts:261 pushes the day outside the weekend guard and says why at
+  :11-12; server/booking/slots.test.ts:238-264 asserts fourteen days come back and that a
+  Saturday's slots deep-equal []; client/src/lib/booking.ts:169-185 copies it through, pinned at
+  client/src/lib/booking.test.ts:114-120; and the dialog prints a sentence. Keep the sentence. A
+  grid that silently omits a day is a worse answer than one that says nothing is free. (2) The
+  timezone is stated beside the times, because a visitor in another country booking a 14:00
+  needs to know whose 14:00 it is. (3) firstDayWithASlot falls back to days[0] when EVERY day is
+  empty, which leaves a date selected, no time, and the submit disabled - correct but silent.
+  Say something in that case: nothing free in this window. (4) The 409 response carries fresh
+  availability and redraws. A GRID HAS CONVENTIONS AND THIS ONE MUST FOLLOW THEM: arrow keys
+  move by day and wrap across rows, PageUp and PageDown move by month, Home and End go to the
+  start and end of a row, one tab stop for the whole grid with a roving tabindex, and the
+  selected day announced in a live region along with how many times are free in it. Give the
+  grid role=grid and the day cells role=gridcell, and mark a day with no free time aria-disabled
+  rather than only grey. DO NOT LET IT GO BACKWARDS PAST TODAY: server/booking/slots.ts:70-75
+  validates a date's shape and realness and does NOT reject a past one, so a previous-month
+  request is answered 200 with every day empty, which reads as a broken picker. Disable
+  back-navigation client-side. And DERIVE THE GRID FROM THE RESPONSE, not the browser clock -
+  from days[0].date and the response's own timezone - or a visitor in another zone sees a day
+  greyed for no visible reason.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  The booking popup works and the owner does not like how it asks for a date. It is a vertical
+  list of days, each with its own row of times folded underneath, so choosing a Thursday
+  afternoon means scrolling past Monday, Tuesday and Wednesday. He wants it horizontal: pick the
+  day of a month in one place, pick the time beside it or under it. This parcel changes only
+  that, and only in the one file.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+    </section>
+    <section class="wave">
+      <h2>Wave 8</h2>
+      <p class="waveNote">Start these 2 together. When all 2 have reported, run the two commands, then go to the next wave.</p>
+      <article class="parcel">
+        <header>
+          <h3>adgrant-generate</h3>
+          <button class="copy" data-target="p-adgrant-generate">Copy this prompt</button>
+        </header>
+        <p class="what">The owner wants the AdGrant.AI home page to stop being a form and start being an agent that asks what is needed and then generates.</p>
+        <pre id="p-adgrant-generate">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "adgrant-generate".
+
+Read these first, before you write anything, in this order:
+  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
+    content API and what was captured through it; the six statements in that material
+    that are wrong against Google's current documentation, each with the page that
+    contradicts it; why "generate and upload" is two products with a Google approval
+    between them; and the answer to the owner's question about per-agent limits.
+  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
+    endpoint it touches, transcribed with the URL it came from. Four decisions already
+    made, with the reasoning, so you do not spend your wave relitigating them. The
+    request and response shapes two parcels build to in parallel. And the rule the
+    owner set: every message is checked for who it is from, who it is to and which
+    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
+    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
+    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
+    A paraphrase would not, and you would find out after building on all three.
+  README.md, private/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  server/adgrant/generate.ts
+  server/adgrant/policy.ts
+  server/adgrant/quota.ts
+  server/adgrant/README.md
+  shared/schema-adgrant.ts
+  server/adgrant/generate.test.ts
+  server/adgrant/policy.test.ts
+  server/adgrant/quota.test.ts
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  server/routes.ts
+      - one POST route that generates a structure
+      - one GET route for the remaining generations
+  shared/schema.ts
+      - one re-export of shared/schema-adgrant.ts
+  shared/api.ts
+      - the generation request and response types
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  Generate an Ad Grant account structure from a nonprofit's website, check it against Google's
+  rules, and count it. THE POLICY GATE IS THE MOST VALUABLE PART OF THIS PARCEL, so build it
+  first and test it hardest: pure functions over the generated object, no network, every input
+  listed in the brief section 2. It must reject a structure that has a single-word keyword
+  outside Google's exception list, fewer than two ad groups in a campaign, fewer than two
+  sitelinks, no geo-target, a destination that is not https on an authorised domain, a daily
+  budget over $329, or manual CPC where Smart bidding is required. A generator that produces a
+  structure Google would suspend is worse than no generator, and the nonprofit carries that
+  risk, not us. Each rule is its own named exported function with its own test and its own
+  citation in a comment. THE QUOTA: three generations, durable, per identified person - and
+  durable means a table, so shared/schema-adgrant.ts holds it and shared/schema.ts re-exports it
+  in ONE line, because a table is fifteen lines and the seam allows three. Count a generation
+  when the structure is produced, not when it is requested. Say the remaining count on every
+  response; a limit a visitor discovers by hitting it is a bad limit. AND SAY WHY THREE, because
+  it is not arbitrary: the Google Ads API allows 15,000 operations a day across every client of
+  a developer token, and a generation is roughly 150 of them. IDENTITY: a generation requires a
+  bound room, through the identity layer that already exists - LinkedIn OIDC or the WhatsApp
+  click-to-chat proof, both in server/identity.ts. Do not build a third way in. Read the brief's
+  other file, docs/specs/unipile-rooms-and-booking.md section 0.1, before touching identity.
+  WHAT YOU MUST NOT BUILD: no Google Ads API client, no OAuth, no customer id, no upload. There
+  is no google-ads dependency in this repository and this parcel does not add one. The structure
+  is produced, shown, and exportable as CSV for Google Ads Editor, which is a real thing a
+  nonprofit can use today without giving us access to anything. If a sentence anywhere in your
+  work implies the structure was uploaded, change the sentence.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  The owner wants the AdGrant.AI home page to stop being a form and start being an agent that
+  asks what is needed and then generates. That sentence contains two products with a
+  Google-shaped approval in the middle, and the brief section 2 separates them. This parcel
+  builds the half that needs no approval from anybody: generate a complete, policy-checked
+  account structure and show it. Writing it into a live grant account needs a developer token at
+  Basic Access, an OAuth client, and a manager link a human at the nonprofit has to accept in
+  the Google Ads UI - which no page can promise inside one session.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+      <article class="parcel">
+        <header>
+          <h3>dev-agents</h3>
+          <button class="copy" data-target="p-dev-agents">Copy this prompt</button>
+        </header>
+        <p class="what">The owner wants two agents that help a client build their own agents against Google Ads and against LinkedIn, present in every Google Ads, paid ads and dev room.</p>
+        <pre id="p-dev-agents">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "dev-agents".
+
+Read these first, before you write anything, in this order:
+  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
+    content API and what was captured through it; the six statements in that material
+    that are wrong against Google's current documentation, each with the page that
+    contradicts it; why "generate and upload" is two products with a Google approval
+    between them; and the answer to the owner's question about per-agent limits.
+  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
+    endpoint it touches, transcribed with the URL it came from. Four decisions already
+    made, with the reasoning, so you do not spend your wave relitigating them. The
+    request and response shapes two parcels build to in parallel. And the rule the
+    owner set: every message is checked for who it is from, who it is to and which
+    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
+    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
+    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
+    A paraphrase would not, and you would find out after building on all three.
+  README.md, private/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  server/spend.ts
+  server/spend.test.ts
+  shared/playbook.ts
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  shared/roster.ts
+      - one appended agent entry for Google Ads Dev
+      - one appended agent entry for LinkedIn Dev
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  Two agents, in the right rooms, with a ceiling of their own. THE AGENTS: google-ads-dev,
+  grounded in the google-ads-api namespace, and linkedin-dev, grounded in unipile-api - both
+  corpora built in the previous wave. Two appended entries at the end of AGENTS, which widens
+  the stated one-entry exception for this parcel only; the shape is still one contiguous append
+  and nothing else in shared/roster.ts moves. WHAT THEY ARE FOR, and write the prompts to it:
+  design and review, not build. They read the API documentation they are grounded in and tell a
+  client what is possible, what it costs in approvals, what the quota is, what shape the code
+  takes, and what is wrong with the code they already have. A room with a five-dollar monthly
+  budget cannot pay for an agent to write a production integration, and a prompt that implies
+  otherwise sells something the budget cannot deliver. LINKEDIN DEV IS WHITE-LABEL: it never
+  names Unipile to a visitor. We are the developer; which vendor sits underneath is ours, and
+  the agent talks about what can be built, not about whose API does it. Google Ads Dev may name
+  Google, because the client's own account and Google's own documentation are the subject. THE
+  ROOMS: read how an agent reaches a room before changing anything - an agent in AGENTS is
+  reachable in every room already, and being SEEDED into one is a different thing that costs a
+  channel and a member row per room. Decide which of the two senses the owner's every Google
+  Ads, paid ads and dev room means, say which you chose and why in your handoff, and if you
+  seed, seed only the doors that qualify. THE CEILING, and this is the substantial half of the
+  parcel. server/spend.ts today keys every bound by workspaceId; agentId reaches it twice and
+  neither is a limit. Add a per-agent ledger keyed with the agent id alongside the room's, and
+  claim TWICE - the agent's key first, then the room's - which is exactly what
+  routes.ts:1048-1049 already does for the ask keys. Copy that pattern rather than inventing
+  one. The room's own bound stays over the top, so one agent can never spend the room's whole
+  month. The numbers live in a map in server/spend.ts and NOT on AgentDef: shared/roster.ts is
+  imported by client code, and a per-agent dollar figure on an agent row ships a cost number to
+  the browser. claimAgentTurn already takes budgetUsd as its third argument, so the money half
+  is nearly free; the turns-per-hour half reads a module constant at :229 and has to be
+  parameterised. Do not touch ROOM_MONTHLY_BUDGET_USD or the two bounds under it - render.yaml
+  is frozen and its own comment says those are not configurable. NOT IN THIS PARCEL:
+  bring-your-own-key. The brief section 3.3 prices it - one client from one env var, no field on
+  AgentTurn, both secret stores in memory, and a house rule that forbids agents to accept a
+  pasted credential. Nor a pricing row: there is already a $49/month row, an earlier one was cut
+  for a reason that applies again, and the reseller question is the owner's to answer.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  The owner wants two agents that help a client build their own agents against Google Ads and
+  against LinkedIn, present in every Google Ads, paid ads and dev room. He also asked whether
+  they need a higher limit to do anything good. They do, and there is no per-agent limit in this
+  codebase at all - every bound in server/spend.ts is keyed by room - so the ceiling and the
+  agents arrive together or the agents arrive useless.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+    </section>
+    <section class="wave">
+      <h2>Wave 9 — this one runs alone</h2>
+      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
+      <article class="parcel">
+        <header>
+          <h3>adgrant-site</h3>
+          <button class="copy" data-target="p-adgrant-site">Copy this prompt</button>
+        </header>
+        <p class="what">The AdGrant.AI front page and shell exist from an earlier wave, built from what the repository already knew.</p>
+        <pre id="p-adgrant-site">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "adgrant-site".
+
+Read these first, before you write anything, in this order:
+  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
+    content API and what was captured through it; the six statements in that material
+    that are wrong against Google's current documentation, each with the page that
+    contradicts it; why "generate and upload" is two products with a Google approval
+    between them; and the answer to the owner's question about per-agent limits.
+  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
+    endpoint it touches, transcribed with the URL it came from. Four decisions already
+    made, with the reasoning, so you do not spend your wave relitigating them. The
+    request and response shapes two parcels build to in parallel. And the rule the
+    owner set: every message is checked for who it is from, who it is to and which
+    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
+    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
+    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
+    A paraphrase would not, and you would find out after building on all three.
+  README.md, private/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  client/src/pages/adgrant/*
+  client/src/components/adgrant/*
+
+SHARED FILES: none. You do not edit any file outside the list above.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  A four-section site in the top-rated.team design system wearing AdGrant.AI's own chrome. THE
+  SECTIONS, named as the live site names them: Ad Grant Glossary (Terminology explained), Case
+  Studies, Tips &amp; Tricks (Custom workarounds), Starter Templates. Each gets an index and a leaf
+  page, rendered from shared/adgrant.ts, which the previous wave generated. KEEP THE URL SHAPES
+  - /glossary/&lt;slug&gt;, /tricks/&lt;slug&gt; and their siblings - because every page carries
+  relatedLinks into the others and the internal link graph is worth more than a tidier path. SET
+  TITLE AND DESCRIPTION PER ROUTE from each page's own metaTitle and metaDescription, the way
+  client/src/pages/landing.tsx does it. The live site serves one title and one canonical for all
+  74 URLs and injects the rest client-side, so this metadata exists and is currently wasted;
+  this is the cheapest real improvement on the whole site. THE FRONT PAGE: the measured
+  statistic goes on it. 4,539 Ad Grant accounts processed, 16,575 campaigns, 3,142,469 keywords,
+  with the medians beside them - that is the most valuable thing this product owns and the
+  current site does almost nothing with it. State what each number is a number OF, and do not
+  round it into a marketing figure. Then the conversation: the front page's action is an agent
+  that asks what the nonprofit needs, not a form. Identity is required before it generates, and
+  generating is the previous wave's endpoint - call it, do not reimplement it, and print the
+  remaining count of three where a person can see it before they spend one. Say plainly what
+  happens: a structure is produced and shown, and a person sets up the account link afterwards.
+  Do NOT write any sentence implying the structure was uploaded into their Google Ads account.
+  THE CHROME: its own mark, its own top menu, its own footer, both linking back to
+  top-rated.team. Extend the accent and wordmark in
+  client/src/components/site/doors/adgrant-style.ts rather than starting a second palette; the
+  type scale, the spacing scale and the class vocabulary in
+  client/src/components/site/doors/quiet.ts stay exactly as they are. No import of the site's
+  Header or Footer. Build it so it can move to its own host later: nothing that assumes the
+  apex. Two faces of type, not the twenty-eight the live site loads; no pinch-zoom lock; and no
+  machine-translation gadget - English only is an honest state. Where a section's material is
+  thin, say less rather than padding it.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  The AdGrant.AI front page and shell exist from an earlier wave, built from what the repository
+  already knew. Now there is the real material - 23 written pages, 12 starter templates and a
+  measured statistic over 4,539 accounts - and the owner wants the four sections rebuilt in this
+  design system, with AdGrant.AI's own mark, menu and footer, and the front page turned from a
+  form into a conversation.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.

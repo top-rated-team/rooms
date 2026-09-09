@@ -14,37 +14,35 @@ const REPO = "~/Documents/ChatGPT Ads";
 
 const WAVES = [
   /*
-   * PROGRAMME THREE. Programme two's thirteen parcels are landed and kept in
-   * docs/parcels-programme-2.json; programme one's nineteen are in
-   * docs/parcels-programme-1.json. Neither is for running.
+   * PROGRAMME THREE, SECOND HALF. The first five parcels are landed and retired to
+   * docs/parcels-programme-3-landed.json, so they no longer appear here: a re-run of a
+   * landed parcel is an agent rewriting a finished file, and the owner copies from the
+   * published page rather than from this file. The numbering keeps going from four so
+   * that "wave 4" still means what it meant when the page said it.
    *
-   * The ordering here is a DEPENDENCY CHAIN rather than a preference, which is
-   * what differs from the last two programmes. Three links:
+   * Two of the new parcels reuse ownership the retired ones released, on purpose:
+   * adgrant-site inherits the AdGrant tree from adgrant-front, and booking-picker
+   * inherits the dialog from booking-dialog.
    *
-   *   1. unipile-core is wave one, alone. Four parcels import its client, and a
-   *      parcel that writes its own because the shared one did not exist yet is
-   *      four incompatible error mappers and four opinions about where an API
-   *      key may live.
-   *   2. booking-server and booking-dialog run together and build to the
-   *      request and response shapes fixed in section 3 of
-   *      docs/specs/unipile-rooms-and-booking.md. Fixing them in writing first
-   *      is what makes running them in parallel safe.
-   *   3. room-identity precedes login-create-room: the claim dialog the site's
-   *      new menu opens is the one room-identity builds.
+   * The dependencies, which is why the order is not a preference:
+   *   - dev-agents-kb before dev-agents. An agent with useKb set and no corpus retrieves
+   *     nothing AT ALL, silently, and shared/roster.ts says so in the field's own comment.
+   *   - adgrant-content before adgrant-site. The site renders shared/adgrant.ts, and that
+   *     module does not exist until the content parcel writes it.
+   *   - adgrant-generate before adgrant-site. The front page calls the generator; it does
+   *     not reimplement it.
    *
-   * And one standing rule that shapes everything else: AT MOST ONE PARCEL PER
-   * WAVE MAY TOUCH server/routes.ts, and the same for shared/api.ts. Three
-   * parcels here need a route, so they are in three different waves for that
-   * reason alone.
+   * And the standing rule, unchanged: AT MOST ONE PARCEL PER WAVE TOUCHES server/routes.ts,
+   * and the same for shared/api.ts and shared/schema.ts.
    */
-  { n: 1, keys: ["unipile-core"], alone: true, landed: true },
-  { n: 2, keys: ["unipile-messaging", "adgrant-front"], landed: true },
-  { n: 3, keys: ["booking-server", "booking-dialog"], landed: true },
-  /* Alone because the manifest marks it runAlone: it writes into the room, the
-     storage layer and the identity layer, and everything reads those. */
   { n: 4, keys: ["room-identity"], alone: true },
   { n: 5, keys: ["login-create-room"], alone: true },
   { n: 6, keys: ["chatwoot-inbox"], alone: true },
+  /* Three at once and no seam shared between them: one touches package.json, one touches
+     scripts/build-kb.ts, and the third touches nothing outside its single file. */
+  { n: 7, keys: ["adgrant-content", "dev-agents-kb", "booking-picker"] },
+  { n: 8, keys: ["adgrant-generate", "dev-agents"] },
+  { n: 9, keys: ["adgrant-site"], alone: true },
 ];
 
 function prompt(key) {
@@ -56,7 +54,12 @@ function prompt(key) {
   lines.push(`You are working in ${REPO}, branch main. One parcel, called "${key}".`);
   lines.push("");
   lines.push("Read these first, before you write anything, in this order:");
-  lines.push("  docs/specs/unipile-rooms-and-booking.md — this programme's brief. Every Unipile");
+  lines.push("  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public");
+  lines.push("    content API and what was captured through it; the six statements in that material");
+  lines.push("    that are wrong against Google's current documentation, each with the page that");
+  lines.push("    contradicts it; why \"generate and upload\" is two products with a Google approval");
+  lines.push("    between them; and the answer to the owner's question about per-agent limits.");
+  lines.push("  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile");
   lines.push("    endpoint it touches, transcribed with the URL it came from. Four decisions already");
   lines.push("    made, with the reasoning, so you do not spend your wave relitigating them. The");
   lines.push("    request and response shapes two parcels build to in parallel. And the rule the");
