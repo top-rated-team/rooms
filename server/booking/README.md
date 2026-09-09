@@ -4,7 +4,8 @@ Availability and the booking write. Unipile has no free/busy endpoint — seven
 calendar routes exist and none of them is availability — so slots are computed
 here: a padded events query, our own overlap test, working hours 09:00–17:00
 on weekdays in the calendar's own timezone, 30-minute slots, cached for 45
-seconds.
+seconds. Live holds occupy a slot the same way a calendar event does, until
+they expire or become a booking.
 
 The primary calendar is listed once (`is_primary`, `is_read_only === false`)
 and cached in process. Widget loads do not list calendars again.
@@ -22,29 +23,43 @@ Busy is `is_cancelled !== true` and `transparency !== "transparent"` and
 `event_type` not in `{birthday, fromGmail, declined}`. The undocumented
 `busy=true` query is not relied on.
 
-Writing a booking sends `transparency: opaque`,
+A booking with an address is written immediately: `transparency: opaque`,
 `conference: {provider: google_meet}` with no `url` (Unipile auto-provisions
 Meet), and `notify: true` — that default is false, and without it the visitor
 never gets an invite. 201 is `{event_id}` only; the Meet URL is read back
 with GET.
 
+A booking with no address is not written on POST. `hold.ts` reserves the
+slot, mints the dictatable code, and returns the wa.me link. That is a hold,
+not a booking. The event is created when the inbound matcher in
+`server/unipile/inbound.ts` sees the planted code, and only then. The hold
+expires with the code — five minutes. If it expires unproven, nothing was
+booked. GET `/api/booking/confirmed` reports that the booking exists, not
+that a message arrived.
+
 `date_time` is sent as UTC with a trailing `Z`, and `time_zone` is the
 calendar's IANA zone. The brief's own example holds in the tests:
 14:00 on 2026-09-10 in Europe/Bratislava is `2026-09-10T12:00:00.000Z`.
-This machine has no Unipile credentials, so the created event was not read
-back out of Google Calendar here. That check still needs a live calendar.
 
-`attendees: []` is schema-valid and untested against Unipile. It is not sent.
-With a visitor email, that address is the attendee and `invited` is true.
-Without one, `dan@top-rated.team` satisfies the required constraint and
-`invited` is false. A placeholder built from a phone number is not used:
-the create body has no phone field, and a number we do not have must not be
-reported as an invite that will arrive.
+`attendees: []` with `notify: false` is the no-address write, verified
+against the live tenant. A placeholder built from a phone number is not used.
+With an address, that address is the attendee and `notify` is true.
+
+The event description names who will be on the call. The host line is
+`Dan Burykin: https://www.linkedin.com/in/burykin/`. A visitor line is added
+only when Sign in with LinkedIn actually handed a profile over. Reminders
+follow the route the visitor used: email (Google's invite) where there is an
+address, WhatsApp to the chat that proved it where there is not. Never
+LinkedIn.
 
 The planted WhatsApp code uses the alphabet at `server/identity.ts:98-102`.
-`BOOKING_CODE_RE` is the one pattern the matcher and the test share. Expiry
-is five minutes. Confirmation is a matcher on `server/unipile/inbound.ts`,
-not a second webhook parser.
+`BOOKING_CODE_RE` is the one pattern the matcher and the test share.
+
+The WhatsApp path is offered only on a house host, and only when Unipile is
+configured. `WHATSAPP_URL` in `shared/roster.ts` is the owner's own mobile;
+a fork inherits that constant, so a visitor on somebody else's deployment
+must never be handed it. Off a house host there is no gate and no no-address
+path: an address is required.
 
 There is no visitor-calendar connection. The brief §2.3 prices it and refuses
 it.

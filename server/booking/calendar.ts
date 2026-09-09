@@ -4,18 +4,34 @@
  * the invite and the visitor's own client does the conflict check.
  *
  * 201 from Unipile is only {event_id}. The Meet URL, if any, is read back
- * with GET. email is the only optional field; without it the event is still
- * created, invited is false, and the host address satisfies attendees.
+ * with GET. email is the only optional field.
+ *
+ * WITH an address the event is created immediately, notify true. WITHOUT an
+ * address this file does not create an event: hold.ts reserves the slot and
+ * confirm.ts writes the event after WhatsApp proves it. A hold is not a
+ * booking.
  */
 
-import type { BookingConflictResponse, CreateBookingRequest, CreateBookingResponse } from "@shared/api";
+import type {
+  BookingConflictResponse,
+  CreateBookingRequest,
+  CreateBookingResponse,
+  HoldBookingResponse,
+} from "@shared/api";
 import {
   createCalendarEvent,
   getCalendarEvent,
   getPrimaryCalendar,
 } from "../unipile/calendar";
 import { available, unavailableLine } from "../unipile/client";
-import { plantBookingCode } from "./confirm";
+import {
+  ADDRESS_REQUIRED_LINE,
+  bookingEventDescription,
+  holdToResponse,
+  placeHold,
+  slotIsHeld,
+  whatsappGateAllowed,
+} from "./hold";
 import {
   SLOT_MINUTES,
   getBookingSlots,
@@ -28,7 +44,7 @@ import {
 
 /**
  * Kept as the organiser's own address for anything that needs to name it. It
- * is no longer used as a stand-in attendee: an empty attendee list works, and
+ * is not used as a stand-in attendee: an empty attendee list works, and
  * putting the host on his own event mailed him an invitation to it.
  */
 export const HOST_ATTENDEE_EMAIL = "dan@top-rated.team";
@@ -37,7 +53,7 @@ export const SLOT_TAKEN_LINE = "That time has just been taken. Here is what is s
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type PostBookingResult =
-  | { ok: true; status: 201; body: CreateBookingResponse }
+  | { ok: true; status: 201; body: CreateBookingResponse | HoldBookingResponse }
   | { ok: false; status: 409; body: BookingConflictResponse }
   | { ok: false; status: 503; error: string };
 
@@ -73,22 +89,52 @@ function attendeesFor(email: string | undefined): {
     return { invited: true, attendees: [{ email }], notify: true };
   }
   /*
-   * `attendees: []` IS accepted. This was the parcel's open question and it
-   * was right to refuse to guess; the answer came from a probe against the
-   * real tenant on 2026-09-09, where a POST with an empty array returned 201
-   * and the event was created.
-   *
-   * And `notify` goes false with it. It used to be true unconditionally,
-   * which put the host on his own event as a guest and then mailed him an
-   * invitation to it — once per booking taken without an address. There is
-   * nobody to notify when there is no attendee.
+   * `attendees: []` IS accepted. Probed against the real tenant on 2026-09-09:
+   * a POST with an empty array returned 201. `notify` goes false with it —
+   * there is nobody to notify, and naming the organiser as the sole attendee
+   * mailed him an invitation to his own event.
    */
   return { invited: false, attendees: [], notify: false };
 }
 
+export async function createBookingEvent(
+  input: {
+    calendarId: string;
+    timezone: string;
+    starts: Date;
+    ends: Date;
+    name: string;
+    topic: string;
+    email?: string;
+    visitorProfile?: { name: string; url: string };
+  },
+  fetchImpl: typeof fetch,
+): Promise<{ ok: true; eventId: string; meetUrl: string | null; invited: boolean } | { ok: false; error: string }> {
+  const { invited, attendees, notify } = attendeesFor(input.email);
+  const created = await createCalendarEvent(
+    {
+      calendarId: input.calendarId,
+      title: `Call with ${input.name}`,
+      body: bookingEventDescription({ topic: input.topic, visitorProfile: input.visitorProfile }),
+      attendees,
+      start: { dateTime: input.starts.toISOString(), timeZone: input.timezone },
+      end: { dateTime: input.ends.toISOString(), timeZone: input.timezone },
+      transparency: "opaque",
+      conference: { provider: "google_meet" },
+      notify,
+    },
+    fetchImpl,
+  );
+  if (!created.ok) return { ok: false, error: created.line };
+
+  const fetched = await getCalendarEvent(input.calendarId, created.body.eventId, fetchImpl);
+  const meetUrl = fetched.ok && fetched.body ? fetched.body.conferenceUrl : null;
+  return { ok: true, eventId: created.body.eventId, meetUrl, invited };
+}
+
 export async function postBooking(
   raw: unknown,
-  opts: { fetchImpl?: typeof fetch; now?: Date } = {},
+  opts: { fetchImpl?: typeof fetch; now?: Date; host?: string } = {},
 ): Promise<PostBookingResult> {
   const fetchImpl = opts.fetchImpl ?? fetch;
   const now = opts.now ?? new Date();
@@ -102,6 +148,11 @@ export async function postBooking(
     return { ok: false, status: 503, error: "That email address is not one we can send an invite to." };
   }
 
+  const hasAddress = Boolean(input.email);
+  if (!hasAddress && !whatsappGateAllowed(opts.host)) {
+    return { ok: false, status: 503, error: ADDRESS_REQUIRED_LINE };
+  }
+
   const primary = await getPrimaryCalendar(fetchImpl);
   if (!primary.ok) return { ok: false, status: 503, error: primary.line };
 
@@ -112,34 +163,48 @@ export async function postBooking(
   invalidateSlotsCache();
   const slots = await getBookingSlots(input.date, 1, { fetchImpl, now });
   if (!slots.ok) return { ok: false, status: 503, error: slots.error };
-  if (!slotIsFree(slots.body, input.date, input.time)) {
+  if (!slotIsFree(slots.body, input.date, input.time) || slotIsHeld(input.date, input.time, now.getTime())) {
     const wider = await getBookingSlots(input.date, 14, { fetchImpl, now });
     const days = wider.ok ? wider.body.days : slots.body.days;
     return { ok: false, status: 409, body: { error: SLOT_TAKEN_LINE, days } };
   }
 
-  const { invited, attendees, notify } = attendeesFor(input.email);
-  const created = await createCalendarEvent(
+  if (!hasAddress) {
+    const held = placeHold(
+      {
+        date: input.date,
+        time: input.time,
+        name: input.name,
+        topic: input.topic,
+        timezone: primary.calendar.timezone,
+        startsAt: starts.toISOString(),
+      },
+      now.getTime(),
+    );
+    if ("taken" in held) {
+      const wider = await getBookingSlots(input.date, 14, { fetchImpl, now });
+      const days = wider.ok ? wider.body.days : slots.body.days;
+      return { ok: false, status: 409, body: { error: SLOT_TAKEN_LINE, days } };
+    }
+    invalidateSlotsCache();
+    return { ok: true, status: 201, body: holdToResponse(held) };
+  }
+
+  const created = await createBookingEvent(
     {
       calendarId: primary.calendar.id,
-      title: `Call with ${input.name}`,
-      body: input.topic,
-      attendees,
-      start: { dateTime: starts.toISOString(), timeZone: primary.calendar.timezone },
-      end: { dateTime: ends.toISOString(), timeZone: primary.calendar.timezone },
-      transparency: "opaque",
-      conference: { provider: "google_meet" },
-      notify,
+      timezone: primary.calendar.timezone,
+      starts,
+      ends,
+      name: input.name,
+      topic: input.topic,
+      email: input.email,
     },
     fetchImpl,
   );
-  if (!created.ok) return { ok: false, status: 503, error: created.line };
+  if (!created.ok) return { ok: false, status: 503, error: created.error };
 
-  const fetched = await getCalendarEvent(primary.calendar.id, created.body.eventId, fetchImpl);
-  const meetUrl = fetched.ok && fetched.body ? fetched.body.conferenceUrl : null;
-  const whatsapp = plantBookingCode(now.getTime());
   invalidateSlotsCache();
-
   return {
     ok: true,
     status: 201,
@@ -147,9 +212,11 @@ export async function postBooking(
       booked: true,
       startsAt: starts.toISOString(),
       timezone: primary.calendar.timezone,
-      meetUrl,
-      invited,
-      whatsapp,
+      meetUrl: created.meetUrl,
+      invited: created.invited,
+      /* Email is the confirmation channel. Do not hand the house WhatsApp
+         number to a fork, and do not plant a hold against a slot already booked. */
+      whatsapp: { url: "", code: "" },
     },
   };
 }

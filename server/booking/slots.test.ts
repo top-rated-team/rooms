@@ -13,6 +13,7 @@ import assert from "node:assert/strict";
 
 import type { UnipileCalendarEvent } from "../unipile/calendar";
 import { resetUnipileCalendarForTests } from "../unipile/calendar";
+import { placeHold, resetHoldsForTests } from "./hold";
 import {
   WINDOW_PAD_MS,
   busyInterval,
@@ -64,6 +65,7 @@ function event(partial: Partial<UnipileCalendarEvent> & Pick<UnipileCalendarEven
 beforeEach(() => {
   resetSlotsCacheForTests();
   resetUnipileCalendarForTests();
+  resetHoldsForTests();
   delete process.env.UNIPILE_DSN;
   delete process.env.UNIPILE_API_KEY;
   delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
@@ -72,6 +74,7 @@ beforeEach(() => {
 afterEach(() => {
   resetSlotsCacheForTests();
   resetUnipileCalendarForTests();
+  resetHoldsForTests();
   delete process.env.UNIPILE_DSN;
   delete process.env.UNIPILE_API_KEY;
   delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
@@ -261,6 +264,33 @@ describe("getBookingSlots", () => {
     assert.deepEqual(saturday?.slots, []);
     assert.equal(second.ok, true);
     assert.equal(eventLists, 1);
+  });
+
+  it("hides a slot that is held, even when the calendar itself is free", async () => {
+    setConfigured();
+    const held = placeHold({
+      date: FROM,
+      time: "14:00",
+      name: "Ada",
+      topic: "google-ads",
+      timezone: TZ,
+      startsAt: "2026-09-10T12:00:00.000Z",
+    });
+    assert.equal("taken" in held, false);
+    const fetchImpl: typeof fetch = async (input) => {
+      const url = String(input);
+      if (url.includes("/calendars?") || /\/api\/v1\/calendars$/.test(url.split("?")[0])) {
+        return jsonResponse(200, {
+          data: [{ id: CALENDAR_ID, is_primary: true, is_read_only: false, timezone: TZ }],
+        });
+      }
+      return jsonResponse(200, { data: [] });
+    };
+    const result = await getBookingSlots(FROM, 1, { fetchImpl, now: NOW });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.body.days[0]?.slots.includes("14:00"), false);
+    assert.equal(result.body.days[0]?.slots.includes("09:00"), true);
   });
 
   it("is inert with a sentence when Unipile is not configured", async () => {

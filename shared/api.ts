@@ -361,14 +361,44 @@ export interface CreateBookingResponse {
   whatsapp: { url: string; code: string };
 }
 
+/**
+ * POST /api/booking with no address, on a house host with WhatsApp configured.
+ * A hold is not a booking: nothing is on the calendar until WhatsApp proves it.
+ * `booked` is the literal false so nothing can call this a booking by accident.
+ */
+export interface HoldBookingResponse {
+  booked: false;
+  held: true;
+  startsAt: string;
+  timezone: string;
+  meetUrl: null;
+  invited: false;
+  whatsapp: { url: string; code: string };
+  expiresAt: string;
+}
+
+export type PostBookingResponse = CreateBookingResponse | HoldBookingResponse;
+
 export interface BookingConflictResponse {
   error: string;
   days: BookingDay[];
 }
 
+/**
+ * GET /api/booking/confirmed reports that the booking exists, not that a
+ * message arrived. `expired` is set when a hold ran out unproven — nothing
+ * was booked. Meet and start fields are present only once the event exists.
+ */
 export type BookingConfirmedResponse =
-  | { confirmed: true; at: string }
-  | { confirmed: false };
+  | {
+      confirmed: true;
+      at: string;
+      meetUrl?: string | null;
+      startsAt?: string;
+      timezone?: string;
+      invited?: boolean;
+    }
+  | { confirmed: false; expired?: boolean };
 
 /* -------------------- Ad Grant structure (generate, do not upload) -------------------- */
 /* Product A in docs/specs/adgrant-and-dev-agents.md section 2: a policy-checked

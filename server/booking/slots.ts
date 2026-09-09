@@ -22,6 +22,7 @@ import {
   listCalendarEvents,
   type UnipileCalendarEvent,
 } from "../unipile/calendar";
+import { activeHeldSlots } from "./hold";
 
 export const SLOT_MINUTES = 30;
 export const WORK_START_HOUR = 9;
@@ -303,16 +304,21 @@ export async function getBookingSlots(
   );
   if (!listed.ok) return { ok: false, status: 503, error: listed.line };
 
+  const held = activeHeldSlots(now.getTime());
+  const dayRows = daysFromEvents({
+    from,
+    days,
+    timezone: primary.calendar.timezone,
+    events: listed.body,
+    now,
+  }).map((day) => ({
+    date: day.date,
+    slots: day.slots.filter((time) => !held.some((row) => row.date === day.date && row.time === time)),
+  }));
   const body: BookingSlotsResponse = {
     timezone: primary.calendar.timezone,
     slotMinutes: SLOT_MINUTES,
-    days: daysFromEvents({
-      from,
-      days,
-      timezone: primary.calendar.timezone,
-      events: listed.body,
-      now,
-    }),
+    days: dayRows,
   };
   slotsCache = { key: cacheKey, body, expiresAt: now.getTime() + SLOTS_CACHE_MS };
   return { ok: true, body };

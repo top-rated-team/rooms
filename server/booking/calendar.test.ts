@@ -3,16 +3,17 @@
  *
  *   npx tsx --test server/booking/calendar.test.ts
  *
- * notify defaults to false in Unipile and must be sent as true. 201 is only
- * {event_id}, so the Meet URL is read back. email is the only optional field.
+ * With an address, notify is true and the event is created immediately.
+ * With no address on a house host, POST does not create an event.
  */
 
 import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import { resetUnipileCalendarForTests } from "../unipile/calendar";
-import { HOST_ATTENDEE_EMAIL, SLOT_TAKEN_LINE, parseCreateBooking, postBooking } from "./calendar";
+import { SLOT_TAKEN_LINE, parseCreateBooking, postBooking } from "./calendar";
 import { resetBookingCodesForTests } from "./confirm";
+import { ADDRESS_REQUIRED_LINE, HOST_LINKEDIN_LINE, resetHoldsForTests } from "./hold";
 import { resetSlotsCacheForTests } from "./slots";
 
 const DSN = "unipile.test.example:9443";
@@ -39,21 +40,28 @@ beforeEach(() => {
   resetSlotsCacheForTests();
   resetUnipileCalendarForTests();
   resetBookingCodesForTests();
+  resetHoldsForTests();
   delete process.env.UNIPILE_DSN;
   delete process.env.UNIPILE_API_KEY;
   delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
+  delete process.env.PUBLIC_BASE_URL;
 });
 
 afterEach(() => {
   resetSlotsCacheForTests();
   resetUnipileCalendarForTests();
   resetBookingCodesForTests();
+  resetHoldsForTests();
   delete process.env.UNIPILE_DSN;
   delete process.env.UNIPILE_API_KEY;
   delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
+  delete process.env.PUBLIC_BASE_URL;
 });
 
-function mockUnipile(opts: { busy?: boolean; meetUrl?: string | null } = {}): { fetchImpl: typeof fetch; posts: Record<string, unknown>[] } {
+function mockUnipile(opts: { busy?: boolean; meetUrl?: string | null } = {}): {
+  fetchImpl: typeof fetch;
+  posts: Record<string, unknown>[];
+} {
   const posts: Record<string, unknown>[] = [];
   const fetchImpl: typeof fetch = async (input, init) => {
     const url = String(input);
@@ -71,7 +79,10 @@ function mockUnipile(opts: { busy?: boolean; meetUrl?: string | null } = {}): { 
         event_type: "default",
         start: { date_time: "2026-09-10T12:00:00.000Z", time_zone: TZ },
         end: { date_time: "2026-09-10T12:30:00.000Z", time_zone: TZ },
-        conference: opts.meetUrl === null ? { provider: "google_meet" } : { provider: "google_meet", url: opts.meetUrl ?? "https://meet.google.com/aaa-bbbb-ccc" },
+        conference:
+          opts.meetUrl === null
+            ? { provider: "google_meet" }
+            : { provider: "google_meet", url: opts.meetUrl ?? "https://meet.google.com/aaa-bbbb-ccc" },
       });
     }
     if (method === "GET" && url.includes("/events")) {
@@ -128,12 +139,13 @@ describe("postBooking", () => {
     if (!result.ok) return;
     assert.equal(result.status, 201);
     assert.equal(result.body.booked, true);
+    if (!result.body.booked) return;
     assert.equal(result.body.startsAt, "2026-09-10T12:00:00.000Z");
     assert.equal(result.body.timezone, TZ);
     assert.equal(result.body.invited, true);
     assert.equal(result.body.meetUrl, "https://meet.google.com/aaa-bbbb-ccc");
-    assert.match(result.body.whatsapp.url, /^https:\/\/wa\.me\/420774654822\?text=/);
-    assert.match(result.body.whatsapp.code, /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/);
+    assert.equal(result.body.whatsapp.url, "");
+    assert.equal(result.body.whatsapp.code, "");
 
     assert.equal(posts.length, 1);
     const body = posts[0];
@@ -145,9 +157,12 @@ describe("postBooking", () => {
     assert.match(start.date_time, /Z$/);
     assert.equal(start.time_zone, TZ);
     assert.deepEqual(body.attendees, [{ email: "ada@example.com" }]);
+    assert.equal(typeof body.body, "string");
+    assert.equal(String(body.body).includes(HOST_LINKEDIN_LINE), true);
+    assert.equal(String(body.body).includes("Ada:"), false);
   });
 
-  it("sends an empty attendee list and notify false when there is no address", async () => {
+  it("does not create an event when there is no address: it holds the slot and returns the WhatsApp code", async () => {
     setConfigured();
     const { fetchImpl, posts } = mockUnipile();
     const result = await postBooking(
@@ -156,12 +171,47 @@ describe("postBooking", () => {
     );
     assert.equal(result.ok, true);
     if (!result.ok) return;
+    assert.equal(result.body.booked, false);
+    if (result.body.booked) return;
+    assert.equal(result.body.held, true);
     assert.equal(result.body.invited, false);
-    /* Probed against the real tenant: a POST with attendees: [] returns 201.
-       The host address used to stand in here, which mailed him an invite to
-       his own event on every booking taken without an address. */
-    assert.deepEqual(posts[0]?.attendees, []);
-    assert.equal(posts[0]?.notify, false, "nobody to notify when there is no attendee");
+    assert.equal(result.body.meetUrl, null);
+    assert.match(result.body.whatsapp.url, /^https:\/\/wa\.me\/420774654822\?text=/);
+    assert.match(result.body.whatsapp.code, /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/);
+    assert.equal(posts.length, 0);
+  });
+
+  it("requires an address off a house host, and never returns the house WhatsApp number", async () => {
+    setConfigured();
+    process.env.PUBLIC_BASE_URL = "https://partner.example";
+    const { fetchImpl, posts } = mockUnipile();
+    const result = await postBooking(
+      { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads" },
+      { fetchImpl, now: NOW, host: "https://partner.example" },
+    );
+    assert.equal(result.ok, false);
+    if (result.ok) return;
+    assert.equal(result.status, 503);
+    if (result.status !== 503) return;
+    assert.equal(result.error, ADDRESS_REQUIRED_LINE);
+    assert.equal(posts.length, 0);
+  });
+
+  it("still creates the event immediately with notify true when a fork booking has an address", async () => {
+    setConfigured();
+    const { fetchImpl, posts } = mockUnipile();
+    const result = await postBooking(
+      { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
+      { fetchImpl, now: NOW, host: "https://partner.example" },
+    );
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.body.booked, true);
+    if (!result.body.booked) return;
+    assert.equal(result.body.invited, true);
+    assert.equal(posts[0]?.notify, true);
+    assert.deepEqual(posts[0]?.attendees, [{ email: "ada@example.com" }]);
+    assert.equal(result.body.whatsapp.url.includes("420774654822"), false);
   });
 
   it("returns 409 with fresh days when that time has just been taken", async () => {
@@ -179,15 +229,21 @@ describe("postBooking", () => {
     assert.ok(Array.isArray(result.body.days));
   });
 
-  it("does not claim the visitor was invited when there is no address", async () => {
+  it("returns 409 when a hold already covers that time", async () => {
     setConfigured();
-    const { fetchImpl } = mockUnipile();
-    const result = await postBooking(
+    const { fetchImpl, posts } = mockUnipile();
+    const first = await postBooking(
       { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads" },
       { fetchImpl, now: NOW },
     );
-    assert.equal(result.ok, true);
-    if (!result.ok) return;
-    assert.equal(result.body.invited, false);
+    assert.equal(first.ok, true);
+    const second = await postBooking(
+      { date: "2026-09-10", time: "14:00", name: "Bea", topic: "google-ads", email: "bea@example.com" },
+      { fetchImpl, now: NOW },
+    );
+    assert.equal(second.ok, false);
+    if (second.ok) return;
+    assert.equal(second.status, 409);
+    assert.equal(posts.length, 0);
   });
 });

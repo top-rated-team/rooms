@@ -1397,6 +1397,8 @@ export function registerRoutes(app: Express): void {
     "/api/booking/confirmed",
     bookingLimit,
     route(async (req, res) => {
+      /* Reports that the held booking has been proved — the calendar event
+         exists — not merely that a WhatsApp message arrived. */
       const code = typeof req.query.code === "string" ? req.query.code : "";
       res.json(getBookingConfirmed(code));
     }),

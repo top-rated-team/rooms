@@ -5,18 +5,25 @@ import { Check, ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
 import {
   bookSlot,
   cachedSlots,
+  CONFIRMED_POLL_MS,
+  CONFIRMED_TIMEOUT_MS,
+  buildBookBody,
   errorFromBody,
   formatBookedWhen,
   formatSlotDay,
   isPhoneBooking,
   loadSlots,
+  parseDays,
   parseSlotsPayload,
-  pollBookingConfirmed,
   slotsUrl,
   type BookedPayload,
   type SlotDay,
   type SlotsPayload,
 } from "@/lib/booking";
+import type { BookingConfirmedResponse, HoldBookingResponse } from "@shared/api";
+import { isHouseHost } from "@shared/operator";
+
+import { BookingQr } from "./BookingQr";
 
 const BTN_BASE =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2";
@@ -44,9 +51,14 @@ export interface BookingDialogProps {
 
 type Phase =
   | { kind: "pick" }
-  | { kind: "waiting"; booked: BookedPayload; openedWhatsApp: boolean }
+  | { kind: "waiting"; hold: HoldBookingResponse; openedWhatsApp: boolean }
   | { kind: "done"; booked: BookedPayload; viaWhatsApp: boolean }
-  | { kind: "expired"; booked: BookedPayload };
+  | { kind: "expired"; code: string };
+
+function offerWhatsAppGate(): boolean {
+  if (typeof window === "undefined") return false;
+  return isHouseHost(window.location.hostname);
+}
 
 export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
   const [slots, setSlots] = useState<SlotsPayload | null>(cachedSlots);
@@ -225,53 +237,87 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
     event.preventDefault();
     if (!date || !time) return;
     const trimmed = email.trim();
+    const whatsappGate = offerWhatsAppGate();
     if (trimmed && !EMAIL_RE.test(trimmed)) {
-      setEmailError("Enter an email address the invite can reach, or leave it blank.");
+      setEmailError(
+        whatsappGate
+          ? "Enter an email address the invite can reach, or leave it blank."
+          : "Enter an email address the invite can reach.",
+      );
+      return;
+    }
+    if (!trimmed && !whatsappGate) {
+      setEmailError("Enter an email address. This page does not take a booking without one.");
       return;
     }
     setEmailError(null);
     setFormError(null);
 
+    if (trimmed) {
+      setSending(true);
+      try {
+        const result = await bookSlot({ date, time, email: trimmed });
+        if (!result.ok && result.conflict) {
+          applyDays(result.days);
+          setFormError(result.error);
+          return;
+        }
+        if (!result.ok) {
+          setFormError(result.error);
+          return;
+        }
+        setPhase({ kind: "done", booked: result.booked, viaWhatsApp: false });
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setFormError("Could not reach the server. Check your connection and try again.");
+      } finally {
+        setSending(false);
+      }
+      return;
+    }
+
     const phone = isPhoneBooking();
     const tab = phone ? window.open("about:blank", "_blank") : null;
     setSending(true);
     try {
-      const result = await bookSlot({ date, time, email: trimmed || undefined });
-      if (!result.ok && result.conflict) {
+      const hold = await holdSlot({ date, time });
+      if (!hold.ok && hold.conflict) {
         tab?.close();
-        applyDays(result.days);
-        setFormError(result.error);
+        applyDays(hold.days);
+        setFormError(hold.error);
         return;
       }
-      if (!result.ok) {
+      if (!hold.ok) {
         tab?.close();
-        setFormError(result.error);
-        return;
-      }
-
-      if (!phone) {
-        tab?.close();
-        setPhase({ kind: "done", booked: result.booked, viaWhatsApp: false });
+        setFormError(hold.error);
         return;
       }
 
       let openedWhatsApp = false;
-      if (tab) {
-        tab.location.href = result.booked.whatsapp.url;
-        openedWhatsApp = true;
+      if (phone) {
+        if (tab) {
+          tab.location.href = hold.body.whatsapp.url;
+          openedWhatsApp = true;
+        } else {
+          openedWhatsApp = window.open(hold.body.whatsapp.url, "_blank") != null;
+        }
       } else {
-        openedWhatsApp = window.open(result.booked.whatsapp.url, "_blank") != null;
+        tab?.close();
       }
 
-      setPhase({ kind: "waiting", booked: result.booked, openedWhatsApp });
+      setPhase({ kind: "waiting", hold: hold.body, openedWhatsApp });
       const controller = new AbortController();
       pollAbort.current = controller;
-      const confirmed = await pollBookingConfirmed(result.booked.whatsapp.code, { signal: controller.signal });
+      const confirmed = await pollHoldConfirmed(hold.body.whatsapp.code, controller.signal);
       if (controller.signal.aborted) return;
       if (confirmed.confirmed) {
-        setPhase({ kind: "done", booked: result.booked, viaWhatsApp: true });
+        setPhase({
+          kind: "done",
+          booked: bookedFromHold(hold.body, confirmed),
+          viaWhatsApp: true,
+        });
       } else {
-        setPhase({ kind: "expired", booked: result.booked });
+        setPhase({ kind: "expired", code: hold.body.whatsapp.code });
       }
     } catch (error) {
       tab?.close();
@@ -313,10 +359,10 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
           {phase.kind === "done" ? (
             <DoneView booked={phase.booked} email={email.trim() || null} viaWhatsApp={phase.viaWhatsApp} />
           ) : phase.kind === "waiting" ? (
-            <WaitingView booked={phase.booked} openedWhatsApp={phase.openedWhatsApp} />
+            <WaitingView hold={phase.hold} openedWhatsApp={phase.openedWhatsApp} />
           ) : phase.kind === "expired" ? (
             <ExpiredView
-              booked={phase.booked}
+              code={phase.code}
               onRetry={() => {
                 setPhase({ kind: "pick" });
                 setFormError(null);
@@ -419,6 +465,7 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                         type="email"
                         autoComplete="email"
                         aria-invalid={emailError ? true : undefined}
+                        aria-required={offerWhatsAppGate() ? undefined : true}
                         aria-describedby={emailError ? "booking-email-error booking-email-hint" : "booking-email-hint"}
                         className={FIELD}
                         value={email}
@@ -448,9 +495,7 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                     </button>
                   </div>
                   <p id="booking-email-hint" className="mt-1.5 text-xs text-muted-foreground">
-                    An address gets you a calendar invite and any reminder. Sign in with LinkedIn does the same without
-                    typing it, and is not on yet. With neither, the call is still booked &mdash; you confirm it in
-                    WhatsApp instead, and that is where a reminder would go.
+                    {emailHint(offerWhatsAppGate())}
                   </p>
                   {emailError ? (
                     <p id="booking-email-error" className="mt-1.5 text-xs text-destructive" role="alert">
@@ -737,6 +782,13 @@ function dayClassName({ selected, past, empty }: { selected: boolean; past: bool
   return "m-0.5 min-h-9 w-[calc(100%-0.25rem)] rounded-md text-sm tabular-nums text-foreground hover-elevate active-elevate-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 }
 
+function emailHint(whatsappGate: boolean): string {
+  if (whatsappGate) {
+    return "An address gets you a calendar invite and any reminder. Sign in with LinkedIn does the same without typing it, and is not on yet. With neither, the slot is held for five minutes while you send a WhatsApp message. The call is booked only after that message arrives.";
+  }
+  return "An address is required — type it, or sign in with LinkedIn when that is on. This page does not take a booking without one.";
+}
+
 function descriptionFor(
   slots: SlotsPayload | null,
   timezone: string | undefined,
@@ -973,53 +1025,62 @@ function inviteLine(booked: BookedPayload, email: string | null) {
   return null;
 }
 
-function WaitingView({ booked, openedWhatsApp }: { booked: BookedPayload; openedWhatsApp: boolean }) {
+function WaitingView({ hold, openedWhatsApp }: { hold: HoldBookingResponse; openedWhatsApp: boolean }) {
+  const phone = isPhoneBooking();
   return (
     <div>
       <Dialog.Title className="pr-8 text-xl font-semibold tracking-tight">Send the WhatsApp message</Dialog.Title>
       <Dialog.Description className="mt-2 text-sm text-muted-foreground">
         {openedWhatsApp
-          ? "WhatsApp is open with a message ready. Send it, and this page will show when the booking is confirmed."
-          : "Open WhatsApp and send the message. This page will show when the booking is confirmed."}
+          ? "WhatsApp is open with a message ready. Send it. The call is booked only after that message arrives."
+          : phone
+            ? "Open WhatsApp and send the message. The call is booked only after that message arrives."
+            : "Scan this code or click it. Both open the same WhatsApp message. The call is booked only after that message arrives."}
       </Dialog.Description>
       <p className="mt-3 text-sm text-muted-foreground">
         The message contains the code{" "}
         <code className="rounded border border-card-border bg-muted px-1 py-0.5 font-mono text-[11px] text-foreground">
-          {booked.whatsapp.code}
+          {hold.whatsapp.code}
         </code>
         .
       </p>
-      {openedWhatsApp ? null : (
-        <p className="mt-4 text-sm">
-          <a
-            href={booked.whatsapp.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline underline-offset-2"
-            data-testid="link-booking-whatsapp"
-          >
-            Open WhatsApp
-          </a>
-        </p>
+      {phone ? (
+        openedWhatsApp ? null : (
+          <p className="mt-4 text-sm">
+            <a
+              href={hold.whatsapp.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2"
+              data-testid="link-booking-whatsapp"
+            >
+              Open WhatsApp
+            </a>
+          </p>
+        )
+      ) : (
+        <div className="mt-4">
+          <BookingQr url={hold.whatsapp.url} />
+        </div>
       )}
       <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Waiting for the message to arrive.
+        Waiting for the WhatsApp message. Nothing is booked yet.
       </p>
     </div>
   );
 }
 
-function ExpiredView({ booked, onRetry }: { booked: BookedPayload; onRetry: () => void }) {
+function ExpiredView({ code, onRetry }: { code: string; onRetry: () => void }) {
   return (
     <div>
-      <Dialog.Title className="pr-8 text-xl font-semibold tracking-tight">The code has expired</Dialog.Title>
+      <Dialog.Title className="pr-8 text-xl font-semibold tracking-tight">Nothing was booked</Dialog.Title>
       <Dialog.Description className="mt-2 text-sm text-muted-foreground">
         Five minutes passed without a WhatsApp message for{" "}
         <code className="rounded border border-card-border bg-muted px-1 py-0.5 font-mono text-[11px] text-foreground">
-          {booked.whatsapp.code}
+          {code}
         </code>
-        . Book again.
+        . The slot is free again.
       </Dialog.Description>
       <div className="mt-6">
         <button type="button" className={BTN_PRIMARY} onClick={onRetry} data-testid="button-booking-retry">
@@ -1028,6 +1089,152 @@ function ExpiredView({ booked, onRetry }: { booked: BookedPayload; onRetry: () =
       </div>
     </div>
   );
+}
+
+async function holdSlot(input: { date: string; time: string }): Promise<
+  | { ok: true; body: HoldBookingResponse }
+  | { ok: false; conflict: true; error: string; days: SlotDay[] }
+  | { ok: false; conflict: false; error: string }
+> {
+  let res: Response;
+  try {
+    res = await fetch("/api/booking", {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(buildBookBody(input)),
+    });
+  } catch {
+    return {
+      ok: false,
+      conflict: false,
+      error: "Could not reach the server. Check your connection and try again.",
+    };
+  }
+
+  let raw: unknown = null;
+  try {
+    const text = await res.text();
+    raw = text ? (JSON.parse(text) as unknown) : null;
+  } catch {
+    if (res.ok) {
+      return { ok: false, conflict: false, error: "The server returned a response that was not JSON." };
+    }
+  }
+
+  if (res.status === 409) {
+    const days = parseDays(raw && typeof raw === "object" ? (raw as { days?: unknown }).days : undefined);
+    return {
+      ok: false,
+      conflict: true,
+      error: errorFromBody(raw, "That time has just been taken. Here is what is still free."),
+      days: days ?? [],
+    };
+  }
+
+  if (!res.ok) {
+    return { ok: false, conflict: false, error: errorFromBody(raw, "That time could not be held.") };
+  }
+
+  const body = parseHoldPayload(raw);
+  if (!body) {
+    return { ok: false, conflict: false, error: "The server did not hold the slot." };
+  }
+  return { ok: true, body };
+}
+
+function parseHoldPayload(value: unknown): HoldBookingResponse | null {
+  if (typeof value !== "object" || value === null) return null;
+  const record = value as Record<string, unknown>;
+  if (record.booked !== false || record.held !== true) return null;
+  if (typeof record.startsAt !== "string" || typeof record.timezone !== "string") return null;
+  if (record.meetUrl !== null || record.invited !== false) return null;
+  if (typeof record.whatsapp !== "object" || record.whatsapp === null) return null;
+  const whatsapp = record.whatsapp as Record<string, unknown>;
+  if (typeof whatsapp.url !== "string" || typeof whatsapp.code !== "string") return null;
+  if (typeof record.expiresAt !== "string") return null;
+  return {
+    booked: false,
+    held: true,
+    startsAt: record.startsAt,
+    timezone: record.timezone,
+    meetUrl: null,
+    invited: false,
+    whatsapp: { url: whatsapp.url, code: whatsapp.code },
+    expiresAt: record.expiresAt,
+  };
+}
+
+function parseHoldConfirmed(value: unknown): BookingConfirmedResponse | null {
+  if (typeof value !== "object" || value === null) return null;
+  const record = value as Record<string, unknown>;
+  if (record.confirmed === true) {
+    if (typeof record.at !== "string") return null;
+    const meetUrl = record.meetUrl === null || record.meetUrl === undefined ? null : record.meetUrl;
+    if (meetUrl !== null && typeof meetUrl !== "string") return null;
+    return {
+      confirmed: true,
+      at: record.at,
+      meetUrl,
+      startsAt: typeof record.startsAt === "string" ? record.startsAt : undefined,
+      timezone: typeof record.timezone === "string" ? record.timezone : undefined,
+      invited: typeof record.invited === "boolean" ? record.invited : undefined,
+    };
+  }
+  if (record.confirmed === false) {
+    return { confirmed: false, expired: record.expired === true };
+  }
+  return null;
+}
+
+async function pollHoldConfirmed(code: string, signal: AbortSignal): Promise<BookingConfirmedResponse> {
+  const deadline = Date.now() + CONFIRMED_TIMEOUT_MS;
+  while (!signal.aborted) {
+    try {
+      const res = await fetch(`/api/booking/confirmed?code=${encodeURIComponent(code)}`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        credentials: "same-origin",
+        signal,
+      });
+      const text = await res.text();
+      const raw = text ? (JSON.parse(text) as unknown) : null;
+      const parsed = parseHoldConfirmed(raw);
+      if (parsed && parsed.confirmed) return parsed;
+      if (parsed && !parsed.confirmed && parsed.expired) return parsed;
+    } catch (error) {
+      if (signal.aborted) throw error;
+      if (error instanceof DOMException && error.name === "AbortError") throw error;
+    }
+    if (Date.now() >= deadline) return { confirmed: false, expired: true };
+    await new Promise<void>((resolve, reject) => {
+      if (signal.aborted) {
+        reject(new DOMException("Aborted", "AbortError"));
+        return;
+      }
+      const timer = setTimeout(resolve, CONFIRMED_POLL_MS);
+      const onAbort = () => {
+        clearTimeout(timer);
+        reject(new DOMException("Aborted", "AbortError"));
+      };
+      signal.addEventListener("abort", onAbort, { once: true });
+    });
+  }
+  throw new DOMException("Aborted", "AbortError");
+}
+
+function bookedFromHold(
+  hold: HoldBookingResponse,
+  confirmed: Extract<BookingConfirmedResponse, { confirmed: true }>,
+): BookedPayload {
+  return {
+    booked: true,
+    startsAt: confirmed.startsAt ?? hold.startsAt,
+    timezone: confirmed.timezone ?? hold.timezone,
+    meetUrl: confirmed.meetUrl ?? null,
+    invited: confirmed.invited ?? false,
+    whatsapp: hold.whatsapp,
+  };
 }
 
 export default BookingDialog;
