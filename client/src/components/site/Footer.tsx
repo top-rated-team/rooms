@@ -1,4 +1,5 @@
 import { useRoute, Link } from "wouter";
+import { RoomMenu } from "@/components/site/RoomMenu";
 
 import { DEFAULT_DOOR_ID, DOOR_BY_ID, DOOR_BY_SLUG, type DoorContract, type DoorDef } from "@shared/doors";
 import { GITHUB_URL } from "@shared/roster";
@@ -180,9 +181,10 @@ export function Footer() {
                 the end of the scroll — the site's only standing link to /w. The
                 page itself explains, in one sentence, why there are none when a
                 browser remembers none. */}
-            <Link href="/w" data-testid="link-footer-rooms" className={LINK}>
-              Rooms you have kept
-            </Link>
+            {/* The same control the masthead and the hero carry, so the way
+                back into a room is one thing with one name everywhere rather
+                than a link here and a menu there. */}
+            <RoomMenu className={LINK} testId="button-footer-open-a-room" />
             {/* Our own two pages, so they are Links rather than anchors with a
                 target: they were external URLs back when this application did
                 not serve them, and both answered with a 404 page under a 200

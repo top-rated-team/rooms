@@ -134,9 +134,16 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
       className={
         layout === "inline"
           ? "mt-[var(--s2)] flex min-w-[16rem] flex-col border-t border-border pt-[var(--s2)]"
-          : "absolute left-0 top-full z-50 mt-[var(--s1)] min-w-[18rem] border border-border bg-background py-[var(--s2)]"
+          /* pt- and not mt-: a margin here is 8px of nothing between the
+             trigger and the list, and the root's mouseleave fires while the
+             pointer crosses it, so the menu shut before it could be reached.
+             Padding keeps the same visual gap inside the hit area. The border
+             and ground move to an inner wrapper so the padding stays invisible. */
+          : "absolute left-0 top-full z-50 min-w-[18rem] pt-[var(--s1)]"
       }
     >
+      {/* The visible box, so the hover bridge above it carries no border. */}
+      <li aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 top-[var(--s1)] -z-10 border border-border bg-background" />
       {rooms.map((room) => {
         const when = formatLastSeen(room.lastSeen);
         return (

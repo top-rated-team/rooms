@@ -5,7 +5,7 @@ import { useBooking } from "@/hooks/use-booking";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID, type DoorContract, type DoorDef } from "@shared/doors";
 import type { Channel, Message, TaskStatus } from "@shared/schema";
 import { useTheme } from "@/hooks/use-theme";
-import { listStoredWorkspaces, useWorkspace } from "@/hooks/use-workspace";
+import { forgetWorkspace, listStoredWorkspaces, useWorkspace } from "@/hooks/use-workspace";
 import { AccountsPanel } from "@/components/workspace/AccountsPanel";
 import { AdGrantPanel, AD_GRANT_SETUP, type SetupLine } from "@/components/workspace/AdGrantPanel";
 import { roomNowLine } from "@shared/room-now";
@@ -543,6 +543,14 @@ export default function WorkspacePage() {
   }
 
   if (status === "not-found") {
+    /* This address is not a room, so stop offering it. The list is this
+       browser's memory of where its rooms are, and an entry that lands back on
+       this very page is an offer to go nowhere — which is what the owner hit
+       when three remembered rooms had been destroyed by a deploy: he clicked
+       them, the page did not change, and it read as a dead button rather than
+       as a room that no longer exists. Forgetting is the honest answer, and it
+       happens before the list below is read so the row disappears with it. */
+    if (token) forgetWorkspace(token);
     const stored = listStoredWorkspaces().filter((w) => w.token !== token);
     /* ----------------------------- the way back in ---------------------------
      * `/w` with nothing after it is not a broken link — it is somebody looking

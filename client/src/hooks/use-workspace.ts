@@ -54,6 +54,22 @@ export function listStoredWorkspaces(): StoredWorkspace[] {
   }
 }
 
+/**
+ * Forget one. Called when its address turns out not to be a room: every entry
+ * in this list is an offer to go somewhere, and an offer that lands on "this
+ * link is not a room" is worse than no offer — the owner clicked three of them
+ * and reported that nothing happened, because the destination looked identical
+ * to where he already was.
+ */
+export function forgetWorkspace(token: string): void {
+  try {
+    const next = listStoredWorkspaces().filter((w) => w.token !== token);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // Same reason the writer below swallows: this is a convenience, not a requirement.
+  }
+}
+
 function rememberWorkspace(token: string, name: string): void {
   try {
     const entry: StoredWorkspace = { token, name, lastSeen: new Date().toISOString() };

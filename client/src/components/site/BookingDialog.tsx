@@ -483,10 +483,18 @@ function DayGrid({
   useEffect(() => {
     if (!tabStop) return;
     const grid = gridRef.current;
-    if (!grid || !grid.contains(document.activeElement)) return;
+    if (!grid) return;
+    const active = document.activeElement;
+    const inGrid = Boolean(active && grid.contains(active));
+    const lostAfterNav =
+      !active ||
+      active === document.body ||
+      active === document.documentElement ||
+      (active instanceof HTMLElement && active.getAttribute("role") === "dialog");
+    if (!inGrid && !lostAfterNav) return;
     const cell = grid.querySelector(`[data-booking-day="${tabStop}"]`);
-    if (cell instanceof HTMLElement && cell !== document.activeElement) cell.focus();
-  }, [tabStop]);
+    if (cell instanceof HTMLElement && cell !== active) cell.focus();
+  }, [tabStop, year, month]);
 
   function moveTo(next: string) {
     onFocusDay(next);
