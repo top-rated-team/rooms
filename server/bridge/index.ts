@@ -35,7 +35,8 @@ import {
   type BridgeSource,
   type MemberRef,
 } from "./attribution";
-import { parseChatwootInbound, sendChatwootText } from "./chatwoot";
+import { isChatwootEcho, parseChatwootInbound, sendChatwootText } from "./chatwoot";
+import { ensureChatwootInboxConversation, sendChatwootInboxText } from "./inbox";
 import { isWhatsAppGroup, parseWahaInbound, sendWahaText } from "./waha";
 
 const SEND_MS = 5_000;
@@ -56,6 +57,7 @@ export const connectBridgeSchema = z.object({
   secret: z.string().min(1).max(2000).optional(),
   accountId: z.string().min(1).max(80).optional(),
   inboxId: z.string().min(1).max(80).optional(),
+  inboxIdentifier: z.string().min(1).max(200).optional(),
   baseUrl: z.string().min(1).max(300).optional(),
   channelId: z.string().min(1).max(80).optional(),
   senderMap: z
@@ -80,6 +82,8 @@ interface StoredBridge {
   secret: string | null;
   accountId: string | null;
   inboxId: string | null;
+  inboxIdentifier: string | null;
+  contactIdentifier: string | null;
   baseUrl: string | null;
   channelId: string | null;
   senderMap: Map<string, string>;
@@ -145,7 +149,11 @@ export type ConnectResult =
   | { ok: true; bridges: RoomBridge[] }
   | { ok: false; error: string; status: 400 | 404 };
 
-export async function connectOrDisconnectBridge(token: string, input: ConnectBridgeInput): Promise<ConnectResult> {
+export async function connectOrDisconnectBridge(
+  token: string,
+  input: ConnectBridgeInput,
+  fetchImpl: typeof fetch = fetch,
+): Promise<ConnectResult> {
   const state = await storage.getWorkspaceByToken(token);
   if (!state) return { ok: false, error: "Workspace not found", status: 404 };
 
@@ -163,10 +171,35 @@ export async function connectOrDisconnectBridge(token: string, input: ConnectBri
   if (input.kind === "whatsapp" && !input.target?.trim()) {
     return { ok: false, error: "A WhatsApp chat id is required to connect.", status: 400 };
   }
-  if (input.kind === "chatwoot" && (!input.target?.trim() || !input.accountId?.trim() || !input.secret?.trim())) {
+
+  const chatwootInboxIdentifier =
+    input.inboxIdentifier?.trim() || process.env.CHATWOOT_INBOX_IDENTIFIER?.trim() || "";
+  const chatwootAccountId = input.accountId?.trim() || process.env.CHATWOOT_ACCOUNT_ID?.trim() || "";
+  const chatwootBaseUrl = input.baseUrl?.trim() || process.env.CHATWOOT_BASE_URL?.trim() || "";
+  const chatwootAgentMode =
+    input.kind === "chatwoot" &&
+    Boolean(input.target?.trim() && input.secret?.trim() && chatwootAccountId);
+  const chatwootInboxMode = input.kind === "chatwoot" && Boolean(chatwootInboxIdentifier) && !chatwootAgentMode;
+
+  if (input.kind === "chatwoot" && !chatwootInboxMode && !chatwootAgentMode) {
     return {
       ok: false,
-      error: "ChatWoot needs an account id, a conversation id, and an API token. One conversation, not the inbox.",
+      error:
+        "ChatWoot needs an inbox identifier and an account id, so this room can create its own contact and conversation. To speak as an agent into a conversation that already exists, give that conversation's id, the account id, and an API token.",
+      status: 400,
+    };
+  }
+  if (chatwootInboxMode && !chatwootAccountId) {
+    return {
+      ok: false,
+      error: "ChatWoot needs an account id so inbound messages can be matched to this room.",
+      status: 400,
+    };
+  }
+  if (chatwootInboxMode && !chatwootBaseUrl) {
+    return {
+      ok: false,
+      error: "ChatWoot needs the inbox host (the ChatWoot URL) so this room can open a conversation.",
       status: 400,
     };
   }
@@ -185,10 +218,36 @@ export async function connectOrDisconnectBridge(token: string, input: ConnectBri
     };
   }
 
-  const target =
+  let target =
     input.kind === "slack"
       ? "channel"
       : (input.target ?? "").trim();
+  let inboxIdentifier: string | null = chatwootInboxMode ? chatwootInboxIdentifier : null;
+  let contactIdentifier: string | null = null;
+  let inboxId = input.inboxId?.trim() ?? null;
+  const accountId = input.kind === "chatwoot" ? chatwootAccountId : input.accountId?.trim() ?? null;
+  const baseUrl = input.kind === "chatwoot" ? chatwootBaseUrl || null : input.baseUrl?.trim() ?? process.env.CHATWOOT_BASE_URL?.trim() ?? null;
+
+  if (chatwootInboxMode) {
+    const opened = await ensureChatwootInboxConversation(
+      {
+        baseUrl: chatwootBaseUrl,
+        inboxIdentifier: chatwootInboxIdentifier,
+        workspaceId: state.workspace.id,
+        workspaceName: state.workspace.name,
+        token: state.workspace.token,
+        hmacToken: process.env.CHATWOOT_HMAC_TOKEN?.trim() || null,
+      },
+      fetchImpl,
+    );
+    if (!opened.ok) {
+      return { ok: false, error: opened.line, status: 400 };
+    }
+    target = opened.conversationId;
+    contactIdentifier = opened.contactIdentifier;
+    if (opened.inboxId) inboxId = opened.inboxId;
+  }
+
   const targetLabel =
     input.targetLabel?.trim() ||
     (input.kind === "whatsapp"
@@ -196,7 +255,9 @@ export async function connectOrDisconnectBridge(token: string, input: ConnectBri
         ? "WhatsApp group"
         : "WhatsApp chat"
       : input.kind === "chatwoot"
-        ? "ChatWoot conversation"
+        ? chatwootInboxMode
+          ? "ChatWoot inbox"
+          : "ChatWoot conversation"
         : input.kind === "slack"
           ? "Slack channel"
           : "ClickUp list");
@@ -217,9 +278,11 @@ export async function connectOrDisconnectBridge(token: string, input: ConnectBri
     target,
     targetLabel,
     secret: input.secret?.trim() ?? null,
-    accountId: input.accountId?.trim() ?? null,
-    inboxId: input.inboxId?.trim() ?? null,
-    baseUrl: input.baseUrl?.trim() ?? process.env.CHATWOOT_BASE_URL?.trim() ?? null,
+    accountId,
+    inboxId,
+    inboxIdentifier,
+    contactIdentifier,
+    baseUrl,
     channelId: input.channelId?.trim() ?? null,
     senderMap,
     connectedAt: new Date().toISOString(),
@@ -242,7 +305,7 @@ function webhookSecretOk(provided: string | undefined): boolean {
     process.env.WAHA_WEBHOOK_SECRET?.trim() ||
     process.env.CHATWOOT_WEBHOOK_SECRET?.trim() ||
     "";
-  if (!expected) return true;
+  if (!expected) return false;
   if (!provided) return false;
   const a = Buffer.from(expected);
   const b = Buffer.from(provided);
@@ -256,6 +319,35 @@ export type InboundResult =
 
 function inboundKey(source: string, parts: string[]): string {
   return `${source}:${parts.join(":")}`;
+}
+
+function pickId(value: unknown): string | null {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return null;
+}
+
+/**
+ * A provider's own message id, when the payload has one. Used as the dedupe
+ * key so two genuine identical bodies (two "thanks") are not collapsed.
+ */
+function inboundIdFromRaw(raw: unknown): string | null {
+  if (raw === null || typeof raw !== "object") return null;
+  const root = raw as Record<string, unknown>;
+  const payload =
+    root.payload !== null && typeof root.payload === "object" ? (root.payload as Record<string, unknown>) : null;
+  const event =
+    root.event !== null && typeof root.event === "object" ? (root.event as Record<string, unknown>) : null;
+  return (
+    pickId(root.id) ??
+    pickId(root.message_id) ??
+    pickId(payload?.id) ??
+    pickId(payload?.message_id) ??
+    pickId(event?.ts) ??
+    pickId(event?.event_ts) ??
+    pickId(root.event_ts) ??
+    pickId(root.ts)
+  );
 }
 
 function alreadySeen(key: string): boolean {
@@ -317,7 +409,8 @@ export async function acceptBridgeInbound(
   const waha = parseWahaInbound(raw);
   if (waha) {
     if (waha.fromMe) return { accepted: true, handled: false };
-    if (alreadySeen(inboundKey("whatsapp", [waha.chatId, waha.body.slice(0, 80)]))) {
+    const wahaId = inboundIdFromRaw(raw);
+    if (alreadySeen(inboundKey("whatsapp", [waha.chatId, wahaId ?? waha.body]))) {
       return { accepted: true, handled: false };
     }
     const workspaceId = byWhatsAppChat.get(waha.chatId);
@@ -336,12 +429,15 @@ export async function acceptBridgeInbound(
 
   const chatwoot = parseChatwootInbound(raw);
   if (chatwoot) {
-    if (chatwoot.echo) return { accepted: true, handled: false };
-    if (alreadySeen(inboundKey("chatwoot", [chatwoot.accountId, chatwoot.conversationId, chatwoot.body.slice(0, 80)]))) {
-      return { accepted: true, handled: false };
-    }
     const workspaceId = byChatwootConversation.get(`${chatwoot.accountId}:${chatwoot.conversationId}`);
     if (!workspaceId) return { accepted: true, handled: false };
+    const stored = byWorkspace.get(workspaceId)?.get("chatwoot");
+    const mode = stored?.inboxIdentifier ? "inbox" : "agent";
+    if (isChatwootEcho(chatwoot, mode)) return { accepted: true, handled: false };
+    const chatwootId = chatwoot.messageId ?? inboundIdFromRaw(raw);
+    if (alreadySeen(inboundKey("chatwoot", [chatwoot.accountId, chatwoot.conversationId, chatwootId ?? chatwoot.body]))) {
+      return { accepted: true, handled: false };
+    }
     await ingestInbound({
       workspaceId,
       source: "chatwoot",
@@ -356,7 +452,8 @@ export async function acceptBridgeInbound(
 
   const slack = parseSlackInbound(raw);
   if (slack) {
-    if (alreadySeen(inboundKey("slack", [slack.channel, slack.user ?? "", slack.body.slice(0, 80)]))) {
+    const slackId = inboundIdFromRaw(raw);
+    if (alreadySeen(inboundKey("slack", [slack.channel, slack.user ?? "", slackId ?? slack.body]))) {
       return { accepted: true, handled: false };
     }
     const workspaceId = bySlackTarget.get(slack.channel) ?? bySlackTarget.get("channel");
@@ -375,7 +472,8 @@ export async function acceptBridgeInbound(
 
   const clickup = parseClickUpInbound(raw);
   if (clickup) {
-    if (alreadySeen(inboundKey("clickup", [clickup.taskId, clickup.user ?? "", clickup.body.slice(0, 80)]))) {
+    const clickupId = inboundIdFromRaw(raw);
+    if (alreadySeen(inboundKey("clickup", [clickup.taskId, clickup.user ?? "", clickupId ?? clickup.body]))) {
       return { accepted: true, handled: false };
     }
     const workspaceId = byClickUpTarget.get(clickup.taskId);
@@ -676,6 +774,18 @@ async function sendOnBridge(
     return sendWahaText({ chatId: bridge.target, text: payload.text }, fetchImpl);
   }
   if (bridge.kind === "chatwoot") {
+    if (bridge.inboxIdentifier && bridge.contactIdentifier) {
+      return sendChatwootInboxText(
+        {
+          baseUrl: bridge.baseUrl ?? "",
+          inboxIdentifier: bridge.inboxIdentifier,
+          contactIdentifier: bridge.contactIdentifier,
+          conversationId: bridge.target,
+          text: payload.text,
+        },
+        fetchImpl,
+      );
+    }
     return sendChatwootText(
       {
         baseUrl: bridge.baseUrl ?? "",

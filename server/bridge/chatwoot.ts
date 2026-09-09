@@ -1,5 +1,9 @@
 /**
- * ChatWoot: the contractors' shared inbox, talking to one conversation.
+ * ChatWoot Application API: speaking as an agent into one conversation.
+ *
+ * Right for a conversation the owner already found. Wrong for a room that
+ * should make its own — that path is inbox.ts (Client API, keyed by
+ * inbox_identifier and contact_identifier).
  *
  * Read-and-write into that conversation, never a mirror of the whole inbox.
  * When ChatWoot is down the send fails with a sentence and the caller marks
@@ -24,6 +28,8 @@ export interface ChatwootSendInput {
 
 export type ChatwootSendResult = { ok: true } | { ok: false; line: string };
 
+export type ChatwootMessageType = "incoming" | "outgoing" | "activity" | "template" | null;
+
 export interface ChatwootInbound {
   accountId: string;
   conversationId: string;
@@ -32,7 +38,16 @@ export interface ChatwootInbound {
   senderId: string | null;
   senderType: "user" | "contact" | "agent_bot" | "unknown";
   body: string;
-  /** Outgoing from the API or a bot — skip, we sent it. */
+  messageId: string | null;
+  messageType: ChatwootMessageType;
+  /** A private note. Those do not enter the room. */
+  privateNote: boolean;
+  /**
+   * Agent-path echo: our own Application-API send comes back as
+   * message_type outgoing, and so do bot messages and private notes.
+   * Inbox-path echo is different — the room is the contact, so incoming
+   * is what we sent. Use isChatwootEcho(inbound, mode).
+   */
   echo: boolean;
 }
 
@@ -97,9 +112,33 @@ function senderTypeOf(raw: string | null): ChatwootInbound["senderType"] {
   return "unknown";
 }
 
+export function messageTypeOf(value: unknown): ChatwootMessageType {
+  if (value === 0 || value === "0" || value === "incoming") return "incoming";
+  if (value === 1 || value === "1" || value === "outgoing") return "outgoing";
+  if (value === 2 || value === "2" || value === "activity") return "activity";
+  if (value === 3 || value === "3" || value === "template") return "template";
+  return null;
+}
+
+/**
+ * Whether this webhook is our own send coming back, or a private note, or
+ * a bot. Mode matters: on the agent path we sent outgoing; on the inbox
+ * path the room is the contact and we sent incoming.
+ */
+export function isChatwootEcho(inbound: ChatwootInbound, mode: "agent" | "inbox"): boolean {
+  if (inbound.privateNote) return true;
+  if (inbound.senderType === "agent_bot") return true;
+  if (inbound.messageType === "activity" || inbound.messageType === "template") return true;
+  if (mode === "inbox") {
+    return inbound.messageType === "incoming" || inbound.senderType === "contact";
+  }
+  return inbound.messageType === "outgoing";
+}
+
 /**
  * A ChatWoot `message_created` (or a body that already is the message).
  * Bot/API echoes are marked `echo` so the room does not write them twice.
+ * `echo` is the agent-path answer; inbox-path callers use isChatwootEcho.
  */
 export function parseChatwootInbound(raw: unknown): ChatwootInbound | null {
   const root = asRecord(raw);
@@ -111,6 +150,7 @@ export function parseChatwootInbound(raw: unknown): ChatwootInbound | null {
   const conv = nested(root, "conversation");
   const account = nested(root, "account");
   const sender = nested(root, "sender") ?? nested(root, "user");
+  const message = nested(root, "message");
 
   const conversationId =
     stringish(root.conversation_id) ?? stringish(conv?.id) ?? stringish(conv?.display_id);
@@ -118,14 +158,16 @@ export function parseChatwootInbound(raw: unknown): ChatwootInbound | null {
   if (!conversationId || !accountId) return null;
 
   const inboxId = stringish(root.inbox_id) ?? stringish(conv?.inbox_id) ?? stringish(nested(conv, "inbox")?.id);
-  const body = stringish(root.content) ?? stringish(root.body) ?? "";
+  const body = stringish(root.content) ?? stringish(root.body) ?? stringish(message?.content) ?? "";
   const type = stringish(sender?.type);
-  const messageType = stringish(root.message_type);
+  const messageType = messageTypeOf(root.message_type ?? message?.message_type);
   const senderType = senderTypeOf(
     type ?? (messageType === "incoming" ? "contact" : messageType === "outgoing" ? "user" : null),
   );
   const senderId = stringish(sender?.id) ?? stringish(sender?.phone_number) ?? stringish(sender?.email);
-  const echo = senderType === "agent_bot" || root.private === true;
+  const messageId = stringish(root.id) ?? stringish(root.message_id) ?? stringish(message?.id);
+  const privateNote = root.private === true || message?.private === true;
+  const echo = senderType === "agent_bot" || privateNote || messageType === "outgoing";
 
   return {
     accountId,
@@ -134,6 +176,9 @@ export function parseChatwootInbound(raw: unknown): ChatwootInbound | null {
     senderId,
     senderType,
     body,
+    messageId,
+    messageType,
+    privateNote,
     echo,
   };
 }

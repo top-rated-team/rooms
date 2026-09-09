@@ -26,11 +26,14 @@ import {
   storedBridgeForTests,
 } from "./index";
 
+const BRIDGE_SECRET = "test-bridge-webhook-secret";
+
 beforeEach(() => {
   resetBridgeForTests();
   resetSpendLedgerForTests();
   delete process.env.WAHA_BASE_URL;
   delete process.env.WAHA_API_KEY;
+  process.env.BRIDGE_WEBHOOK_SECRET = BRIDGE_SECRET;
 });
 
 async function openRoom() {
@@ -111,7 +114,7 @@ describe("inbound", () => {
           fromMe: false,
         },
       },
-      undefined,
+      BRIDGE_SECRET,
     );
     assert.equal(result.accepted, true);
 
