@@ -73,7 +73,18 @@ export function PartnerBody() {
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <div className="lg:col-start-2">
-                  <h3 className={HEADING}>
+                  <h3 className={`${HEADING} flex items-baseline gap-[var(--s2)]`}>
+                    {/* Each product's own mark, taken from its own site rather
+                        than redrawn, at the size the wordmark beside it sets.
+                        aria-hidden with an empty alt: the name is right there,
+                        and a screen reader announcing "Top Voice logo, Top
+                        Voice" says it twice. */}
+                    <img
+                      src={`/assets/products/${build.slug}.png`}
+                      alt=""
+                      aria-hidden="true"
+                      className="inline-block h-[1.1em] w-[1.1em] shrink-0 translate-y-[0.12em] object-contain"
+                    />
                     {href ? (
                       <a
                         href={href}

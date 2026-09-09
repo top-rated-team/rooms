@@ -176,7 +176,19 @@ export function FirstScreen() {
             aria-hidden="true"
             className="me-[0.18em] inline-block h-[1.053em] w-[1.053em] translate-y-[0.02em]"
           />
-          Digital Experts + any AI agents in one room.
+          Digital Experts +{" "}
+          {/* A native title rather than a portal: it needs no state, no
+              decision about touch, and it is the same device the member rail
+              uses for the same job. The underline says there is something to
+              read; without it a tooltip is a secret. */}
+          <span
+            className="underline decoration-from-font underline-offset-[0.18em]"
+            title="Every service here has its own agent, grounded in that service's own documentation. You can admit your own agents to a room as well, and they can work alongside ours."
+            data-testid="text-home-any-agents"
+          >
+            any AI agents
+          </span>{" "}
+          in one room.
         </p>
       </div>
 
