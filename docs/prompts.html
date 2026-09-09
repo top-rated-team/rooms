@@ -45,7 +45,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">8 still to run. Copy one, paste
+  <p class="lede">7 still to run, 1 landed. Copy one, paste
   it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -60,99 +60,9 @@
     <li>Run the same two commands again. If they pass, commit. Then the next wave.</li>
   </ol>
 
-    <section class="wave">
-      <h2>Wave 1 — this one runs alone</h2>
-      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
-      <article class="parcel">
-        <header>
-          <h3>unipile-core</h3>
-          <button class="copy" data-target="p-unipile-core">Copy this prompt</button>
-        </header>
-        <p class="what">Four parcels in this programme call Unipile, and there is no Unipile code in the repository at all - a grep for it returns nothing.</p>
-        <pre id="p-unipile-core">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "unipile-core".
-
-Read these first, before you write anything, in this order:
-  docs/specs/unipile-rooms-and-booking.md — this programme's brief. Every Unipile
-    endpoint it touches, transcribed with the URL it came from. Four decisions already
-    made, with the reasoning, so you do not spend your wave relitigating them. The
-    request and response shapes two parcels build to in parallel. And the rule the
-    owner set: every message is checked for who it is from, who it is to and which
-    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
-    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
-    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
-    A paraphrase would not, and you would find out after building on all three.
-  README.md, private/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  server/unipile/client.ts
-  server/unipile/errors.ts
-  server/unipile/accounts.ts
-  server/unipile/index.ts
-  server/unipile/README.md
-  server/unipile/client.test.ts
-  server/unipile/errors.test.ts
-  .env.example
-
-SHARED FILES: none. You do not edit any file outside the list above.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  One HTTP client for the whole Unipile surface, server-side only. Base URL is
-  https://${UNIPILE_DSN}/api/v1/... - the DSN carries host AND a non-standard port and differs
-  per tenant, so api1 and 13111 appear nowhere in the code. Auth is the single header X-API-KEY,
-  no Bearer prefix. The key authorises the ENTIRE Unipile workspace, not one account, so this
-  directory must be unimportable from client code: read process.env at call time the way
-  server/db.ts does, and add a test that fails if anything under client/ imports it. Errors: the
-  RFC 7807 envelope in the brief section 1.2, mapped to a typed union keyed on `type`, with the
-  enum values the brief lists. Retry 503 and 504 with backoff and NOTHING else; a 401 is an
-  operator alert, never a retry - there is no Retry-After header and no documented quota
-  anywhere, so the retry policy is ours and must be conservative. Missing env vars are not a
-  crash and not a dead button: export an available() and an unavailableLine() the way
-  server/waha.ts:89-115 does, so a caller can put one sentence on screen. Never log the key,
-  never log a whole request body, and never let a Unipile error string reach a visitor
-  unfiltered - its `detail` can name our account. accounts.ts wraps GET /api/v1/accounts and GET
-  /api/v1/accounts/{id} so the operator page can be told whether the two accounts in the brief
-  section 4 are connected and what their sources[].status says (OK, STOPPED, ERROR, CREDENTIALS,
-  PERMISSIONS, CONNECTING - a connected account can rot, and this is how we learn it did). Add
-  both UNIPILE_ variables plus UNIPILE_WEBHOOK_SECRET, UNIPILE_CALENDAR_ACCOUNT_ID and
-  UNIPILE_WHATSAPP_ACCOUNT_ID to .env.example, each with one comment line saying what breaks
-  without it. Tests inject fetch, as server/bridge/chatwoot.ts:57 does - no network in the
-  suite. Do NOT build calendar, messaging or webhook calls here: three other parcels own those
-  and each will import this one.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  Four parcels in this programme call Unipile, and there is no Unipile code in the repository at
-  all - a grep for it returns nothing. Whoever writes the second client writes a second error
-  mapper, a second retry policy and a second opinion about where the key may live, and the third
-  and fourth do it again. One client, first, alone, is the cheapest hour in the programme. It
-  has no seams and no route: it is a module four other parcels import.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
+    <section class="wave" data-landed>
+      <h2>Wave 1 — landed</h2>
+      <p class="waveNote">unipile-core — reported, reviewed and committed. Nothing to run here.</p>
     </section>
     <section class="wave">
       <h2>Wave 2</h2>
