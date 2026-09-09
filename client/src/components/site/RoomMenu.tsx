@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { ROOMS_STORAGE_KEY } from "@/lib/rooms";
 import { Link } from "wouter";
 
 import { useOpenRoom } from "@/hooks/use-open-room";
@@ -12,7 +13,7 @@ import { useOpenRoom } from "@/hooks/use-open-room";
  * localStorage itself behind the same try/catch rather than importing the
  * reader and pulling the room in with it.
  */
-const STORAGE_KEY = "tr-workspaces";
+const STORAGE_KEY = ROOMS_STORAGE_KEY;
 
 export interface RememberedRoom {
   token: string;

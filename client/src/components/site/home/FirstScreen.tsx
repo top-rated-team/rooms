@@ -18,7 +18,7 @@ import { Fragment, lazy, Suspense, useState } from "react";
 
 import { Link } from "wouter";
 
-import { BOOK_A_CALL_URL, PROOF, WHATSAPP_NUMBER, WHATSAPP_URL } from "@shared/roster";
+import { BOOK_A_CALL_URL, PROOF } from "@shared/roster";
 import { RoomMenu } from "@/components/site/RoomMenu";
 import { useBooking } from "@/hooks/use-booking";
 
@@ -129,8 +129,22 @@ export function FirstScreen() {
         as a sibling it claimed a second row and dragged the right-hand
         paragraph down with it.
       */}
-        <p className="type-body mt-[var(--s2)] font-display font-medium" data-testid="text-home-mechanism">
-          Digital Experts + AI agents in one room.
+        {/* The mark sits in the line rather than above it, at the size the
+            header uses relative to its own wordmark, so the two read as the
+            same object at two scales. aria-hidden and empty alt: the words
+            beside it already say whose room this is, and a screen reader
+            announcing "Top-Rated Team logo" before them says it twice. */}
+        <p
+          className="type-body mt-[var(--s2)] flex items-baseline gap-[var(--s2)] font-display font-medium"
+          data-testid="text-home-mechanism"
+        >
+          <img
+            src="/assets/top-rated-logo.png"
+            alt=""
+            aria-hidden="true"
+            className="h-[1.1em] w-[1.1em] shrink-0 translate-y-[0.18em]"
+          />
+          Digital Experts + any AI agents in one room.
         </p>
       </div>
 
@@ -230,18 +244,6 @@ export function FirstScreen() {
           >
             Leave a message
           </button>
-          {/* The number itself, not a word standing in for it: it is what
-              somebody recognises, and on a desktop it is what they copy. It was
-              here once and I lost it replacing this block wholesale. */}
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="link-home-whatsapp"
-            className={ACTION_QUIET}
-          >
-            {WHATSAPP_NUMBER}
-          </a>
         </div>
       </div>
 

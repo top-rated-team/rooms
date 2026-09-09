@@ -2,7 +2,7 @@ import { lazy, Suspense, useState } from "react";
 import { Link } from "wouter";
 
 import { CASES } from "@shared/cases";
-import { BOOK_A_CALL_URL, WHATSAPP_NUMBER, WHATSAPP_URL } from "@shared/roster";
+import { BOOK_A_CALL_URL } from "@shared/roster";
 import { LINK, META, PAGE, READ_MUTED } from "@/components/site/doors/quiet";
 import { useBooking } from "@/hooks/use-booking";
 
@@ -82,19 +82,6 @@ export function TalkToUs({ className = "" }: TalkToUsProps) {
               here that reaches a person in a minute rather than a day. The
               number is shown rather than hidden behind a word: it is what
               somebody recognises, and on a desktop it is what they copy. */}
-          <p className={ACTION_LINE}>
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="link-whatsapp"
-              className={LINK}
-            >
-              {WHATSAPP_NUMBER}
-            </a>
-            <span className={`ml-[var(--s2)] ${META}`}>WhatsApp, straight to a person</span>
-          </p>
-
           <p className={ACTION_LINE}>
             <Link href="/case-studies" data-testid="link-case-studies" className={LINK}>
               Read the cases

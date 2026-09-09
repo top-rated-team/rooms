@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ROOMS_STORAGE_KEY, type StoredWorkspace } from "@/lib/rooms";
 import type { ClientEvent, KbStatus, ServerEvent, WorkspaceState } from "@shared/api";
 import type { Channel, Member, Message, MessageMeta, Task, TaskStatus } from "@shared/schema";
 
@@ -20,13 +21,8 @@ export interface TypingSignal {
   at: number;
 }
 
-export interface StoredWorkspace {
-  token: string;
-  name: string;
-  lastSeen: string;
-}
-
-const STORAGE_KEY = "tr-workspaces";
+export type { StoredWorkspace } from "@/lib/rooms";
+const STORAGE_KEY = ROOMS_STORAGE_KEY;
 const TYPING_TTL_MS = 4_000;
 const PING_INTERVAL_MS = 25_000;
 const TYPING_THROTTLE_MS = 3_000;
