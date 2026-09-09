@@ -27,6 +27,7 @@ import {
   identifyActions,
   looksLikeOwnMaterial,
   resetIdentityForTests,
+  memberFromUserInfo,
   startLinkedIn,
   startWhatsApp,
   storedBindingForTests,
@@ -186,7 +187,7 @@ describe("what may be stored", () => {
     if (!start.ok) return;
     const auth = new URL(start.url);
     assert.equal(auth.origin + auth.pathname, "https://www.linkedin.com/oauth/v2/authorization");
-    assert.equal(auth.searchParams.get("scope"), "openid profile");
+    assert.equal(auth.searchParams.get("scope"), "openid profile email");
     assert.equal(auth.searchParams.get("response_type"), "code");
     const state = auth.searchParams.get("state");
     assert.ok(state);
@@ -462,6 +463,38 @@ describe("the first binding is the owner", () => {
     assert.equal(still?.providerId, "linkedin:owner-sub");
     assert.equal(still?.displayName, "Ada Example");
     assert.equal(claimStateForWorkspace(WORKSPACE).canRename, true);
+  });
+});
+
+describe("LinkedIn userinfo", () => {
+  it("treats email and a profile URL as optional, and never builds a profile from a name or a photo", () => {
+    const withEmail = memberFromUserInfo({
+      sub: "782bbtaQ",
+      name: "Ada Example",
+      email: "ada@example.com",
+      email_verified: true,
+      profile: "https://www.linkedin.com/in/ada-example/",
+      picture: "https://media.licdn.com/dms/image/ada.jpg",
+    });
+    assert.equal(withEmail?.email, "ada@example.com");
+    assert.equal(withEmail?.profileUrl, "https://www.linkedin.com/in/ada-example/");
+
+    const noAddress = memberFromUserInfo({
+      sub: "782bbtaQ",
+      name: "Ada Example",
+      picture: "https://media.licdn.com/dms/image/ada.jpg",
+    });
+    assert.ok(noAddress);
+    assert.equal(noAddress.email, null);
+    assert.equal(noAddress.profileUrl, null);
+    assert.equal(noAddress.displayName, "Ada Example");
+
+    const fromPicture = memberFromUserInfo({
+      sub: "782bbtaQ",
+      name: "Ada Example",
+      profile: "https://media.licdn.com/dms/image/ada.jpg",
+    });
+    assert.equal(fromPicture?.profileUrl, null);
   });
 });
 

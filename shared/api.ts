@@ -400,6 +400,51 @@ export type BookingConfirmedResponse =
     }
   | { confirmed: false; expired?: boolean };
 
+/**
+ * GET /api/booking/linkedin — whether the button can work, and after the
+ * callback, what the popup learns about the signed-in booker.
+ *
+ * `email` is null when LinkedIn omitted the optional claim. That is a booked
+ * call without an invite, not an error: the event is created with
+ * attendees: [] and notify: false, the same write as no address at all.
+ *
+ * `profileUrl` is null when userinfo did not carry a LinkedIn profile page.
+ * It is never built from a name.
+ */
+export type BookingLinkedInAvailability =
+  | { available: true }
+  | { available: false; unavailableLine: string };
+
+export interface BookingLinkedInBooker {
+  name: string | null;
+  email: string | null;
+  profileUrl: string | null;
+}
+
+export type BookingLinkedInResult =
+  | {
+      booked: true;
+      startsAt: string;
+      timezone: string;
+      meetUrl: string | null;
+      invited: boolean;
+    }
+  | {
+      booked: false;
+      invited: false;
+      error?: string;
+      days?: BookingDay[];
+    };
+
+export interface BookingLinkedInSession {
+  draft: { date: string; time: string; name: string; topic: string };
+  booker: BookingLinkedInBooker;
+  result: BookingLinkedInResult;
+}
+
+/** Query the callback puts on the return URL so the popup can restore the pick. */
+export const BOOKING_LINKEDIN_SESSION_QUERY = "booking_signin";
+
 /* -------------------- Ad Grant structure (generate, do not upload) -------------------- */
 /* Product A in docs/specs/adgrant-and-dev-agents.md section 2: a policy-checked
  * account structure the nonprofit can see and take to Google Ads Editor. Nothing
@@ -498,4 +543,38 @@ export interface AdGrantGenerateResponse extends AdGrantQuotaView {
 
 export interface AdGrantGenerateError extends Partial<AdGrantQuotaView> {
   error: string;
+}
+
+/* ------------------------- room access (email link) ------------------------ */
+/* A mailed way back into a room. The token in the link is not the room's own
+ * address: that address is a bearer credential, and putting it in an email
+ * would make the email one too. The mailed token is single-use and lasts one
+ * hour. The sentence the form prints is the same whether or not a room was
+ * found, so the form cannot be used to ask whether a given person is a
+ * customer here. */
+
+/** How long a mailed room-access link remains valid. */
+export const ROOM_ACCESS_TTL_MS = 60 * 60 * 1000;
+
+/** The duration, in the words a visitor reads. Must match ROOM_ACCESS_TTL_MS. */
+export const ROOM_ACCESS_TTL_PHRASE = "one hour";
+
+/** Printed after submit, found or not, known address or not. */
+export const ROOM_ACCESS_SENT_LINE = "If that address has a room, the link is on its way.";
+
+/** Printed when RESEND_API_KEY or LEAD_EMAIL_FROM is missing. */
+export const ROOM_ACCESS_UNAVAILABLE_LINE =
+  "A link cannot be sent from this deployment: email is not configured.";
+
+export type RoomAccessAvailability =
+  | { available: true }
+  | { available: false; unavailableLine: string };
+
+export interface SendRoomAccessRequest {
+  email: string;
+}
+
+/** What the site learns after it asks to send a link. */
+export interface SendRoomAccessResponse {
+  line: string;
 }

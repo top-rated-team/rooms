@@ -57,7 +57,14 @@ import { ensureUnipileWebhooks, INBOUND_PATH, RETIRED_INBOUND_PATHS, UNIPILE_WEB
 import { getBookingSlots, parseSlotsQuery } from "./booking/slots";
 import { postBooking } from "./booking/calendar";
 import { getBookingConfirmed, installBookingInbound } from "./booking/confirm";
+import {
+  bookingLinkedInAvailability,
+  completeBookingLinkedIn,
+  getBookingLinkedInSession,
+  startBookingLinkedIn,
+} from "./booking/signin";
 import { generateAdGrantStructure, getAdGrantGenerationQuota } from "./adgrant/generate";
+import { openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage } from "./room-access";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -589,6 +596,12 @@ export function registerRoutes(app: Express): void {
   });
   const identityWebhookLimit = rateLimit({ windowMs: 60_000, max: 120, message: "Too many requests. Wait a moment." });
   const bookingLimit = rateLimit({ windowMs: 60_000, max: 30, message: "Too many booking requests. Wait a moment." });
+  const roomAccessSendLimit = rateLimit({
+    windowMs: 60 * 60_000,
+    max: 10,
+    message: "Too many requests from this address. Try again later.",
+  });
+  const roomAccessOpenLimit = rateLimit({ windowMs: 60_000, max: 30, message: "Too many requests. Wait a moment." });
 
   /* --------------------------- workspaces --------------------------- */
 
@@ -1300,6 +1313,86 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
+  /* ---------------------- room access (emailed link) ---------------------- */
+  /*
+   * Two routes. POST sends a single-use link to an address, and the JSON it
+   * returns is the same whether or not a room was found. GET opens a room from
+   * that link — a different token from the room's own address, spent when it
+   * is used. GET without a token is whether sending is configured at all, so
+   * the form can say so before asking for an address.
+   */
+
+  /* ------------------------------------------------------------------------
+   * SEALED UNTIL REPAIRED — /api/room-access/* and /api/booking/linkedin/*
+   *
+   * Both parcels were reviewed before they were let out and both came back
+   * with defects that must not meet a visitor. The three that decided it:
+   *
+   *   1. sendRoomAccessLink authorises the mailed link with
+   *      workspaces.visitorEmail, which is self-asserted — any anonymous
+   *      caller sets it on their own room. So this deployment can be made to
+   *      mail a stranger a working link into a room the attacker controls,
+   *      from our domain and our sender.
+   *   2. Issued links live in a process-local Map, so a restart inside the
+   *      hour turns a live link into "already been used" — while the mail and
+   *      ROOM_ACCESS_SPENT_LINE both promise an hour. A promise the software
+   *      cannot keep is the one kind of sentence this product may not carry.
+   *   3. A LinkedIn sign-in whose userinfo omits the optional email claim
+   *      writes a calendar event with no attendee and no way to reach anybody,
+   *      instead of taking the hold-and-prove gate that the identical booking
+   *      takes when the field is left blank — and it does that on a fork too,
+   *      where POST /api/booking refuses the same booking outright.
+   *
+   * The code stays: it is most of two parcels and the next two waves fix it in
+   * place rather than starting again. Nothing below answers until then. Delete
+   * this block in the same commit that fixes the list above, and not before.
+   * ---------------------------------------------------------------------- */
+  app.use(["/api/room-access", "/api/booking/linkedin"], (_req, res) => {
+    res.status(404).json({ error: "Not found" });
+  });
+
+  app.get(
+    "/api/room-access",
+    roomAccessOpenLimit,
+    route(async (_req, res) => {
+      res.json(roomAccessAvailability());
+    }),
+  );
+
+  app.post(
+    "/api/room-access",
+    roomAccessSendLimit,
+    route(async (req, res) => {
+      const result = await sendRoomAccessLink({
+        email: req.body?.email,
+        publicBaseUrl: publicBaseUrl(req),
+      });
+      if (!result.ok) {
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.json(result.body);
+    }),
+  );
+
+  app.get(
+    "/api/room-access/:token",
+    roomAccessOpenLimit,
+    route(async (req, res) => {
+      const raw = req.params.token;
+      const token = Array.isArray(raw) ? raw[0] : raw;
+      const opened = openRoomAccess(token ?? "");
+      if (!opened.ok) {
+        res.setHeader("Cache-Control", "no-store");
+        res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+        res.status(404).type("html").send(spentPage(opened.line));
+        return;
+      }
+      res.setHeader("Cache-Control", "no-store");
+      res.redirect(302, `/w/${opened.workspaceToken}`);
+    }),
+  );
+
   /* ---------------------- room bridges (WhatsApp, ChatWoot, Slack, ClickUp) ---------------------- */
   /*
    * One route to connect or disconnect, and the inbound webhook from the other
@@ -1407,6 +1500,56 @@ export function registerRoutes(app: Express): void {
          exists — not merely that a WhatsApp message arrived. */
       const code = typeof req.query.code === "string" ? req.query.code : "";
       res.json(getBookingConfirmed(code));
+    }),
+  );
+
+  app.get(
+    "/api/booking/linkedin",
+    bookingLimit,
+    route(async (req, res) => {
+      const sessionId = typeof req.query.session === "string" ? req.query.session : "";
+      if (sessionId) {
+        const session = getBookingLinkedInSession(sessionId);
+        if (!session) {
+          res.status(404).json({ error: "That sign-in has expired. Pick a time again." });
+          return;
+        }
+        res.json(session);
+        return;
+      }
+
+      const date = typeof req.query.date === "string" ? req.query.date : "";
+      const time = typeof req.query.time === "string" ? req.query.time : "";
+      if (!date && !time) {
+        res.json(bookingLinkedInAvailability());
+        return;
+      }
+
+      const start = startBookingLinkedIn({
+        date,
+        time,
+        name: typeof req.query.name === "string" ? req.query.name : "",
+        topic: typeof req.query.topic === "string" ? req.query.topic : "",
+        returnPath: typeof req.query.return === "string" ? req.query.return : "/",
+        publicBaseUrl: publicBaseUrl(req),
+      });
+      if (!start.ok) {
+        res.status(503).json({ error: start.line });
+        return;
+      }
+      res.redirect(302, start.url);
+    }),
+  );
+
+  app.get(
+    "/api/booking/linkedin/callback",
+    route(async (req, res) => {
+      const result = await completeBookingLinkedIn({
+        code: typeof req.query.code === "string" ? req.query.code : undefined,
+        state: typeof req.query.state === "string" ? req.query.state : undefined,
+        error: typeof req.query.error === "string" ? req.query.error : undefined,
+      });
+      res.redirect(302, result.redirectTo);
     }),
   );
 
