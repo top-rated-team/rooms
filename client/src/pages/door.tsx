@@ -309,7 +309,17 @@ function DoorPage({ door }: { door: DoorDef }) {
                   once below, beside the sentence that says why there is no
                   panel — on that door the room is not ours to open either. */}
               {panelIsOpen ? (
-                <div className="mt-[var(--s4)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s2)]">
+                /* The same row as the home page, on the owner's instruction:
+                   the same clamp, the same nowrap, the same gap that closes a
+                   step on a phone. It was left at full --type-meta here and so
+                   it broke across two lines while the home page held one. The
+                   door carries one action the home page does not — Ask AI
+                   agent, because this page is where you ask — so it is four
+                   where home is three, which is the same count home reaches
+                   anyway once a browser remembers a room, and the row is
+                   measured at that width. Below sm it wraps between whole
+                   actions rather than mid-label, exactly as home does. */
+                <div className="mt-[var(--s4)] flex flex-wrap items-baseline gap-x-[var(--s2)] gap-y-[var(--s1)] whitespace-nowrap [font-size:clamp(0.66rem,3vw,0.76rem)!important] sm:flex-nowrap sm:gap-x-[var(--s3)]">
                   {roomMenu("hero")}
                   <button type="button" data-testid="button-door-ask" className={ACTION} onClick={askInPanel}>
                     Ask AI agent

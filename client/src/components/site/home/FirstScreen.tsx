@@ -236,11 +236,11 @@ export function FirstScreen() {
               identically would teach the reader the wrong rule. tabIndex makes
               each reachable by keyboard, which the native title never was. */}
           <Hover text="Come in. We're inside!" testId="text-home-digital-experts">
-            Digital Experts
+            Digital experts
           </Hover>{" "}
           +{" "}
           <Hover
-            text="Every service here has its own agent, grounded in that service's own documentation. You can admit your own agents to a room as well, and they can work alongside ours."
+            text="Every room here has its own AI agent, grounded in its service's own documentation. You can admit your own agents to a room too, and they can work alongside ours as well as collaborate between each other."
             testId="text-home-any-agents"
           >
             any AI agents
@@ -266,9 +266,10 @@ export function FirstScreen() {
             the first screen's text, which is the complaint this rewrite began
             with. Panel.tsx carries it. */}
         <p className="type-body m-0">
-          Start with a free expert audit of what the AI agents and automations in your ad accounts have been doing.
-          Then the work it turns up: paid advertising and the measurement under it, Google Ad Grants, inbound LinkedIn
-          on the official API, custom AI around all of it &mdash; for you and/or your clients.
+          Start with a free expert audit of what the AI agents and automations in your ad accounts and beyond have
+          been doing. Then the work it turns up: any automations, Google Ad, any advertising, and the measurement
+          under it, inbound LinkedIn on the official API, custom AI around all of it &mdash; for you and/or your
+          clients.
         </p>
         <dl
           data-testid="list-record"

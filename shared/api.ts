@@ -578,3 +578,27 @@ export interface SendRoomAccessRequest {
 export interface SendRoomAccessResponse {
   line: string;
 }
+
+/* ------------------------- room login (three ways) ------------------------ */
+/* LOGIN on the site. LinkedIn and WhatsApp ask the reverse of a room binding:
+ * given this person, which rooms are theirs. The address way is the mailed
+ * link above. WhatsApp is omitted on a fork: the number in the repo is the
+ * owner's. */
+
+export interface RoomLoginAvailability {
+  linkedin: { available: true } | { available: false; unavailableLine: string };
+  /** False means do not draw the way. A fork never sees it. */
+  whatsapp: { available: true } | { available: false };
+  email: RoomAccessAvailability;
+}
+
+export interface RoomLoginWhatsAppOffer {
+  url: string;
+  qrSvg: string | null;
+  warning: string;
+  code: string;
+}
+
+export type RoomLoginWhatsAppConfirmed =
+  | { confirmed: true; rooms: { token: string }[] }
+  | { confirmed: false; expired?: boolean };

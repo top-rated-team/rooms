@@ -39,9 +39,22 @@ export interface StoredWhatsappNote {
 
 const bindings = new Map<string, StoredBinding>();
 const notes = new Map<string, StoredWhatsappNote>();
+/** Reverse index: given this person, which rooms are theirs. */
+const byPerson = new Map<string, Set<string>>();
 
 let hydrated = false;
 let hydrateInFlight: Promise<void> | null = null;
+
+function personKey(provider: StoredBinding["provider"], providerId: string): string {
+  return `${provider}\0${providerId}`;
+}
+
+function indexBinding(row: StoredBinding): void {
+  const key = personKey(row.provider, row.providerId);
+  const ids = byPerson.get(key) ?? new Set<string>();
+  ids.add(row.workspaceId);
+  byPerson.set(key, ids);
+}
 
 function iso(value: Date | string): string {
   if (value instanceof Date) return value.toISOString();
@@ -86,7 +99,11 @@ async function hydrateFromDb(): Promise<void> {
         db.select().from(roomWhatsappNotes),
       ]);
       for (const row of bindingRows) {
-        if (!bindings.has(row.workspaceId)) bindings.set(row.workspaceId, fromBindingRow(row));
+        if (!bindings.has(row.workspaceId)) {
+          const stored = fromBindingRow(row);
+          bindings.set(row.workspaceId, stored);
+          indexBinding(stored);
+        }
       }
       for (const row of noteRows) {
         if (!notes.has(row.workspaceId)) {
@@ -124,6 +141,25 @@ export function getBinding(workspaceId: string): StoredBinding | undefined {
   return bindings.get(workspaceId);
 }
 
+/**
+ * The reverse of getBinding: given this person, which rooms are theirs.
+ * Same hashed identifiers the forward map already stores. Nothing new is written.
+ */
+export async function listBindingsByPerson(
+  provider: RoomBindingProvider,
+  providerId: string,
+): Promise<StoredBinding[]> {
+  await hydrateFromDb();
+  const ids = byPerson.get(personKey(provider, providerId));
+  if (!ids) return [];
+  const rows: StoredBinding[] = [];
+  for (const id of ids) {
+    const row = bindings.get(id);
+    if (row) rows.push(row);
+  }
+  return rows;
+}
+
 export function getWhatsappNote(workspaceId: string): StoredWhatsappNote | undefined {
   return notes.get(workspaceId);
 }
@@ -138,6 +174,7 @@ export async function putBinding(row: StoredBinding): Promise<StoredBinding> {
   if (existing) return existing;
 
   bindings.set(row.workspaceId, row);
+  indexBinding(row);
 
   if (hasDb()) {
     const db = getDb();
@@ -202,6 +239,7 @@ export async function putWhatsappNote(row: StoredWhatsappNote): Promise<StoredWh
 export function resetIdentityStoreForTests(): void {
   bindings.clear();
   notes.clear();
+  byPerson.clear();
   hydrated = false;
   hydrateInFlight = null;
 }

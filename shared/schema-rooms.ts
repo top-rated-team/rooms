@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, index, primaryKey } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
 /**
@@ -44,5 +44,48 @@ export const claimNoteSchema = z.object({
   number: z.string().trim().min(1).max(40),
 });
 
+/**
+ * An address that has earned a room. Hashed. Not workspaces.visitorEmail —
+ * that field is self-asserted by whoever opened the room.
+ *
+ * The room token is stored so a later send can mint a single-use access link
+ * without putting that token in the mail. A stolen dump of hashes does not
+ * yield a working address or a working link.
+ */
+export const roomAddressBindings = pgTable(
+  "room_address_bindings",
+  {
+    emailHash: text("email_hash").notNull(),
+    workspaceId: text("workspace_id").notNull(),
+    workspaceToken: text("workspace_token").notNull(),
+    boundAt: timestamp("bound_at").notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.emailHash, t.workspaceId] }),
+    emailIdx: index("room_address_bindings_email_idx").on(t.emailHash),
+  }),
+);
+
+/**
+ * A mailed way back into a room. The token in the URL is hashed before it is
+ * stored, spent when it is used, and dead after an hour. It is not the room's
+ * own address.
+ */
+export const roomAccessLinks = pgTable(
+  "room_access_links",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    workspaceId: text("workspace_id").notNull(),
+    workspaceToken: text("workspace_token").notNull(),
+    emailHash: text("email_hash").notNull(),
+    createdAt: timestamp("created_at").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    spentAt: timestamp("spent_at"),
+  },
+  (t) => ({ expiresIdx: index("room_access_links_expires_idx").on(t.expiresAt) }),
+);
+
 export type RoomBindingRow = typeof roomBindings.$inferSelect;
 export type RoomWhatsappNoteRow = typeof roomWhatsappNotes.$inferSelect;
+export type RoomAddressBindingRow = typeof roomAddressBindings.$inferSelect;
+export type RoomAccessLinkRow = typeof roomAccessLinks.$inferSelect;

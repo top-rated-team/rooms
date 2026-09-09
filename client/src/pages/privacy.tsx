@@ -12,7 +12,11 @@ import { CONTACT_EMAIL } from "@shared/roster";
  * with a 200 status — and a LinkedIn API application made as a SaaS.
  *
  * The rule this page is written to is the site's own: everything here must be
- * true of the code as it stands. So it names the actual stores, the actual
+ * true of the code as it stands. It was broken here once, and the break is
+ * worth remembering: the visitor-calendar row was written in the present
+ * tense for a feature no parcel had built, so a legal page — the one Google's
+ * reviewer reads — described a permission this site has never asked anybody
+ * for. A future tense is the only honest way to describe a plan on this page. So it names the actual stores, the actual
  * processors and the actual fields, and where a thing is not built yet it
  * says "when", not "we may". A policy that reserves rights the software does
  * not exercise is the kind that gets read as boilerplate, by a reviewer and by
@@ -184,9 +188,9 @@ export default function Privacy() {
       <Section title="How long we keep it">
         <P>
           A room and its messages are kept while the work is live and for as long as you might want to come back to
-          it. A request to leave a message is kept as the record of an enquiry. Anything read from a calendar you
-          connected is never written down at all. Ask us to delete a room or an enquiry and we will, and we will say
-          when it is done.
+          it. A request to leave a message is kept as the record of an enquiry. Nothing has ever been read from a
+          calendar of yours, because connecting one is not built. Ask us to delete a room or an enquiry and we will,
+          and we will say when it is done.
         </P>
       </Section>
 

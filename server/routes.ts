@@ -64,7 +64,17 @@ import {
   startBookingLinkedIn,
 } from "./booking/signin";
 import { generateAdGrantStructure, getAdGrantGenerationQuota } from "./adgrant/generate";
-import { openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage } from "./room-access";
+import { openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage, bindRoomAddressForToken } from "./room-access";
+import {
+  completeRoomLoginLinkedIn,
+  getRoomLoginWhatsAppConfirmed,
+  installRoomLoginInbound,
+  loginNonePage,
+  loginPickerPage,
+  roomLoginAvailability,
+  startRoomLoginLinkedIn,
+  startRoomLoginWhatsApp,
+} from "./room-login";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -1212,6 +1222,7 @@ export function registerRoutes(app: Express): void {
   /* ---------------------- room identity (two routes) ---------------------- */
 
   installIdentityInbound();
+  installRoomLoginInbound();
   void hydrateIdentityStore();
 
   app.get(
@@ -1313,43 +1324,86 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
-  /* ---------------------- room access (emailed link) ---------------------- */
+  /* ---------------------- room login (three ways) ---------------------- */
   /*
-   * Two routes. POST sends a single-use link to an address, and the JSON it
-   * returns is the same whether or not a room was found. GET opens a room from
-   * that link — a different token from the room's own address, spent when it
-   * is used. GET without a token is whether sending is configured at all, so
-   * the form can say so before asking for an address.
+   * LOGIN on the site. GET /api/room-login says which ways work on this
+   * deployment. LinkedIn and WhatsApp look up rooms already bound to that
+   * person. The address way is the mailed single-use link: POST sends it,
+   * GET /api/room-access/:token opens it. An address typed into a room the
+   * caller is already inside is POST /api/workspaces/:token/room-address.
+   *
+   * Defects 1 and 2 that sealed this block are repaired here. Defect 3 is
+   * booking LinkedIn and stays sealed below.
    */
 
-  /* ------------------------------------------------------------------------
-   * SEALED UNTIL REPAIRED — /api/room-access/* and /api/booking/linkedin/*
-   *
-   * Both parcels were reviewed before they were let out and both came back
-   * with defects that must not meet a visitor. The three that decided it:
-   *
-   *   1. sendRoomAccessLink authorises the mailed link with
-   *      workspaces.visitorEmail, which is self-asserted — any anonymous
-   *      caller sets it on their own room. So this deployment can be made to
-   *      mail a stranger a working link into a room the attacker controls,
-   *      from our domain and our sender.
-   *   2. Issued links live in a process-local Map, so a restart inside the
-   *      hour turns a live link into "already been used" — while the mail and
-   *      ROOM_ACCESS_SPENT_LINE both promise an hour. A promise the software
-   *      cannot keep is the one kind of sentence this product may not carry.
-   *   3. A LinkedIn sign-in whose userinfo omits the optional email claim
-   *      writes a calendar event with no attendee and no way to reach anybody,
-   *      instead of taking the hold-and-prove gate that the identical booking
-   *      takes when the field is left blank — and it does that on a fork too,
-   *      where POST /api/booking refuses the same booking outright.
-   *
-   * The code stays: it is most of two parcels and the next two waves fix it in
-   * place rather than starting again. Nothing below answers until then. Delete
-   * this block in the same commit that fixes the list above, and not before.
-   * ---------------------------------------------------------------------- */
-  app.use(["/api/room-access", "/api/booking/linkedin"], (_req, res) => {
-    res.status(404).json({ error: "Not found" });
-  });
+  app.get(
+    "/api/room-login",
+    roomAccessOpenLimit,
+    route(async (req, res) => {
+      res.json(await roomLoginAvailability({ host: req.hostname }));
+    }),
+  );
+
+  app.get(
+    "/api/room-login/linkedin",
+    identityLimit,
+    route(async (_req, res) => {
+      const start = startRoomLoginLinkedIn();
+      if (!start.ok) {
+        res.status(503).json({ error: start.line });
+        return;
+      }
+      res.redirect(302, start.url);
+    }),
+  );
+
+  app.get(
+    "/api/room-login/linkedin/callback",
+    route(async (req, res) => {
+      const result = await completeRoomLoginLinkedIn({
+        code: typeof req.query.code === "string" ? req.query.code : undefined,
+        state: typeof req.query.state === "string" ? req.query.state : undefined,
+        error: typeof req.query.error === "string" ? req.query.error : undefined,
+      });
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+      if (!result.ok) {
+        res.status(404).type("html").send(loginNonePage(result.line));
+        return;
+      }
+      if (result.rooms.length === 1) {
+        res.redirect(302, `/w/${result.rooms[0].token}`);
+        return;
+      }
+      if (result.rooms.length === 0) {
+        res.status(200).type("html").send(loginNonePage("No room is bound to this LinkedIn account."));
+        return;
+      }
+      res.status(200).type("html").send(loginPickerPage(result.rooms));
+    }),
+  );
+
+  app.get(
+    "/api/room-login/whatsapp",
+    identityLimit,
+    route(async (req, res) => {
+      const start = await startRoomLoginWhatsApp({ host: req.hostname });
+      if (!start.ok) {
+        res.status(503).json({ error: start.line });
+        return;
+      }
+      res.json(start.offer);
+    }),
+  );
+
+  app.get(
+    "/api/room-login/whatsapp/confirmed",
+    roomAccessOpenLimit,
+    route(async (req, res) => {
+      const code = typeof req.query.code === "string" ? req.query.code : "";
+      res.json(getRoomLoginWhatsAppConfirmed(code));
+    }),
+  );
 
   app.get(
     "/api/room-access",
@@ -1365,7 +1419,6 @@ export function registerRoutes(app: Express): void {
     route(async (req, res) => {
       const result = await sendRoomAccessLink({
         email: req.body?.email,
-        publicBaseUrl: publicBaseUrl(req),
       });
       if (!result.ok) {
         res.status(result.status).json({ error: result.error });
@@ -1381,7 +1434,7 @@ export function registerRoutes(app: Express): void {
     route(async (req, res) => {
       const raw = req.params.token;
       const token = Array.isArray(raw) ? raw[0] : raw;
-      const opened = openRoomAccess(token ?? "");
+      const opened = await openRoomAccess(token ?? "");
       if (!opened.ok) {
         res.setHeader("Cache-Control", "no-store");
         res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
@@ -1392,6 +1445,35 @@ export function registerRoutes(app: Express): void {
       res.redirect(302, `/w/${opened.workspaceToken}`);
     }),
   );
+
+  app.post(
+    "/api/workspaces/:token/room-address",
+    roomAccessSendLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const result = await bindRoomAddressForToken(state.workspace.token, req.body?.email);
+      if (!result.ok) {
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.json({ ok: true });
+    }),
+  );
+
+  /* ------------------------------------------------------------------------
+   * SEALED UNTIL REPAIRED — /api/booking/linkedin/*
+   *
+   * Room-access is unsealed: visitorEmail is no longer read, links live in
+   * the database, and the mailed URL is PUBLIC_BASE_URL. Booking LinkedIn
+   * still has defect 3: a sign-in whose userinfo omits the optional email
+   * claim writes a calendar event with no attendee, instead of the
+   * hold-and-prove gate, including on a fork where POST /api/booking refuses
+   * the same booking. Nothing below answers until that is fixed.
+   * ---------------------------------------------------------------------- */
+  app.use("/api/booking/linkedin", (_req, res) => {
+    res.status(404).json({ error: "Not found" });
+  });
 
   /* ---------------------- room bridges (WhatsApp, ChatWoot, Slack, ClickUp) ---------------------- */
   /*

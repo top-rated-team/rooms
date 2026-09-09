@@ -15,6 +15,7 @@ import { storage } from "./storage";
 import {
   getBinding,
   getWhatsappNote,
+  listBindingsByPerson,
   putBinding,
   putWhatsappNote,
   resetIdentityStoreForTests,
@@ -45,6 +46,45 @@ describe("putBinding", () => {
     assert.equal(second.displayName, "Ada");
     assert.equal(getBinding("ws_a")?.providerId, first.providerId);
     const dumped = JSON.stringify(getBinding("ws_a"));
+    assert.equal(dumped.includes("phone"), false);
+    assert.equal(dumped.includes("token"), false);
+  });
+});
+
+describe("listBindingsByPerson", () => {
+  it("answers the reverse of getBinding: given this person, which rooms are theirs", async () => {
+    await putBinding({
+      workspaceId: "ws_a",
+      provider: "linkedin",
+      providerId: "linkedin:ada",
+      displayName: "Ada",
+      boundAt: "2026-09-09T10:00:00.000Z",
+    });
+    await putBinding({
+      workspaceId: "ws_b",
+      provider: "linkedin",
+      providerId: "linkedin:ada",
+      displayName: "Ada",
+      boundAt: "2026-09-09T11:00:00.000Z",
+    });
+    await putBinding({
+      workspaceId: "ws_c",
+      provider: "whatsapp",
+      providerId: "whatsapp:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      displayName: "Ada",
+      boundAt: "2026-09-09T12:00:00.000Z",
+    });
+
+    const rooms = await listBindingsByPerson("linkedin", "linkedin:ada");
+    assert.deepEqual(
+      rooms.map((row) => row.workspaceId).sort(),
+      ["ws_a", "ws_b"],
+    );
+    assert.equal(
+      (await listBindingsByPerson("linkedin", "linkedin:nobody")).length,
+      0,
+    );
+    const dumped = JSON.stringify(rooms);
     assert.equal(dumped.includes("phone"), false);
     assert.equal(dumped.includes("token"), false);
   });

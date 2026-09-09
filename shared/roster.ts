@@ -23,6 +23,19 @@ export interface AgentDef {
   /** Tailwind classes for the avatar chip. */
   tone: string;
   /**
+   * Off the roster everywhere a visitor can reach it — the panel, the mention
+   * list, and the server's answer path, which matters most: an agent hidden
+   * from a list but still answerable by id is not hidden, it is unlisted.
+   *
+   * Added for the LinkedIn API review. The owner's application is open, and a
+   * reviewer reading this product should not find LinkedIn automation agents
+   * working in it while we ask LinkedIn for the access to do that properly.
+   * LinkedIn ADS is excepted: bought media is not automation against a
+   * member's account. Temporary — the two rows that set it say so and say
+   * what to delete when the application is answered.
+   */
+  hidden?: boolean;
+  /**
    * Whether this agent answers from a retrieved corpus at all. The server reads
    * it in server/ai/agentRuntime.ts.
    */
@@ -524,6 +537,10 @@ engineer must own.`,
   },
   {
     id: "linkedin-automation",
+    /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this line
+       and the comment when it is answered; nothing else about the row changes.
+       Its door is hidden the same way in shared/doors.ts. */
+    hidden: true,
     handle: "linkedin-automation",
     name: "LinkedIn Automation Agent",
     title: "Reads LinkedIn's own developer documentation",
@@ -907,6 +924,10 @@ ${kbRules(
   },
   {
     id: "linkedin-dev",
+    /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW — same reason as
+       linkedin-automation above. This one designs LinkedIn messaging
+       integrations, which is precisely the access being applied for. */
+    hidden: true,
     handle: "linkedin-dev",
     name: "LinkedIn Dev Agent",
     title: "Designs LinkedIn messaging and calendar integrations",

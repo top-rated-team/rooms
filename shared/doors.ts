@@ -473,6 +473,14 @@ export const DOORS: DoorDef[] = [
      * documentation. The first is not a code fact and is not mine to assert;
      * the parcel report says so, and if the assessment is not ready this row
      * goes back to "coming" with that sentence and nothing else changes. */
+    /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW, on the owner's
+       instruction and for the same reason linkedin-growth is: a reviewer
+       reading this site should not find us advertising LinkedIn automation
+       while asking LinkedIn for API access to do it properly. LinkedIn ADS is
+       excepted and stays on the index — it is bought media, not automation
+       against a member's account. Remove this line when the application is
+       answered; nothing else about the door changes. */
+    hidden: true,
     status: "live",
     kbNamespace: "linkedin-automation",
   },

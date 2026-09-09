@@ -10,17 +10,15 @@
  *
  * THE REPLY ON SCREEN IS THE SAME whether or not a room was found. A form that
  * says "no room for that address" is a form that tells anybody whether a given
- * person is a customer here.
+ * person is a customer here. The no-room path waits as long as a send would, so
+ * latency does not say what the words do not.
  *
- * Bindings of address → room live in this module, hashed. Identity does not
- * store an email today; callers that learn one (LinkedIn userinfo, a typed
- * visitorEmail) should call bindRoomAddress. Until they do, this path can only
- * find rooms it was told about, or — with a database — a workspace that already
- * carries that visitorEmail.
+ * An address earns a room only through bindRoomAddress. workspaces.visitorEmail
+ * is self-asserted and is not read here.
  */
 
 import { createHash, randomBytes } from "node:crypto";
-import { sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { customAlphabet } from "nanoid";
 import {
   ROOM_ACCESS_SENT_LINE,
@@ -30,8 +28,9 @@ import {
   type RoomAccessAvailability,
   type SendRoomAccessResponse,
 } from "@shared/api";
-import { workspaces } from "@shared/schema";
+import { roomAccessLinks, roomAddressBindings } from "@shared/schema-rooms";
 import { getDb, hasDb } from "./db";
+import { storage } from "./storage";
 
 export {
   ROOM_ACCESS_SENT_LINE,
@@ -48,15 +47,26 @@ const mintAccessToken = customAlphabet(ACCESS_TOKEN_ALPHABET, ACCESS_TOKEN_LENGT
 const EMAIL_TIMEOUT_MS = 8_000;
 /** One send per address, and one per room, inside this window. */
 export const SEND_COOLDOWN_MS = 15 * 60_000;
+/** Both the found and the not-found path wait at least this long. */
+export const TIMING_FLOOR_MS = 800;
 
 export const ROOM_ACCESS_INVALID_EMAIL_LINE = "That does not look like an address.";
 export const ROOM_ACCESS_SPENT_LINE = `This link has already been used, or ${ROOM_ACCESS_TTL_PHRASE} has passed, so it no longer opens a room.`;
+export const ROOM_ACCESS_SEND_FAILED_LINE = "The link could not be sent. Try again.";
+export const ROOM_ACCESS_NO_PUBLIC_URL_LINE =
+  "A link cannot be sent from this deployment: the public address is not configured.";
+export const ROOM_ACCESS_NO_DATABASE_LINE =
+  "A link cannot be sent from this deployment: rooms are not stored in a database, so a link could not last an hour.";
 
 const RESEND_URL = "https://api.resend.com/emails";
 
 /* --------------------------------- hashing -------------------------------- */
 
 let pepper: Buffer | null = null;
+let memoryDurableForTests = false;
+let hydrated = false;
+let hydrateInFlight: Promise<void> | null = null;
+let lastSendMs = TIMING_FLOOR_MS;
 
 function hashPepper(): Buffer {
   if (pepper) return pepper;
@@ -92,6 +102,16 @@ function hashAccessToken(token: string): string {
   return digest("access", token);
 }
 
+export function configuredPublicBaseUrl(): string | null {
+  const raw = process.env.PUBLIC_BASE_URL?.trim();
+  if (!raw) return null;
+  return raw.replace(/\/+$/, "");
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /* --------------------------------- records -------------------------------- */
 
 export interface BoundRoomAddress {
@@ -115,12 +135,83 @@ const links = new Map<string, IssuedLink>();
 const sentAtByEmail = new Map<string, number>();
 const sentAtByRoom = new Map<string, number>();
 
+function durableConfigured(): boolean {
+  return memoryDurableForTests || hasDb();
+}
+
+async function hydrateFromDb(): Promise<void> {
+  if (hydrated) return;
+  if (!hasDb()) {
+    hydrated = true;
+    return;
+  }
+  if (hydrateInFlight) {
+    await hydrateInFlight;
+    return;
+  }
+  hydrateInFlight = (async () => {
+    const db = getDb();
+    if (!db) {
+      hydrated = true;
+      return;
+    }
+    try {
+      const [bindingRows, linkRows] = await Promise.all([
+        db.select().from(roomAddressBindings),
+        db.select().from(roomAccessLinks),
+      ]);
+      for (const row of bindingRows) {
+        rememberBinding(
+          { workspaceId: row.workspaceId, workspaceToken: row.workspaceToken },
+          row.emailHash,
+        );
+      }
+      const now = Date.now();
+      for (const row of linkRows) {
+        const expiresAt = row.expiresAt.getTime();
+        const spentAt = row.spentAt ? row.spentAt.getTime() : null;
+        if (expiresAt <= now && spentAt === null) continue;
+        links.set(row.tokenHash, {
+          tokenHash: row.tokenHash,
+          workspaceId: row.workspaceId,
+          workspaceToken: row.workspaceToken,
+          emailHash: row.emailHash,
+          createdAt: row.createdAt.getTime(),
+          expiresAt,
+          spentAt,
+        });
+      }
+    } catch (error) {
+      console.error(
+        "[room-access] room_address_bindings is not readable. A link cannot be kept for an hour until DATABASE_URL is set and `npm run db:push` creates the tables.",
+        error instanceof Error ? error.message : error,
+      );
+    } finally {
+      hydrated = true;
+    }
+  })();
+  try {
+    await hydrateInFlight;
+  } finally {
+    hydrateInFlight = null;
+  }
+}
+
 export function resetRoomAccessForTests(): void {
   bindings.clear();
   links.clear();
   sentAtByEmail.clear();
   sentAtByRoom.clear();
   pepper = null;
+  memoryDurableForTests = false;
+  hydrated = false;
+  hydrateInFlight = null;
+  lastSendMs = TIMING_FLOOR_MS;
+}
+
+/** Tests of send/open keep rows in this process, which is what a database does in production. */
+export function useMemoryRoomAccessForTests(): void {
+  memoryDurableForTests = true;
 }
 
 /** Test seam: the stored rows, so cases can assert what is NOT on them. */
@@ -139,8 +230,22 @@ export function mailConfigured(): boolean {
 }
 
 export function roomAccessAvailability(): RoomAccessAvailability {
-  if (mailConfigured()) return { available: true };
-  return { available: false, unavailableLine: ROOM_ACCESS_UNAVAILABLE_LINE };
+  if (!durableConfigured()) {
+    return { available: false, unavailableLine: ROOM_ACCESS_NO_DATABASE_LINE };
+  }
+  if (!configuredPublicBaseUrl()) {
+    return { available: false, unavailableLine: ROOM_ACCESS_NO_PUBLIC_URL_LINE };
+  }
+  if (!mailConfigured()) {
+    return { available: false, unavailableLine: ROOM_ACCESS_UNAVAILABLE_LINE };
+  }
+  return { available: true };
+}
+
+function roomAccessReady(): SendRoomAccessResult | null {
+  const availability = roomAccessAvailability();
+  if (availability.available) return null;
+  return { ok: false, status: 503, error: availability.unavailableLine };
 }
 
 /**
@@ -152,6 +257,7 @@ async function sendViaResend(to: string, text: string): Promise<boolean> {
   const from = process.env.LEAD_EMAIL_FROM?.trim();
   if (!key || !from) return false;
 
+  const started = Date.now();
   try {
     const response = await fetch(RESEND_URL, {
       method: "POST",
@@ -164,8 +270,10 @@ async function sendViaResend(to: string, text: string): Promise<boolean> {
       }),
       signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),
     });
+    lastSendMs = Math.max(TIMING_FLOOR_MS, Date.now() - started);
     return response.ok;
   } catch (error) {
+    lastSendMs = Math.max(TIMING_FLOOR_MS, Date.now() - started);
     console.error("[room-access] sending the link failed:", error instanceof Error ? error.message : error);
     return false;
   }
@@ -176,12 +284,12 @@ function accessUrl(publicBaseUrl: string, token: string): string {
 }
 
 function emailBody(publicBaseUrl: string, tokens: string[]): string {
-  const links = tokens.map((token) => accessUrl(publicBaseUrl, token));
-  if (links.length === 1) {
+  const mailed = tokens.map((token) => accessUrl(publicBaseUrl, token));
+  if (mailed.length === 1) {
     return [
       `This link opens the room once, and only for ${ROOM_ACCESS_TTL_PHRASE}:`,
       "",
-      links[0],
+      mailed[0],
       "",
       `After it has been used, or after ${ROOM_ACCESS_TTL_PHRASE}, it will not work. It is not the room's own address, so keeping this email does not keep a way into the room forever.`,
     ].join("\n");
@@ -189,10 +297,18 @@ function emailBody(publicBaseUrl: string, tokens: string[]): string {
   return [
     `Each of these links opens one room once, and only for ${ROOM_ACCESS_TTL_PHRASE}:`,
     "",
-    ...links,
+    ...mailed,
     "",
     `After a link has been used, or after ${ROOM_ACCESS_TTL_PHRASE}, it will not work. These are not the rooms' own addresses, so keeping this email does not keep a way into the rooms forever.`,
   ].join("\n");
+}
+
+async function equalizeTiming(
+  startedAt: number,
+  sleepImpl: (ms: number) => Promise<void>,
+): Promise<void> {
+  const wait = Math.max(TIMING_FLOOR_MS, lastSendMs) - (Date.now() - startedAt);
+  if (wait > 0) await sleepImpl(wait);
 }
 
 /* -------------------------------- bindings -------------------------------- */
@@ -209,53 +325,89 @@ function rememberBinding(row: BoundRoomAddress, emailHash: string): void {
   bindings.set(emailHash, [...existing, row]);
 }
 
+async function persistBinding(row: BoundRoomAddress, emailHash: string): Promise<boolean> {
+  rememberBinding(row, emailHash);
+  if (!hasDb()) return memoryDurableForTests;
+  const db = getDb();
+  if (!db) return false;
+  try {
+    const existing = await db
+      .select()
+      .from(roomAddressBindings)
+      .where(eq(roomAddressBindings.emailHash, emailHash));
+    const same = existing.find((item) => item.workspaceId === row.workspaceId);
+    if (same) {
+      await db
+        .update(roomAddressBindings)
+        .set({ workspaceToken: row.workspaceToken, boundAt: new Date() })
+        .where(
+          and(eq(roomAddressBindings.emailHash, emailHash), eq(roomAddressBindings.workspaceId, row.workspaceId)),
+        );
+      return true;
+    }
+    await db.insert(roomAddressBindings).values({
+      emailHash,
+      workspaceId: row.workspaceId,
+      workspaceToken: row.workspaceToken,
+      boundAt: new Date(),
+    });
+    return true;
+  } catch (error) {
+    console.error(
+      "[room-access] could not persist an address binding. The row is in this process only.",
+      error instanceof Error ? error.message : error,
+    );
+    return false;
+  }
+}
+
 /**
  * Record that this address belongs to this room. The address is hashed. The
  * room token is kept server-side so a later send can mint an access link
  * without putting that token in the mail.
+ *
+ * Callers must be real: a LinkedIn userinfo email, or an address a person
+ * typed into a room they were already inside. workspaces.visitorEmail is not
+ * a caller.
  */
-export function bindRoomAddress(input: { workspaceId: string; workspaceToken: string; email: string }): void {
+export async function bindRoomAddress(input: {
+  workspaceId: string;
+  workspaceToken: string;
+  email: string;
+}): Promise<void> {
+  await hydrateFromDb();
   const email = parseEmail(input.email);
   if (!email) return;
   const workspaceToken = input.workspaceToken.trim();
   const workspaceId = input.workspaceId.trim();
   if (!workspaceToken || !workspaceId) return;
-  rememberBinding({ workspaceId, workspaceToken }, hashEmail(email));
+  await persistBinding({ workspaceId, workspaceToken }, hashEmail(email));
 }
 
-async function roomsFromVisitorEmail(email: string): Promise<BoundRoomAddress[]> {
-  if (!hasDb()) return [];
-  const db = getDb();
-  if (!db) return [];
-  try {
-    const rows = await db
-      .select({
-        workspaceId: workspaces.id,
-        workspaceToken: workspaces.token,
-        visitorEmail: workspaces.visitorEmail,
-      })
-      .from(workspaces)
-      .where(sql`lower(${workspaces.visitorEmail}) = ${email}`);
-    return rows
-      .filter((row) => row.workspaceToken)
-      .map((row) => ({ workspaceId: row.workspaceId, workspaceToken: row.workspaceToken }));
-  } catch (error) {
-    console.error(
-      "[room-access] could not read visitorEmail off workspaces. Address lookup stays with the bindings this process was told about.",
-      error instanceof Error ? error.message : error,
-    );
-    return [];
-  }
+/**
+ * An address typed into a room the caller is already inside. The room token
+ * is the credential; this is not a way to bind a stranger's address to a
+ * room you do not have.
+ */
+export async function bindRoomAddressForToken(
+  token: string,
+  email: unknown,
+): Promise<{ ok: true } | { ok: false; status: 400 | 404; error: string }> {
+  const parsed = parseEmail(email);
+  if (!parsed) return { ok: false, status: 400, error: ROOM_ACCESS_INVALID_EMAIL_LINE };
+  const state = await storage.getWorkspaceByToken(token.trim());
+  if (!state) return { ok: false, status: 404, error: "Workspace not found" };
+  await bindRoomAddress({
+    workspaceId: state.workspace.id,
+    workspaceToken: state.workspace.token,
+    email: parsed,
+  });
+  return { ok: true };
 }
 
 async function roomsForEmail(email: string): Promise<BoundRoomAddress[]> {
-  const fromBind = bindings.get(hashEmail(email)) ?? [];
-  const fromWorkspaces = await roomsFromVisitorEmail(email);
-  const byId = new Map<string, BoundRoomAddress>();
-  for (const row of [...fromBind, ...fromWorkspaces]) {
-    if (!byId.has(row.workspaceId)) byId.set(row.workspaceId, row);
-  }
-  return [...byId.values()];
+  await hydrateFromDb();
+  return [...(bindings.get(hashEmail(email)) ?? [])];
 }
 
 /* ---------------------------------- send ---------------------------------- */
@@ -289,48 +441,96 @@ function issueLink(room: BoundRoomAddress, emailHash: string, now: number): { to
   return { token, row };
 }
 
+async function persistLink(row: IssuedLink): Promise<boolean> {
+  if (!hasDb()) return memoryDurableForTests;
+  const db = getDb();
+  if (!db) return false;
+  try {
+    await db.insert(roomAccessLinks).values({
+      tokenHash: row.tokenHash,
+      workspaceId: row.workspaceId,
+      workspaceToken: row.workspaceToken,
+      emailHash: row.emailHash,
+      createdAt: new Date(row.createdAt),
+      expiresAt: new Date(row.expiresAt),
+      spentAt: null,
+    });
+    return true;
+  } catch (error) {
+    console.error(
+      "[room-access] could not persist an access link. Nothing was mailed.",
+      error instanceof Error ? error.message : error,
+    );
+    return false;
+  }
+}
+
 /**
  * Mint single-use links for rooms this address is bound to, and send them.
  * Always returns the same visitor-facing line when the request is well-formed
- * and mail is configured, whether or not anything was found.
+ * and sending is configured, whether or not anything was found — except when
+ * the mail provider rejects a send, which must not claim a link was sent.
  */
 export async function sendRoomAccessLink(input: {
   email: unknown;
-  publicBaseUrl: string;
+  /** Tests only. Production mails PUBLIC_BASE_URL and refuses when it is unset. */
+  publicBaseUrl?: string;
   now?: number;
+  sleep?: (ms: number) => Promise<void>;
 }): Promise<SendRoomAccessResult> {
   const email = parseEmail(input.email);
   if (!email) {
     return { ok: false, status: 400, error: ROOM_ACCESS_INVALID_EMAIL_LINE };
   }
-  if (!mailConfigured()) {
-    return { ok: false, status: 503, error: ROOM_ACCESS_UNAVAILABLE_LINE };
+  const notReady = roomAccessReady();
+  if (notReady) return notReady;
+
+  const publicBaseUrl = configuredPublicBaseUrl() ?? input.publicBaseUrl?.replace(/\/+$/, "") ?? null;
+  if (!publicBaseUrl) {
+    return { ok: false, status: 503, error: ROOM_ACCESS_NO_PUBLIC_URL_LINE };
   }
 
   const now = input.now ?? Date.now();
+  const startedAt = Date.now();
+  const sleepImpl = input.sleep ?? sleep;
   const emailHash = hashEmail(email);
   const body: SendRoomAccessResponse = { line: ROOM_ACCESS_SENT_LINE };
 
   if (coolingDown(sentAtByEmail, emailHash, now)) {
+    await equalizeTiming(startedAt, sleepImpl);
     return { ok: true, body };
   }
 
   const rooms = (await roomsForEmail(email)).filter((room) => !coolingDown(sentAtByRoom, room.workspaceId, now));
   if (rooms.length === 0) {
+    await equalizeTiming(startedAt, sleepImpl);
     return { ok: true, body };
   }
 
   const issued = rooms.map((room) => issueLink(room, emailHash, now));
+  for (const item of issued) {
+    const kept = await persistLink(item.row);
+    if (!kept) {
+      links.delete(item.row.tokenHash);
+      await equalizeTiming(startedAt, sleepImpl);
+      return { ok: false, status: 503, error: ROOM_ACCESS_SEND_FAILED_LINE };
+    }
+  }
+
   const sent = await sendViaResend(
     email,
     emailBody(
-      input.publicBaseUrl,
+      publicBaseUrl,
       issued.map((item) => item.token),
     ),
   );
-  if (sent) {
-    for (const item of issued) markSent(emailHash, item.row.workspaceId, now);
+  if (!sent) {
+    await equalizeTiming(startedAt, sleepImpl);
+    return { ok: false, status: 503, error: ROOM_ACCESS_SEND_FAILED_LINE };
   }
+
+  for (const item of issued) markSent(emailHash, item.row.workspaceId, now);
+  await equalizeTiming(startedAt, sleepImpl);
   return { ok: true, body };
 }
 
@@ -340,11 +540,31 @@ export type OpenRoomAccessResult =
   | { ok: true; workspaceToken: string }
   | { ok: false; line: string };
 
+async function markLinkSpent(row: IssuedLink, now: number): Promise<void> {
+  row.spentAt = now;
+  links.set(row.tokenHash, row);
+  if (!hasDb()) return;
+  const db = getDb();
+  if (!db) return;
+  try {
+    await db
+      .update(roomAccessLinks)
+      .set({ spentAt: new Date(now) })
+      .where(eq(roomAccessLinks.tokenHash, row.tokenHash));
+  } catch (error) {
+    console.error(
+      "[room-access] could not mark a link spent in the database.",
+      error instanceof Error ? error.message : error,
+    );
+  }
+}
+
 /**
  * Spend a mailed token and return the room's own address. The mailed token is
  * not that address and is never returned.
  */
-export function openRoomAccess(token: string, now = Date.now()): OpenRoomAccessResult {
+export async function openRoomAccess(token: string, now = Date.now()): Promise<OpenRoomAccessResult> {
+  await hydrateFromDb();
   const trimmed = token.trim();
   if (!trimmed || trimmed.length !== ACCESS_TOKEN_LENGTH) {
     return { ok: false, line: ROOM_ACCESS_SPENT_LINE };
@@ -355,8 +575,7 @@ export function openRoomAccess(token: string, now = Date.now()): OpenRoomAccessR
     return { ok: false, line: ROOM_ACCESS_SPENT_LINE };
   }
 
-  row.spentAt = now;
-  links.set(row.tokenHash, row);
+  await markLinkSpent(row, now);
   return { ok: true, workspaceToken: row.workspaceToken };
 }
 
