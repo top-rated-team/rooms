@@ -1,50 +1,74 @@
-import { useEffect } from "react";
+import { Route, Switch } from "wouter";
 
 import { Home } from "@/components/adgrant/Home";
+import { LibraryIndex } from "@/components/adgrant/LibraryIndex";
+import { LibraryPage } from "@/components/adgrant/LibraryPage";
+import { Meta } from "@/components/adgrant/Meta";
+import { Missing } from "@/components/adgrant/Missing";
 import { Shell } from "@/components/adgrant/Shell";
+import { TemplatePage } from "@/components/adgrant/TemplatePage";
+import { TemplatesIndex } from "@/components/adgrant/TemplatesIndex";
+import { formatCount } from "@/components/adgrant/format";
+import { mountHome, sectionPath, leafPath } from "@/components/adgrant/links";
+import { ADGRANT_MOUNT } from "@/components/adgrant/mount";
+import { STATS } from "@shared/adgrant";
 
 /* ---------------------------------------------------------------------------
- * ADGRANT.AI'S FRONT, IN THIS APPLICATION.
+ * ADGRANT.AI'S TREE, IN THIS APPLICATION.
  *
- * It cannot be a second host. client/index.html is the one head this process
- * serves, so a second site with its own title and meta is owner work for when
- * no wave is running. This page sets its own title the way landing.tsx does.
+ * client/index.html is the one head this process serves, so a second host with
+ * its own title is owner work for when no wave is running. Each route sets
+ * title and description from that page's own meta, the way landing.tsx does.
  *
- * It does not import the site header or footer. The 74 library pages stay on
- * adgrant.ai and are linked, not copied.
+ * URL shapes are the live ones — /glossary/<slug>, /tricks/<slug> and their
+ * siblings — under ADGRANT_MOUNT until the tree moves. Nested paths only
+ * render when App.tsx matches them; that change is a handoff, because this
+ * parcel does not own App.tsx.
  * ------------------------------------------------------------------------- */
 
-const PAGE_TITLE = "AdGrant.AI — Google Ad Grant setup from your website";
-const PAGE_DESCRIPTION =
-  "Send the Google Ads Customer ID in a room. A person checks the grant, you invite a manager-account link, and the tool writes campaigns, ad groups, keywords, ads and extensions from the nonprofit website into your own account. This page is in English.";
+const HOME_TITLE = "AdGrant.AI — a Google Ad Grant structure from the nonprofit's website";
+const HOME_DESCRIPTION = `${formatCount(STATS.accountsProcessed)} Ad Grant accounts processed, ${formatCount(STATS.totals.campaigns)} campaigns, ${formatCount(STATS.totals.keywords)} keywords. A structure is produced from the nonprofit's website and shown here. Nothing is written into a Google Ads account.`;
+
+function HomeRoute() {
+  return (
+    <>
+      <Meta title={HOME_TITLE} description={HOME_DESCRIPTION} />
+      <Home />
+    </>
+  );
+}
 
 export function AdGrantApp() {
-  useEffect(() => {
-    const previousTitle = document.title;
-    document.title = PAGE_TITLE;
-
-    let created = false;
-    let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.name = "description";
-      document.head.appendChild(meta);
-      created = true;
-    }
-    const element = meta;
-    const previousDescription = element.content;
-    element.content = PAGE_DESCRIPTION;
-
-    return () => {
-      document.title = previousTitle;
-      if (created) element.remove();
-      else element.content = previousDescription;
-    };
-  }, []);
-
   return (
     <Shell>
-      <Home />
+      <Switch>
+        <Route path={mountHome()} component={HomeRoute} />
+        <Route path={sectionPath("glossary")}>
+          <LibraryIndex segment="glossary" />
+        </Route>
+        <Route path={leafPath("glossary", ":slug")}>
+          <LibraryPage segment="glossary" />
+        </Route>
+        <Route path={sectionPath("case-studies")}>
+          <LibraryIndex segment="case-studies" />
+        </Route>
+        <Route path={leafPath("case-studies", ":slug")}>
+          <LibraryPage segment="case-studies" />
+        </Route>
+        <Route path={sectionPath("tricks")}>
+          <LibraryIndex segment="tricks" />
+        </Route>
+        <Route path={leafPath("tricks", ":slug")}>
+          <LibraryPage segment="tricks" />
+        </Route>
+        <Route path={sectionPath("templates")} component={TemplatesIndex} />
+        <Route path={leafPath("templates", ":slug")} component={TemplatePage} />
+        {ADGRANT_MOUNT ? (
+          <Route>
+            <Missing title="This page is not in the library" />
+          </Route>
+        ) : null}
+      </Switch>
     </Shell>
   );
 }

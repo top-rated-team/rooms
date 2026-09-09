@@ -2,10 +2,12 @@ import type { ReactNode } from "react";
 import { Link } from "wouter";
 
 import { DOOR_BY_ID } from "@shared/doors";
+import { MAIN_SITE_URL } from "@shared/roster";
 import { ADGRANT_ACCENT_WRAP, ADGRANT_MARK } from "@/components/site/doors/adgrant-style";
 import { LINK, META, META_PLAIN, PAGE } from "@/components/site/doors/quiet";
 import { useTheme } from "@/hooks/use-theme";
-import { ADGRANT_MOUNT } from "@/components/adgrant/mount";
+import { mountHome } from "@/components/adgrant/links";
+import { ADGRANT_SECTIONS } from "@/components/adgrant/sections";
 
 const DOOR = DOOR_BY_ID["ad-grants"];
 const CONTRACT = DOOR.contract;
@@ -17,12 +19,10 @@ function contactHref(contact: string): string {
 }
 
 /**
- * AdGrant.AI's own chrome. It does not import the site header or footer: those
- * name Top-Rated Team's other offers, and this front has to be able to move to
- * its own host without dragging them with it.
- *
- * `data-site-chrome` is the type scale. `--primary` is remapped to `--chart-2`
- * here and only here, which is the accent adgrant-style.ts already set.
+ * AdGrant.AI's own chrome. It does not import the site header or footer.
+ * Internal links go through ADGRANT_MOUNT so the tree can move to its own host
+ * without pointing at the other product's home. The menu and footer link back
+ * to top-rated.team as a different site, not as this one.
  */
 export function Shell({ children }: { children: ReactNode }) {
   const { resolvedTheme, setTheme } = useTheme();
@@ -35,23 +35,42 @@ export function Shell({ children }: { children: ReactNode }) {
         data-testid="adgrant-header"
         className="sticky top-0 z-40 border-b border-transparent bg-background/85 backdrop-blur-sm"
       >
-        <div className={`${PAGE} flex items-center justify-between gap-[var(--s3)] py-[var(--s2)]`}>
+        <div className={`${PAGE} flex flex-wrap items-baseline justify-between gap-x-[var(--s3)] gap-y-[var(--s1)] py-[var(--s2)]`}>
           <Link
-            href={ADGRANT_MOUNT}
+            href={mountHome()}
             data-testid="link-adgrant-mark"
             className="font-sans text-[1.0625rem] font-medium tracking-[0.13em] text-foreground [text-transform:none]"
           >
             {ADGRANT_MARK}
           </Link>
-          <button
-            type="button"
-            data-testid="button-adgrant-theme"
-            onClick={() => setTheme(next)}
-            className={`${NAV_LINK} [text-transform:none!important]`}
-          >
-            {next === "dark" ? "Dark" : "Light"}
-            <span className="sr-only"> theme</span>
-          </button>
+          <nav aria-label={ADGRANT_MARK} className="flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]">
+            {ADGRANT_SECTIONS.map((section) => (
+              <Link
+                key={section.segment}
+                href={section.path}
+                data-testid={`link-adgrant-nav-${section.segment}`}
+                className={NAV_LINK}
+              >
+                {section.name}
+              </Link>
+            ))}
+            <a
+              href={MAIN_SITE_URL}
+              data-testid="link-adgrant-top-rated"
+              className={NAV_LINK}
+            >
+              Top-Rated Team
+            </a>
+            <button
+              type="button"
+              data-testid="button-adgrant-theme"
+              onClick={() => setTheme(next)}
+              className={`${NAV_LINK} [text-transform:none!important]`}
+            >
+              {next === "dark" ? "Dark" : "Light"}
+              <span className="sr-only"> theme</span>
+            </button>
+          </nav>
         </div>
       </header>
 
@@ -70,9 +89,14 @@ export function Shell({ children }: { children: ReactNode }) {
           <p className={`mt-[var(--s2)] ${META_PLAIN}`}>This page is in English.</p>
 
           <nav
-            aria-label="AdGrant.AI"
+            aria-label={`${ADGRANT_MARK} footer`}
             className="type-meta mt-[var(--s3)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]"
           >
+            {ADGRANT_SECTIONS.map((section) => (
+              <Link key={section.segment} href={section.path} className={LINK}>
+                {section.name}
+              </Link>
+            ))}
             {CONTRACT.termsUrl ? (
               <a
                 href={CONTRACT.termsUrl}
@@ -93,9 +117,9 @@ export function Shell({ children }: { children: ReactNode }) {
                 {CONTRACT.contactLabel ?? CONTRACT.contact}
               </a>
             ) : null}
-            <Link href="/w" data-testid="link-adgrant-rooms" className={LINK}>
-              Rooms you have kept
-            </Link>
+            <a href={MAIN_SITE_URL} data-testid="link-adgrant-footer-top-rated" className={LINK}>
+              Top-Rated Team
+            </a>
           </nav>
         </div>
       </footer>
