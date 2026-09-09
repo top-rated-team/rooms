@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, lazy, Suspense } from "react";
 import { Link, Redirect, useLocation, useRoute } from "wouter";
 
 import type { CreateWorkspaceResponse } from "@shared/api";
@@ -37,6 +37,10 @@ import TalkToUs from "@/components/site/TalkToUs";
 import { DoorCases } from "@/components/site/Cases";
 import { DoorPrice } from "@/components/site/Ladder";
 import { collectSource } from "@/components/site/LeadDialog";
+
+/* Lazily loaded, same as the header does it: LeadDialog pulls in Radix, and a
+   door page should not download a modal nobody has opened. */
+const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) => ({ default: m.LeadDialog })));
 import { usePanelState, type CreateRoomResult } from "@/hooks/use-panel-state";
 import NotFound from "@/pages/not-found";
 
@@ -242,6 +246,7 @@ function DoorPage({ door }: { door: DoorDef }) {
    * rooms wearing their name.
    */
   const booking = useBooking();
+  const [messageOpen, setMessageOpen] = useState(false);
   const [openingRoom, setOpeningRoom] = useState(false);
   const [roomError, setRoomError] = useState<string | null>(null);
 
@@ -327,37 +332,49 @@ function DoorPage({ door }: { door: DoorDef }) {
 
           <div className="mt-[var(--s4)] grid items-end gap-[var(--s4)] pb-[var(--s6)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)]">
             {/*
-              THE ROOM SITS UNDER THE HEADLINE, in the wide column, on the
-              owner's instruction — he asked for it on the left so it is seen.
-              It is the most visible position on the page: the first thing after
-              the largest type, on the side the eye starts.
-
-              The panel's own action stays on the right, beside the paragraph
-              that explains what the panel is. That keeps the pair reading as
-              what it is — the offer, then the way to try it — rather than as
-              two buttons competing in one corner.
+              THE HEADLINE STANDS ALONE, and the actions mirror the home page's
+              first screen: the same three, in the same order, under the
+              paragraph that explains the offer. The room moved out of here to
+              the panel band below — the owner's call, and it reads better: the
+              hero asks, and the section that shows what asking looks like is
+              the one that offers the room.
             */}
-            <div>
-              <h1 className={DISPLAY} data-testid="text-door-headline">
-                {door.headline}
-              </h1>
-              {panelIsOpen ? <div className="mt-[var(--s3)]">{openRoomAction("hero")}</div> : null}
-            </div>
+            <h1 className={DISPLAY} data-testid="text-door-headline">
+              {door.headline}
+            </h1>
 
             <div>
               <p className={READ_MUTED} data-testid="text-door-blurb">
                 {door.blurb}
               </p>
 
-              {/* A door with no panel has no action here — the call is offered
-                  once, below, beside the sentence that says why there is no
-                  panel — because on that door the room is not ours to open. */}
+              {/* A door with no panel has nothing to ask, so it offers the call
+                  once below, beside the sentence that says why there is no
+                  panel — on that door the room is not ours to open either. */}
               {panelIsOpen ? (
-                <div className="mt-[var(--s4)]">
-                  <button type="button" data-testid="button-door-ask" className={ACTION_QUIET} onClick={askInPanel}>
-                    Put a question to the agent
+                <p className="mt-[var(--s4)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s2)]">
+                  <button type="button" data-testid="button-door-ask" className={ACTION} onClick={askInPanel}>
+                    Ask AI agent
                   </button>
-                </div>
+                  <a
+                    href={BOOK_A_CALL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="link-door-hero-book-a-call"
+                    className={ACTION_QUIET}
+                    {...booking}
+                  >
+                    Book a call
+                  </a>
+                  <button
+                    type="button"
+                    data-testid="button-door-hero-leave-a-message"
+                    className={ACTION_QUIET}
+                    onClick={() => setMessageOpen(true)}
+                  >
+                    Leave a message
+                  </button>
+                </p>
               ) : null}
             </div>
           </div>
@@ -385,6 +402,16 @@ function DoorPage({ door }: { door: DoorDef }) {
                     It is free, it does not need your name, and it will tell you when your question is a five-minute
                     fix.
                   </p>
+                  {/*
+                    THE ROOM, HERE, on the owner's instruction — on the left,
+                    opposite the agent rather than beneath it, and after the
+                    sentence rather than straight under the heading.
+                    
+                    It reads as the alternative to what is on the right, which
+                    is what it is: the panel demonstrates, the room is the thing.
+                    Under the heading it would have been a second title.
+                  */}
+                  <div className="mt-[var(--s3)]">{openRoomAction("panel")}</div>
                 </>
               ) : (
                 <>
@@ -492,14 +519,10 @@ function DoorPage({ door }: { door: DoorDef }) {
                     a room actually is, in one line, because "open a room" means
                     nothing to somebody who has never seen one.
                   */}
-                  <div className="mt-[var(--s3)] border-t border-border pt-[var(--s3)]">
-                    <p className={READ}>
-                      Or open a room and skip the asking. One address of its own, this door&rsquo;s agent and our
-                      people already in it, the work written out as a checklist — and no signup, because the link in
-                      your browser is the whole account.
-                    </p>
-                    <div className="mt-[var(--s3)]">{openRoomAction("panel")}</div>
-                  </div>
+                  {/* The room used to be offered again here, under the panel.
+                      It is on the left of this same band now, which is where the
+                      owner asked for it, and twice in one band is once too
+                      many. */}
                 </div>
               ) : (
                 /* A door that cannot hold a conversation says so on the left
@@ -706,6 +729,12 @@ function DoorPage({ door }: { door: DoorDef }) {
 
         <DoorPrice door={door} />
       </main>
+
+      {messageOpen ? (
+        <Suspense fallback={null}>
+          <LeadDialog open={messageOpen} onOpenChange={setMessageOpen} prefill={null} />
+        </Suspense>
+      ) : null}
 
       <Footer />
     </div>

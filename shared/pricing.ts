@@ -127,6 +127,48 @@ export const PRICES: PriceRow[] = [
     ours: true,
   },
   {
+    id: "ownKeys",
+    price: "free",
+    buys: "LinkedIn content autopilot, and the AI agents.",
+    /*
+     * SECOND ON THE LADDER, beside the other free row, on the owner's
+     * instruction. Two rows that cost nothing standing together is the
+     * strongest thing this table says, and having them at opposite ends of it
+     * made a reader work for the fact.
+     *
+     * "LinkedIn CONTENT AUTOPILOT" is the corrected wording, and the word
+     * matters more than it looks. Publishing a post on behalf of a member is an
+     * OPEN permission on LinkedIn's own API — `w_member_social`, "required to
+     * create a LinkedIn post on behalf of the authenticated member", and
+     * LinkedIn's access page says open permissions are the only ones available
+     * to all developers without special approval. So this row is white, on the
+     * official API, with the member's own OAuth consent, exactly as every
+     * scheduling tool works.
+     *
+     * WHERE THE GREY BEGINS IS ENGAGEMENT, NOT PUBLISHING: reactions,
+     * invitations, messages and profile views are restricted permissions behind
+     * a partner programme. That is the whole reason the reaction engine sits on
+     * the partner's row and this does not, and it is why the two must never be
+     * described in one sentence.
+     *
+     * Every clause below is doing work, and dropping any of them makes the row
+     * untrue:
+     *
+     * - "on your own keys" is the condition the whole row rests on. Free is not
+     *   a gift; it is the model bill moving from us to the client.
+     * - "we take no margin" is the true version of "never pay for AI tokens",
+     *   which said the opposite of what this row means.
+     * - the last sentence is there because there is NO code in this repository
+     *   that accepts somebody else's key, and every room is metered by
+     *   server/spend.ts regardless of the row. Saying the conversation is
+     *   unmetered here would be the one sentence on this page that the code
+     *   contradicts outright.
+     */
+    condition:
+      "Free on your own Anthropic or OpenAI keys: you pay the model provider directly for every token and we take no margin on them. Rooms on this site are metered while that is being set up, and the keys are arranged with a person rather than on this page.",
+    ours: true,
+  },
+  {
     id: "task",
     price: "from $49 per task",
     buys: "A contractor dedicated to one task.",
@@ -158,28 +200,6 @@ export const PRICES: PriceRow[] = [
     price: "from $499 / month",
     buys: "Managing a paid advertising account.",
     condition: "From, because the work follows the account. The figure for yours comes from a person.",
-    ours: true,
-  },
-  {
-    id: "ownKeys",
-    price: "free",
-    buys: "Content campaigns, autopilot and the AI agents.",
-    /*
-     * Every clause here is doing work, and dropping any of them makes the row
-     * untrue:
-     *
-     * - "on your own keys" is the condition the whole row rests on. Free is not
-     *   a gift; it is the model bill moving from us to the client.
-     * - "we take no margin" is the true version of "never pay for AI tokens",
-     *   which said the opposite of what this row means.
-     * - the last sentence is there because there is NO code in this repository
-     *   that accepts somebody else's key, and every room is metered by
-     *   server/spend.ts regardless of the row. Saying the conversation is
-     *   unmetered here would be the one sentence on this page that the code
-     *   contradicts outright.
-     */
-    condition:
-      "Free on your own Anthropic or OpenAI keys: you pay the model provider directly for every token and we take no margin on them. Rooms on this site are metered while that is being set up, and the keys are arranged with a person rather than on this page.",
     ours: true,
   },
   {

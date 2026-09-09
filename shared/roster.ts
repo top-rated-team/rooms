@@ -897,8 +897,17 @@ export const SERVICES: ServiceDef[] = [
   { id: "cro", group: "Growth", name: "CRO & landing pages", blurb: "Pages built for the ad intent that sent the click." },
 
   { id: "websites", group: "Build", name: "Websites & landing pages", blurb: "Fast, brand-consistent pages shipped in days.", agentId: "ai-dev" },
-  { id: "software", group: "Build", name: "Software via AI dev tools", blurb: "Internal tools, portals and integrations built with modern AI tooling.", agentId: "ai-dev" },
-  { id: "automation", group: "Build", name: "Automations & AI agents", blurb: "Reporting, alerting and workflow agents wired into your stack.", agentId: "ai-dev" },
+  /*
+   * RENAMED AND REPHRASED on the owner's instruction: this row was only ever
+   * "we build it for you", and half of what is actually sold is the other
+   * shape — sitting with a team while they build it themselves with AI tools,
+   * and staying reachable afterwards. It is the same sale the white-label door
+   * makes about this application: the software is free to run, help is what is
+   * paid for.
+   */
+  { id: "software", group: "Build", name: "Software with AI tools — built for you, or with you", blurb: "Internal tools, portals and integrations. We build them, or we set your team up to build them with the same AI tooling we use and stay on call while they do.", agentId: "ai-dev" },
+  { id: "automation", group: "Build", name: "Automations & AI agents", blurb: "Reporting, alerting and workflow agents wired into your stack — yours to run, and we will teach whoever runs them.", agentId: "ai-dev" },
+  { id: "ai-enablement", group: "Build", name: "AI development, taught rather than delivered", blurb: "Consulting and training for a team that would rather build with AI itself: which tools, how to review what they produce, where they are wrong, and what to keep a person on. Paid by the hour or by the task, not by the seat.", agentId: "ai-dev" },
 
   { id: "legal", group: "Included", name: "AI Lawyer Agent — free, in every room", blurb: "What the platforms and regulators actually publish about automation, outreach, consent and advertising, with the page it used cited. It is in every marketing and development room of ours at no cost, and it is not a substitute for a lawyer where you need an opinion signed.", agentId: "legal" },
 ];

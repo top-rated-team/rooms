@@ -28,6 +28,16 @@ const UPWORK_AGENCY_URL = "https://www.upwork.com/agencies/google/";
 
 const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) => ({ default: m.LeadDialog })));
 
+/** The one loud action. Uppercase and the display face are stated, not inherited. */
+const ACTION_LOUD =
+  "type-meta border-b border-primary pb-[var(--s1)] font-medium text-primary " +
+  "hover:border-foreground hover:text-foreground";
+
+/** The rest, same shape and less weight. */
+const ACTION_QUIET =
+  "type-meta border-b border-border pb-[var(--s1)] text-muted-foreground " +
+  "hover:border-foreground hover:text-foreground";
+
 export function FirstScreen() {
   const [messageOpen, setMessageOpen] = useState(false);
   const booking = useBooking();
@@ -99,9 +109,9 @@ export function FirstScreen() {
         AI agents in one room.": 31 characters, which at the 68px display size
         is about 1,050px against a 730px column. Fitting it meant about 48px, a
         third off the headline. Once the line dropped to reading size the owner
-        immediately made it longer and more precise — SUBJECT MATTER EXPERTS
-        rather than "people", which is the actual claim, since what a client
-        buys here is somebody who knows a trade — and at 19px it still sets on
+        immediately made it longer and more precise — DIGITAL EXPERTS rather
+        than "people", which is the actual claim, since what a client buys here
+        is somebody who knows a trade — and at 19px it still sets on
         one line with room to spare. The join is "+" rather than "and", also on
         his instruction, and it is the better mark here: "and" reads as a list
         of two things you get, where "+" reads as one thing made of two. That is the argument for the demotion
@@ -121,7 +131,7 @@ export function FirstScreen() {
         paragraph down with it.
       */}
         <p className="type-body mt-[var(--s2)] font-display font-medium" data-testid="text-home-mechanism">
-          Subject Matter Experts + AI agents in one room.
+          Digital Experts + AI agents in one room.
         </p>
       </div>
 
@@ -189,14 +199,35 @@ export function FirstScreen() {
           the header no longer shows, which is why they are here rather than
           only lower down the page.
         */}
-        <p className="type-meta mt-[var(--s3)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]">
+        {/*
+          FOUR WAYS IN, AND THE ROOM GOES FIRST, on the owner's instruction —
+          the order is the argument: the room is free and immediate, the call
+          costs a slot in somebody's day, the message costs a day.
+
+          EVERY CONTROL CARRIES ITS OWN CLASSES rather than inheriting them from
+          this paragraph, and that is not verbosity. Inherited, the anchor came
+          out uppercase in the display face and the two buttons came out
+          sentence-case in the serif — three controls in a row, two of them
+          looking like body text. Stating the class on each one is the only
+          version of this that cannot drift.
+        */}
+        <p className="mt-[var(--s3)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]">
+          <button
+            type="button"
+            data-testid="button-home-open-a-room"
+            onClick={() => void room.open()}
+            disabled={room.opening}
+            className={`${ACTION_LOUD} disabled:opacity-50`}
+          >
+            {room.opening ? "Opening a room…" : "Open a room"}
+          </button>
           <a
             href={BOOK_A_CALL_URL}
             target="_blank"
             rel="noopener noreferrer"
             data-testid="link-home-book-a-call"
             {...booking}
-            className="border-b border-primary pb-[var(--s1)] font-medium text-primary hover:border-foreground hover:text-foreground"
+            className={ACTION_QUIET}
           >
             Book a call
           </a>
@@ -204,32 +235,22 @@ export function FirstScreen() {
             type="button"
             onClick={() => setMessageOpen(true)}
             data-testid="button-home-leave-a-message"
-            className="border-b border-border pb-[var(--s1)] text-muted-foreground hover:border-foreground hover:text-foreground"
+            className={ACTION_QUIET}
           >
             Leave a message
           </button>
-          {/*
-            THE THIRD ACTION, and it is the one the site is actually for. The
-            owner counted two here and expected three — the room had been added
-            to the header and to the ask section and never to the first screen,
-            which is the one place every visitor sees.
-
-            IT OPENS A ROOM. It used to scroll to the ask section, and he was
-            right that this is wrong: the button says open. The scroll was a
-            hedge — the worry was somebody arriving in a room without having
-            read what a room is — and the room answers that itself, in its own
-            arrival note, which is where it belongs rather than in a button that
-            declines to do what it says.
-          */}
-          <button
-            type="button"
-            data-testid="button-home-open-a-room"
-            onClick={() => void room.open()}
-            disabled={room.opening}
-            className="border-b border-border pb-[var(--s1)] text-muted-foreground hover:border-foreground hover:text-foreground disabled:opacity-50"
+          {/* The number itself, not a word standing in for it: it is what
+              somebody recognises, and on a desktop it is what they copy. It was
+              here once and I lost it replacing this block wholesale. */}
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="link-home-whatsapp"
+            className={ACTION_QUIET}
           >
-            {room.opening ? "Opening a room…" : "Open a room"}
-          </button>
+            {WHATSAPP_NUMBER}
+          </a>
         </p>
         {room.error ? (
           <p role="alert" className="type-note mt-[var(--s2)] text-destructive">

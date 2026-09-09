@@ -214,7 +214,12 @@ export function Header() {
             target="_blank"
             rel="noopener noreferrer"
             data-testid="link-nav-github"
-            className={`${LINK} inline-flex items-center`}
+            /* MARK_LINK, not LINK: LINK carries `draw`, which paints a rule
+               across the element on hover and under a glyph reads as a
+               strikethrough. This line said LINK for a turn after I reported it
+               fixed — the earlier edit targeted a string that had already
+               changed and replaced nothing, silently. */
+            className={`${MARK_LINK} inline-flex items-center`}
             aria-label="This site's source on GitHub"
           >
             <svg viewBox="0 0 16 16" aria-hidden="true" className="h-[1.15em] w-[1.15em] translate-y-[0.07em] fill-current">
