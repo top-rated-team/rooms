@@ -933,6 +933,13 @@ export const BOOK_A_CALL_URL = "https://calendar.app.google/ucoG2E1L6KV7BPUD7";
  * and the inbox. Kept beside BOOK_A_CALL_URL so every surface that offers one
  * can offer the other from the same import.
  */
+/**
+ * The address a visitor writes to. Not the one lead notifications are sent to:
+ * that is LEAD_NOTIFY_EMAIL and it is the owner's own, which is a different
+ * fact and belongs in the environment rather than on a page.
+ */
+export const CONTACT_EMAIL = "contact@top-rated.team";
+
 export const WHATSAPP_NUMBER = "+420 774 654 822";
 export const WHATSAPP_URL = "https://wa.me/420774654822";
 

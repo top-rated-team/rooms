@@ -183,17 +183,18 @@ export function Footer() {
             <Link href="/w" data-testid="link-footer-rooms" className={LINK}>
               Rooms you have kept
             </Link>
-            {OURS.termsUrl ? (
-              <a
-                href={OURS.termsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="link-footer-terms"
-                className={LINK}
-              >
-                Terms
-              </a>
-            ) : null}
+            {/* Our own two pages, so they are Links rather than anchors with a
+                target: they were external URLs back when this application did
+                not serve them, and both answered with a 404 page under a 200
+                status until they were written. A door whose contract belongs to
+                somebody else still points at THEIR terms, elsewhere in this
+                file, and that one stays an anchor. */}
+            <Link href="/terms" data-testid="link-footer-terms" className={LINK}>
+              Terms
+            </Link>
+            <Link href="/privacy" data-testid="link-footer-privacy" className={LINK}>
+              Privacy
+            </Link>
             {OURS.contact ? (
               <a href={contactHref(OURS.contact)} rel="noopener noreferrer" data-testid="link-footer-contact" className={LINK}>
                 Contact

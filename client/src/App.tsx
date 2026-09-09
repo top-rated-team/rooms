@@ -12,6 +12,8 @@ import Team from "@/pages/team";
 import RoiCalculator from "@/pages/roi-calculator";
 import NotFound from "@/pages/not-found";
 import Setup from "@/pages/setup";
+import Privacy from "@/pages/privacy";
+import Terms from "@/pages/terms";
 
 /* The landing page is paid traffic and bounces on latency, so the workspace —
  * chat, websocket client, markdown renderer — is a separate chunk it never
@@ -52,6 +54,12 @@ export default function App() {
         {/* /w with nothing after it: the rooms this browser remembers. */}
         <Route path="/w" component={Workspace} />
         {/* /setup and /partner are one page: the form, then the same form as the cabinet. */}
+        {/* The two legal addresses. Both answered 200 with a 404 page for
+            months, which is what a single-page shell does with an address it
+            has no route for — and what Google's brand review reported as a
+            privacy policy with insufficient content. */}
+        <Route path="/privacy" component={Privacy} />
+        <Route path="/terms" component={Terms} />
         <Route path="/setup" component={Setup} />
         <Route path="/partner" component={Setup} />
         {/* AdGrant.AI's own tree. Own chrome, not the site header. Mounted here
