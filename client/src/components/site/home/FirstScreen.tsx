@@ -141,7 +141,11 @@ export function FirstScreen() {
           the owner's instruction. Same arithmetic the header carries: the image
           sits on the baseline, so its top is its own height above it, and
           translate-y = height − cap-height brings that top to the cap line.
-          Outfit's cap is about 0.70em and the mark is 1.1em, so 0.4em. The
+          Outfit's cap is about 0.70em. At 1.1em the mark then hung 0.4em BELOW
+          the baseline and read as sinking, so it is 0.85em: the top is still on
+          the cap line and the descent is 0.15em instead. Smaller is the fix the
+          owner offered and it is the right one — the alignment is a subtraction
+          that holds at any height, so only the overhang changes. The
           header adds a further 0.11em of overhang because there he asked for
           slightly above; here he asked for level, so there is no overhang term.
 
@@ -159,7 +163,7 @@ export function FirstScreen() {
             src="/assets/top-rated-logo.png"
             alt=""
             aria-hidden="true"
-            className="me-[0.35em] inline-block h-[1.1em] w-[1.1em] translate-y-[0.4em]"
+            className="me-[0.3em] inline-block h-[0.85em] w-[0.85em] translate-y-[0.15em]"
           />
           Digital Experts + any AI agents in one room.
         </p>
@@ -247,14 +251,15 @@ export function FirstScreen() {
             stops at the label size — the same clamp the mechanism line above
             uses, and !important for the same reason: .type-meta lives in the
             frozen index.css and beats a Tailwind utility of equal specificity.
-            The gap closes by a step on a phone and opens again from sm. Below
-            360 it wraps again rather than overflowing: at 320 the four actions
-            do not fit at any size worth reading, and a line that runs off the
-            edge is worse than a line that wraps. Measured at 320, 360, 375, 390
-            and 430 with a real mobile viewport, not with --window-size, which
-            does not apply the viewport meta and reports overflow that is not
-            there — it told me the LIVE site was broken too. */}
-        <div className="mt-[var(--s3)] flex flex-nowrap items-baseline gap-x-[var(--s2)] gap-y-[var(--s1)] whitespace-nowrap [font-size:clamp(0.66rem,3vw,var(--type-meta))!important] max-[359px]:flex-wrap sm:gap-x-[var(--s3)]">
+            The gap closes by a step on a phone and opens again from sm. One line from sm up, and wrapping
+            below it — measured with two rooms remembered, which is when the
+            control expands to "Your rooms | Open a room" and the row becomes
+            four actions. At 390 that is 478px of content against 342px of
+            column, and closing 116px of it means about 8px type. So a phone
+            wraps between whole actions, each keeping whitespace-nowrap so no
+            label breaks in the middle. A line that runs 116px off the edge is
+            not the one line the owner asked for either. */}
+        <div className="mt-[var(--s3)] flex flex-wrap items-baseline gap-x-[var(--s2)] gap-y-[var(--s1)] whitespace-nowrap [font-size:clamp(0.66rem,3vw,0.76rem)!important] sm:flex-nowrap sm:gap-x-[var(--s3)]">
           <RoomMenu className={ACTION_LOUD} testId="button-home-open-a-room" />
           <a
             href={BOOK_A_CALL_URL}
