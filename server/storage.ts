@@ -20,7 +20,7 @@ import {
 } from "@shared/schema";
 import type { WorkspaceState } from "@shared/api";
 import { AGENT_BY_ID, EXPERTS } from "@shared/roster";
-import { seedFor } from "@shared/playbook";
+import { GENERAL_ROOM_ID, seedFor } from "@shared/playbook";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
 import { getDb, hasDb, type AppDatabase } from "./db";
 
@@ -145,15 +145,20 @@ function buildSeed(workspaceId: string, input: CreateWorkspaceInput, now: Date):
    * a room with no channels at all is unusable, and routes.ts already renders
    * the fault state for a room that named no company.
    */
-  const door = DOOR_BY_ID[input.source?.door ?? ""] ?? DOOR_BY_ID[DEFAULT_DOOR_ID];
+  const stamp = input.source?.door ?? "";
+  const general = stamp === GENERAL_ROOM_ID;
+
+  /* A general room is OURS and carries our contract — the footer has to name a
+     company or the room renders its fault state — but it is not the default
+     door's room, and seeding it as one is what put a conversion-tracking
+     checklist in front of everybody who opened a room from the front page. */
+  const door = general ? DOOR_BY_ID[DEFAULT_DOOR_ID] : (DOOR_BY_ID[stamp] ?? DOOR_BY_ID[DEFAULT_DOOR_ID]);
   const ours = door.contract.legalName === DOOR_BY_ID[DEFAULT_DOOR_ID].contract.legalName;
-  const plan = seedFor({
-    id: door.id,
-    slug: door.slug,
-    headline: door.headline,
-    firstAgentId: door.firstAgentId,
-    ours,
-  });
+  const plan = seedFor(
+    general
+      ? { id: GENERAL_ROOM_ID, slug: "room", headline: "A room of your own", firstAgentId: null, ours: true }
+      : { id: door.id, slug: door.slug, headline: door.headline, firstAgentId: door.firstAgentId, ours },
+  );
 
   const channelRows: Channel[] = plan.channels.map((seed, index) => ({
     id: nanoid(),
@@ -256,11 +261,27 @@ function buildSeed(workspaceId: string, input: CreateWorkspaceInput, now: Date):
   return { channels: channelRows, members: memberRows, tasks: taskRows, messages: messageRows };
 }
 
+/** What to call a room nobody named: the door it came through, or its own thing. */
+function roomName(stamp: string): string {
+  if (stamp === GENERAL_ROOM_ID) return "A room of your own";
+  const door = DOOR_BY_ID[stamp];
+  if (!door) return "A room of your own";
+  /* The headline up to its first break, which is how shortName() cuts it on
+     the site — so the room is called what the door is called. */
+  return door.headline.split(/[,—-]/)[0].trim() || door.headline;
+}
+
 function workspaceRow(input: CreateWorkspaceInput, now: Date): Workspace {
   return {
     id: nanoid(),
     token: newToken(),
-    name: input.name?.trim() || input.visitorCompany?.trim() || "Conversion tracking",
+    /*
+     * "Conversion tracking" was the hard-coded fallback, so every unnamed room
+     * was called that — including three of the owner's own, opened from the
+     * front page, which is how they appeared in his room list as three
+     * identical rows. A room's name should come from where it was opened.
+     */
+    name: input.name?.trim() || input.visitorCompany?.trim() || roomName(input.source?.door ?? ""),
     visitorName: input.visitorName?.trim() || null,
     visitorEmail: input.visitorEmail?.trim() || null,
     visitorCompany: input.visitorCompany?.trim() || null,
@@ -455,6 +476,10 @@ class MemoryStorage implements Storage {
   private stateOf(workspace: Workspace): WorkspaceState {
     const id = workspace.id;
     return {
+      /* This store IS the process. A restart or a deploy loses every room in
+         it, so it says so and the room repeats it to the visitor — see the
+         field's own comment in shared/api.ts. */
+      durable: false,
       workspace: publicWorkspace(workspace),
       channels: this.channels.filter((row) => row.workspaceId === id).sort(byOrder),
       members: this.members.filter((row) => row.workspaceId === id),
@@ -487,6 +512,7 @@ class PgStorage implements Storage {
     });
 
     return {
+      durable: true,
       workspace: publicWorkspace(workspace),
       channels: seed.channels,
       members: seed.members,
@@ -509,6 +535,7 @@ class PgStorage implements Storage {
     ]);
 
     return {
+      durable: true,
       workspace: publicWorkspace(workspace),
       channels: channelRows,
       members: memberRows,

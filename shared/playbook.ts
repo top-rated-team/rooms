@@ -120,7 +120,45 @@ export const CONVERSION_TRACKING_TASKS: SeedTask[] = [
  * "the checklist on the right is the actual conversion-tracking engagement".
  */
 
+/**
+ * The room opened from the home page, which belongs to no door.
+ *
+ * It used to be seeded as a chatgpt-ads room, because storage falls back to the
+ * default door for anything unstamped — so a visitor who pressed "Open a room"
+ * on the front page arrived to a CONVERSION-TRACKING CHECKLIST they had not
+ * asked for, and to a room called "Conversion tracking". That is the same
+ * defect this file's own header describes about Ad Grants rooms, arriving by a
+ * different route.
+ *
+ * A general room gets a place to write and the lawyer, and nothing pretending
+ * to know what the work is. What it is for is decided by the person in it.
+ */
+export const GENERAL_ROOM_ID = "general";
+
 export function seedFor(door: DoorSeedInput): DoorSeed {
+  if (door.id === GENERAL_ROOM_ID) {
+    return {
+      channels: [
+        {
+          slug: "room",
+          name: "room",
+          purpose: "Say what you are working on. Whichever agent or person it needs can be brought in here.",
+          kind: "project",
+        },
+        {
+          slug: "ask-legal",
+          name: "ask-legal",
+          purpose:
+            "What the platforms and regulators actually publish about automation, outreach, consent and advertising — and which tier a piece of work falls in.",
+          kind: "agent",
+          counterpartKey: "agent:legal",
+        },
+      ],
+      tasks: [],
+      expertIds: ["ihor", "dan"],
+    };
+  }
+
   const project: SeedChannel = {
     slug: door.slug,
     name: door.slug,

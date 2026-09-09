@@ -710,7 +710,12 @@ export default function WorkspacePage() {
               {showArrival ? (
                 <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto border-b border-border lg:flex-none lg:overflow-visible">
                   <div className="mx-auto w-full max-w-[42rem] px-5 py-7 sm:px-8">
-                    <RoomArrival hasQuestion={hasQuestion} onStart={startWriting} onDismiss={dismissArrival} />
+                    <RoomArrival
+                      hasQuestion={hasQuestion}
+                      onStart={startWriting}
+                      onDismiss={dismissArrival}
+                      durable={state.durable}
+                    />
                   </div>
                 </div>
               ) : null}

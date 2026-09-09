@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useLocation } from "wouter";
 
 import type { CreateWorkspaceResponse } from "@shared/api";
-import { DEFAULT_DOOR_ID } from "@shared/doors";
+import { GENERAL_ROOM_ID } from "@shared/playbook";
 import { roomSource } from "@/components/site/home/doorText";
 
 /**
@@ -15,9 +15,10 @@ import { roomSource } from "@/components/site/home/doorText";
  * door page, which goes through usePanelState — and the first screen needs
  * neither of those, only the plain case. So the plain case is here, once.
  *
- * POST /api/workspaces takes no question. The server resolves the default agent
- * when agentId is absent, and the room's own roster is editable from inside, so
- * arriving on a default costs nothing.
+ * POST /api/workspaces takes no question. The door stamp is GENERAL_ROOM_ID
+ * rather than the default door: a room opened from the front page is not a
+ * conversion-tracking room, and stamping it as one gave it that door's
+ * checklist and that door's name. See shared/playbook.ts.
  *
  * `entered: "direct"` is the same marker HouseAsk sets: the lead inbox should
  * not have to guess whether somebody walked in or kept an answer.
@@ -40,7 +41,7 @@ export function useOpenRoom() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          source: { ...roomSource(DEFAULT_DOOR_ID), entered: "direct" },
+          source: { ...roomSource(GENERAL_ROOM_ID), entered: "direct" },
         }),
       });
       if (!res.ok) {

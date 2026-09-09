@@ -13,6 +13,17 @@ export interface WorkspaceState {
   members: Member[];
   messages: Message[];
   tasks: Task[];
+  /**
+   * False when this deployment is holding rooms in process memory, which is
+   * what happens with no DATABASE_URL: the next restart or deploy loses every
+   * room and every address handed out with it.
+   *
+   * It travels with the state because the ROOM is what has to say it. The boot
+   * log has always said it and nobody reads a boot log — meanwhile the room
+   * tells its visitor the link is the whole account, which is a promise the
+   * deployment cannot keep in that mode.
+   */
+  durable: boolean;
 }
 
 export interface CreateWorkspaceResponse extends WorkspaceState {
