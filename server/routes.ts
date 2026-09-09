@@ -53,7 +53,7 @@ import { startDigestSchedule } from "./schedule";
 import { connectorMcp, connectorRouter } from "./connector";
 import { operatorGate, readOperator, writeOperator } from "./operator";
 import { acceptUnipileInbound, dispatchInbound } from "./unipile/inbound";
-import { ensureUnipileWebhooks, UNIPILE_WEBHOOK_AUTH_HEADER } from "./unipile/webhooks";
+import { ensureUnipileWebhooks, INBOUND_PATH, RETIRED_INBOUND_PATHS, UNIPILE_WEBHOOK_AUTH_HEADER } from "./unipile/webhooks";
 import { getBookingSlots, parseSlotsQuery } from "./booking/slots";
 import { postBooking } from "./booking/calendar";
 import { getBookingConfirmed, installBookingInbound } from "./booking/confirm";
@@ -1348,8 +1348,14 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
+  /* The retired addresses stay answerable. The reconciler moves the tenant's
+     webhooks onto INBOUND_PATH at boot, but it can only do that if it reaches
+     the provider, and a webhook still pointing at an address that 404s is a
+     confirmation silently thrown away — which is the exact failure this file
+     spent an evening on. Drop a retired path only after a boot has been seen
+     to reconcile. */
   app.post(
-    "/api/unipile/inbound",
+    [INBOUND_PATH, ...RETIRED_INBOUND_PATHS],
     identityWebhookLimit,
     route(async (req, res) => {
       const result = acceptUnipileInbound(req.body, req.get(UNIPILE_WEBHOOK_AUTH_HEADER) ?? undefined);
