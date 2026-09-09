@@ -35,7 +35,7 @@ const WAVES = [
    * And the standing rule, unchanged: AT MOST ONE PARCEL PER WAVE TOUCHES server/routes.ts,
    * and the same for shared/api.ts and shared/schema.ts.
    */
-  { n: 4, keys: ["room-identity"], alone: true },
+  { n: 4, keys: ["room-identity"], alone: true, landed: true },
   { n: 5, keys: ["login-create-room"], alone: true },
   { n: 6, keys: ["chatwoot-inbox"], alone: true },
   /* Three at once and no seam shared between them: one touches package.json, one touches

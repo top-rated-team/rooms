@@ -45,7 +45,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">9 still to run. Copy one, paste
+  <p class="lede">8 still to run, 1 landed. Copy one, paste
   it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -60,138 +60,9 @@
     <li>Run the same two commands again. If they pass, commit. Then the next wave.</li>
   </ol>
 
-    <section class="wave">
-      <h2>Wave 4 — this one runs alone</h2>
-      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
-      <article class="parcel">
-        <header>
-          <h3>room-identity</h3>
-          <button class="copy" data-target="p-room-identity">Copy this prompt</button>
-        </header>
-        <p class="what">Three of the owner's asks are one feature: let a room's owner name it, let a room be claimed so it is theirs, and make that survive a deploy.</p>
-        <pre id="p-room-identity">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "room-identity".
-
-Read these first, before you write anything, in this order:
-  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
-    content API and what was captured through it; the six statements in that material
-    that are wrong against Google's current documentation, each with the page that
-    contradicts it; why "generate and upload" is two products with a Google approval
-    between them; and the answer to the owner's question about per-agent limits.
-  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
-    endpoint it touches, transcribed with the URL it came from. Four decisions already
-    made, with the reasoning, so you do not spend your wave relitigating them. The
-    request and response shapes two parcels build to in parallel. And the rule the
-    owner set: every message is checked for who it is from, who it is to and which
-    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
-    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
-    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
-    A paraphrase would not, and you would find out after building on all three.
-  README.md, private/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  server/identity.ts
-  server/identity-store.ts
-  shared/schema-rooms.ts
-  server/storage.ts
-  server/waha.ts
-  client/src/components/workspace/IdentifyStrip.tsx
-  client/src/components/workspace/RoomIdentityDialog.tsx
-  server/identity.test.ts
-  server/identity-store.test.ts
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  shared/schema.ts
-      - one re-export of shared/schema-rooms.ts
-  shared/api.ts
-      - the room-claim and rename types
-  server/routes.ts
-      - one PATCH /api/workspaces/:token route
-      - one route for the claim state
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  A room that can be named by whoever owns it, and an ownership that survives a deploy. THE
-  TABLE: a new table in shared/schema-rooms.ts, re-exported from shared/schema.ts in ONE line -
-  drizzle-kit follows the export, and fifteen lines in a seam do not merge. It holds what
-  server/identity.ts:109-116 already models - workspaceId, provider, providerId, displayName,
-  boundAt - and the first binding on a room is its owner. Persist through
-  server/identity-store.ts, so server/identity.ts stops being the store as well as the logic,
-  and keep the in-memory path as the fallback when there is no database. THERE IS NO DATABASE ON
-  THE DEPLOYMENT TODAY: DATABASE_URL is unset, rooms live in memory, and every deploy destroys
-  them. A claim written to a table that does not exist is the bug the owner already reported.
-  Say so in your handoff, plainly, as the thing that blocks this feature from meaning anything -
-  do not quietly ship it and call it done. THE NAME: add a rename to the Storage interface
-  (server/storage.ts:82-93 - nine writes and a touch, none of which updates a workspace),
-  implemented in BOTH MemoryStorage and PgStorage and wired through the delegating object; an
-  updateWorkspaceSchema beside the createWorkspaceSchema that already caps a name at 120; a
-  PATCH route; and a ServerEvent so other people in the room see the new name without reloading
-  - server/ws.ts is how state reaches them. Only the owner may rename. An unclaimed room has no
-  owner, so the control appears once a claim exists, and a room nobody has claimed keeps the
-  name roomName() gave it. THE CONTROL, and the standing instruction is DO NOT COMPLICATE THE
-  ROOM: the name is already on screen in three places (WorkspaceSidebar.tsx:153-155, the desktop
-  top bar at workspace.tsx:187-191, and the owner's lead notifications), and the smallest honest
-  affordance is to make the one the owner already reads editable in place. No new panel, no
-  settings screen, no modal for one text field. IDENTITY, AND THIS DECISION IS ALREADY MADE:
-  LinkedIn stays on the official Sign In with LinkedIn (OIDC), which is built, tested and
-  correct. The brief section 2.1 prices the alternative and refuses it; the short version is
-  that Unipile hosted auth would bill EUR 5 per claimed room per month - more than the entire AI
-  budget of the room it identifies - and would ask the visitor for their LinkedIn PASSWORD on a
-  third-party page that may present a captcha. Do not switch it. Leave the scope at openid
-  profile: adding email is a review cost, not a free upgrade. WHATSAPP: swap the transport from
-  WAHA to server/unipile/messaging.ts, for OUR OWN NUMBER ONLY. WAHA does exactly two jobs -
-  probeWaha() at server/waha.ts:89-115 learns our own number so the wa.me link has a
-  destination, and an inbound webhook delivers the reply - and Unipile does both for one account
-  at no per-visitor cost. What the VISITOR does must not change: they tap a wa.me link and
-  message us. That direction is also the safe one - Unipile's own provider limits say a fresh
-  account can be blocked after two or three new outbound chats, while replying to inbound is
-  effectively unlimited. Keep the sha256(pepper, chatId) identifier at :387-389: a phone number
-  is never stored and never logged. Keep the dictatable nonce alphabet and BIND_CODE_RE. Keep
-  binding as an allowance rather than a gate - allowanceForWorkspace() at :164-179 gives a bound
-  room three times the turns and budget, and the room address stays a bearer credential. AND
-  KEEP THE THIRD ROUTE the owner asked for: we do not know a person's WhatsApp, so adding a
-  number to a room by hand must remain possible and must not be dressed up as verification. A
-  number somebody typed is a note; a number that messaged us is a proof; the room must not print
-  them the same way. RoomIdentityDialog is the popup a newly created room shows to offer the
-  claim - login-create-room opens it from the site in the next wave, and you do not need to know
-  how.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  Three of the owner's asks are one feature: let a room's owner name it, let a room be claimed
-  so it is theirs, and make that survive a deploy. Today a room's name is written once at the
-  instant of creation and is immutable through every interface this product has - four
-  independent checks confirm it, including a grep for renameWorkspace that returns nothing - and
-  the identity bindings that would say who owns a room live in a new Map() that empties on
-  restart. Alone in its wave because it writes into the room, the storage layer and the identity
-  layer, and everything reads those.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
+    <section class="wave" data-landed>
+      <h2>Wave 4 — landed</h2>
+      <p class="waveNote">room-identity — reported, reviewed and committed. Nothing to run here.</p>
     </section>
     <section class="wave">
       <h2>Wave 5 — this one runs alone</h2>
