@@ -21,6 +21,8 @@ import {
 const BTN_BASE =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2";
 const BTN_PRIMARY = `${BTN_BASE} bg-primary text-primary-foreground border border-primary-border min-h-9 px-4 py-2`;
+/** The second way to hand over an address, beside the field rather than under it. */
+const BTN_SECONDARY = `${BTN_BASE} border border-border bg-transparent text-foreground min-h-9 px-4 py-2`;
 const BTN_SLOT =
   "inline-flex min-h-8 items-center justify-center rounded-md border border-input bg-background px-2.5 py-1.5 text-sm text-foreground hover-elevate active-elevate-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
 const BTN_SLOT_SELECTED = `${BTN_SLOT} border-primary bg-primary text-primary-foreground`;
@@ -391,34 +393,70 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                     {liveText}
                   </div>
 
-                  <div className="mt-6">
-                    <label htmlFor="booking-email" className="mb-1.5 block text-sm font-medium">
-                      Email
-                    </label>
-                    <input
-                      id="booking-email"
-                      data-testid="input-booking-email"
-                      type="email"
-                      autoComplete="email"
-                      aria-invalid={emailError ? true : undefined}
-                      aria-describedby={emailError ? "booking-email-error booking-email-hint" : "booking-email-hint"}
-                      className={FIELD}
-                      value={email}
-                      onChange={(event) => {
-                        setEmail(event.target.value);
-                        if (emailError) setEmailError(null);
-                      }}
-                    />
-                    <p id="booking-email-hint" className="mt-1.5 text-xs text-muted-foreground">
-                      An email address gets you a calendar invite. Leave it blank and the call is still booked; you just
-                      will not get an invite.
-                    </p>
-                    {emailError ? (
-                      <p id="booking-email-error" className="mt-1.5 text-xs text-destructive" role="alert">
-                        {emailError}
-                      </p>
-                    ) : null}
+                  {/*
+                    ONE LINE: the address, the button that books, and the way
+                    to hand over an address without typing it. They belong
+                    together because they are one decision — how we reach you —
+                    and stacking them read as three separate steps.
+
+                    The LinkedIn button is on screen and disabled. It is shown
+                    rather than hidden because the owner asked for it now and
+                    because a visitor deciding whether to type an address
+                    should see the alternative that is coming; it says why it
+                    is off rather than looking broken. It turns on when the
+                    LinkedIn app is live — see section 3.1 of
+                    docs/specs/unipile-rooms-and-booking.md, which also carries
+                    what it must do with the profile it gets back.
+                  */}
+                  <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
+                    <div className="min-w-0 flex-1">
+                      <label htmlFor="booking-email" className="mb-1.5 block text-sm font-medium">
+                        Email
+                      </label>
+                      <input
+                        id="booking-email"
+                        data-testid="input-booking-email"
+                        type="email"
+                        autoComplete="email"
+                        aria-invalid={emailError ? true : undefined}
+                        aria-describedby={emailError ? "booking-email-error booking-email-hint" : "booking-email-hint"}
+                        className={FIELD}
+                        value={email}
+                        onChange={(event) => {
+                          setEmail(event.target.value);
+                          if (emailError) setEmailError(null);
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      data-testid="button-booking-submit"
+                      className={`${BTN_PRIMARY} shrink-0`}
+                      disabled={sending || !date || !time}
+                    >
+                      {sending ? <Loader2 className="animate-spin" /> : null}
+                      Book
+                    </button>
+                    <button
+                      type="button"
+                      disabled
+                      data-testid="button-booking-linkedin"
+                      title="Not on yet. It turns on when the LinkedIn app is live."
+                      className={`${BTN_SECONDARY} shrink-0 disabled:cursor-not-allowed disabled:opacity-50`}
+                    >
+                      Sign in with LinkedIn
+                    </button>
                   </div>
+                  <p id="booking-email-hint" className="mt-1.5 text-xs text-muted-foreground">
+                    An address gets you a calendar invite and any reminder. Sign in with LinkedIn does the same without
+                    typing it, and is not on yet. With neither, the call is still booked &mdash; you confirm it in
+                    WhatsApp instead, and that is where a reminder would go.
+                  </p>
+                  {emailError ? (
+                    <p id="booking-email-error" className="mt-1.5 text-xs text-destructive" role="alert">
+                      {emailError}
+                    </p>
+                  ) : null}
 
                   {formError ? (
                     <p role="alert" className="mt-4 text-sm text-destructive">
@@ -426,17 +464,6 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                     </p>
                   ) : null}
 
-                  <div className="mt-6 flex flex-wrap items-center gap-3">
-                    <button
-                      type="submit"
-                      data-testid="button-booking-submit"
-                      className={BTN_PRIMARY}
-                      disabled={sending || !date || !time}
-                    >
-                      {sending ? <Loader2 className="animate-spin" /> : null}
-                      {isPhoneBooking() ? "Book this time in WhatsApp" : "Book this time"}
-                    </button>
-                  </div>
                 </>
               ) : null}
             </form>

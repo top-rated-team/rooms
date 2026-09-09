@@ -627,6 +627,69 @@ in is a fourth affordance beside them, not a replacement for any.
 without `LINKEDIN_CLIENT_ID` the route reports itself unavailable in one
 sentence and the other three ways stay on screen.
 
+The field, the **Book** button and **Sign in with LinkedIn** now sit on one line,
+and the button is on screen and disabled with a title saying why. The helper
+line under them was wrong and is rewritten: it used to promise that leaving the
+address blank still books the call outright, which stops being true the moment
+the WhatsApp step below becomes a gate rather than a receipt.
+
+### 3.2 With no address, WhatsApp stops being a receipt and becomes the gate
+
+**This changes the order of operations on the server**, so it is not a client
+change and must not be attempted as one.
+
+Today `POST /api/booking` writes the Google event immediately and returns a
+`wa.me` link with a planted code beside it — the message is a *confirmation
+channel*. The owner wants it to be a *gate* when no address was given by either
+route: nothing is written to the calendar until the visitor has actually sent
+the message.
+
+So the flow becomes three steps rather than one:
+
+1. **Hold.** `POST /api/booking` with no address does not create an event. It
+   reserves the slot, mints the code, and returns the `wa.me` link plus the code.
+   The hold expires with the code — five minutes — so a slot cannot be held by
+   somebody who walked away, and the existing 409 path already covers the race.
+2. **Prove.** On a phone the button opens WhatsApp directly. **On a desktop it
+   shows the same link as a QR code, and the QR is itself clickable** — a
+   desktop visitor may well have WhatsApp on that machine, and making them
+   choose between scanning and clicking is a decision they should not have to
+   make. The message goes to +420774654822, account `y8T1nMDYR0ejEsMQpLr9OA`,
+   and arrives through the inbound handler wave 2 built, with its seven checks.
+3. **Confirm.** When the matcher fires, the event is created, and only then does
+   the popup show the confirmation with the Google Meet link. The popup is
+   already polling `GET /api/booking/confirmed`; what changes is what that
+   endpoint means — it now reports "the booking exists", not "the message
+   arrived".
+
+**If the hold expires unproven, nothing was booked and the popup says so.** That
+is the honest end state, and it is better than a calendar full of events nobody
+confirmed.
+
+### 3.3 What goes in the event, and where a reminder goes
+
+**The description names who will be on the call, with their LinkedIn profiles
+where we have them.** The host's is a constant —
+`Dan Burykin: https://www.linkedin.com/in/burykin/` — and the visitor's comes
+from Sign in with LinkedIn when that is the route they took. Where a profile is
+not known, the line is simply absent; no placeholder, and nothing inferred from
+a name.
+
+**Reminders follow the route the visitor actually used, and only that one.**
+
+| how they identified | invite | reminder |
+|---|---|---|
+| email typed, or from LinkedIn sign-in | Google invite, `notify: true` | email |
+| WhatsApp only | no invite, `attendees: []`, `notify: false` | WhatsApp, to the chat that proved it |
+| nothing at all | there is no booking to remind about | — |
+
+**Never LinkedIn.** Signing in with LinkedIn is a way to hand over an address,
+not a channel to message somebody on. A reminder sent as a LinkedIn message
+would be exactly the kind of unsolicited automation the API application says
+this product does not do, and it would put that application at risk for the sake
+of a convenience email already covers.
+
+
 ```
 POST /api/unipile/inbound          (the webhook; secret in a header)
 → 200 { "ok": true }               always, fast, idempotent
