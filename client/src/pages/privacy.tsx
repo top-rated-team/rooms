@@ -166,9 +166,10 @@ export default function Privacy() {
           <Row term="Neon">The database. Rooms, messages and leads, in the European Union.</Row>
           <Row term="Render">The hosting that runs the application.</Row>
           <Row term="OpenAI">Answers a question an agent was asked. Not used for training.</Row>
-          <Row term="Unipile">
-            Connects our own Google Calendar and our own WhatsApp number to the application, so a booking can be
-            written and a message answered.
+          <Row term="A scheduling and messaging connector">
+            Connects our own Google Calendar and our own WhatsApp number to this application, so a booking can be
+            written and a message answered. It sees the booking and the message, and nothing about you beyond what is
+            in them.
           </Row>
           <Row term="Google">Calendar, for the meeting itself and for the free/busy check if you authorised one.</Row>
           <Row term="LinkedIn">Sign-in, and page content where you have asked for it.</Row>

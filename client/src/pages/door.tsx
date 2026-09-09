@@ -708,7 +708,11 @@ function DoorPage({ door }: { door: DoorDef }) {
  */
 export function Door() {
   const [, params] = useRoute<{ slug: string }>("/services/:slug");
-  const door = params ? DOOR_BY_SLUG[params.slug] : undefined;
+  /* A hidden door has no page either: its address answers as not found, the
+     way it would if the row were not in the table. Anything less would leave a
+     door that is off every list but still reachable by typing its path. */
+  const found = params ? DOOR_BY_SLUG[params.slug] : undefined;
+  const door = found && !found.hidden ? found : undefined;
 
   if (!door) return <NotFound />;
   if (door.path !== `/services/${door.slug}`) return <Redirect to={door.path} replace />;

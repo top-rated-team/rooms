@@ -28,7 +28,8 @@
  * Inert when Unipile, PUBLIC_BASE_URL or the secret is missing.
  */
 
-import { available, unipileRequest, type UnipileResult } from "./client";
+import {
+  UNIPILE_UNCONFIGURED_LINE, available, unipileRequest, type UnipileResult } from "./client";
 
 /** The header Unipile echoes back to us. Their own docs use this name. */
 export const UNIPILE_WEBHOOK_AUTH_HEADER = "Unipile-Auth";
@@ -183,7 +184,7 @@ export async function createWebhook(
   const requestUrl = inboundRequestUrl();
   const secret = webhookSecret();
   if (!requestUrl || !secret) {
-    return { ok: false, error: { type: "unknown", status: 0 }, line: "Unipile is not configured on this deployment." };
+    return { ok: false, error: { type: "unknown", status: 0 }, line: UNIPILE_UNCONFIGURED_LINE };
   }
   const result = await unipileRequest<unknown>(
     { method: "POST", path: "/webhooks", json: createBody(source, requestUrl, secret) },

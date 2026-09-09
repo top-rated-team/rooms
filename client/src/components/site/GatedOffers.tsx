@@ -60,7 +60,8 @@ const FIELD =
  */
 
 /** Every row a stranger sees, which is now all of them. */
-export const LISTED_DOORS: DoorDef[] = DOORS;
+/* A hidden door is off every list. See the field's own comment in shared/doors.ts. */
+export const LISTED_DOORS: DoorDef[] = DOORS.filter((door) => !door.hidden);
 
 /** Tiers we contract and invoice ourselves. */
 export const PUBLIC_TIERS: DoorTier[] = ["white", "light-grey"];
@@ -75,7 +76,7 @@ export function isPublicDoor(door: DoorDef): boolean {
  * listed and reachable but is not one of the services Top-Rated Team sells, so
  * it is not counted in a sentence that says how many we have.
  */
-export const PUBLIC_DOORS: DoorDef[] = DOORS.filter(isPublicDoor);
+export const PUBLIC_DOORS: DoorDef[] = DOORS.filter((door) => !door.hidden && isPublicDoor(door));
 
 /** A partner's. Listed, labelled, and not counted as ours. */
 export const PARTNER_DOORS: DoorDef[] = DOORS.filter((door) => !isPublicDoor(door));

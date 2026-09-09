@@ -53,7 +53,7 @@ export const OPERATOR_ALERT_TYPES = new Set<UnipileErrorKind>([
 
 const KNOWN = new Set<string>(UNIPILE_ERROR_TYPES);
 
-const VISITOR_UNREACHABLE = "Unipile could not be reached.";
+const VISITOR_UNREACHABLE = "That service could not be reached.";
 /* A 429 is not unreachable, it is throttled, and the difference is the only
    thing a visitor can act on. Seen for real: the tenant returned 429 while the
    booking widget was being checked, and the popup said the service could not

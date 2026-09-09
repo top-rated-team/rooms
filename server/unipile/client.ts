@@ -28,10 +28,15 @@ const REQUEST_MS = 10_000;
 const BACKOFF_MS = [400, 1_200] as const;
 const RETRY_STATUSES = new Set([503, 504]);
 
+/* No vendor name in anything a visitor reads — the owner's instruction, and
+   the sentence is more useful without it anyway: a visitor cannot act on whose
+   API it is, only on whether the thing works. The identifiers below still say
+   Unipile because that is the API this module calls, and a module that lied
+   about that would be worse than one that names it. */
 export const UNIPILE_UNCONFIGURED_LINE =
-  "Unipile is not configured on this deployment.";
+  "Scheduling is not configured on this deployment.";
 
-export const UNIPILE_UNREACHABLE_LINE = "Unipile could not be reached.";
+export const UNIPILE_UNREACHABLE_LINE = "That service could not be reached.";
 
 export type UnipileMethod = "GET" | "POST" | "PATCH" | "DELETE";
 
@@ -112,7 +117,7 @@ function operatorAlert(error: UnipileError): void {
       : error.type === "errors/expired_credentials"
         ? "the provider refresh token died and needs reconnect"
         : error.type === "errors/insufficient_privileges"
-          ? "a required scope is missing; calendar scopes are off by default in Unipile"
+          ? "a required calendar scope is missing on the connected account"
           : "not retrying";
   console.error(`[unipile] ${error.status} ${error.type} — ${reason}`);
 }

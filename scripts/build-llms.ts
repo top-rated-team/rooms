@@ -87,7 +87,9 @@ const url = (pathname: string): string => `${ORIGIN}${pathname}`;
  */
 const PUBLIC_TIERS: DoorTier[] = ["white", "light-grey"];
 
-const PUBLIC_DOORS: DoorDef[] = DOORS.filter((door) => PUBLIC_TIERS.includes(door.tier));
+/* A hidden door is not in the sitemap and not in llms.txt either — see the
+   field's comment in shared/doors.ts. */
+const PUBLIC_DOORS: DoorDef[] = DOORS.filter((door) => !door.hidden && PUBLIC_TIERS.includes(door.tier));
 
 /** Whether a door has a panel a visitor can use — the test door.tsx applies before rendering one. */
 const answers = (door: DoorDef): boolean => door.status === "live" && doorAgent(door) !== undefined;

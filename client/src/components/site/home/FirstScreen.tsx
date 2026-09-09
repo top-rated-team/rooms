@@ -156,6 +156,15 @@ export function FirstScreen() {
           are level — 1620 against 1621 — which is what his reference shows,
           where the mark sits one pixel under the ink top. 0.02em is that one
           pixel. Do not reintroduce a cap-height term here.
+
+          THEN ONE PIXEL BIGGER, on the owner's instruction, growing down and
+          sideways with the top staying put. At 19px that is 20/19 = 1.053em.
+          The translate does NOT grow with it, which is the opposite of what the
+          arithmetic predicted: adding 1/19em pushed the mark three device
+          pixels down rather than holding it in place. Measured, so the
+          measurement wins — here the box grows downward from a fixed top,
+          which is exactly what was asked for. Proportions untouched: it was
+          square and it is square.
         */}
         <p
           className="type-body mt-[var(--s2)] ps-[0.25rem] font-display font-medium [font-size:clamp(0.82rem,3.5vw,var(--type-body))!important]"
@@ -165,7 +174,7 @@ export function FirstScreen() {
             src="/assets/top-rated-logo.png"
             alt=""
             aria-hidden="true"
-            className="me-[0.18em] inline-block h-[1em] w-[1em] translate-y-[0.02em]"
+            className="me-[0.18em] inline-block h-[1.053em] w-[1.053em] translate-y-[0.02em]"
           />
           Digital Experts + any AI agents in one room.
         </p>

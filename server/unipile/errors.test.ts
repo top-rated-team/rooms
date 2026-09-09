@@ -99,11 +99,11 @@ describe("visitorLine", () => {
     );
     assert.equal(
       visitorLine({ type: "errors/service_unavailable", status: 503 }),
-      "Unipile could not be reached.",
+      "That service could not be reached.",
     );
     assert.equal(
       visitorLine({ type: "errors/request_timeout", status: 504 }),
-      "Unipile could not be reached.",
+      "That service could not be reached.",
     );
   });
 });

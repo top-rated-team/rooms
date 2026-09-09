@@ -161,6 +161,18 @@ export interface DoorDef {
   /** Only for status "coming": why the panel is shut, in one sentence. */
   comingLine?: string;
   /**
+   * Off every list, every route, the sitemap and llms.txt — as if the row were
+   * not in the table. Not the same as `status: "coming"`, which is a door that
+   * exists and is shut and says so.
+   *
+   * On the owner's instruction, while the official LinkedIn API application is
+   * under review: a site advertising third-party LinkedIn growth is the kind of
+   * thing that review reads, and the row can come back the day it is decided.
+   * Reversible by deleting one line, which is why it is a flag rather than a
+   * deletion — the copy, the corpus wiring and the body all survive.
+   */
+  hidden?: boolean;
+  /**
    * Which corpus the door's answers are retrieved from. Three are built today —
    * "chatgpt-ads" (data/kb/kb.json), "google-ads" (kb.google-ads.json) and
    * "ad-grants" (kb.ad-grants.json), all written by scripts/build-kb.ts. A door
@@ -587,6 +599,7 @@ export const DOORS: DoorDef[] = [
     // invoices it, so this site publishes no figure for it — private/doors.md,
     // "whoever sets the price is the seller of that work".
     priceTier: "partner",
+    hidden: true,
     status: "coming",
     comingLine:
       "This door opens when Maksymenko's registered name and terms are on the page, because the room has to show theirs and it has none to show yet.",

@@ -240,7 +240,7 @@ describe("unipileRequest", () => {
     assert.equal(blob.includes(KEY), false);
   });
 
-  it("does not retry a thrown fetch, and does not claim Unipile's own wording", async () => {
+  it("does not retry a thrown fetch, and never puts the vendor name in front of a visitor", async () => {
     setConfigured();
     const fetchImpl: typeof fetch = async () => {
       throw new Error(`ENOTFOUND ${KEY}`);
@@ -248,7 +248,7 @@ describe("unipileRequest", () => {
     const result = await unipileRequest({ path: "/accounts" }, fetchImpl);
     assert.equal(result.ok, false);
     if (!result.ok) {
-      assert.equal(result.line, "Unipile could not be reached.");
+      assert.equal(result.line, "That service could not be reached.");
       assert.equal(result.line.includes(KEY), false);
     }
   });
