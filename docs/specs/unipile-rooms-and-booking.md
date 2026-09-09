@@ -579,6 +579,54 @@ must never be presented to the visitor as an invite that will arrive.
 `whatsapp.code` is the planted code of §2.4. `whatsapp.url` is the deep link the popup
 opens on a phone.
 
+### 3.1 A third way to give us an address: sign in with LinkedIn
+
+The owner asked for it after the widget shipped, so it is written here rather
+than in a parcel's head. Today a booking has two shapes: an address typed by
+hand, or no address at all — and the WhatsApp deep link, which is a
+confirmation channel rather than an address. The third is **sign in with
+LinkedIn and let it hand over the email**, once the official app is live.
+
+**It is not a small change, and here is exactly why.**
+
+**The scope is not requested today.** `server/identity.ts:83` sets
+`LINKEDIN_SCOPE = "openid profile"`. LinkedIn's own page is explicit that a
+third permission is needed: *"email — Required to retrieve the member's email
+address."* Adding it means both the scope string and the product being
+provisioned on the app in LinkedIn's developer portal. The earlier brief said to
+leave the scope alone because adding it carried a review cost; that review is
+now happening anyway, as a SaaS application, so the reason to leave it has gone.
+
+**The address may not arrive.** Verbatim from LinkedIn: *"The 'email' and
+'email_verified' fields are optional and may not be included in all responses.
+Ensure your application can handle cases where these fields are absent."* So
+"signed in, and still no address" is a real branch, not an edge case. It must
+land on the same footing as booking without an address at all — the event is
+created, `invited` is false, and the popup says so — rather than on an error.
+
+**The identity layer is room-scoped and a booking is not a room.**
+`startLinkedIn()` carries a room token in `state` and binds the result to a
+`workspaceId`. A booking has no workspace. So this needs a second, roomless
+entry into the same OIDC exchange, with `state` keyed to the booking draft
+instead — and the binding it produces is not a room claim and must not be
+written into `room_bindings`.
+
+**OAuth navigates away, and the draft has to survive it.** The visitor has
+already picked a day and a time when they press it. A full-page redirect to
+LinkedIn and back that loses the slot is worse than typing the address, and it
+is the thing a first implementation gets wrong. Keep the draft, restore the
+popup on return, and re-check the slot is still free before writing — the 409
+path already exists for exactly that.
+
+**Do not disturb the three paths that work.** An address typed by hand; no
+address at all, which is `attendees: []` with `notify: false` and was verified
+against the live tenant; and the WhatsApp deep link with its planted code. Sign
+in is a fourth affordance beside them, not a replacement for any.
+
+**Inert until the app is live**, in the pattern everything else here follows:
+without `LINKEDIN_CLIENT_ID` the route reports itself unavailable in one
+sentence and the other three ways stay on screen.
+
 ```
 POST /api/unipile/inbound          (the webhook; secret in a header)
 → 200 { "ok": true }               always, fast, idempotent
