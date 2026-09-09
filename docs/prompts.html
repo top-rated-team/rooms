@@ -45,7 +45,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">3 still to run. Copy one, paste
+  <p class="lede">3 still to run, 1 landed. Copy one, paste
   it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -60,104 +60,9 @@
     <li>Run the same two commands again. If they pass, commit. Then the next wave.</li>
   </ol>
 
-    <section class="wave">
-      <h2>Wave 9 — this one runs alone</h2>
-      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
-      <article class="parcel">
-        <header>
-          <h3>adgrant-site</h3>
-          <button class="copy" data-target="p-adgrant-site">Copy this prompt</button>
-        </header>
-        <p class="what">The AdGrant.AI front page and shell exist from an earlier wave, built from what the repository already knew.</p>
-        <pre id="p-adgrant-site">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "adgrant-site".
-
-Read these first, before you write anything, in this order:
-  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
-    content API and what was captured through it; the six statements in that material
-    that are wrong against Google's current documentation, each with the page that
-    contradicts it; why "generate and upload" is two products with a Google approval
-    between them; and the answer to the owner's question about per-agent limits.
-  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
-    endpoint it touches, transcribed with the URL it came from. Four decisions already
-    made, with the reasoning, so you do not spend your wave relitigating them. The
-    request and response shapes two parcels build to in parallel. And the rule the
-    owner set: every message is checked for who it is from, who it is to and which
-    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
-    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
-    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
-    A paraphrase would not, and you would find out after building on all three.
-  README.md, private/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/pages/adgrant/*
-  client/src/components/adgrant/*
-
-SHARED FILES: none. You do not edit any file outside the list above.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  A four-section site in the top-rated.team design system wearing AdGrant.AI's own chrome. THE
-  SECTIONS, named as the live site names them: Ad Grant Glossary (Terminology explained), Case
-  Studies, Tips &amp; Tricks (Custom workarounds), Starter Templates. Each gets an index and a leaf
-  page, rendered from shared/adgrant.ts, which the previous wave generated. KEEP THE URL SHAPES
-  - /glossary/&lt;slug&gt;, /tricks/&lt;slug&gt; and their siblings - because every page carries
-  relatedLinks into the others and the internal link graph is worth more than a tidier path. SET
-  TITLE AND DESCRIPTION PER ROUTE from each page's own metaTitle and metaDescription, the way
-  client/src/pages/landing.tsx does it. The live site serves one title and one canonical for all
-  74 URLs and injects the rest client-side, so this metadata exists and is currently wasted;
-  this is the cheapest real improvement on the whole site. THE FRONT PAGE: the measured
-  statistic goes on it. 4,539 Ad Grant accounts processed, 16,575 campaigns, 3,142,469 keywords,
-  with the medians beside them - that is the most valuable thing this product owns and the
-  current site does almost nothing with it. State what each number is a number OF, and do not
-  round it into a marketing figure. Then the conversation: the front page's action is an agent
-  that asks what the nonprofit needs, not a form. Identity is required before it generates, and
-  generating is the previous wave's endpoint - call it, do not reimplement it, and print the
-  remaining count of three where a person can see it before they spend one. Say plainly what
-  happens: a structure is produced and shown, and a person sets up the account link afterwards.
-  Do NOT write any sentence implying the structure was uploaded into their Google Ads account.
-  THE CHROME: its own mark, its own top menu, its own footer, both linking back to
-  top-rated.team. Extend the accent and wordmark in
-  client/src/components/site/doors/adgrant-style.ts rather than starting a second palette; the
-  type scale, the spacing scale and the class vocabulary in
-  client/src/components/site/doors/quiet.ts stay exactly as they are. No import of the site's
-  Header or Footer. Build it so it can move to its own host later: nothing that assumes the
-  apex. Two faces of type, not the twenty-eight the live site loads; no pinch-zoom lock; and no
-  machine-translation gadget - English only is an honest state. Where a section's material is
-  thin, say less rather than padding it.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  The AdGrant.AI front page and shell exist from an earlier wave, built from what the repository
-  already knew. Now there is the real material - 23 written pages, 12 starter templates and a
-  measured statistic over 4,539 accounts - and the owner wants the four sections rebuilt in this
-  design system, with AdGrant.AI's own mark, menu and footer, and the front page turned from a
-  form into a conversation.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
+    <section class="wave" data-landed>
+      <h2>Wave 9 — landed</h2>
+      <p class="waveNote">adgrant-site — reported, reviewed and committed. Nothing to run here.</p>
     </section>
     <section class="wave">
       <h2>Wave 10 — this one runs alone</h2>
@@ -244,7 +149,17 @@ WHAT DONE MEANS FOR THIS PARCEL:
   placeholder-address idea is refused in the brief. REMINDERS follow the route the visitor used
   and only that one, per the table in section 3.3: email where there is an address, WhatsApp to
   the chat that proved it where there is not, and never LinkedIn. Do not build the LinkedIn
-  button's behaviour — it stays disabled and the next parcel owns it.
+  button's behaviour — it stays disabled and the next parcel owns it. A FORK MUST NEVER BE
+  OFFERED THIS NUMBER, and that is not a policy note — it is a live bug waiting. WHATSAPP_URL in
+  shared/roster.ts is the owner's own mobile, hardcoded, and a fork inherits the constant
+  verbatim: without this rule a visitor on somebody else's white-label deployment who books
+  without an address is handed a wa.me link to a phone in Prague. So the WhatsApp path is
+  offered ONLY on a house host — shared/operator.ts exports HOUSE_HOSTS for exactly this kind of
+  question — and only when a WhatsApp account is actually configured. OFF A HOUSE HOST THERE IS
+  NO GATE AND NO NO-ADDRESS PATH: an address is required, by typing it or by the LinkedIn
+  sign-in the next parcel builds, and the sentence under the field says so rather than
+  describing a WhatsApp step that deployment does not have. The repository is public and
+  forkable, so this is the ordinary case rather than the exotic one.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
   With no email address the popup today writes the event into the calendar immediately and hands
@@ -354,13 +269,119 @@ WHAT DONE MEANS FOR THIS PARCEL:
   reminder there is exactly the unsolicited automation the pending API application says this
   product does not do, and it would put that application at risk to save an email. Inert without
   LINKEDIN_CLIENT_ID: the button says it is not available in one sentence and the other two ways
-  stay on screen.
+  stay on screen. WRITE THE FORK OPERATOR THE SHORT VERSION OF HOW TO GET ONE. Off a house host
+  there is no WhatsApp path, so LinkedIn sign-in and a typed address are the only two ways a
+  booking can reach anybody, and the operator has to create their own LinkedIn app before the
+  first works. Put it where they will meet it — beside the LINKEDIN_CLIENT_ID row in
+  .env.example and in the one sentence the disabled button shows — and keep it to the steps that
+  are actually load-bearing: create an app at linkedin.com/developers against a LinkedIn Page
+  they administer, request the Sign In with LinkedIn using OpenID Connect product, add the three
+  scopes, register the redirect URI as their own PUBLIC_BASE_URL plus the callback path this
+  parcel adds, and put the client id and secret in the environment. Do not write a tutorial;
+  write the six things whose absence makes it fail.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
   The third way to give us an address, beside typing one and giving none: sign in with LinkedIn
   and let it hand the address over. The button is already on screen and disabled. This turns it
   on, and it is deliberately after the gate parcel because both change the same dialog and the
   same booking server, and two agents in those at once is a merge nobody can check.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+    </section>
+    <section class="wave">
+      <h2>Wave 12 — this one runs alone</h2>
+      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
+      <article class="parcel">
+        <header>
+          <h3>room-access-email</h3>
+          <button class="copy" data-target="p-room-access-email">Copy this prompt</button>
+        </header>
+        <p class="what">A room's address is its whole credential and this browser's localStorage is the only thing that remembers it.</p>
+        <pre id="p-room-access-email">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "room-access-email".
+
+Read these first, before you write anything, in this order:
+  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
+    content API and what was captured through it; the six statements in that material
+    that are wrong against Google's current documentation, each with the page that
+    contradicts it; why "generate and upload" is two products with a Google approval
+    between them; and the answer to the owner's question about per-agent limits.
+  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
+    endpoint it touches, transcribed with the URL it came from. Four decisions already
+    made, with the reasoning, so you do not spend your wave relitigating them. The
+    request and response shapes two parcels build to in parallel. And the rule the
+    owner set: every message is checked for who it is from, who it is to and which
+    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
+    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
+    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
+    A paraphrase would not, and you would find out after building on all three.
+  README.md, private/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  server/room-access.ts
+  server/room-access.test.ts
+  client/src/components/site/RoomMenu.tsx
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  server/routes.ts
+      - one route that sends a link to an address
+      - one route that opens a room from a link
+  shared/api.ts
+      - what the site learns about a link it sent
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  A way back into a room that survives a cleared browser, beside the LinkedIn one. SEND: a
+  visitor gives an address, and if that address is bound to a room they get a link to it. The
+  reply on screen is the same whether or not anything was found and whether or not the address
+  is one we know — 'if that address has a room, the link is on its way' — because a form that
+  says 'no room for that address' is a form that tells anybody whether a given person is a
+  customer here. OPEN: the link carries a single-use token, separate from the room's own
+  address, valid for one hour, and spent when it is used. It is not the room's token and must
+  never be the room's token: the room address is a bearer credential and putting it in an email
+  makes the email one too, forever, in whatever archive it lands in. Store the sent tokens
+  beside the bindings in shared/schema-rooms.ts, hashed, the way the WhatsApp identifier already
+  is — a stolen database must not yield a working link. Rate-limit sending per address AND per
+  room, or this is a way to post mail to somebody through us. Sending goes through
+  server/notify.ts, which already talks to Resend and already degrades to a sentence when
+  RESEND_API_KEY is absent; a deployment with no mail configured must say the route is
+  unavailable rather than pretending a link was sent. The site half is one more entry in
+  RoomMenu, where a browser that remembers no rooms currently offers nothing but 'Open a room'.
+  Say what the link does and how long it lasts before asking for the address, not after.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  A room's address is its whole credential and this browser's localStorage is the only thing
+  that remembers it. That is fine for us — the owner decided a person who is not signed in has
+  nothing to look up — but a fork has no WhatsApp to prove anybody with, so on somebody else's
+  deployment a visitor who clears their browser loses every room they had and there is no way
+  back at all. Two ways back, then: the LinkedIn sign-in the previous parcel builds, and a link
+  sent to an address.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.

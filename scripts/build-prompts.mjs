@@ -38,7 +38,7 @@ const WAVES = [
   /* Waves 4 to 8 are landed and their parcels are retired to
      docs/parcels-programme-3-landed.json, so they no longer appear here — a
      re-run of a landed parcel is an agent rewriting a finished file. */
-  { n: 9, keys: ["adgrant-site"], alone: true },
+  { n: 9, keys: ["adgrant-site"], alone: true, landed: true },
   /*
    * The booking popup's last two pieces, and they are two waves rather than
    * one because they change the same dialog and the same booking server.
@@ -49,6 +49,11 @@ const WAVES = [
    */
   { n: 10, keys: ["booking-gate"], alone: true },
   { n: 11, keys: ["booking-linkedin"], alone: true },
+  /* The fork's other half. We decided a visitor who is not signed in has
+     nothing to look up, and for us that is fine — but a fork has no WhatsApp to
+     prove anybody with, so without this a cleared browser loses every room on
+     somebody else's deployment with no way back at all. */
+  { n: 12, keys: ["room-access-email"], alone: true },
 ];
 
 function prompt(key) {
