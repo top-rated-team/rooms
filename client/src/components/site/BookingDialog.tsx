@@ -1042,7 +1042,6 @@ function WaitingView({ hold, openedWhatsApp }: { hold: HoldBookingResponse; open
         <code className="rounded border border-card-border bg-muted px-1 py-0.5 font-mono text-[11px] text-foreground">
           {hold.whatsapp.code}
         </code>
-        .
       </p>
       {phone ? (
         openedWhatsApp ? null : (
@@ -1079,8 +1078,8 @@ function ExpiredView({ code, onRetry }: { code: string; onRetry: () => void }) {
         Five minutes passed without a WhatsApp message for{" "}
         <code className="rounded border border-card-border bg-muted px-1 py-0.5 font-mono text-[11px] text-foreground">
           {code}
-        </code>
-        . The slot is free again.
+        </code>{" "}
+        — the slot is free again.
       </Dialog.Description>
       <div className="mt-6 flex justify-center">
         <button type="button" className={BTN_PRIMARY} onClick={onRetry} data-testid="button-booking-retry">
