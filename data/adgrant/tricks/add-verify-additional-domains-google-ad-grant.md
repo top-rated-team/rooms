@@ -45,7 +45,7 @@ This isn’t just a quick setting you can toggle inside Google Ads. It requires 
 
 ## Why It Matters for Your Ad Grant
 
-From managing 4,539 processed Ad Grant accounts, I’ve seen nonprofits lose opportunities by limiting themselves to one domain. Maybe your main site is at nonprofit.org, but you run a separate fundraising site at donate-nonprofit.com. Or you have a campaign microsite unrelated to your main domain that you want to promote. Without verifying these extra domains, Google won’t allow ads to send traffic there.
+Nonprofits lose opportunities by limiting themselves to one domain. Maybe your main site is at nonprofit.org, but you run a separate fundraising site at donate-nonprofit.com. Or you have a campaign microsite unrelated to your main domain that you want to promote. Without verifying these extra domains, Google won’t allow ads to send traffic there.
 
 Google's domain verification policy is strict because the Ad Grant program is designed to send free traffic only to websites owned and controlled by your nonprofit. This protects nonprofits and the program’s integrity.
 
@@ -57,7 +57,7 @@ So, adding additional domains legitimately increases your program’s reach and 
 
 ## How to Add and Verify Additional Domains for Your Ad Grant
 
-Here’s the exact, practical workflow I follow (and recommend) for nonprofits wishing to add more domains:
+The workflow for nonprofits wishing to add more domains:
 
 1. **Confirm You Own and Control the Domain**
    - You must have administrative access to the domain or hosting provider.
@@ -134,5 +134,3 @@ Adding additional domains isn’t glamorous but it expands your nonprofit’s re
 If you want a fast, well-structured starting point for campaigns on multiple sites, try the free generator at AdGrant.AI.
 
 For more on making your Ad Grant work harder, check out how to [Collect Remarketing Audiences Using Google Ad Grant Free Traffic](/tricks/collect-remarketing-audiences-google-ad-grant).
-
-Good luck, and keep those clicks coming!

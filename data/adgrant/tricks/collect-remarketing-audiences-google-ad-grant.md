@@ -34,11 +34,11 @@ corrections:
 
 ## How to Use Google Ad Grant Traffic to Build Remarketing Audiences for Paid Ads
 
-When a small environmental nonprofit I worked with hit their Google Ad Grant $10K monthly limit, they weren’t sure how to step up their paid Google Ads. Their website traffic was decent, but conversion rates were low and the paid ads had a tight budget. The missing link? Remarketing audiences.
+A small environmental nonprofit hit its Google Ad Grant $10K monthly limit and was not sure how to step up its paid Google Ads. Website traffic was decent, but conversion rates were low and the paid ads had a tight budget. The missing piece was remarketing audiences.
 
-**Remarketing** lets you show ads to people who’ve already visited your website, increasing conversion chances dramatically. But most nonprofits don’t realize you can use that free Ad Grant traffic to collect remarketing audiences — then leverage those lists in your paid Google Ads accounts.
+**Remarketing** lets you show ads to people who’ve already visited your website, which raises the chance they convert. But most nonprofits don’t realize you can use that free Ad Grant traffic to collect remarketing audiences — then leverage those lists in your paid Google Ads accounts.
 
-This tactic is a win-win. It means you’re not just using your free Ad Grant budget for cold traffic; you’re *also* creating a warm, high-intent audience pool for your paid campaigns, where your budget goes further.
+The Grant budget then does two jobs. It buys cold traffic now, and it builds a warm, high-intent audience pool for your paid campaigns, where your budget goes further.
 
 ### Why Does This Work?
 
@@ -50,7 +50,7 @@ Remarketing audiences are built via Google Analytics or Google Ads tag on your w
 
 1. **Set Up Remarketing Tags Properly**
 
-   You need Google Ads remarketing tags installed on your website or use Google Analytics 4 with linked Google Ads accounts. We’ve seen many nonprofits miss this step and waste their Grant traffic without capturing audiences.
+   You need Google Ads remarketing tags installed on your website or use Google Analytics 4 with linked Google Ads accounts. Nonprofits often miss this step and spend Grant traffic without capturing audiences.
 
    - If you don’t have the tag set up, use Google Tag Manager to add it quickly.
    - Confirm your tag captures *all* pages you want to remarket (usually the entire site).
@@ -80,15 +80,15 @@ Remarketing audiences are built via Google Analytics or Google Ads tag on your w
 - Managing audiences across multiple accounts needs care — use Google Ads Manager Account setups to connect Grant and paid accounts.
 - Be mindful of Google Ad Grant policies. Do not try to run paid campaigns under the Grant but use audience sharing legitimately.
 
-### Real Numbers We’ve Seen
+### Real Numbers
 
-In accounts with 10,000 free Grant clicks/month, remarketing lists grew to 6,000-8,000 in 30 days. When we layered those audiences into paid campaigns, conversion rates improved, from higher intent.
+In accounts with 10,000 free Grant clicks/month, remarketing lists grew to 6,000-8,000 in 30 days. Layering those audiences into paid campaigns improved conversion rates, because the intent is higher.
 
 Even smaller nonprofits with 1,000–2,000 monthly Grant clicks saw remarketing lists grow to usable sizes within 60 days, enabling them to stretch their paid budgets further.
 
-### A Bonus Hack: Use AdGrant.AI to Jumpstart Your Structure
+### Use AdGrant.AI to Build the Structure
 
-If you’re setting this up for the first time, I recommend generating a solid Google Ad Grant account structure with [AdGrant.AI](https://adgrant.ai/). It creates campaigns, keywords, and ads based on your website—and you can build your remarketing tags alongside.
+If you’re setting this up for the first time, generate the account structure with [AdGrant.AI](https://adgrant.ai/). It creates campaigns, keywords, and ads based on your website, and you can add your remarketing tags alongside.
 
 For deeper insights on bidding and keyword tactics that work well with the Grant, check out [Bypass the $2 CPC Cap with Smart Bidding, Conversion Goals & Tracking](/tricks/bypass-2-cpc-cap-smart-bidding-google-ad-grant).
 
@@ -96,4 +96,4 @@ Or see how other nonprofits organize accounts to maximize Grant impact, like [Ho
 
 ---
 
-Use your Google Ad Grant beyond just free clicks. Build smart remarketing audiences to turbocharge your paid campaigns. Get the tags right, segment your audiences, and watch your nonprofit’s fundraising and engagement climb.
+Use your Google Ad Grant for more than free clicks. Build remarketing audiences for your paid campaigns. Get the tags right and segment your audiences.

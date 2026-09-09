@@ -39,15 +39,15 @@ corrections:
 
 ## Bottom Line: Keep Your Google Ad Grant Account Alive by Hitting 5% CTR
 
-Google requires every Ad Grant account to maintain at least a 5% CTR each month. If that is missed for two consecutive months, the account is temporarily deactivated. From 4,539 processed Ad Grant accounts, we have seen how fast you can lose your Grant if you ignore this simple metric. The trick? Don’t just chase clicks blindly. You need targeted, relevant ads **and** smart account structure to reach that 5% CTR consistently.
+Google requires every Ad Grant account to maintain at least a 5% CTR each month. If that is missed for two consecutive months, the account is temporarily deactivated. Ignore the metric and the Grant goes fast. Chasing clicks is not enough on its own: reaching 5% consistently takes targeted, relevant ads **and** a sound account structure.
 
 ---
 
 ## Why the 5% CTR Rule Exists
 
-Google’s $10,000/month free Search ads come with rules. One is a minimum 5% click-through rate (CTR) monthly. Google wants to ensure you’re showing ads people actually click — otherwise, what’s the point?
+Google’s $10,000/month free Search ads come with rules. One is a minimum 5% click-through rate (CTR) monthly. Google wants ads that people actually click.
 
-If the CTR requirement is not met for two consecutive months, Google temporarily deactivates the account. Recovery is a request after the account is brought back into compliance (see my [Recover a Suspended Google Ad Grant Account: Step-by-Step Guide](/tricks/recover-suspended-google-ad-grant-account)).
+If the CTR requirement is not met for two consecutive months, Google temporarily deactivates the account. Recovery is a request after the account is brought back into compliance (see [Recover a Suspended Google Ad Grant Account: Step-by-Step Guide](/tricks/recover-suspended-google-ad-grant-account)).
 
 In practice, this means you can't run broad, low-intent keywords or sloppy ads and just hope for the best.
 
@@ -62,7 +62,7 @@ Say you run a nonprofit with the full $10,000/mo Grant. The daily dollar budget 
 
 If your ads show 3,334 times a day but only get 50 clicks, your CTR is 1.5% — well below 5%. Google sees that as “your ads aren’t relevant.”
 
-The pitfall? If you go too broad with keywords or your ads don’t match searcher intent, you’ll get a ton of impressions but barely any clicks.
+The pitfall: go too broad with keywords, or write ads that miss searcher intent, and you get impressions but barely any clicks.
 
 ---
 
@@ -130,4 +130,4 @@ If you want a ready-made, Google-compliant account structure aligned to your non
 
 Finally, keep learning. Understanding [Quality Score](/glossary/quality-score-google-ad-grant) and [Ad Rank](/glossary/ad-rank-google-ad-grant) will help you improve your account’s performance and CTR over time.
 
-Get serious about CTR, and your Google Ad Grant will keep fueling your mission instead of getting suspended.
+Keep CTR up and the account stays active.

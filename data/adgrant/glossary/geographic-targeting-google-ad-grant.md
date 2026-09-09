@@ -33,7 +33,7 @@ corrections: []
 
 ## Geographic Targeting: Making Your Google Ads Count Where It Matters
 
-I once worked with a nonprofit focused on providing clean water in rural communities across a specific state. They initially ran their Google Ad Grant ads targeting the entire country. The result? Lots of wasted impressions and clicks from places they couldn't serve or follow-up with. That's where **geographic targeting** changed everything.
+A nonprofit that provides clean water in rural communities across one state, running its Google Ad Grant ads at the whole country, collects impressions and clicks from places it cannot serve or follow up with. **Geographic targeting** is the setting that fixes that.
 
 ### What Is Geographic Targeting?
 
@@ -43,7 +43,7 @@ For nonprofits using the $10,000/month Google Ad Grant, this means you can get y
 
 ### Why It Matters for Nonprofits
 
-In the 4,539 processed Ad Grant accounts I've managed, geographic targeting is one of the single biggest levers for improving **click-through rate (CTR)** and conversion rates. When people see ads relevant to their location or community, they’re far more likely to click and engage.
+Geographic targeting is one of the biggest levers for improving **click-through rate (CTR)** and conversion rates. When people see ads relevant to their location or community, they’re far more likely to click and engage.
 
 Without geographic targeting, you risk:
 
@@ -54,7 +54,7 @@ Without geographic targeting, you risk:
 ### Real-World Tips on Using Geographic Targeting Effectively
 
 1. **Start Narrow, Then Expand**  
-I’ve seen nonprofits start with a tight radius around their physical location or target service areas. For example, a food bank might target a 25-mile radius around their distribution centers. Once you see solid results, you can cautiously expand to neighboring areas.
+Start with a tight radius around your physical location or service areas. A food bank might target a 25-mile radius around its distribution centers. Once the results hold up, expand cautiously to neighboring areas.
 
 2. **Use Location Exclusions**  
 Sometimes it’s not just about where you want your ads to show, but where you don’t. Exclude locations known for irrelevant clicks or areas you can’t serve. This prevents wasting clicks on people outside your mission’s footprint.
@@ -64,7 +64,7 @@ If you run multiple campaigns, tailor geographic targeting to each one. For inst
 
 ### Pitfalls to Watch Out For
 
-- **Overly Broad Targeting:** I’ve seen accounts struggle because their ads show everywhere. The ad budget gets diluted, CTR tanks, and Google penalizes the account.
+- **Overly Broad Targeting:** Accounts whose ads show everywhere struggle. The ad budget gets diluted, CTR tanks, and Google penalizes the account.
 
 - **Ignoring Location Intent Settings:** Google Ads lets you target people physically in your locations, people searching for your locations, or both. Choose wisely. For nonprofits, “people in or regularly in your targeted locations” is usually best.
 
@@ -72,7 +72,7 @@ If you run multiple campaigns, tailor geographic targeting to each one. For inst
 
 ### How to Get Started Quickly
 
-If this sounds technical or time-consuming, I recommend using **AdGrant.AI**—a free tool that auto-generates a full Ad Grant account structure tailored to your nonprofit’s website and mission, including smart geographic targeting built in. It’s saved me and hundreds of nonprofits countless hours.
+If this sounds technical or time-consuming, **AdGrant.AI** is a free tool that auto-generates a full Ad Grant account structure from your nonprofit’s website and mission, geographic targeting included.
 
 
 For more on keeping your account in good standing, check out [Ad Rank: What It Means for Your Google Ad Grant Success](/glossary/ad-rank-google-ad-grant) and how to [Stretch the Full $10,000 Google Ad Grant Monthly Budget](/tricks/stretch-full-10000-google-ad-grant-monthly-budget).

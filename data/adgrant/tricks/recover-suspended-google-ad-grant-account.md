@@ -32,7 +32,7 @@ corrections:
 
 When your Google Ad Grant account is suspended, it means your nonprofit's access to the free $10,000/month in Google Search ads has been paused due to non-compliance with program policies. Recovering your account means diagnosing why it got suspended, fixing the issues, and successfully submitting a request to Google to reinstate your ads. 
 
-Straightforward, but it’s not always quick or easy. I’ve worked on 4,539 processed Ad Grant accounts, and I can tell you: the key is focusing on the *real* reasons for suspension, not just guessing. 
+Straightforward, but not always quick or easy. The key is fixing the actual reason for the suspension rather than guessing. 
 
 ## Why It Matters for Your Ad Grant
 
@@ -40,7 +40,7 @@ Every day your account is suspended, you lose the chance to drive traffic, suppo
 
 Google is strict about compliance, especially around minimum performance metrics like the 5% **click-through rate (CTR)** and keyword quality. Without fixing the root cause, you’ll get suspended again. 
 
-Ignoring or delaying recovery increases frustration, and sometimes nonprofits simply give up on Google Ads. Don’t let that happen. Recovering your account is 100% doable if you get systematic about it.
+Ignoring or delaying recovery increases frustration, and sometimes nonprofits simply give up on Google Ads. Recovery is doable if you work through it systematically.
 
 ## How to Recover a Suspended Ad Grant Account: Step-by-Step
 
@@ -116,4 +116,4 @@ Recovering a suspended Google Ad Grant account is frustrating but manageable. Th
 
 If you want to shortcut the process, try [AdGrant.AI](https://adgrant.ai/)—it’s free and builds Google Ad Grant-compliant campaigns for you in minutes. 
 
-Remember: the Grant is a powerful tool. Keep it healthy, and it will keep driving real results for your cause.
+Keep the account healthy and the Grant keeps working.

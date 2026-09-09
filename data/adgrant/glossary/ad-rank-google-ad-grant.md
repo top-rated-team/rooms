@@ -37,7 +37,7 @@ corrections:
 
 ## Ad Rank: The Bottom Line
 
-Your Ad Rank is the single most important factor that decides where your Google Ad Grant ads show up in Google search results. It affects whether your ad appears on the first page—or somewhere no one ever clicks. We’ve seen nonprofits lose out on thousands of impressions simply because they misunderstood how Ad Rank works.
+Your Ad Rank decides where your Google Ad Grant ads show up in Google search results. It affects whether your ad appears on the first page—or somewhere no one ever clicks. Misreading how it works is a common way to lose impressions.
 
 **If your Ad Rank is low, your ads don’t show well, your clicks tank, and you risk not spending your full $10,000 monthly grant—which means missed opportunities to promote your cause.**
 
@@ -51,10 +51,10 @@ Google publishes no Ad Rank formula, and does not name Quality Score as a factor
 
 Where manual CPC is still in use the Grant limits max CPC to $2 (Maximize conversions, required for accounts created on or after 22 April 2019, can bid above it), **you can’t just outbid everyone else.** Your Ad Rank depends heavily on quality factors.
 
-Across 4,539 processed Ad Grant accounts, nonprofits with strong Ad Rank consistently:  
+Nonprofits with strong Ad Rank:  
 - Get more impressions and clicks, stretching the full $10k monthly grant  
 - Achieve 5%+ CTR to avoid suspension  
-- Improve conversion rates by showing ads to the right searchers**
+- Improve conversion rates by showing ads to the right searchers
 
 Poor Ad Rank means your ads get buried on page 2 or later, where click-through rates drop dramatically—often below the 5% minimum Google requires.
 
@@ -81,10 +81,10 @@ That’s why improving **quality** is crucial.
 
 ## Next Steps
 
-If you’re stuck trying to figure out how to organize your campaigns and improve your Ad Rank, try the free Ad Grant account generator at [AdGrant.AI](/). It builds an optimized, search-intent-focused account structure for you in minutes.
+If you’re stuck trying to figure out how to organize your campaigns and improve your Ad Rank, try the free Ad Grant account generator at [AdGrant.AI](/). It builds a search-intent-focused account structure in minutes.
 
-Remember, the Grant is a huge opportunity, but it only works when your ads rank well. Focus first on quality and relevance before thinking about bids. In the long run, that’s how you’ll stretch the full $10k budget every month (/tricks/stretch-full-10000-google-ad-grant-monthly-budget), avoid suspension, and bring real impact to your mission.
+The Grant only works when your ads rank well. Focus on quality and relevance before bids. In the long run, that’s how you’ll stretch the full $10k budget every month (/tricks/stretch-full-10000-google-ad-grant-monthly-budget), avoid suspension, and bring real impact to your mission.
 
-If you ever hit an account suspension due to low CTR or quality issues, act fast. Follow our step-by-step guide to recover (/tricks/recover-suspended-google-ad-grant-account). 
+If the account is suspended for low CTR or quality issues, act quickly. Follow the step-by-step guide to recover (/tricks/recover-suspended-google-ad-grant-account). 
 
-Master your Ad Rank, and your Google Ad Grant will become one of your most reliable fundraising and awareness tools.
+Work on Ad Rank first. It decides whether the rest of the account is seen at all.

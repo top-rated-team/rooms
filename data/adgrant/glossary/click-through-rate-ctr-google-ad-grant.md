@@ -37,7 +37,7 @@ corrections:
 
 Imagine this: you’ve set up your Google Ad Grant account with great keywords and compelling ads. You’re excited to see some traffic, but after a few weeks, your account risks suspension. The culprit? Your **Click-Through Rate (CTR)** fell below Google’s required 5% minimum.
 
-This is a reality we’ve seen across hundreds of nonprofit accounts. CTR isn’t just a number — it’s a gatekeeper for your grant’s continued success.
+CTR isn’t just a number — it’s the gatekeeper for keeping the grant.
 
 ### What Is Click-Through Rate (CTR)?
 CTR is the percentage of people who see your ad and then actually click on it. To put it simply:
@@ -54,7 +54,7 @@ A high CTR sounds great, but it’s not just about clicks. If your CTR is artifi
 
 Conversely, a low CTR can tank your account fast. Too broad keywords or generic ads often attract impressions but few clicks. With the $10,000/month grant capped at $2 CPC (unless using Smart Bidding), every click counts.
 
-We’ve managed 4,539 processed Ad Grant accounts and the key is balance: relevant keywords + well-written ads + ongoing optimization = sustainable CTR.
+The key is balance: relevant keywords + well-written ads + ongoing optimization = sustainable CTR.
 
 ### 3 Tips to Boost CTR and Keep Your Ad Grant Healthy
 
@@ -66,18 +66,18 @@ We’ve managed 4,539 processed Ad Grant accounts and the key is balance: releva
 2. **Write Compelling, Action-Oriented Ads**
    - Highlight benefits or unique offers, like “Support local education programs today.”
    - Use ad extensions where possible to add more info.
-   - Test multiple ad variations; we always recommend at least 2 ads per ad group to see what performs best.
+   - Test multiple ad variations — 2 ads per ad group is enough to see what performs best.
 
 3. **Monitor and Refine Regularly**
    - Check your CTR monthly and pause or adjust keywords with low performance.
    - Use Smart Bidding strategies like **Maximize Conversions** if you have conversion tracking set up—it can bid above the $2 CPC ceiling (and is required for accounts created on or after 22 April 2019) and can improve both CTR and results.
 
-If this sounds overwhelming, try [AdGrant.AI](https://adgrant.ai/). We built it to auto-generate complete account structures tailored to your site, saving you hours of guesswork and helping maintain a healthy CTR.
+If this sounds overwhelming, try [AdGrant.AI](https://adgrant.ai/). It auto-generates a complete account structure tailored to your site, which saves hours of guesswork and helps keep CTR healthy.
 
 ### Last Word
 
 CTR isn’t just a metric for PPC nerds; it directly affects your ability to keep using the free $10,000/month Google Ad Grant. Strive for relevance in your keywords and ads, keep testing, and treat CTR as a vital health sign for your account.
 
-For a deep dive into maximizing your budget while maintaining strong performance, check out our guide on [Stretch the Full $10,000 Google Ad Grant Monthly Budget](/tricks/stretch-full-10000-google-ad-grant-monthly-budget). And if you ever get suspended, here’s how to [Recover a Suspended Google Ad Grant Account: Step-by-Step Guide](/tricks/recover-suspended-google-ad-grant-account).
+For a deep dive into maximizing your budget while maintaining strong performance, see the guide on [Stretch the Full $10,000 Google Ad Grant Monthly Budget](/tricks/stretch-full-10000-google-ad-grant-monthly-budget). And if you ever get suspended, here’s how to [Recover a Suspended Google Ad Grant Account: Step-by-Step Guide](/tricks/recover-suspended-google-ad-grant-account).
 
-Remember, staying above that 5% CTR threshold isn’t just about compliance—it’s about making sure your message gets clicked, your mission gets seen, and your nonprofit grows.
+Staying above the 5% CTR threshold isn’t only about compliance. It is how your message gets clicked and your mission gets seen.

@@ -32,25 +32,25 @@ corrections: []
 
 ## Sitelink Extensions: What They Really Do for Your Google Ad Grant
 
-A lot of nonprofit marketers I talk to think sitelink extensions are just a minor add-on — some fancy extra links that might look nice but don’t really change results much. That’s the misconception. The truth? Sitelink extensions can significantly improve your Google Ad Grant ads’ performance, if you use them right.
+Sitelink extensions are often treated as a minor add-on — extra links that look nice but don’t change results. Used properly, they improve how Google Ad Grant ads perform.
 
 ### How Sitelink Extensions Work
 
 At their core, sitelink extensions are additional links that show up below your main ad copy in Google Search results. Instead of just clicking your primary headline, searchers get extra options like “Donate,” “Volunteer,” “Programs,” or “Events” — direct paths to the content they want.
 
-In the 4,539 processed Ad Grant accounts I’ve managed, ads with sitelinks consistently see higher click-through rates compared to ads without them. Since the Grant requires maintaining at least a 5% CTR to stay active, these extensions play a strategic role.
+Ads with sitelinks tend to see higher click-through rates than ads without them. Since the Grant requires maintaining at least a 5% CTR to stay active, that matters.
 
-Here’s the kicker: sitelinks don’t cost extra. They’re free real estate that **increases your ad’s size on the search results page, making it more noticeable and clickable** — all while giving users more ways to engage with your nonprofit.
+Sitelinks don’t cost extra. They’re free real estate that **increases your ad’s size on the search results page, making it more noticeable and clickable** — all while giving users more ways to engage with your nonprofit.
 
 ### Why They Matter for Nonprofits Running Google Ad Grants
 
 - **Drive traffic to key landing pages**: You’re not limited to just one URL in your ad. Want to promote your donation page, volunteer sign-up, or latest campaign? Sitelinks let you do that simultaneously.
-- **Improve Quality Score and Ad Rank**: Google loves ads that give searchers relevant choices. Using sitelinks can improve your Ad Rank, which helps your ads show higher even with the $2 CPC cap.
+- **Improve Quality Score and Ad Rank**: Ads that give searchers relevant choices tend to do better. Sitelinks can improve your Ad Rank, which helps your ads show higher even with the $2 CPC cap.
 - **Help stretch your $10,000 grant budget**: More clicks with the same impressions means better budget efficiency. (For ideas on budget management, check out [Stretch the Full $10,000 Google Ad Grant Monthly Budget](/tricks/stretch-full-10000-google-ad-grant-monthly-budget).)
 
 ### Pitfalls and Things to Watch Out For
 
-Sitelinks sound great, but they’re not automatic magic. Here’s what I’ve seen trip up nonprofits:
+Sitelinks are not automatic. Here is what trips nonprofits up:
 
 1. **Generic or irrelevant sitelinks**: Adding links that don’t match the searcher’s intent or your ad group’s keywords can hurt your Quality Score. Be specific.
 2. **Too many or too few**: Google recommends 4-6 sitelinks per campaign. Fewer than 2 won’t trigger sitelink display, and too many unfocused sitelinks dilute your messaging.
@@ -72,8 +72,8 @@ Sitelinks sound great, but they’re not automatic magic. Here’s what I’ve s
 - [ ] Monitor performance monthly and tweak underperforming sitelinks
 - [ ] Pair with at least 2 ads per ad group for optimal account health
 
-If you’re just getting started or want to improve your sitelink setup, I highly recommend trying the free site-wide account generator at [AdGrant.AI](/). It automates this whole process and structures your account with best practices embedded.
+If you’re just getting started, the free account generator at [AdGrant.AI](/) builds sitelinks along with the rest of the account structure.
 
-Sitelink extensions are an underused lever that can push your Google Ad Grant campaigns from average to high-impact. Don’t overlook them — they’re one of the simplest, most effective ways to drive more meaningful traffic and engagement for your nonprofit.
+Sitelink extensions are underused. They are one of the simplest ways to get more traffic and engagement out of the same impressions.
 
 For more on improving your ad performance and avoiding suspension, check out [Ad Rank: What It Means for Your Google Ad Grant Success](/glossary/ad-rank-google-ad-grant) and [Recover a Suspended Google Ad Grant Account: Step-by-Step Guide](/tricks/recover-suspended-google-ad-grant-account).

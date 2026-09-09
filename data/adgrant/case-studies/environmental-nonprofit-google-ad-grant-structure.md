@@ -33,11 +33,11 @@ corrections: []
 
 An environmental nonprofit focused on conservation and climate action wants to use its Google Ad Grant wisely. They face a common problem: how to organize their account so it covers the varied goals of volunteer sign-ups, fundraising, and advocacy without spreading the budget too thin or running an unmanageable mess.
 
-This situation is classic. From the 4,539 processed Ad Grant accounts I've managed, I've seen most nonprofits start small—often with just one campaign. But well-structured accounts typically have 3 or 4 campaigns, each laser-focused on a distinct mission area. This approach helps keep ads and keywords relevant, which is critical to maintaining quality scores and hitting the minimum 5% CTR to avoid suspension.
+This situation is common. Across 4,539 Ad Grant accounts AdGrant.AI has processed, the median account runs one campaign. Well-structured accounts typically have 3 or 4, each focused on a distinct mission area. That keeps ads and keywords relevant, which is what holds up quality scores and the minimum 5% CTR needed to avoid suspension.
 
 ## Structure: Three Campaigns Aligned with Core Goals
 
-For an environmental nonprofit juggling volunteers, donations, and advocacy, I'd recommend exactly three campaigns:
+For an environmental nonprofit juggling volunteers, donations, and advocacy, three campaigns are enough:
 
 1. **Volunteer Recruitment**
 2. **Donations & Fundraising**
@@ -58,7 +58,7 @@ The goal here is to attract people interested in hands-on environmental work, co
 
 - **Keywords:** Median is about 9 keywords per ad group. For volunteer recruitment, these might include phrases like "environmental volunteer near me," "how to volunteer for climate action," "youth conservation programs."
 
-- **Ads:** Two active ads per ad group, with copy variations testing calls to action (“Join a local cleanup,” “Volunteer from home,” etc.) to maximize click-through.
+- **Ads:** Two active ads per ad group, with copy variations testing calls to action (“Join a local cleanup,” “Volunteer from home,” etc.) to see which draws more clicks.
 
 ---
 
@@ -94,15 +94,15 @@ Designed to reach people interested in petitions, letter writing, or policy educ
 
 ## Account Benchmarking & Extensions
 
-From the accounts I analyzed:
+From the 4,539 accounts AdGrant.AI has processed:
 
-- **Campaign Count:** While many accounts have only one campaign, aiming for about 3 campaigns matches the median for a well-structured account.
+- **Campaign Count:** The median account has one campaign. About 3 is the working target for a well-structured account.
 
 - **Ad Groups:** Median is 3 ad groups per campaign, which helps keep targeting focused and manageable.
 
 - **Keywords:** Around 9 keywords per ad group is typical. More than that can cause irrelevant impressions; fewer can limit reach.
 
-- **Ads:** At least 2 ads per ad group are recommended to allow A/B testing.
+- **Ads:** Median is 2 ads per ad group, which leaves room for A/B testing.
 
 - **Ad Extensions:** A solid account uses roughly 7 sitelinks and 5 callouts.
 
@@ -134,17 +134,17 @@ Keep in mind the standard $2 max CPC cap unless you enable Smart Bidding with co
 
 - **Use negative keywords carefully.** For example, exclude broad terms like "jobs" if you don’t want traffic looking for employment.
 
-- **Refresh ads regularly.** Two ads per ad group is the minimum—switch up copy to avoid ad fatigue.
+- **Refresh ads regularly.** Two ads per ad group leaves room to rotate copy and avoid ad fatigue.
 
-- **Leverage ad extensions fully.** They boost ad real estate and improve CTR.
+- **Use ad extensions fully.** They give the ad more space on the page and improve CTR.
 
 - **Monitor the 5% CTR requirement.** If your ads don’t hit this, Google can suspend your account. Relevant, tightly themed campaigns help prevent this.
 
-If you’re setting up an account like this from scratch, I recommend trying the free generator at [AdGrant.AI](/). It auto-builds an account structure based on your website, including campaigns, ad groups, keywords, and extensions — saving hours on setup.
+If you’re setting up an account like this from scratch, the free generator at [AdGrant.AI](/) builds a structure from your website: campaigns, ad groups, keywords, and extensions.
 
 For more examples, see how other nonprofits structure their grants:
 - [How a Community Arts Nonprofit Structures Its Google Ad Grant Account](/case-studies/community-arts-nonprofit-google-ad-grant-structure)
 - [How a Youth Mentoring Nonprofit Structures Google Ad Grant Campaigns](/case-studies/youth-mentoring-nonprofit-google-ad-grant-structure-2)
 - [How a Homeless Shelter Builds an Ad Grant Account Around Emergency Housing and Donations](/case-studies/homeless-shelter-google-ad-grant-structure-emergency-housing-donations)
 
-The key takeaway: thoughtful structure — distinct campaigns with focused ad groups, relevant keywords, multiple ads, and robust extensions — is how to unlock the potential of the $10K monthly Ad Grant budget for an environmental nonprofit juggling multiple outreach goals.
+The takeaway: distinct campaigns with focused ad groups, relevant keywords, multiple ads, and full extensions are what let an environmental nonprofit spend the $10K monthly Ad Grant budget across several outreach goals.

@@ -32,11 +32,11 @@ corrections: []
 
 ## Bottom-line takeaway
 
-From managing 4,539 processed Ad Grant accounts, I’ve found that a well-structured homeless shelter’s account usually runs **3 campaigns**, each with about **3 ad groups**, and uses around **9 keywords per ad group**. This setup balances focus and reach while fully leveraging the $10,000 monthly grant budget.
+A well-structured homeless shelter account usually runs **3 campaigns**, each with about **3 ad groups**, and around **9 keywords per ad group**. The ad group and keyword figures are the medians across the 4,539 Ad Grant accounts AdGrant.AI has processed. This setup balances focus and reach while using the full $10,000 monthly grant budget.
 
 ## Why structure matters for a homeless shelter
 
-Most accounts I’ve seen tend to be small—with the median account running only 1 campaign. But for a nonprofit focused on emergency housing and donations, a thoughtful division of campaigns lets you target different audience intents clearly without overlap.
+Most accounts are small: the median account runs 1 campaign. But for a nonprofit focused on emergency housing and donations, a thoughtful division of campaigns lets you target different audience intents clearly without overlap.
 
 The Google Ad Grant gives you roughly **$329 per day** to spend, capped at **$2 max CPC** unless you switch to Smart Bidding. Staying within these limits, while keeping a 5% CTR to avoid suspension, means you must carefully organize your keywords and ads.
 
@@ -79,11 +79,11 @@ With a daily budget of around $329, the campaigns share spend roughly evenly, bu
 
 - **Too few campaigns means unclear messaging.** More broad accounts often struggle with poor CTR because ads and keywords aren’t tightly themed.
 
-- **Too many campaigns or keywords can dilute spend and complicate management.** The median nonprofit account we analyzed hovered around 3 campaigns for a reason: it strikes the right balance.
+- **Too many campaigns or keywords can dilute spend and complicate management.** Well-structured accounts tend to settle around 3 campaigns for a reason: it strikes the balance.
 
 - **Generic keywords hurt quality score and CTR.** Using multi-word, specific phrases aligned to your shelter’s actual services is key.
 
-- **Not using extensions leaves valuable space unused.** We see accounts boost CTR by 10-15% just by adding sitelinks and callouts.
+- **Not using extensions leaves valuable space unused.** Adding sitelinks and callouts usually lifts CTR.
 
 ## Next steps
 
@@ -91,10 +91,10 @@ If you’re running or planning a Google Ad Grant account for a homeless shelter
 
 Build about 3 ad groups per campaign, each with roughly 9 well-researched, multi-word keywords. Write at least 2 tailored ads per group. Don’t forget to add sitelinks and callouts—aim for about 7 and 5 respectively.
 
-I recommend trying [AdGrant.AI](/) to auto-generate a full account structure tailored to your website—it's free and helps avoid common pitfalls.
+[AdGrant.AI](/) generates a full account structure from your website. It is free, and it avoids the common pitfalls.
 
 Want to see more nonprofit examples? Check out [How a Regional Food Bank Structures Its Google Ad Grant Account](/case-studies/regional-food-bank-google-ad-grant-structure) or [How an Animal Shelter Structures Its Google Ad Grant Account for Adoptions](/case-studies/animal-shelter-google-ad-grant-structure).
 
 Also, keep in mind the [Avoid Account Suspension from the Google Ad Grant 5% CTR Rule](/tricks/avoid-account-suspension-google-ad-grant-5-percent-ctr-rule) guide to keep your account safe.
 
-With focused structure and smart use of the grant, your homeless shelter can maximize visibility and impact without spending a dime.
+With a focused structure, a homeless shelter can get steady visibility from the grant at no cost.

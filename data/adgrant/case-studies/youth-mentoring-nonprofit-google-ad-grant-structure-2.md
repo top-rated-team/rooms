@@ -35,7 +35,7 @@ A mid-size regional youth mentoring nonprofit faces two core goals on Google Ads
 
 ### Why it matters for your Ad Grant
 
-Most nonprofits underutilize their Google Ad Grant, often running just one campaign with a handful of keywords. But from analyzing 4,539 real Ad Grant accounts, we know that well-structured accounts typically use at least 3 campaigns with 3 ad groups each, about 9 keywords per ad group, and 2 ads per ad group to test messaging. This setup helps cover a range of user intents and keeps Quality Scores healthy—critical to avoid suspension.
+Most nonprofits underutilize their Google Ad Grant, often running just one campaign with a handful of keywords. Across the 4,539 Ad Grant accounts AdGrant.AI has processed, the medians are 3 ad groups per campaign, about 9 keywords per ad group, and 2 ads per ad group. Well-structured accounts add at least 3 campaigns to that. The setup covers a range of user intents and keeps Quality Scores healthy, which is what avoids suspension.
 
 For a youth mentoring nonprofit, the dual focus on mentor recruitment and family enrollment means splitting campaigns clearly so each message resonates and keywords stay tightly relevant. Extensions like sitelinks and callouts further clarify what’s offered and boost click-through rates, helping meet the Google Ad Grant’s 5% CTR requirement.
 
@@ -46,7 +46,7 @@ For a youth mentoring nonprofit, the dual focus on mentor recruitment and family
    - **Family Enrollment:** Target families looking for mentoring help (e.g., "youth mentoring for kids," "family support programs mentoring").
    - **General Awareness / Programs Overview:** Catch broader searches about youth mentoring services and your nonprofit’s offerings.
 
-   Median accounts run just 1 campaign, but here the 3-campaign approach ensures you cover your key audiences thoroughly.
+   The median account runs 1 campaign. Here, 3 campaigns covers both key audiences.
 
 2. **Build about 3 ad groups per campaign**
    Each ad group targets a specific theme within the campaign. For example, under Mentor Recruitment:
@@ -86,9 +86,9 @@ For a youth mentoring nonprofit, the dual focus on mentor recruitment and family
 - Use a manual bidding strategy at a $2 max CPC cap or consider Maximize Conversions with conversion tracking if you can track mentor signups or family inquiries.
 - Monitor Quality Scores and CTR closely. Keyword relevance and tightly themed ad groups help maintain scores above 3 and CTR above 5%, avoiding suspension.
 
-This approach balances the need to appear for distinct user intents while maximizing the breadth of your reach across mentor and family audiences.
+This approach balances the need to appear for distinct user intents with reaching both mentor and family audiences.
 
-If you want to jumpstart this process, try the free account structure generator at [AdGrant.AI](/). It uses your website content to suggest an optimized campaign and keyword structure tailored to your nonprofit.
+The free account structure generator at [AdGrant.AI](/) reads your website content and suggests a campaign and keyword structure for your nonprofit.
 
 ### FAQ
 
@@ -96,7 +96,7 @@ If you want to jumpstart this process, try the free account structure generator 
 Because their search intent and messaging differ. Merging them risks diluting ad relevance and Quality Scores, hurting overall performance.
 
 **Q: How many keywords can I use without hurting my account?**  
-Google Ad Grants recommend roughly 9 keywords per ad group to keep relevance high. More than that, and your ads risk showing for loosely-related queries, lowering Quality Scores.
+Roughly 9 keywords per ad group is the median, and it keeps relevance high. More than that, and your ads risk showing for loosely-related queries, lowering Quality Scores.
 
 **Q: What if I can’t track conversions to use Smart Bidding?**  
 Manual CPC with a $2 max bid is fine, but you must focus on tightly themed ad groups and well-written ads to keep CTR above 5%. Conversion tracking enables bidding strategies that remove the $2 cap, potentially increasing traffic but requires some setup.

@@ -34,9 +34,9 @@ corrections:
 
 ## Broad Match Keywords: What You're Getting Wrong
 
-Too often I hear nonprofit marketers say, "Broad match keywords are too risky, they'll waste my entire Google Ad Grant budget." While it’s true they can send irrelevant traffic if left unchecked, dismissing them outright means missing out on valuable reach and discovery opportunities.
+Nonprofit marketers often call broad match keywords too risky — a fast way to waste the whole Google Ad Grant budget. They can send irrelevant traffic if left unchecked. Dismissing them outright gives up reach and keyword discovery.
 
-In the 4,539 processed Ad Grant accounts we've managed, **broad match keywords** can add clicks when paired with careful account management.
+**Broad match keywords** can add clicks when paired with careful account management.
 
 ## How Broad Match Keywords Actually Work
 
@@ -50,7 +50,7 @@ For example, if your broad match keyword is "homeless shelter help," your ad mig
 
 This wide net increases your ad visibility **beyond exact phrases** or more restrictive match types like phrase or exact match.
 
-Here’s the catch: broad match can trigger ads on queries that are less relevant, increasing costs without guaranteed conversions. For nonprofits running a Google Ad Grant, where you have a **$2.00 max CPC cap by default** and a strict need to maintain at least a **5% click-through rate (CTR)** to keep your account active, this can cause wasted impressions and put your account health at risk.
+Here’s the catch: broad match can trigger ads on queries that are less relevant, increasing costs without guaranteed conversions. For nonprofits running a Google Ad Grant, where you have a **$2.00 max CPC cap where manual CPC is in use** and a strict need to maintain at least a **5% click-through rate (CTR)** to keep your account active, this can cause wasted impressions and put your account health at risk.
 
 However, when used strategically, broad match can:
 
@@ -60,7 +60,7 @@ However, when used strategically, broad match can:
 
 The key is **constant monitoring and optimization**. Use negative keywords to exclude irrelevant searches and refine your keyword list regularly.
 
-## What We’ve Seen Work Best
+## What Works Best
 
 1. **Start with a seed list of targeted, relevant broad match keywords.**
 2. **Review search query reports at least weekly.** Negative-match irrelevant terms immediately.
@@ -77,7 +77,7 @@ The key is **constant monitoring and optimization**. Use negative keywords to ex
 - [ ] Combine broad match with phrase and exact match for better control
 - [ ] Test ad copy tailored to broad match traffic
 
-If you’re struggling to keep your Google Ad Grant account optimized, try the free automated account builder at [AdGrant.AI](https://adgrant.ai/). It takes the guesswork out of keyword match types and helps you stretch the full $10,000 monthly budget smarter.
+If you’re struggling to keep your Google Ad Grant account optimized, try the free automated account builder at [AdGrant.AI](https://adgrant.ai/). It takes the guesswork out of keyword match types and helps you stretch the full $10,000 monthly budget.
 
 For more on improving your ads’ performance, check out these related topics:
 
@@ -85,4 +85,4 @@ For more on improving your ads’ performance, check out these related topics:
 - [Geographic Targeting: How to Focus Your Google Ad Grant Ads Where They Matter Most](/glossary/geographic-targeting-google-ad-grant)
 - [Click-Through Rate (CTR): What It Means for Your Google Ad Grant](/glossary/click-through-rate-ctr-google-ad-grant)
 
-Broad match keywords aren’t a set-it-and-forget-it tool. They require discipline but can unlock valuable traffic you otherwise wouldn’t reach. Ignore them at your organization’s peril—but manage them carefully, and they’ll become one of your best allies in driving nonprofit impact through Google Ads.
+Broad match keywords aren’t a set-it-and-forget-it tool. They require discipline, and they reach traffic the tighter match types miss. Manage them carefully and read the search terms report.

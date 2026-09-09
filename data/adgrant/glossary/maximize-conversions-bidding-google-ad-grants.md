@@ -32,13 +32,13 @@ corrections:
     against: "https://support.google.com/nonprofits/answer/117827?hl=en"
 ---
 
-## Maximize Conversions Bidding: The Fastest Way to Grow Google Ad Grant Impact
+## Maximize Conversions Bidding: What It Does for Your Ad Grant
 
-If you want your Google Ad Grant account to do more than just drive clicks, **Maximize Conversions** bidding is the go-to strategy. For accounts created on or after 22 April 2019 it is the required bidding strategy, not a workaround: those accounts must use conversion-based Smart bidding, and Google can set bids above the $2 program-level ceiling when performance merits it. It lets Google use machine learning to get you as many conversions—think donations, sign-ups, or volunteer applications—as possible within your $10,000 monthly budget.
+**Maximize Conversions** bidding aims at conversions rather than clicks. For accounts created on or after 22 April 2019 it is the required bidding strategy, not a workaround: those accounts must use conversion-based Smart bidding, and Google can set bids above the $2 program-level ceiling when performance merits it. Google uses machine learning to get as many conversions—donations, sign-ups, volunteer applications—as it can within your $10,000 monthly budget.
 
 ### Why This Matters
 
-Where manual CPC is still in use, Google Ad Grants limit CPC to $2. That ceiling caps the ability to compete for valuable, higher-cost keywords that actually drive meaningful actions. We’ve seen dozens of accounts stuck spinning their wheels with clicks but little real impact because of this limit.
+Where manual CPC is still in use, Google Ad Grants limit CPC to $2. That ceiling caps the ability to compete for valuable, higher-cost keywords that actually drive meaningful actions. Accounts stuck at that ceiling collect clicks and little else.
 
 Switching to Maximize Conversions removes that $2 ceiling. Instead, Google dynamically sets bids based on real-time signals—like user device, location, time of day—to chase conversions, not just clicks.
 
@@ -86,4 +86,4 @@ If you’re new to structuring your account or want a quick way to build a high-
 - Check out [Bypass the $2 CPC Cap with Smart Bidding, Conversion Goals & Tracking](/tricks/bypass-2-cpc-cap-smart-bidding-google-ad-grant) to learn detailed setup steps.
 - Use a [Manager Account (MCC) Explained for Google Ad Grants](/glossary/manager-account-mcc-google-ad-grants) if you manage multiple grants.
 
-Maximize Conversions isn’t magic, but with the right data and patience, it’s the single biggest lever to stretch your grant beyond clicks into real-world impact.
+Maximize Conversions isn’t magic. With conversion tracking in place and some patience, it moves the grant from clicks to actions you can count.

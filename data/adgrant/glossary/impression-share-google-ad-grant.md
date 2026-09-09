@@ -6,7 +6,7 @@ topic: "Impression Share"
 niche: null
 excerpt: "Impression Share shows the percentage of times your nonprofit’s ads appeared versus how often they could have appeared in relevant searches."
 metaTitle: "Impression Share Explained for Google Ad Grant Nonprofits | AdGrant.AI"
-metaDescription: "Understand Impression Share and boost your Google Ad Grant impact with actionable steps from a PPC pro drawn from 4,539 processed Ad Grant accounts."
+metaDescription: "What Impression Share means on a Google Ad Grant account, and the steps that move it."
 keywords:
   - "impression share"
   - "google ad grant"
@@ -34,18 +34,18 @@ corrections: []
 
 Impression Share (IS) is the percentage of possible impressions your ads actually show up for in Google Search results. Imagine Google shows 1,000 searches that match your keywords—if your ads appeared 700 times, your impression share is 70%. It’s a measure of **how often your nonprofit’s ads are showing up when they could be**, not just clicks or conversions.
 
-We’ve managed 4,539 processed Ad Grant accounts, and impression share consistently tells us how much untapped opportunity exists. If your impression share sits below 50%, you’re missing out on half of your potential awareness and traffic. But beating your way to 100% impression share is rarely a simple or cheap fix.
+Impression share is the clearest read on how much untapped opportunity is left in an account. If your impression share sits below 50%, you’re missing out on half of your potential awareness and traffic. But beating your way to 100% impression share is rarely a simple or cheap fix.
 
 ## Why Impression Share Matters for Your Ad Grant
 
-As a nonprofit using the Google Ad Grant, your $10,000 monthly budget can only drive impact if your ads *are* seen. Impression share directly relates to visibility and brand awareness. Here’s what I’ve learned:
+As a nonprofit using the Google Ad Grant, your $10,000 monthly budget can only drive impact if your ads *are* seen. Impression share directly relates to visibility and brand awareness. What that means in practice:
 
 - **Low impression share means fewer eyeballs on your message.** You can’t convert clicks and supporters if your ads aren’t showing.
 - Your impression share is capped by Google’s policies, your account settings, and your $2 max CPC bid limit—unless you use Smart Bidding like Maximize Conversions.
 - **Increasing impression share often means raising bids, improving Quality Score, or expanding keywords.** But with the $2 cap, you hit a ceiling quickly.
 - If your impression share is low due to budget constraints, that’s a good signal to optimize your campaigns to stretch the $10,000 fully (see [Stretch the Full $10,000 Google Ad Grant Monthly Budget](/tricks/stretch-full-10000-google-ad-grant-monthly-budget) for practical tips).
 
-In many accounts, impression share is the first “big red flag” that your ad reach is weaker than it should be. I’ve seen nonprofits jump from 40% to 80% impression share just by adjusting bids, refining keywords, and improving ad quality.
+In many accounts, impression share is the first sign that ad reach is weaker than it should be. Adjusting bids, refining keywords, and improving ad quality can take an account from 40% to 80%.
 
 ## How to Improve Your Impression Share: A Step-by-Step Guide
 
@@ -61,7 +61,7 @@ In many accounts, impression share is the first “big red flag” that your ad 
 
 6. **Monitor and adjust regularly.** Impression share can fluctuate with competition and search trends. Set a routine to check monthly.
 
-If you want a fast way to structure your account and keywords to maximize impression share, try the free generator at [AdGrant.AI](/). It’s saved countless nonprofits hours of manual work.
+If you want a fast way to structure your account and keywords for impression share, try the free generator at [AdGrant.AI](/).
 
 ## FAQs About Impression Share
 

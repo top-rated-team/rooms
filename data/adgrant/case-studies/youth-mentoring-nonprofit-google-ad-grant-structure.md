@@ -33,7 +33,7 @@ corrections:
     against: "https://support.google.com/nonprofits/answer/117827?hl=en"
 ---
 
-A youth mentoring nonprofit typically seeks to recruit volunteer mentors and enroll families interested in mentorship programs. Structuring a Google Ad Grant account to address these two related but distinct goals requires a clear division of campaigns, targeted keywords, and ad copy that speaks directly to each audience. From my experience managing 4,539 processed Ad Grant accounts, I can share a solid, practical approach grounded in honest benchmarks and proven structure.
+A youth mentoring nonprofit typically seeks to recruit volunteer mentors and enroll families interested in mentorship programs. Structuring a Google Ad Grant account to address these two related but distinct goals requires a clear division of campaigns, targeted keywords, and ad copy that speaks directly to each audience. The approach below is grounded in the benchmarks from the 4,539 Ad Grant accounts AdGrant.AI has processed.
 
 ## Why it matters for your Ad Grant
 
@@ -49,7 +49,7 @@ The full Google Ad Grant budget is about $329/day or $10,000/month. To use it fu
    - **Family Enrollment**: Focused on families looking for mentoring support for their children.
    - **Brand Awareness**: Covers general searches about the nonprofit’s name, programs, and related community services.
 
-   The median across accounts is about 3-4 campaigns, so this aligns well with best practice.
+   For a well-structured account, 3 or 4 campaigns is the usual target.
 
 2. **Within each campaign, build about 3 ad groups with distinct keyword focuses**
 
@@ -62,7 +62,7 @@ The full Google Ad Grant budget is about $329/day or $10,000/month. To use it fu
 
 3. **Use 2 ads per ad group**
 
-   The honest benchmark is 2 ads per ad group, allowing you to A/B test messaging such as emphasizing impact vs. community benefits. Ads should be responsive search ads optimized with relevant calls to action for each audience.
+   The median is 2 ads per ad group, which is enough to A/B test messaging such as impact vs. community benefits. Ads should be responsive search ads optimized with relevant calls to action for each audience.
 
 4. **Add sitelink and callout extensions at the account level**
 
@@ -118,11 +118,9 @@ A: You can, but most accounts with just one campaign struggle to stretch the ful
 
 **Q: How many keywords per ad group should I aim for?**
 
-A: Around 9 is the median benchmark from thousands of accounts we analyzed. Too few keywords limit reach; too many dilute relevance and lower Quality Score. Keep them tightly themed.
+A: Around 9 is the median across the 4,539 accounts AdGrant.AI has processed. Too few keywords limit reach; too many dilute relevance and lower Quality Score. Keep them tightly themed.
 
 
-If managing your Google Ad Grant account feels overwhelming, tools like the free AdGrant.AI generator help create a solid starting point—saving you time and effort while following proven best practices.
+If managing the account feels like a lot, the free AdGrant.AI generator creates a starting point.
 
 For a deep dive into ad copy, extensions, and avoiding common pitfalls, check out [Avoid Account Suspension from the Google Ad Grant 5% CTR Rule](/tricks/avoid-account-suspension-google-ad-grant-5-percent-ctr-rule) and [Quality Score: What It Means for Your Google Ad Grant Success](/glossary/quality-score-google-ad-grant).
-
-Happy campaigns!

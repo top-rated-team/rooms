@@ -36,12 +36,12 @@ corrections:
 
 Imagine a mid-size regional homeless shelter that wants to use the Google Ad Grant to reach people looking for emergency housing and to encourage donations. They’ve heard the grant offers $10,000/month in free Search ads, but they’re not sure how to set up their account without wasting time or ad spend. That’s a familiar story—most smaller nonprofits struggle to structure their accounts to use the grant effectively.
 
-From managing 4,539 processed Ad Grant accounts, I can say with confidence that structure matters. Many accounts run a single campaign with a handful of keywords, but that leaves a lot of potential on the table. The median Ad Grant account has just 1 campaign, yet the average is more like 3 to 4. When we talk about a “well-structured” account, I’m referring to something closer to the average or better:
+Structure matters. Across 4,539 Ad Grant accounts AdGrant.AI has processed, the median account runs 1 campaign with a handful of keywords, while the average is more like 3 to 4. A “well-structured” account here means something at the average or better:
 
 - **3 campaigns**
 - About **3 ad groups per campaign** (median from 4,539 accounts)
 - Around **9 keywords per ad group** (median)
-- At least **2 ads per ad group**
+- About **2 ads per ad group** (median)
 - Use of around **7 sitelink extensions** and **5 callout extensions** per account
 
 And this setup aims to use the full $329 daily budget effectively without hitting common pitfalls.
@@ -86,17 +86,17 @@ This campaign helps build long-term engagement beyond immediate needs.
 
 Don't start with one campaign and a dozen keywords scattered around. Aim for **3 campaigns** with around **3 ad groups each** and **9 keywords per ad group**. That’s about 81 keywords total, which fits well with Google’s relevance and quality score requirements.
 
-2. **Create at Least 2 Ads per Ad Group**
+2. **Add a Second Ad to Test Messaging**
 
-Two ad groups per campaign are required. One responsive search ad per ad group meets the ad rule that replaced two ads per ad group on 30 June 2022. Extra ads can still help test messaging and maximize your quality score potential. Vary headlines and descriptions—one ad might focus on urgency (“Need Shelter Tonight?”), another on reassurance (“Safe, Warm Shelter Available”).
+Two ad groups per campaign are required. One responsive search ad per ad group meets the ad rule that replaced two ads per ad group on 30 June 2022. Extra ads still help test messaging. Vary headlines and descriptions—one ad might focus on urgency (“Need Shelter Tonight?”), another on reassurance (“Safe, Warm Shelter Available”).
 
-3. **Leverage Extensions to Capture More Real Estate**
+3. **Use Extensions to Take More Space on the Page**
 
 Don’t forget sitelink extensions (average is around 7 per account) to link to key pages like volunteer info, donation forms, or FAQs. Callout extensions (around 5 per account) add extra selling points like “Open 24/7,” “No Fee Shelter,” or “Trusted by Community.” These small details boost ad rank without extra cost.
 
 4. **Monitor Budget Use and Adjust**
 
-The full grant budget is $329/day. If you find one campaign or ad group is using too little or too much of the spend, tweak keywords or bids respectfully, keeping in mind the max $2 CPC cap unless using Smart Bidding with conversion tracking.
+The full grant budget is $329/day. If you find one campaign or ad group is using too little or too much of the spend, adjust keywords or bids, keeping in mind the max $2 CPC cap unless using Smart Bidding with conversion tracking.
 
 5. **Stay on Top of Compliance and CTR**
 
@@ -106,11 +106,11 @@ Google requires a 5% monthly CTR or accounts risk suspension. Well-structured ac
 
 Structuring your Google Ad Grant account for a homeless shelter around **emergency housing, donations, and outreach** lets you cover key program areas while using the grant budget efficiently. It’s about clarity and focus—divide your campaigns so each targets a specific audience with tailored keywords and ads.
 
-If this feels overwhelming, tools like [AdGrant.AI](/) can generate a complete account structure for you, using your website as a starting point. I’ve seen it save hours and help nonprofits hit those median benchmarks with ease.
+If this feels like a lot, [AdGrant.AI](/) generates a complete account structure from your website, at the median benchmarks above.
 
 If you want to see how other nonprofits structure their accounts, check out these case studies:
 
 - [How a Regional Food Bank Structures Its Google Ad Grant Account](/case-studies/regional-food-bank-google-ad-grant-structure)
 - [How an Animal Shelter Structures Its Google Ad Grant Account for Adoptions](/case-studies/animal-shelter-google-ad-grant-structure)
 
-Getting this foundation right is key to making your ads work well without burning out your team or wasting the grant’s potential.
+Getting the foundation right is what keeps the ads working without burning out your team or wasting the grant.

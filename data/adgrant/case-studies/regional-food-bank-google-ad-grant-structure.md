@@ -33,15 +33,15 @@ corrections: []
 
 ## Here’s how a regional food bank can organize its Google Ad Grant account to reach families and recruit volunteers
 
-From the 4,539 processed Ad Grant accounts I’ve managed, the smartest strategy for a regional food bank is to build a solid, well-diversified account structure that uses the full $10,000/month budget without overwhelming complexity.
+The workable strategy for a regional food bank is a diversified account structure that uses the full $10,000/month budget without becoming hard to manage.
 
-**The bottom line:** aim for about 3 campaigns, each with roughly 3 ad groups, 9 keywords per ad group, 2 ads per ad group, plus 7 sitelinks and 5 callouts. This is a proven setup that balances reach, relevance, and manageability.
+**The bottom line:** aim for about 3 campaigns, each with roughly 3 ad groups, 9 keywords per ad group, 2 ads per ad group, plus 7 sitelinks and 5 callouts. That balances reach, relevance, and manageability.
 
 ---
 
 ### Why this structure?
 
-Most nonprofits run just one campaign. That’s often too narrow and limits your ability to address different audience needs or program areas. The median across thousands of accounts is around 3 to 4 campaigns, which lets you target distinct themes clearly.
+Across the 4,539 Ad Grant accounts AdGrant.AI has processed, the median account runs one campaign. That is often too narrow and limits your ability to address different audience needs or program areas. Running 3 or 4 campaigns lets you target distinct themes clearly.
 
 For a regional food bank, two obvious campaign themes are:
 
@@ -102,7 +102,7 @@ Ads here focus on simple donation processes and upcoming event details.
 
 ### Extensions: Sitelinks & Callouts
 
-We add roughly **7 sitelinks** to provide extra entry points—examples include:
+Add roughly **7 sitelinks** to provide extra entry points. Examples:
 
 - How to Get Food Assistance
 - Volunteer FAQs
@@ -122,7 +122,7 @@ And **5 callout extensions** highlight key strengths, such as:
 
 ### The rationale behind numbers
 
-The **2 ads per ad group** setup helps test messaging without creating too much work. With about **9 keywords per ad group** (median from 4,539 real accounts), you can cover relevant search terms without diluting performance or quality scores.
+The **2 ads per ad group** setup helps test messaging without creating too much work. With about **9 keywords per ad group** (the median across the 4,539 accounts AdGrant.AI has processed), you can cover relevant search terms without diluting performance or quality scores.
 
 The **$2 CPC cap** (unless using Smart Bidding) guides keyword selection toward mid- and lower-cost terms, avoiding expensive or overly generic phrases.
 
@@ -138,8 +138,8 @@ Also, neglecting ad extensions is a common waste—adding sitelinks and callouts
 
 ### Next steps
 
-If you want to try building a tailored campaign structure like this, I highly recommend using the free [AdGrant.AI generator](/). It creates a draft Google Ad Grant account structure automatically based on your website, saving tons of setup time.
+To build a structure like this, the free [AdGrant.AI generator](/) drafts a Google Ad Grant account from your website.
 
 For more nonprofit-focused examples, check out how [animal shelters structure their accounts](/case-studies/animal-shelter-google-ad-grant-structure) or read advice on [avoiding the 5% CTR suspension](/tricks/avoid-account-suspension-google-ad-grant-5-percent-ctr-rule).
 
-The key is to start simple but structured. With 3 campaigns, 3 ad groups each, about 9 keywords per ad group, and 2 ads per group, you unlock enough segmentation, message testing, and budget coverage to make the Google Ad Grant work for your regional food bank’s goals.
+The key is to start simple but structured. With 3 campaigns, 3 ad groups each, about 9 keywords per ad group, and 2 ads per group, you get enough segmentation, message testing, and budget coverage for a regional food bank’s goals.

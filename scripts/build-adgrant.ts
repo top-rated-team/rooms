@@ -256,14 +256,41 @@ export function stripUnsourced(body: string): string {
     /Conversion rates can improve 2-3x because/gi,
     "Conversion rates can improve because",
   );
+  /*
+   * THE NUMBER IS TRUE AND THE VERB WAS NOT. 4,539 is how many Ad Grant
+   * accounts AdGrant.AI has PROCESSED — /api/templates/stats says so — and
+   * nobody managed them. The first version of this function swapped the
+   * invented "600+ accounts I have managed" for the measured figure and kept
+   * the verb, which turned a vague false claim into a precise one attached to
+   * a real number. That is the more convincing kind and therefore the worse
+   * kind, and it reached eight pages before it was caught.
+   *
+   * So the replacement names what did the processing, in the third person, and
+   * the guard below refuses to write a page where the two are still bound
+   * together — a rewrite of the prose alone would be undone by the next fetch.
+   */
+  const PROCESSED = "Across 4,539 Ad Grant accounts AdGrant.AI has processed,";
   next = next.replace(
-    new RegExp(`I${APOSTROPHE}ve managed 4,539 processed Ad Grant accounts and seen`, "gi"),
-    "From 4,539 processed Ad Grant accounts, we have seen",
+    new RegExp(`(From|In the) ?\\*{0,2}4,539 processed Ad Grant accounts,? ?(that )?(I${APOSTROPHE}ve|we${APOSTROPHE}ve|I have|we have)? ?(managed|processed|seen|run)?,?`, "gi"),
+    PROCESSED,
   );
   next = next.replace(
-    /In the \*\*4,539 processed Ad Grant accounts we['\u2019]ve managed,/g,
-    "Across 4,539 processed Ad Grant accounts,",
+    new RegExp(`(I${APOSTROPHE}ve|we${APOSTROPHE}ve|I have|we have) (managed|run|processed) 4,539 processed Ad Grant accounts,?( and (seen|found))?`, "gi"),
+    PROCESSED,
   );
+
+  /* The claim this function exists to prevent, checked rather than trusted.
+     A verb of personal experience within a few words of the figure means the
+     rewrite above did not catch the phrasing this page used, and the page must
+     not be written until it does. */
+  const BOUND = /(?:\bI\b|\bwe\b|\bmy\b|\bour\b)[^.]{0,40}\b(?:managed|ran|handled)\b[^.]{0,40}4,?539|4,?539[^.]{0,40}\b(?:I|we)\b[^.]{0,20}\b(?:managed|ran|handled)\b/i;
+  const offending = BOUND.exec(next);
+  if (offending) {
+    throw new Error(
+      `A page still binds 4,539 to a person having managed it: ${JSON.stringify(offending[0])}. ` +
+        "4,539 is what AdGrant.AI processed. Extend the replacements above rather than the exception list.",
+    );
+  }
 
   return next;
 }

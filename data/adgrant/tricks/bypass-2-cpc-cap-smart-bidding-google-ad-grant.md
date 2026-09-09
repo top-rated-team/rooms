@@ -41,19 +41,19 @@ The $2 max CPC is still a program-level ceiling on manual bidding. It has not be
 
 The Google Ad Grant program lets eligible nonprofits run Search ads with a budget of up to $10,000/month (about $329/day). The $2 program-level ceiling applies to manual CPC. Accounts created on or after 22 April 2019 must use conversion-based Smart bidding instead, so for those accounts there is no cap to bypass.
 
-But switching to Smart Bidding strategies like **Maximize Conversions** or **Target CPA** removes this $2 cap. The system *automatically* adjusts your bids to get the most conversions at the best price. In other words, the algorithm can bid above $2 CPC when it predicts a click is more likely to convert.
+But switching to Smart Bidding strategies like **Maximize Conversions** or **Target CPA** removes this $2 cap. The system adjusts your bids automatically to get the most conversions at the best price. In other words, the algorithm can bid above $2 CPC when it predicts a click is more likely to convert.
 
 Here’s the trade-off: to use Smart Bidding, **you need conversion tracking** set up properly, and you must have a clear conversion goal.
 
 ### Real-World Numbers
 
-In the 4,539 processed Ad Grant accounts I’ve managed, when nonprofits switch from manual CPC to Maximize Conversions:
+When an account switches from manual CPC to Maximize Conversions:
 
-- Average CPC often rises from $1.50-$2.00 to $3-$7 per click—but those clicks are *much* more valuable.
+- Average CPC often rises from $1.50-$2.00 to $3-$7 per click, but those clicks are more likely to convert.
 - Conversion rates can improve because the algorithm focuses on users more likely to act.
 - Total conversions increase even with fewer clicks.
 
-For example, one youth mentoring nonprofit I worked with saw their average CPC go from $1.80 to $4.20 after enabling Maximize Conversions. Their monthly lead forms nearly doubled, boosting program signups significantly.
+One youth mentoring nonprofit saw its average CPC go from $1.80 to $4.20 after enabling Maximize Conversions. Its monthly lead forms nearly doubled.
 
 ## Step 1: Set Up Conversion Tracking
 
@@ -107,7 +107,7 @@ Make sure:
 
 Try this on a test campaign or a high-priority campaign to see the difference. You’ll likely spend a bit more per click, but the quality of visitors and volume of conversions will go up.
 
-If you want a shortcut to building a fully optimized structure—keywords, ads, and conversion setups—I recommend trying the free generator at [AdGrant.AI](/). It completely changed how we scale nonprofit accounts.
+If you want a shortcut to building the whole structure—keywords, ads, and conversion setups—the free generator at [AdGrant.AI](/) builds one.
 
 For inspiration, see how nonprofits like [this youth mentoring organization structure their accounts](/case-studies/youth-mentoring-nonprofit-google-ad-grant-structure-2) to succeed with Smart Bidding and conversion tracking.
 

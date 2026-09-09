@@ -34,17 +34,17 @@ Stretching your full $10,000 monthly budget means structuring your Google Ad Gra
 
 ## Why it matters for your Ad Grant
 
-Most nonprofits never hit the $10,000 monthly cap. Where manual CPC is still in use, the $2 max cost-per-click (CPC) ceiling and the keyword rules often limit how much budget you can spend, especially in competitive sectors. Under-spending means lost opportunity — fewer people reached, less traffic driven, and minimal impact.
+Most nonprofits never hit the $10,000 monthly cap. Across 4,539 Ad Grant accounts AdGrant.AI has processed, the median account runs one campaign. Where manual CPC is still in use, the $2 max cost-per-click (CPC) ceiling and the keyword rules often limit how much budget you can spend, especially in competitive sectors. Under-spending means lost opportunity — fewer people reached, less traffic driven, and minimal impact.
 
-If your account is capped by low CPC limits or poor CTR, you’re effectively leaving free money on the table every day. Stretching your budget requires using proven tactics that bypass these limits without risking suspension.
+If your account is capped by low CPC limits or poor CTR, you’re effectively leaving free money on the table every day. Stretching your budget means lifting those limits without risking suspension.
 
 ## How to stretch your full $10,000 Google Ad Grant budget
 
-Here’s a step-by-step approach I’ve used in 4,539 processed Ad Grant accounts that consistently helps nonprofits hit or get close to that $329 daily spend:
+A step-by-step approach that gets nonprofits close to that $329 daily spend:
 
 1. **Switch to a Smart Bidding strategy (Maximize Conversions)**
 
-   The biggest gamechanger is moving off manual CPC with the $2 cap. By enabling Maximize Conversions bidding, Google removes the $2 limit and automatically bids higher where it expects better results. This means you can realistically compete for higher-value clicks and spend more daily.
+   The biggest change is moving off manual CPC and its $2 cap. By enabling Maximize Conversions bidding, Google removes the $2 limit and automatically bids higher where it expects better results. This means you can realistically compete for higher-value clicks and spend more daily.
 
    _Note: You must have conversion tracking set up for this to work._
 
@@ -68,9 +68,9 @@ Here’s a step-by-step approach I’ve used in 4,539 processed Ad Grant account
 
    This improves Quality Score, CTR, and allows Smart Bidding to allocate budget efficiently.
 
-5. **Write 2+ strong, specific ads per ad group**
+5. **Test more than one responsive search ad per ad group**
 
-   Test different messaging. Ads must be relevant to keywords to maintain at least a 5% CTR and avoid suspension.
+   Google stopped requiring two ads per ad group on 30 June 2022, when responsive search ads became required. A second ad is still worth running to test messaging. Ads must be relevant to keywords to maintain at least a 5% CTR and avoid suspension.
 
    Use clear calls to action, incorporate keywords naturally, and highlight unique benefits.
 
@@ -104,7 +104,7 @@ In practice, it’s tough to hit that exact $10,000. Some days you’ll underspe
 
 **Q: What if I can’t set up conversion tracking?**
 
-Without conversions, you’re stuck with the $2 CPC cap and limited spend. Focus on setting up basic conversion tracking via Google Analytics or Google Tag Manager—it’s the most impactful step to unlock full budget potential.
+Without conversions, you’re stuck with the $2 CPC cap and limited spend. Focus on setting up basic conversion tracking via Google Analytics or Google Tag Manager—it’s the step that does most to raise your spend.
 
 **Q: Will using Maximize Conversions hurt my CTR?**
 

@@ -32,11 +32,11 @@ corrections: []
 
 ## What is a Manager Account (MCC)?
 
-A Manager Account, often called an MCC (My Client Center), is a Google Ads tool that lets you access and manage multiple Google Ad Grant accounts from a single login. Instead of logging into each nonprofit’s Ad Grant account separately, you can see all accounts in one dashboard. I've managed 4,539 processed Ad Grant accounts, and using MCCs is a game-changer, especially when you handle multiple projects or work with partners.
+A Manager Account, often called an MCC (My Client Center), is a Google Ads tool that lets you access and manage multiple Google Ad Grant accounts from a single login. Instead of logging into each nonprofit’s Ad Grant account separately, you can see all accounts in one dashboard. An MCC saves real time once you handle multiple projects or work with partners.
 
 ## Why it matters for your Ad Grant
 
-If your nonprofit runs only one Ad Grant, an MCC might feel like overkill. But most nonprofits I work with end up managing several Google Ad Grants — either for different programs, local chapters, or partner organizations. An MCC streamlines everything:
+If your nonprofit runs only one Ad Grant, an MCC might feel like overkill. But many nonprofits end up managing several Google Ad Grants — for different programs, local chapters, or partner organizations. An MCC streamlines everything:
 
 - **Saves time:** No more juggling usernames and passwords or switching between Google accounts.
 - **Easier oversight:** You can quickly check account health, CTRs, budget spend, and alerts in one place.
@@ -44,7 +44,7 @@ If your nonprofit runs only one Ad Grant, an MCC might feel like overkill. But m
 
 But there are some trade-offs. MCCs don’t replace the need for separate accounts — your nonprofit still needs to maintain each Ad Grant account’s compliance individually. Also, access permissions must be managed carefully; giving MCC access means someone can make major changes, so choose trusted team members or agencies.
 
-In the 4,539 processed Ad Grant accounts I’ve overseen, nonprofits with multiple Ad Grants that don’t use MCCs often waste hours each week just logging in and troubleshooting. If you want to scale your Ad Grants or work with contractors, an MCC is essential.
+Nonprofits with multiple Ad Grants that don’t use an MCC lose hours each week just logging in and troubleshooting. If you run several Grants or work with contractors, an MCC is worth the setup.
 
 ## How to set up and use a Manager Account (MCC) for your nonprofit
 
@@ -87,6 +87,6 @@ Only trusted staff or external partners who manage paid search. MCC access is po
 
 **Q3: Can an MCC help prevent my accounts from suspension?**
 
-Indirectly, yes. MCC dashboards let you spot low CTRs or compliance issues across multiple accounts faster. But each account must individually follow Google’s policies to avoid suspension. For deep dives, see our guide on [Avoid Account Suspension from the Google Ad Grant 5% CTR Rule](/tricks/avoid-account-suspension-google-ad-grant-5-percent-ctr-rule).
+Indirectly, yes. MCC dashboards let you spot low CTRs or compliance issues across multiple accounts faster. But each account must individually follow Google’s policies to avoid suspension. For deep dives, see the guide on [Avoid Account Suspension from the Google Ad Grant 5% CTR Rule](/tricks/avoid-account-suspension-google-ad-grant-5-percent-ctr-rule).
 
-Using a Manager Account is one of the best moves you can make if you run multiple Ad Grants or want to streamline your nonprofit’s PPC efforts. It saves time, improves oversight, and helps you keep all your Google Ad Grant accounts running smoothly.
+A Manager Account is worth setting up if you run multiple Ad Grants or want to tidy up your nonprofit’s PPC work. It saves time, improves oversight, and keeps every Google Ad Grant account in one view.

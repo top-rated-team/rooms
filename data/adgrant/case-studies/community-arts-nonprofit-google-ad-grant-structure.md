@@ -31,25 +31,25 @@ publishedAt: "2026-06-05T12:20:50.500Z"
 corrections: []
 ---
 
-A community arts nonprofit typically juggles three key goals with its Google Ad Grant account: promoting event tickets, driving class sign-ups, and encouraging donations. Structuring the account around these priorities with a clear, thematic setup helps cover the full $10,000/month grant budget effectively—and avoids the common pitfall of running just one campaign that doesn’t fully tap the potential.
+A community arts nonprofit typically juggles three key goals with its Google Ad Grant account: promoting event tickets, driving class sign-ups, and encouraging donations. Structuring the account around these priorities, with a clear thematic setup, covers the full $10,000/month grant budget and avoids the common pitfall of one campaign that leaves most of the budget unspent.
 
 ### Why it matters for your Ad Grant
 
-From running 4,539 processed Ad Grant accounts, I've seen that many nonprofits use just a single campaign, which usually means underutilizing their budget and missing out on targeting specificity. For a community arts group, splitting the account into distinct campaigns for tickets, classes, and giving allows you to tailor keywords, ad copy, and bid strategies to each audience segment. That’s critical because search intent for "buy tickets" versus "donate" is very different, and lumping them together can hurt your Quality Score and CTR.
+Across 4,539 Ad Grant accounts AdGrant.AI has processed, the median account runs a single campaign. That usually means an underused budget and no room to separate audiences. For a community arts group, splitting the account into distinct campaigns for tickets, classes, and giving allows you to tailor keywords, ad copy, and bid strategies to each audience segment. That’s critical because search intent for "buy tickets" versus "donate" is very different, and lumping them together can hurt your Quality Score and CTR.
 
 ### How to structure your Google Ad Grant account
 
-Here’s the step-by-step approach based on aggregate data from 4,539 real Ad Grant accounts we analyzed, combined with what works well for community arts nonprofits.
+Here is a step-by-step approach, based on the aggregate figures from those 4,539 accounts and on what works for community arts nonprofits.
 
 1. **Create 3 campaigns, one for each primary goal:**  
    - **Tickets Campaign:** Focuses on selling event or performance tickets.  
    - **Classes Campaign:** Promotes art classes, workshops, or educational programs.  
    - **Giving Campaign:** Targets donors and supporters to give online.
 
-   Median accounts run just 1 campaign, but an ideal structure uses at least 3. This is key for keeping your ads relevant and avoiding keyword cannibalization.
+   The median account runs 1 campaign. At least 3 keeps ads relevant and avoids keyword cannibalization.
 
 2. **Set up about 3 ad groups per campaign:**  
-   Each campaign should have around 3 ad groups (the median we see). For example, the Tickets campaign might have ad groups like "theater tickets," "music concerts," and "family events." The Classes campaign could break down by "kids art classes," "adult painting workshops," and "online classes." The Giving campaign might include "monthly donors," "one-time donations," and "memorial gifts."
+   Each campaign should have around 3 ad groups (the median). For example, the Tickets campaign might have ad groups like "theater tickets," "music concerts," and "family events." The Classes campaign could break down by "kids art classes," "adult painting workshops," and "online classes." The Giving campaign might include "monthly donors," "one-time donations," and "memorial gifts."
 
 3. **Choose focused keywords—around 9 per ad group:**  
    Each ad group should have roughly 9 keywords that are multi-word and relevant. For "theater tickets," think keywords like “buy community theater tickets,” “local theater shows tickets,” and “affordable theater tickets [city].” Avoid generic or single words to meet grant policy and keep metrics strong.
@@ -70,7 +70,7 @@ Here’s the step-by-step approach based on aggregate data from 4,539 real Ad Gr
 
 - Managing multiple campaigns and dozens of keywords means more upkeep. Be ready for regular reviews and tweaks.
 - The $2 max CPC limits competitiveness in some popular arts keywords; consider Smart Bidding if you can implement conversion tracking.
-- Don’t expect the grant to replace your paid ads entirely—it's great at supplementing but requires strategic focus.
+- Don’t expect the grant to replace your paid ads. It supplements them, and only if the account stays focused.
 
 If you’re unsure where to start with keyword ideas or account structure, the free generator at [AdGrant.AI](https://adgrant.ai/) can build an entire campaign scaffold from your website automatically.
 
@@ -80,7 +80,7 @@ If you’re unsure where to start with keyword ideas or account structure, the f
 A: You can, but most well-structured accounts have at least 3 to segment key services or audiences. Running a single campaign risks poor ad relevance and underutilized budget.
 
 **Q: How many keywords should I target per ad group?**  
-A: Around 9 is the median we've seen. More keywords can dilute ad relevance; fewer might limit your reach. Aim for tightly themed groups.
+A: Around 9 is the median. More keywords can dilute ad relevance; fewer might limit your reach. Aim for tightly themed groups.
 
 **Q: What if I can’t track conversions?**  
 A: You can still run a compliant account but will be limited to manual bidding and the $2 max CPC cap. Your ads might get fewer impressions in competitive auctions.

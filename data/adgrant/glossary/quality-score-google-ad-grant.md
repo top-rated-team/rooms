@@ -34,13 +34,13 @@ corrections:
 
 ## What is Quality Score?
 
-Quality Score is Google’s way of grading your keywords, ads, and landing pages on relevance and user experience. It’s a number from 1 to 10 that tells you how well Google thinks your ad matches what people are searching for. In the 4,539 processed Ad Grant accounts I've managed, I’ve seen Quality Scores below 3 tank performance and increase the risk of suspension, while scores between 7 and 10 virtually guarantee good ad placement and steady traffic. It’s not just a nice-to-have metric; it’s the foundation of a healthy Google Ad Grant account.
+Quality Score is Google’s way of grading your keywords, ads, and landing pages on relevance and user experience. It’s a number from 1 to 10 that tells you how well Google thinks your ad matches what people are searching for. Quality Scores below 3 drag performance down and raise the risk of suspension; scores between 7 and 10 usually mean good ad placement and steady traffic. It’s not just a nice-to-have metric; it’s the foundation of a healthy Google Ad Grant account.
 
 ## Why Quality Score Matters for Your Ad Grant
 
 Google uses Quality Score to decide two critical things: **which ads show** and **how much you pay per click**. With the Google Ad Grant’s $2 maximum CPC limit (unless you switch to Smart Bidding), a low Quality Score means you'll get fewer impressions and clicks, because Google favors ads that offer a better experience to searchers. 
 
-Here’s the hard truth: if you neglect Quality Score, you’re leaving free budget on the table—often a big chunk of the $10,000 monthly Grant. Worse, Google requires a minimum keyword Quality Score of 3, or your keywords get disapproved. I’ve seen many nonprofits frustrated because their single-word keywords or vague ads kept failing this test, cutting off their traffic altogether.
+Neglect Quality Score and you leave free budget on the table—often a big chunk of the $10,000 monthly Grant. Google also requires a minimum keyword Quality Score of 3, or the keyword is disapproved. Single-word keywords and vague ads are what usually fail that test, and the traffic stops with them.
 
 Improving Quality Score leads to better **Ad Rank** (which you can learn more about [here](/glossary/ad-rank-google-ad-grant)) and lower CPCs, meaning more clicks for your Grant dollars. It also helps you maintain the 5% monthly CTR needed to keep your account active. In practice, focusing on Quality Score means making your ads tightly relevant to your keywords and landing pages.
 
@@ -88,4 +88,4 @@ A: Smart bidding, required for accounts created on or after 22 April 2019, can b
 
 ---
 
-If you’re serious about maximizing your Google Ad Grant, start with a solid foundation by improving your Quality Score. Don’t waste clicks on low-performing ads—use tools like [AdGrant.AI](/) to generate a clean, relevant account structure and keep your nonprofit’s message front and center where it counts.
+Quality Score is the foundation of the account. Use tools like [AdGrant.AI](/) to generate a clean, relevant structure so the clicks you get go to ads that match what people searched for.
