@@ -24,7 +24,12 @@ import { fileURLToPath } from "node:url";
 const SOURCE = "data/adgrant";
 const OUT = "shared/adgrant.ts";
 const API = "https://adgrant.ai";
-const CATEGORIES = ["glossary", "case-studies", "tricks"] as const;
+/* The live API's own category list names only the first three; `nonprofits`
+   is served by /api/content/pages but absent from /api/content/categories, so
+   it has to be asked for by name. Its slugs are NESTED — animal-shelters/houston
+   — which is why the writer creates directories and the route matches a rest
+   parameter rather than one segment. */
+const CATEGORIES = ["glossary", "case-studies", "tricks", "nonprofits"] as const;
 
 export type AdGrantCategory = (typeof CATEGORIES)[number];
 
@@ -269,6 +274,11 @@ export function stripUnsourced(body: string): string {
    * the guard below refuses to write a page where the two are still bound
    * together — a rewrite of the prose alone would be undone by the next fetch.
    */
+  /* The live pages say this several ways and will say it another way tomorrow,
+     so the verb is a list rather than a literal, and the trailing rule below
+     takes one verb or two joined by "and" — "we've built and managed" is what
+     the nonprofits pages used, and it walked past a single-verb pattern. */
+  const VERBS = "(?:managed|ran|run|handled|processed|seen|built|set ?up)";
   const PROCESSED = "Across 4,539 Ad Grant accounts AdGrant.AI has processed,";
   next = next.replace(
     new RegExp(`(From|In the) ?\\*{0,2}4,539 processed Ad Grant accounts,? ?(that )?(I${APOSTROPHE}ve|we${APOSTROPHE}ve|I have|we have)? ?(managed|processed|seen|run)?,?`, "gi"),
@@ -277,6 +287,16 @@ export function stripUnsourced(body: string): string {
   next = next.replace(
     new RegExp(`(I${APOSTROPHE}ve|we${APOSTROPHE}ve|I have|we have) (managed|run|processed) 4,539 processed Ad Grant accounts,?( and (seen|found))?`, "gi"),
     PROCESSED,
+  );
+  /* And the same claim with the attribution TRAILING the figure — "based on
+     4,539 processed Ad Grant accounts I've managed". The two rules above only
+     matched it leading, so this phrasing walked straight into the guard on the
+     first fetch that included the nonprofits category. Here the surrounding
+     sentence keeps its own preposition, so the replacement is the noun phrase
+     alone rather than a whole clause. */
+  next = next.replace(
+    new RegExp(`4,539 processed Ad Grant accounts,? ?(that )?(I${APOSTROPHE}ve|we${APOSTROPHE}ve|I have|we have) ${VERBS}(,? and ${VERBS})?`, "gi"),
+    "4,539 Ad Grant accounts AdGrant.AI has processed",
   );
 
   /* The claim this function exists to prevent, checked rather than trusted.
@@ -733,8 +753,10 @@ export function readPageFile(file: string): AdGrantPage {
 
 function writePageFile(page: AdGrantPage): string {
   const dir = path.join(SOURCE, page.category);
-  fs.mkdirSync(dir, { recursive: true });
   const file = path.join(dir, `${page.slug}.md`);
+  /* A nonprofits slug carries a slash — animal-shelters/houston — so the
+     directory to create is the file's own, not the category's. */
+  fs.mkdirSync(path.dirname(file), { recursive: true });
   const body = page.bodyMarkdown.startsWith("\n") ? page.bodyMarkdown : `\n${page.bodyMarkdown}`;
   const trailing = body.endsWith("\n") ? body : `${body}\n`;
   fs.writeFileSync(file, `${writeFrontmatter(page)}${trailing}`);
@@ -814,8 +836,12 @@ async function fetchLibrary(takeTheirs: boolean): Promise<void> {
     );
     console.log(`${category}: ${index.items.length} pages`);
     for (const item of index.items) {
+      /* encodeURIComponent, not template interpolation: a nonprofits slug is
+         animal-shelters/houston, and an unencoded slash makes the path one
+         segment too long, which this API answers with the SPA's HTML under a
+         200 rather than with an error. */
       const payload = await fetchJson<PagePayload>(
-        `${API}/api/content/page/${category}/${item.slug}`,
+        `${API}/api/content/page/${category}/${encodeURIComponent(item.slug)}`,
       );
       const incoming = pageFromPayload(payload);
       const dest = path.join(SOURCE, incoming.category, `${incoming.slug}.md`);
@@ -860,14 +886,26 @@ function writeJsonGuarded(file: string, value: unknown, takeTheirs: boolean): vo
 /* Generate                                                                   */
 /* -------------------------------------------------------------------------- */
 
+function markdownUnder(dir: string): string[] {
+  const found: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) found.push(...markdownUnder(full));
+    else if (entry.name.endsWith(".md")) found.push(full);
+  }
+  return found.sort();
+}
+
 function loadPagesFromDisk(): AdGrantPage[] {
   const pages: AdGrantPage[] = [];
   for (const category of CATEGORIES) {
     const dir = path.join(SOURCE, category);
     if (!fs.existsSync(dir)) continue;
-    const files = fs.readdirSync(dir).filter((name) => name.endsWith(".md")).sort();
-    for (const name of files) {
-      pages.push(readPageFile(path.join(dir, name)));
+    /* Recursive: a nonprofits slug is a path — animal-shelters/houston — so its
+       file sits a directory deeper, and a flat readdir found four pages on disk
+       and put none of them in the library. */
+    for (const file of markdownUnder(dir)) {
+      pages.push(readPageFile(file));
     }
   }
   pages.sort((a, b) => {
@@ -932,7 +970,7 @@ export interface AdGrantCorrection {
   against: string;
 }
 
-export type AdGrantCategory = "glossary" | "case-studies" | "tricks";
+export type AdGrantCategory = "glossary" | "case-studies" | "tricks" | "nonprofits";
 
 export interface AdGrantPage {
   slug: string;

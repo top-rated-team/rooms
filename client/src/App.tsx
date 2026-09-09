@@ -65,7 +65,14 @@ export default function App() {
         {/* AdGrant.AI's own tree. Own chrome, not the site header. Mounted here
             because client/index.html is the one head this process serves. Lazy
             so the landing page does not download it. */}
-        <Route path="/adgrant">
+        {/* "/adgrant/*?" and not "/adgrant": a bare path in wouter matches
+            EXACTLY, so every page of this library — the glossary, the case
+            studies, the tricks, the templates — answered "Page not found" from
+            the day it was built, and only the home page ever rendered. The
+            optional wildcard keeps /adgrant itself matching and hands the full
+            path to the tree's own Switch, which routes on absolute paths that
+            already carry the mount. */}
+        <Route path="/adgrant/*?">
           <Suspense
             fallback={
               <div className="flex min-h-screen items-center justify-center bg-background">

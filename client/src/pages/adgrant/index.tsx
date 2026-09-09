@@ -61,6 +61,15 @@ export function AdGrantApp() {
         <Route path={leafPath("tricks", ":slug")}>
           <LibraryPage segment="tricks" />
         </Route>
+        <Route path={sectionPath("nonprofits")}>
+          <LibraryIndex segment="nonprofits" />
+        </Route>
+        {/* A plain wildcard, because these slugs are two segments and wouter's
+            named rest parameter did not match them. LibraryPage reads the slug
+            off the address rather than out of the pattern. */}
+        <Route path={`${sectionPath("nonprofits")}/*`}>
+          <LibraryPage segment="nonprofits" />
+        </Route>
         <Route path={sectionPath("templates")} component={TemplatesIndex} />
         <Route path={leafPath("templates", ":slug")} component={TemplatePage} />
         {ADGRANT_MOUNT ? (

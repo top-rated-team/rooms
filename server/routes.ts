@@ -64,6 +64,7 @@ import {
   startBookingLinkedIn,
 } from "./booking/signin";
 import { generateAdGrantStructure, getAdGrantGenerationQuota } from "./adgrant/generate";
+import { adGrantStats } from "./adgrant/stats";
 import { openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage, bindRoomAddressForToken } from "./room-access";
 import {
   completeRoomLoginLinkedIn,
@@ -1622,6 +1623,19 @@ export function registerRoutes(app: Express): void {
         host: publicBaseUrl(req),
       });
       res.redirect(302, result.redirectTo);
+    }),
+  );
+
+  /* Today's figures for the AdGrant.AI home page. A proxy because the source
+     sends no CORS header, cached for six hours, and it answers with the
+     figures this build shipped with when the source cannot be read — the page
+     must never show a spinner where a measured number goes. */
+  app.get(
+    "/api/adgrant/stats",
+    route(async (_req, res) => {
+      const { stats, live } = await adGrantStats();
+      res.setHeader("Cache-Control", "public, max-age=1800");
+      res.json({ stats, live });
     }),
   );
 

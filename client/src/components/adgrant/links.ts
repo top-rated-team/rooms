@@ -2,7 +2,7 @@ import { ADGRANT_MOUNT } from "@/components/adgrant/mount";
 
 const LIVE_ORIGIN = "https://adgrant.ai";
 
-const LIBRARY_ROOTS = ["/glossary", "/case-studies", "/tricks", "/templates"] as const;
+const LIBRARY_ROOTS = ["/glossary", "/case-studies", "/tricks", "/templates", "/nonprofits"] as const;
 
 /**
  * Paths this tree answers. relatedLinks and markdown in shared/adgrant.ts use
@@ -10,7 +10,9 @@ const LIBRARY_ROOTS = ["/glossary", "/case-studies", "/tricks", "/templates"] as
  * with no mount prefix. While this product lives under /adgrant they have to
  * be prefixed; when ADGRANT_MOUNT is "" they are already the public URL.
  *
- * `/nonprofits…` is out of scope here. Those 33 pages stay on adgrant.ai.
+ * `/nonprofits…` used to be sent back to the live site. It is answered here
+ * now: four pages, and their slugs carry a slash — animal-shelters/houston —
+ * so the route that serves them matches a rest parameter, not one segment.
  */
 export function adgrantHref(href: string): string {
   const trimmed = href.trim();
@@ -19,10 +21,6 @@ export function adgrantHref(href: string): string {
   if (trimmed.startsWith(LIVE_ORIGIN)) {
     const path = trimmed.slice(LIVE_ORIGIN.length) || "/";
     return adgrantHref(path);
-  }
-
-  if (trimmed.startsWith("/nonprofits")) {
-    return `${LIVE_ORIGIN}${trimmed}`;
   }
 
   if (trimmed === "/" ) return mountHome();

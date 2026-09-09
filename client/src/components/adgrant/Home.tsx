@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 
-import { STATS } from "@shared/adgrant";
+import { STATS, type AdGrantStats } from "@shared/adgrant";
 import { DISPLAY, HEADING, LINK, META, NUMERAL, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
 import { Conversation } from "@/components/adgrant/Conversation";
 import { formatCount, formatMeasuredOn } from "@/components/adgrant/format";
@@ -9,36 +10,75 @@ import { ADGRANT_SECTIONS } from "@/components/adgrant/sections";
 const POLICY_CTR = "https://support.google.com/nonprofits/answer/117827?hl=en";
 const POLICY_BUDGET = "https://support.google.com/nonprofits/answer/1332166?hl=en";
 
-const FIGURES: { n: string; of: string }[] = [
+/**
+ * The figures, from whichever reading we have. Built from a parameter rather
+ * than from the imported constant so that today's numbers and the ones this
+ * build shipped with go through exactly the same sentences — a second copy of
+ * this prose is a second place for a figure to go stale.
+ */
+function figuresFrom(stats: AdGrantStats): { n: string; of: string }[] {
+  return [
   {
-    n: formatCount(STATS.accountsProcessed),
+    n: formatCount(stats.accountsProcessed),
     of: "Ad Grant accounts processed. Every account this product has run, not a sample.",
   },
   {
-    n: formatCount(STATS.totals.campaigns),
-    of: `campaigns in those accounts. Median ${STATS.campaignsPerAccount.median} per account, average ${STATS.campaignsPerAccount.avg}, maximum ${formatCount(STATS.campaignsPerAccount.max)}.`,
+    n: formatCount(stats.totals.campaigns),
+    of: `campaigns in those accounts. Median ${stats.campaignsPerAccount.median} per account, average ${stats.campaignsPerAccount.avg}, maximum ${formatCount(stats.campaignsPerAccount.max)}.`,
   },
   {
-    n: formatCount(STATS.totals.keywords),
-    of: `keywords in those accounts. Median ${STATS.keywordsPerAdGroup.median} per ad group, average ${STATS.keywordsPerAdGroup.avg}.`,
+    n: formatCount(stats.totals.keywords),
+    of: `keywords in those accounts. Median ${stats.keywordsPerAdGroup.median} per ad group, average ${stats.keywordsPerAdGroup.avg}.`,
   },
   {
-    n: formatCount(STATS.totals.adGroups),
-    of: `ad groups in those accounts. Median ${STATS.adGroupsPerCampaign.median} per campaign, average ${STATS.adGroupsPerCampaign.avg}.`,
+    n: formatCount(stats.totals.adGroups),
+    of: `ad groups in those accounts. Median ${stats.adGroupsPerCampaign.median} per campaign, average ${stats.adGroupsPerCampaign.avg}.`,
   },
   {
-    n: formatCount(STATS.totals.ads),
+    n: formatCount(stats.totals.ads),
     of: "ads in those accounts.",
   },
-];
+  ];
+}
+
+/**
+ * Today's figures, asked for once on mount. The page renders the shipped
+ * snapshot first and swaps in the live reading when it arrives, so there is
+ * never a spinner where a measured number goes and never a layout that jumps
+ * from empty to full. A failure keeps the snapshot, silently: a visitor cannot
+ * act on our not having reached our own API, and the numbers they are reading
+ * are still true, only older.
+ */
+function useLiveStats(): AdGrantStats {
+  const [stats, setStats] = useState<AdGrantStats>(STATS);
+  useEffect(() => {
+    let alive = true;
+    const controller = new AbortController();
+    void fetch("/api/adgrant/stats", { headers: { Accept: "application/json" }, signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body: { stats?: AdGrantStats } | null) => {
+        if (alive && body?.stats?.accountsProcessed) setStats(body.stats);
+      })
+      .catch(() => {
+        /* the snapshot stands */
+      });
+    return () => {
+      alive = false;
+      controller.abort();
+    };
+  }, []);
+  return stats;
+}
 
 export function Home() {
+  const stats = useLiveStats();
+  const FIGURES = figuresFrom(stats);
   return (
     <>
       <section className={`${PAGE} pt-[var(--s5)] lg:pt-[var(--s6)]`}>
-        <p className={META}>Measured {formatMeasuredOn(STATS.generatedAt)}</p>
+        <p className={META}>Measured {formatMeasuredOn(stats.generatedAt)}</p>
         <h1 className={`mt-[var(--s2)] ${DISPLAY}`} data-testid="text-adgrant-headline">
-          {formatCount(STATS.accountsProcessed)} Ad Grant accounts processed
+          {formatCount(stats.accountsProcessed)} Ad Grant accounts processed
         </h1>
         <p className={`mt-[var(--s3)] max-w-[46ch] ${READ_MUTED}`} data-testid="text-adgrant-pitch">
           Those are the accounts, campaigns and keywords this product has actually processed. A structure for a

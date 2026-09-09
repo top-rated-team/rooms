@@ -6,6 +6,7 @@ import { MAIN_SITE_URL } from "@shared/roster";
 import { ADGRANT_ACCENT_WRAP, ADGRANT_MARK } from "@/components/site/doors/adgrant-style";
 import { LINK, META, META_PLAIN, PAGE } from "@/components/site/doors/quiet";
 import { useTheme } from "@/hooks/use-theme";
+import { AdGrantLogo } from "@/components/adgrant/Logo";
 import { mountHome } from "@/components/adgrant/links";
 import { ADGRANT_SECTIONS } from "@/components/adgrant/sections";
 
@@ -14,9 +15,6 @@ const CONTRACT = DOOR.contract;
 
 const NAV_LINK = "type-meta draw text-muted-foreground hover:text-foreground";
 
-function contactHref(contact: string): string {
-  return /^(https?:\/\/|mailto:|\/)/i.test(contact) ? contact : `mailto:${contact}`;
-}
 
 /**
  * AdGrant.AI's own chrome. It does not import the site header or footer.
@@ -27,7 +25,12 @@ function contactHref(contact: string): string {
 export function Shell({ children }: { children: ReactNode }) {
   const { resolvedTheme, setTheme } = useTheme();
   const next = resolvedTheme === "dark" ? "light" : "dark";
+  /* The year this product started publishing. A copyright line that reads
+     only the current year claims nothing about the years before it, which is
+     the opposite of what the line is for. */
+  const FIRST_YEAR = 2025;
   const year = new Date().getFullYear();
+  const years = year > FIRST_YEAR ? `${FIRST_YEAR}\u2013${year}` : String(FIRST_YEAR);
 
   return (
     <div className={`${ADGRANT_ACCENT_WRAP} flex min-h-screen flex-col bg-background`} data-site-chrome>
@@ -39,8 +42,12 @@ export function Shell({ children }: { children: ReactNode }) {
           <Link
             href={mountHome()}
             data-testid="link-adgrant-mark"
-            className="font-sans text-[1.0625rem] font-medium tracking-[0.13em] text-foreground [text-transform:none]"
+            className="inline-flex items-center gap-[0.45em] font-sans text-[1.0625rem] font-medium tracking-[0.13em] text-foreground [text-transform:none]"
           >
+            {/* Sized in em so it tracks the wordmark at every viewport, and
+                nudged down because the wordmark sits on a baseline and a
+                square box does not. */}
+            <AdGrantLogo className="h-[1.15em] w-[1.15em] shrink-0 translate-y-[0.06em]" />
             {ADGRANT_MARK}
           </Link>
           <nav aria-label={ADGRANT_MARK} className="flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]">
@@ -79,7 +86,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <footer data-testid="adgrant-footer" className="mt-[var(--s6)] border-t border-border">
         <div className={`${PAGE} pb-[var(--s5)] pt-[var(--s3)]`}>
           <p className={`${META} text-foreground`} data-testid="text-adgrant-legal-name">
-            &copy; {year} {CONTRACT.legalName}
+            &copy; {years} {CONTRACT.legalName}
           </p>
           <p className={`mt-[var(--s2)] max-w-[46ch] ${META_PLAIN}`}>{CONTRACT.entity}</p>
           <p className={`mt-[var(--s2)] max-w-[46ch] ${META_PLAIN}`}>
@@ -107,16 +114,10 @@ export function Shell({ children }: { children: ReactNode }) {
                 Terms
               </a>
             ) : null}
-            {CONTRACT.contact ? (
-              <a
-                href={contactHref(CONTRACT.contact)}
-                rel="noopener noreferrer"
-                data-testid="link-adgrant-contact"
-                className={LINK}
-              >
-                {CONTRACT.contactLabel ?? CONTRACT.contact}
-              </a>
-            ) : null}
+            {/* "Write to Top-Rated Team" used to sit here, one link away from
+                "Top-Rated Team" itself, which is two ways to say the same thing
+                in a row of six words. The site link stays; the contact address
+                is on the page it leads to. */}
             <a href={MAIN_SITE_URL} data-testid="link-adgrant-footer-top-rated" className={LINK}>
               Top-Rated Team
             </a>

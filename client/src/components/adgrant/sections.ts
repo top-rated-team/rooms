@@ -8,7 +8,7 @@ import { sectionPath } from "@/components/adgrant/links";
  * come from shared/adgrant.ts so an index cannot go stale against the library.
  */
 export interface AdGrantSection {
-  segment: "glossary" | "case-studies" | "tricks" | "templates";
+  segment: "glossary" | "case-studies" | "tricks" | "templates" | "nonprofits";
   name: string;
   subtitle: string | null;
   /** One sentence for the index, from what is actually in the library. */
@@ -50,6 +50,15 @@ export const ADGRANT_SECTIONS: AdGrantSection[] = [
     count: pagesIn("tricks").length,
     path: sectionPath("tricks"),
     category: "tricks",
+  },
+  {
+    segment: "nonprofits",
+    name: "By Nonprofit",
+    subtitle: "City by city",
+    line: `${countLine(pagesIn("nonprofits").length, "guide", "guides")} for a kind of nonprofit in one city, with the local search terms that actually get typed.`,
+    count: pagesIn("nonprofits").length,
+    path: sectionPath("nonprofits"),
+    category: "nonprofits",
   },
   {
     segment: "templates",

@@ -1,17 +1,23 @@
-import { Link, useRoute } from "wouter";
+import { Link, useLocation } from "wouter";
 
 import { PAGE_BY_SLUG, type AdGrantCorrection, type RelatedLink } from "@shared/adgrant";
 import { DISPLAY, HEADING, LINK, META, META_PLAIN, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
 import { Meta } from "@/components/adgrant/Meta";
 import { Missing } from "@/components/adgrant/Missing";
 import { AdGrantMarkdown } from "@/components/adgrant/Markdown";
-import { adgrantHref, isInternalAdgrantHref, leafPath, sectionPath } from "@/components/adgrant/links";
+import { adgrantHref, isInternalAdgrantHref, sectionPath } from "@/components/adgrant/links";
 import { SECTION_BY_SEGMENT, type AdGrantSection } from "@/components/adgrant/sections";
 
 export function LibraryPage({ segment }: { segment: Exclude<AdGrantSection["segment"], "templates"> }) {
   const section = SECTION_BY_SEGMENT[segment];
-  const [, params] = useRoute<{ slug: string }>(leafPath(segment, ":slug"));
-  const slug = params?.slug;
+  /* The slug comes off the address rather than out of a pattern. A nonprofits
+     slug is a PATH — animal-shelters/houston — and wouter's ":slug*" did not
+     match it here, so every one of those pages answered "not in the library".
+     Stripping the section prefix needs no pattern dialect and works the same
+     for one segment or three. */
+  const [pathname] = useLocation();
+  const prefix = `${sectionPath(segment)}/`;
+  const slug = pathname.startsWith(prefix) ? decodeURIComponent(pathname.slice(prefix.length)) : undefined;
   const page = slug ? PAGE_BY_SLUG[slug] : undefined;
 
   if (!slug || !page || page.category !== section.category) {
