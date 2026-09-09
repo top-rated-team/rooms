@@ -5,6 +5,20 @@ already owns, and `check-parcels.mjs` refuses two owners for one file. They go
 in the moment their blocker lands. Written 9 September 2026 so that a pause
 does not lose them.
 
+## room-login follow-up — one pair in every state
+
+Wave 13 shipped `LOGIN | Open a room` when nothing is remembered, and kept
+`Your rooms | Open a room` when something is. The owner then said the second
+state is not wanted: the pair should read `LOGIN | Open a room` always, and
+hovering LOGIN should show the remembered-room list when this browser has one.
+
+The brief in `parcels.json` was updated to say so, but wave 13 had already been
+launched from the older prompt, so the change never reached the agent. It is
+small and `RoomMenu.tsx` is unowned again — it needs one decision made
+deliberately rather than in a hurry: hover currently opens the room list and
+click currently opens the login panel, and with one label they have to share a
+gesture without either becoming a surprise.
+
 ---
 
 ## booking-return — blocked on wave 14 releasing `BookingDialog.tsx`
