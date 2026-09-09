@@ -1,156 +1,449 @@
 /**
- * Google's appointment popup, opened from our own link.
+ * Our booking popup, opened from the same anchors that used to click Google's
+ * hidden button.
  *
- * WHY NOT JUST LINK TO IT. A booking link sends the visitor to calendar.google.com
- * and the site is over. The popup keeps them here, which matters most on the
- * one action the whole page is for.
+ * WHY THE HOOK STILL RETURNS THREE PROPS. Seventeen call sites spread
+ * `{...booking}`. Changing the return shape is a seventeen-file collision.
+ * This module changes what a click does: open our dialog, not Google's overlay.
  *
- * WHY NOT GOOGLE'S OWN BUTTON. Because it looks like Google's own button:
- * `.qxCTlb` is a filled 4px-radius rectangle in Google Sans with white text on
- * whatever colour you pass it. Dropping that into this design would be the one
- * loudest object on a page that has almost no colour. So Google's button is
- * loaded, hidden, and clicked programmatically when the visitor presses ours.
+ * WHY THE HREF IS STILL ON EVERY ANCHOR. With no JavaScript the click is a
+ * real navigation. With JavaScript a plain left click preventDefault's and the
+ * popup opens; a cmd-click is left alone so it still opens a tab.
  *
- * WHY THE LINK STILL HAS AN href. Because calendar.google.com is a common
- * target for blockers and corporate proxies. `open()` returns false when the
- * embed is not there, and every caller lets the click fall through to plain
- * navigation. The booking never becomes unreachable because a script did not
- * load — that is the difference between an enhancement and a dependency.
- *
- * WHY IT IS INJECTED HERE RATHER THAN IN index.html. Two reasons: that file is
- * frozen while parcels are in flight, and nothing should fetch a third-party
- * script on a page view where nobody intends to book.
+ * WHY WARMING IS A SLOTS FETCH. Unipile has no free/busy endpoint. Slots are
+ * computed on our server and cached briefly. Fetching them on the first
+ * pointer, key or scroll anywhere on the page means a tap on a phone is not
+ * racing the network — there is no hover, and touchstart is only about 50 ms
+ * ahead of click.
  */
 
-const CSS_URL = "https://calendar.google.com/calendar/scheduling-button-script.css";
-const JS_URL = "https://calendar.google.com/calendar/scheduling-button-script.js";
+import type {
+  BookingDay,
+  BookingSlotsResponse,
+  CreateBookingRequest,
+  CreateBookingResponse,
+} from "@shared/api";
+import { DOORS } from "@shared/doors";
 
-/** The schedule this books. Resolved from calendar.app.google/ucoG2E1L6KV7BPUD7. */
-const SCHEDULE_URL =
-  "https://calendar.google.com/calendar/appointments/schedules/" +
-  "AcZssZ3NOMh7SMtLzvAepTJeOomMnMneNJ9lpwBef4p5whZvfp02rajf3csuijL5U0ePbqVRaqm5obfU?gv=true";
+export const SLOT_DAYS = 14;
+export const CONFIRMED_POLL_MS = 2_500;
+export const CONFIRMED_TIMEOUT_MS = 5 * 60 * 1_000;
+const CACHE_MS = 30_000;
 
-interface SchedulingButton {
-  load(options: { url: string; color?: string; label?: string; target: HTMLElement }): void;
-}
-declare global {
-  interface Window {
-    calendar?: { schedulingButton?: SchedulingButton };
-  }
-}
+export type SlotDay = BookingDay;
+export type SlotsPayload = BookingSlotsResponse;
+export type BookedPayload = CreateBookingResponse;
 
-type State = "idle" | "loading" | "ready" | "unavailable";
-let state: State = "idle";
-let host: HTMLElement | null = null;
-let waiting: Array<(ok: boolean) => void> = [];
+export type BookResult =
+  | { ok: true; booked: BookedPayload }
+  | { ok: false; conflict: true; error: string; days: SlotDay[] }
+  | { ok: false; conflict: false; error: string; status: number };
 
-function settle(next: "ready" | "unavailable") {
-  state = next;
-  const listeners = waiting;
-  waiting = [];
-  for (const listener of listeners) listener(next === "ready");
+export interface ConfirmedPayload {
+  confirmed: boolean;
+  at?: string;
 }
 
-function asset(tag: "link" | "script", url: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const existing = document.querySelector(`[data-gcal="${url}"]`);
-    if (existing) return resolve();
-    const element = document.createElement(tag);
-    element.setAttribute("data-gcal", url);
-    element.addEventListener("load", () => resolve());
-    element.addEventListener("error", () => reject(new Error(url)));
-    if (tag === "link") {
-      const link = element as HTMLLinkElement;
-      link.rel = "stylesheet";
-      link.href = url;
-    } else {
-      const script = element as HTMLScriptElement;
-      script.src = url;
-      script.async = true;
-    }
-    document.head.appendChild(element);
-  });
+type HostFn = () => void;
+type OpenListener = (open: boolean) => void;
+
+let hostFn: HostFn | null = null;
+let requestedOpen = false;
+const listeners = new Set<OpenListener>();
+
+let cached: { payload: SlotsPayload; at: number } | null = null;
+let inflight: Promise<SlotsPayload> | null = null;
+
+export function resetBookingForTests(): void {
+  hostFn = null;
+  requestedOpen = false;
+  listeners.clear();
+  cached = null;
+  inflight = null;
+}
+
+export function registerBookingHost(fn: HostFn): void {
+  hostFn = fn;
+}
+
+export function isBookingOpen(): boolean {
+  return requestedOpen;
+}
+
+export function subscribeBookingOpen(listener: OpenListener): () => void {
+  listeners.add(listener);
+  listener(requestedOpen);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+export function setBookingOpen(open: boolean): void {
+  requestedOpen = open;
+  for (const listener of listeners) listener(open);
 }
 
 /**
- * Fetch the embed and let Google build its button into a hidden host. Resolves
- * false rather than throwing: a blocked script is an ordinary thing to meet.
- */
-export function prepareBooking(): Promise<boolean> {
-  if (state === "ready") return Promise.resolve(true);
-  if (state === "unavailable") return Promise.resolve(false);
-  const settled = new Promise<boolean>((resolve) => waiting.push(resolve));
-  if (state === "loading") return settled;
-
-  state = "loading";
-  void (async () => {
-    try {
-      await Promise.all([asset("link", CSS_URL), asset("script", JS_URL)]);
-      const button = window.calendar?.schedulingButton;
-      if (!button) return settle("unavailable");
-
-      /*
-       * A WRAPPER, AND THE TARGET INSIDE IT — because of how their load() works.
-       *
-       * Their code is: `var b = a.target; a = I(a); b.insertAdjacentElement("afterend", a)`.
-       * The button is inserted as the target's NEXT SIBLING, not as its child.
-       * My first version passed a clipped div and then looked for the button
-       * INSIDE it, so it never found one: the poll timed out, openBooking()
-       * returned false, and every click fell through to the link — which is
-       * exactly the new tab the owner saw.
-       *
-       * So the clip goes on a wrapper and the target is a span within it. The
-       * button lands beside the span, inside the wrapper, and the wrapper hides
-       * it. The popup itself is unaffected: their onclick appends the overlay to
-       * document.body, so it is never inside anything we clipped.
-       */
-      host = document.createElement("div");
-      host.setAttribute("aria-hidden", "true");
-      host.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)";
-      const anchor = document.createElement("span");
-      host.appendChild(anchor);
-      document.body.appendChild(host);
-
-      /*
-       * `color` is not optional in practice. Their I() does B(a.color) and B
-       * validates against /^#(?:[0-9a-f]{3}){1,2}$/ — pass nothing and it
-       * throws inside load(), which was the second reason this never worked.
-       * The value is irrelevant because the button is never seen; it is our own
-       * clay so that if their script ever reveals it, it is not Google blue.
-       */
-      button.load({ url: SCHEDULE_URL, color: "#9A4A22", label: "Book a call", target: anchor });
-
-      // The button is built synchronously inside load(), but poll anyway: the
-      // script is theirs to change, and a poll that succeeds on its first tick
-      // costs nothing.
-      const deadline = Date.now() + 4000;
-      const poll = () => {
-        if (host?.querySelector("button")) return settle("ready");
-        if (Date.now() > deadline) return settle("unavailable");
-        window.setTimeout(poll, 60);
-      };
-      poll();
-    } catch {
-      settle("unavailable");
-    }
-  })();
-
-  return settled;
-}
-
-/**
- * Open the popup. Returns false when the embed is not available, and the caller
- * must then let the browser follow the link.
+ * Open the popup with no click to fall through. The room's `/call` slash
+ * command is the caller this exists for. Returns false when no host has
+ * registered, so that command's window.open fallback still runs.
  */
 export function openBooking(): boolean {
-  if (state !== "ready") return false;
-  const button = host?.querySelector("button");
-  if (!button) return false;
-  button.click();
+  if (hostFn == null) return false;
+  requestedOpen = true;
+  hostFn();
+  for (const listener of listeners) listener(true);
   return true;
 }
 
-/** True once the popup can be opened, so a caller can decide before a click. */
-export function bookingReady(): boolean {
-  return state === "ready";
+export function slotsUrl(from: string, days: number = SLOT_DAYS): string {
+  const params = new URLSearchParams({ from, days: String(days) });
+  return `/api/booking/slots?${params.toString()}`;
+}
+
+export function confirmedUrl(code: string): string {
+  const params = new URLSearchParams({ code });
+  return `/api/booking/confirmed?${params.toString()}`;
+}
+
+/** YYYY-MM-DD in the given IANA zone, or in the browser's local zone. */
+export function todayStamp(timeZone?: string): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+export function isPhoneBooking(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
+  return window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+}
+
+/**
+ * booking-server requires `name` and `topic` on POST. They are not on the
+ * form — email is the only extra field — so these are filled from what we
+ * actually know: the local part of the address they typed, or "Visitor", and
+ * the door this page is, or "call".
+ */
+export function bookingTopic(): string {
+  if (typeof window === "undefined") return "call";
+  return DOORS.find((door) => door.path === window.location.pathname)?.id ?? "call";
+}
+
+function nameFromEmail(email: string | undefined): string | undefined {
+  if (!email) return undefined;
+  const local = email.split("@")[0]?.trim();
+  return local || undefined;
+}
+
+export function buildBookBody(input: { date: string; time: string; email?: string; name?: string; topic?: string }): CreateBookingRequest {
+  const email = input.email?.trim();
+  const body: CreateBookingRequest = {
+    date: input.date,
+    time: input.time,
+    name: input.name?.trim() || nameFromEmail(email) || "Visitor",
+    topic: input.topic?.trim() || bookingTopic(),
+  };
+  if (email) body.email = email;
+  return body;
+}
+
+export function parseSlotsPayload(value: unknown): SlotsPayload {
+  if (typeof value !== "object" || value === null) {
+    throw new Error("The server returned a response that was not JSON.");
+  }
+  const record = value as Record<string, unknown>;
+  if (typeof record.timezone !== "string" || record.timezone.trim() === "") {
+    throw new Error("The server returned times with no timezone.");
+  }
+  if (typeof record.slotMinutes !== "number" || !Number.isFinite(record.slotMinutes) || record.slotMinutes <= 0) {
+    throw new Error("The server returned times with no slot length.");
+  }
+  const days = parseDays(record.days);
+  if (!days) throw new Error("The server returned times in a shape we cannot read.");
+  return { timezone: record.timezone, slotMinutes: record.slotMinutes, days };
+}
+
+export function parseDays(value: unknown): SlotDay[] | null {
+  if (!Array.isArray(value)) return null;
+  const days: SlotDay[] = [];
+  for (const entry of value) {
+    if (typeof entry !== "object" || entry === null) return null;
+    const record = entry as Record<string, unknown>;
+    if (typeof record.date !== "string" || record.date.trim() === "") return null;
+    if (!Array.isArray(record.slots)) return null;
+    const slots: string[] = [];
+    for (const slot of record.slots) {
+      if (typeof slot !== "string") return null;
+      slots.push(slot);
+    }
+    days.push({ date: record.date, slots });
+  }
+  return days;
+}
+
+export function parseBookedPayload(value: unknown): BookedPayload {
+  if (typeof value !== "object" || value === null) {
+    throw new Error("The server returned a response that was not JSON.");
+  }
+  const record = value as Record<string, unknown>;
+  if (record.booked !== true) throw new Error("The server did not confirm the booking.");
+  if (typeof record.startsAt !== "string" || record.startsAt.trim() === "") {
+    throw new Error("The server confirmed a booking with no start time.");
+  }
+  if (typeof record.timezone !== "string" || record.timezone.trim() === "") {
+    throw new Error("The server confirmed a booking with no timezone.");
+  }
+  const meetUrl = record.meetUrl === null || record.meetUrl === undefined ? null : record.meetUrl;
+  if (meetUrl !== null && typeof meetUrl !== "string") {
+    throw new Error("The server returned a meeting link we cannot read.");
+  }
+  if (typeof record.invited !== "boolean") {
+    throw new Error("The server did not say whether an invite was sent.");
+  }
+  if (typeof record.whatsapp !== "object" || record.whatsapp === null) {
+    throw new Error("The server confirmed a booking with no WhatsApp path.");
+  }
+  const whatsapp = record.whatsapp as Record<string, unknown>;
+  if (typeof whatsapp.url !== "string" || typeof whatsapp.code !== "string") {
+    throw new Error("The server confirmed a booking with no WhatsApp path.");
+  }
+  return {
+    booked: true,
+    startsAt: record.startsAt,
+    timezone: record.timezone,
+    meetUrl,
+    invited: record.invited,
+    whatsapp: { url: whatsapp.url, code: whatsapp.code },
+  };
+}
+
+export function parseConfirmedPayload(value: unknown): ConfirmedPayload {
+  if (typeof value !== "object" || value === null) {
+    throw new Error("The server returned a response that was not JSON.");
+  }
+  const record = value as Record<string, unknown>;
+  if (typeof record.confirmed !== "boolean") {
+    throw new Error("The server did not say whether the booking was confirmed.");
+  }
+  const at = record.at;
+  if (at === undefined) return { confirmed: record.confirmed };
+  if (typeof at !== "string") throw new Error("The server returned a confirmation time we cannot read.");
+  return { confirmed: record.confirmed, at };
+}
+
+export function errorFromBody(value: unknown, fallback: string): string {
+  if (typeof value === "object" && value !== null) {
+    const message = (value as { error?: unknown }).error;
+    if (typeof message === "string" && message.trim()) return message.trim();
+  }
+  return fallback;
+}
+
+function weekdayHeading(date: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!match) return date;
+  const utc = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12, 0, 0);
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).format(utc);
+}
+
+export function formatSlotDay(date: string): string {
+  return weekdayHeading(date);
+}
+
+export function formatBookedWhen(startsAt: string, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone,
+    timeZoneName: "short",
+  }).format(new Date(startsAt));
+}
+
+async function readJson(res: Response): Promise<unknown> {
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    throw new Error("The server returned a response that was not JSON.");
+  }
+}
+
+export function cachedSlots(): SlotsPayload | null {
+  if (!cached) return null;
+  if (Date.now() - cached.at > CACHE_MS) return null;
+  return cached.payload;
+}
+
+export function replaceCachedDays(days: SlotDay[]): void {
+  if (!cached) return;
+  cached = { payload: { ...cached.payload, days }, at: Date.now() };
+}
+
+export async function loadSlots(options?: { force?: boolean }): Promise<SlotsPayload> {
+  if (!options?.force) {
+    const hit = cachedSlots();
+    if (hit) return hit;
+  }
+  if (inflight) return inflight;
+
+  const request = (async () => {
+    let res: Response;
+    try {
+      res = await fetch(slotsUrl(todayStamp()), {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        credentials: "same-origin",
+      });
+    } catch {
+      throw new Error("Could not reach the server. Check your connection and try again.");
+    }
+    let body: unknown = null;
+    try {
+      body = await readJson(res);
+    } catch (error) {
+      if (res.ok) throw error;
+    }
+    if (!res.ok) {
+      throw new Error(errorFromBody(body, "Times could not be loaded just now."));
+    }
+    const payload = parseSlotsPayload(body);
+    cached = { payload, at: Date.now() };
+    return payload;
+  })();
+
+  inflight = request;
+  try {
+    return await request;
+  } finally {
+    if (inflight === request) inflight = null;
+  }
+}
+
+/**
+ * Fetch slots and resolve false rather than throwing. The first interaction
+ * warmer uses this: a failed warm is ordinary, and the dialog will try again.
+ */
+export function prepareBooking(): Promise<boolean> {
+  return loadSlots()
+    .then(() => true)
+    .catch(() => false);
+}
+
+export async function bookSlot(input: { date: string; time: string; email?: string }): Promise<BookResult> {
+  let res: Response;
+  try {
+    res = await fetch("/api/booking", {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(buildBookBody(input)),
+    });
+  } catch {
+    return {
+      ok: false,
+      conflict: false,
+      error: "Could not reach the server. Check your connection and try again.",
+      status: 0,
+    };
+  }
+
+  const body = await readJson(res).catch(() => null);
+
+  if (res.status === 409) {
+    const days = parseDays(body && typeof body === "object" ? (body as { days?: unknown }).days : undefined);
+    if (days) replaceCachedDays(days);
+    return {
+      ok: false,
+      conflict: true,
+      error: errorFromBody(body, "That time has just been taken. Here is what is still free."),
+      days: days ?? cached?.payload.days ?? [],
+    };
+  }
+
+  if (!res.ok) {
+    return {
+      ok: false,
+      conflict: false,
+      error: errorFromBody(body, "That time could not be booked."),
+      status: res.status,
+    };
+  }
+
+  try {
+    return { ok: true, booked: parseBookedPayload(body) };
+  } catch (error) {
+    return {
+      ok: false,
+      conflict: false,
+      error: error instanceof Error ? error.message : "That time could not be booked.",
+      status: res.status,
+    };
+  }
+}
+
+export async function fetchConfirmed(code: string, signal?: AbortSignal): Promise<ConfirmedPayload> {
+  const res = await fetch(confirmedUrl(code), {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    credentials: "same-origin",
+    signal,
+  });
+  const body = await readJson(res);
+  if (!res.ok) {
+    throw new Error(errorFromBody(body, "The confirmation could not be checked."));
+  }
+  return parseConfirmedPayload(body);
+}
+
+export async function pollBookingConfirmed(
+  code: string,
+  options: { signal: AbortSignal; intervalMs?: number; timeoutMs?: number },
+): Promise<{ confirmed: true; at: string } | { confirmed: false }> {
+  const intervalMs = options.intervalMs ?? CONFIRMED_POLL_MS;
+  const timeoutMs = options.timeoutMs ?? CONFIRMED_TIMEOUT_MS;
+  const deadline = Date.now() + timeoutMs;
+
+  while (!options.signal.aborted) {
+    try {
+      const result = await fetchConfirmed(code, options.signal);
+      if (result.confirmed) {
+        return { confirmed: true, at: result.at ?? new Date().toISOString() };
+      }
+    } catch (error) {
+      if (options.signal.aborted) throw error;
+      if (error instanceof DOMException && error.name === "AbortError") throw error;
+      /* A single failed poll is not the answer. Keep going until the code expires. */
+    }
+    if (Date.now() >= deadline) return { confirmed: false };
+    await sleep(intervalMs, options.signal);
+  }
+  throw new DOMException("Aborted", "AbortError");
+}
+
+function sleep(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) {
+      reject(new DOMException("Aborted", "AbortError"));
+      return;
+    }
+    const timer = setTimeout(resolve, ms);
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(new DOMException("Aborted", "AbortError"));
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+  });
 }

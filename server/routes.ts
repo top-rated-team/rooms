@@ -52,6 +52,9 @@ import { connectorMcp, connectorRouter } from "./connector";
 import { operatorGate, readOperator, writeOperator } from "./operator";
 import { acceptUnipileInbound, dispatchInbound } from "./unipile/inbound";
 import { ensureUnipileWebhooks, UNIPILE_WEBHOOK_AUTH_HEADER } from "./unipile/webhooks";
+import { getBookingSlots, parseSlotsQuery } from "./booking/slots";
+import { postBooking } from "./booking/calendar";
+import { getBookingConfirmed, installBookingInbound } from "./booking/confirm";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -582,6 +585,7 @@ export function registerRoutes(app: Express): void {
     message: "Too many identification attempts from this address. Try again later.",
   });
   const identityWebhookLimit = rateLimit({ windowMs: 60_000, max: 120, message: "Too many requests. Wait a moment." });
+  const bookingLimit = rateLimit({ windowMs: 60_000, max: 30, message: "Too many booking requests. Wait a moment." });
 
   /* --------------------------- workspaces --------------------------- */
 
@@ -1307,6 +1311,46 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
+  app.get(
+    "/api/booking/slots",
+    bookingLimit,
+    route(async (req, res) => {
+      const { from, days } = parseSlotsQuery(req.query);
+      const result = await getBookingSlots(from, days);
+      if (!result.ok) {
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.json(result.body);
+    }),
+  );
+
+  app.post(
+    "/api/booking",
+    bookingLimit,
+    route(async (req, res) => {
+      const result = await postBooking(req.body);
+      if (!result.ok) {
+        if (result.status === 409) {
+          res.status(409).json(result.body);
+          return;
+        }
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.status(201).json(result.body);
+    }),
+  );
+
+  app.get(
+    "/api/booking/confirmed",
+    bookingLimit,
+    route(async (req, res) => {
+      const code = typeof req.query.code === "string" ? req.query.code : "";
+      res.json(getBookingConfirmed(code));
+    }),
+  );
+
   app.use("/api/connector/mcp", connectorMcp);
   app.use("/api/connector", connectorRouter);
 
@@ -1318,5 +1362,6 @@ export function registerRoutes(app: Express): void {
 
   // Off unless WEEKLY_DIGEST is set. server/index.ts is frozen, so this is the mount.
   startDigestSchedule();
+  installBookingInbound();
   void ensureUnipileWebhooks();
 }

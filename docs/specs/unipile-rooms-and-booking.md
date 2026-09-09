@@ -203,7 +203,15 @@ proxy Google's `freeBusy.query`. **We compute availability ourselves.** This is 
 biggest design fact for the booking widget.
 
 **List calendars** — `GET /api/v1/calendars?account_id={id}&limit=10`. Returns
-`{data: Calendar[], next_cursor?}`. A `Calendar` carries `id` (this is the `calendar_id`
+`{data: Calendar[], next_cursor?}`.
+
+**The list envelope differs per resource and both forms are real** (observed, 2026-09-09):
+accounts come back as `{object, items, cursor, total_count, status_counts}`, calendars and
+events as `{data, …}`. Neither is a safe default for the other. Two more observed traps in
+that row: **`is_default` is not returned at all** — only `is_primary`, so selecting by
+`is_default` selects nothing; and on this tenant the primary calendar's `id` is
+`dan@top-rated.team` while its `name` is `danil.burykin@gmail.com`, so **selecting by name
+picks the wrong calendar or none**. `is_primary` is the only correct selector. A `Calendar` carries `id` (this is the `calendar_id`
 for every events call), `is_read_only`, `is_primary`, `access_role`
 (`owner|writer|reader|freeBusyReader`) and **`timezone`** — the calendar's own IANA zone.
 Call this **once at setup**, take the `is_primary` entry, assert `is_read_only === false`,
@@ -250,17 +258,25 @@ link** — and `notify`.
 **201 returns only `{object: "CalendarEventCreated", event_id}`** — not the event. To show
 the visitor a Meet link you must `GET` the event afterwards.
 
-**Unresolved [?]:** whether `attendees: []` satisfies the `required` constraint. The
-OpenAPI declares no `minItems`, so an empty array is schema-valid, but nobody has tested
-it. **Test it before relying on it**; the fallbacks are (a) the visitor's real email, which
-we are collecting anyway, or (b) `dan@top-rated.team` as the sole attendee.
+**SETTLED by probe against the real tenant, 2026-09-09.** Both of these were open
+questions in this file and both were answered by creating an event and deleting it again.
 
-**Unresolved [?]:** whether `date_time` must be UTC-with-`Z` while `time_zone` is advisory,
-or whether `date_time` may be local wall clock read in `time_zone`. The docs say "ISO 8601
-UTC datetime" **and** carry a separate `time_zone` field, which is contradictory. **Send UTC
-`Z` and the IANA zone both, then read the created event back out of Google Calendar and
-confirm the real time before shipping.** A booking widget that is an hour out is worse than
-no booking widget.
+**`attendees: []` is accepted.** A POST with an empty attendees array returned
+`201 {"object":"CalendarEventCreated","event_id":"…"}`. So a booking taken without an email
+needs no attendee at all, and the placeholder-address idea — a fake email built from a
+phone number — should not be built. Send `notify: false` with it: there is nobody to
+notify, and naming the organiser as the sole attendee mails them an invitation to their own
+event.
+
+**`date_time` in UTC with `Z` is an absolute instant; `time_zone` is the display zone.**
+Sent `{"date_time":"2027-01-05T08:00:00.000Z","time_zone":"Europe/Prague"}`; Google recorded
+`2027-01-05T09:00:00+01:00`, exactly that instant in CET. Send both.
+
+**But the READ shape is not what the docs describe.** Unipile documents `date_time` as
+"ISO 8601 UTC datetime (YYYY-MM-DDTHH:MM:SS.sssZ)". Real events come back as
+`2026-09-08T19:30:00+02:00` — a local-offset string. `new Date()` parses it because the
+offset is explicit, but **any code that expects a trailing `Z`, or slices the string, is
+wrong.** Parse it; do not pattern-match it.
 
 ### 1.5 WhatsApp messaging
 
@@ -524,7 +540,7 @@ shape without changing this file first.
 GET /api/booking/slots?from=2026-09-10&days=14
 → 200
 {
-  "timezone": "Europe/Bratislava",
+  "timezone": "Europe/Prague",
   "slotMinutes": 30,
   "days": [
     { "date": "2026-09-10", "slots": ["09:00", "09:30", "14:00"] },
@@ -545,7 +561,7 @@ POST /api/booking
 {
   "booked": true,
   "startsAt": "2026-09-10T12:00:00.000Z",
-  "timezone": "Europe/Bratislava",
+  "timezone": "Europe/Prague",
   "meetUrl": "https://meet.google.com/…" | null,
   "invited": true,
   "whatsapp": { "url": "https://wa.me/420774654822?text=…", "code": "K7QMX2" }
@@ -590,7 +606,7 @@ visitor books again.
 | `UNIPILE_WHATSAPP_ACCOUNT_ID` | default `y8T1nMDYR0ejEsMQpLr9OA` | falls back to the default |
 | `UNIPILE_WEBHOOK_SECRET` | Render dashboard — **needed** | the inbound endpoint refuses everything |
 | `LINKEDIN_CLIENT_ID` / `_SECRET` | Render dashboard — status unknown | the LinkedIn route says so and WhatsApp stays |
-| `DATABASE_URL` | Render dashboard — **not set** | **rooms live in memory and every deploy destroys them** |
+| `DATABASE_URL` | Render dashboard — **set 2026-09-09**, Neon pooled, six tables created | without it rooms live in memory and every deploy destroys them |
 | `PUBLIC_BASE_URL` | set to the apex | the webhook cannot compute its own address |
 
 **`DATABASE_URL` is the one that blocks a claim from meaning anything.** A claim persisted

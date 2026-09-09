@@ -297,3 +297,46 @@ export interface RoomBridge {
   targetLabel: string;
   connectedAt: string | null;
 }
+
+/* ------------------------------- booking ---------------------------------- */
+/* Fixed in docs/specs/unipile-rooms-and-booking.md §3 so booking-server and
+ * booking-dialog can build in parallel. Slots are local wall-clock times in
+ * `timezone`. email is the only optional field on the create body. */
+
+export interface BookingDay {
+  date: string;
+  slots: string[];
+}
+
+export interface BookingSlotsResponse {
+  timezone: string;
+  slotMinutes: number;
+  days: BookingDay[];
+}
+
+export interface CreateBookingRequest {
+  date: string;
+  time: string;
+  /** The only optional field. With it, Google emails an invite. Without it the event is still created and `invited` is false. */
+  email?: string;
+  name: string;
+  topic: string;
+}
+
+export interface CreateBookingResponse {
+  booked: true;
+  startsAt: string;
+  timezone: string;
+  meetUrl: string | null;
+  invited: boolean;
+  whatsapp: { url: string; code: string };
+}
+
+export interface BookingConflictResponse {
+  error: string;
+  days: BookingDay[];
+}
+
+export type BookingConfirmedResponse =
+  | { confirmed: true; at: string }
+  | { confirmed: false };
