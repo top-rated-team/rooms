@@ -141,11 +141,16 @@ export function FirstScreen() {
           the owner's instruction. Same arithmetic the header carries: the image
           sits on the baseline, so its top is its own height above it, and
           translate-y = height − cap-height brings that top to the cap line.
-          Outfit's cap is about 0.70em. At 1.1em the mark then hung 0.4em BELOW
-          the baseline and read as sinking, so it is 0.85em: the top is still on
-          the cap line and the descent is 0.15em instead. Smaller is the fix the
-          owner offered and it is the right one — the alignment is a subtraction
-          that holds at any height, so only the overhang changes. The
+          Outfit's cap is about 0.70em, so the
+          translate is height minus 0.70em at whatever height the mark is.
+
+          THE NUMBERS COME OFF THE OWNER'S OWN REFERENCE IMAGE rather than off
+          my judgement, because two rounds of adjusting by eye went past it in
+          both directions. Measured from it: the mark is 38px against a 38.5px
+          em, so 1em; its top sits one pixel under the cap line, so level; and
+          the gap to the D is 7px, so 0.18em. Height 1em with the top on the cap
+          line puts the bottom 0.30em under the baseline, which is what his
+          image shows. The
           header adds a further 0.11em of overhang because there he asked for
           slightly above; here he asked for level, so there is no overhang term.
 
@@ -163,7 +168,7 @@ export function FirstScreen() {
             src="/assets/top-rated-logo.png"
             alt=""
             aria-hidden="true"
-            className="me-[0.3em] inline-block h-[0.85em] w-[0.85em] translate-y-[0.15em]"
+            className="me-[0.18em] inline-block h-[1em] w-[1em] translate-y-[0.3em]"
           />
           Digital Experts + any AI agents in one room.
         </p>
