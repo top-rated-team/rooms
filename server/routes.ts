@@ -57,6 +57,7 @@ import { ensureUnipileWebhooks, UNIPILE_WEBHOOK_AUTH_HEADER } from "./unipile/we
 import { getBookingSlots, parseSlotsQuery } from "./booking/slots";
 import { postBooking } from "./booking/calendar";
 import { getBookingConfirmed, installBookingInbound } from "./booking/confirm";
+import { generateAdGrantStructure, getAdGrantGenerationQuota } from "./adgrant/generate";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -1398,6 +1399,27 @@ export function registerRoutes(app: Express): void {
     route(async (req, res) => {
       const code = typeof req.query.code === "string" ? req.query.code : "";
       res.json(getBookingConfirmed(code));
+    }),
+  );
+
+  app.post(
+    "/api/workspaces/:token/adgrant/generate",
+    askLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const result = await generateAdGrantStructure({ workspaceId: state.workspace.id, body: req.body });
+      res.status(result.status).json(result.body);
+    }),
+  );
+
+  app.get(
+    "/api/workspaces/:token/adgrant/generations",
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const result = await getAdGrantGenerationQuota(state.workspace.id);
+      res.status(result.status).json(result.body);
     }),
   );
 

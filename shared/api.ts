@@ -369,3 +369,103 @@ export interface BookingConflictResponse {
 export type BookingConfirmedResponse =
   | { confirmed: true; at: string }
   | { confirmed: false };
+
+/* -------------------- Ad Grant structure (generate, do not upload) -------------------- */
+/* Product A in docs/specs/adgrant-and-dev-agents.md section 2: a policy-checked
+ * account structure the nonprofit can see and take to Google Ads Editor. Nothing
+ * here is a write into a Google Ads account. There is no customer id. */
+
+export type AdGrantBidStrategy =
+  | "MAXIMIZE_CONVERSIONS"
+  | "MAXIMIZE_CONVERSION_VALUE"
+  | "TARGET_CPA"
+  | "TARGET_ROAS"
+  | "MAXIMIZE_CLICKS"
+  | "MANUAL_CPC";
+
+export type AdGrantKeywordMatchType = "EXACT" | "PHRASE" | "BROAD";
+
+export interface AdGrantKeyword {
+  text: string;
+  matchType: AdGrantKeywordMatchType;
+}
+
+export interface AdGrantResponsiveSearchAd {
+  headlines: string[];
+  descriptions: string[];
+  finalUrl: string;
+  path1?: string;
+  path2?: string;
+}
+
+export interface AdGrantAdGroup {
+  name: string;
+  keywords: AdGrantKeyword[];
+  ads: AdGrantResponsiveSearchAd[];
+  /** Only meaningful when the campaign uses MANUAL_CPC. */
+  maxCpcUsd?: number;
+}
+
+export interface AdGrantSitelink {
+  text: string;
+  finalUrl: string;
+  description1?: string;
+  description2?: string;
+}
+
+export interface AdGrantCampaign {
+  name: string;
+  dailyBudgetUsd: number;
+  bidStrategy: AdGrantBidStrategy;
+  /** Geo-targets. Empty is a policy failure. */
+  locations: string[];
+  language: string;
+  adGroups: AdGrantAdGroup[];
+  sitelinks: AdGrantSitelink[];
+}
+
+export interface AdGrantAccountStructure {
+  organisationName: string;
+  /** Host ads may land on, no scheme. www and the apex are treated as one domain. */
+  authorisedDomain: string;
+  dailyBudgetUsd: number;
+  /**
+   * Accounts created on or after 22 April 2019 must use conversion-based Smart
+   * bidding. A structure we generate is always in that set.
+   */
+  smartBiddingRequired: boolean;
+  campaigns: AdGrantCampaign[];
+}
+
+export interface AdGrantGenerateRequest {
+  websiteUrl: string;
+  /** Country or region the ads should show in. Required so every campaign has a geo-target. */
+  location: string;
+  organisationName?: string;
+}
+
+export interface AdGrantQuotaView {
+  remaining: number;
+  cap: number;
+  /** Why the cap is three, in one paragraph. */
+  capReason: string;
+  /**
+   * True when the count is in the adgrant_generations table. False when this
+   * process is holding it in memory, which is what happens with no DATABASE_URL:
+   * a restart forgets the count.
+   */
+  durable: boolean;
+  /** Set when durable is false; the sentence the page should print. */
+  durableLine?: string;
+}
+
+export interface AdGrantGenerateResponse extends AdGrantQuotaView {
+  structure: AdGrantAccountStructure;
+  /** CSV for Google Ads Editor. Import it there. Nothing was written into an account. */
+  csv: string;
+  editorLine: string;
+}
+
+export interface AdGrantGenerateError extends Partial<AdGrantQuotaView> {
+  error: string;
+}

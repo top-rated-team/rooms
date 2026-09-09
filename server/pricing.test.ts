@@ -131,7 +131,15 @@ const SWEPT = ["../client/src", "../shared"];
  * exists to prevent. Kept because it is correct and was about to be made from
  * this side anyway.
  */
-const GENERATED_EXEMPT = ["shared/cases.ts", "shared/builds.ts", "shared/blog.ts"];
+/* shared/adgrant.ts is generated too, and it is exempt for a reason worth
+   stating: it is full of dollar figures — $10,000 a month, a $2 bid ceiling,
+   $329 a day — and every one of them is Google's own published programme
+   limit rather than a price we charge. This guard exists to catch a price of
+   OURS appearing somewhere it was not agreed, and it cannot tell the two apart
+   by looking. What keeps that file honest instead is scripts/build-adgrant.ts,
+   which fetches the figures rather than typing them, and the corrections list
+   the parcel applied on the way in. */
+const GENERATED_EXEMPT = ["shared/cases.ts", "shared/builds.ts", "shared/blog.ts", "shared/adgrant.ts"];
 
 function sourceFiles(dir: URL): URL[] {
   return readdirSync(dir).flatMap((entry) => {

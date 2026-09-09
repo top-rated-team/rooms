@@ -17,6 +17,7 @@
     "kb:build": "tsx scripts/build-kb.ts all",
     "kb:refresh": "tsx scripts/refresh-corpora.ts",
     "blog:build": "tsx scripts/build-blog.ts",
+    "adgrant:build": "tsx scripts/build-adgrant.ts",
     "test": "tsx --test \"server/**/*.test.ts\"",
     "verify": "npm run check && npm test && npm run build",
     "cases:pdf": "tsx scripts/build-cases-pdf.ts && \"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf=docs/case-studies.pdf docs/case-studies.html"

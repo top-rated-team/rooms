@@ -1,0 +1,40 @@
+{
+  "accountsProcessed": 4539,
+  "totals": {
+    "campaigns": 16575,
+    "adGroups": 108656,
+    "keywords": 3142469,
+    "ads": 244071
+  },
+  "campaignsPerAccount": {
+    "median": 1,
+    "avg": 3.7,
+    "min": 1,
+    "max": 224
+  },
+  "adGroupsPerAccount": {
+    "median": 6,
+    "avg": 23.9
+  },
+  "adGroupsPerCampaign": {
+    "median": 3,
+    "avg": 6.6
+  },
+  "keywordsPerAdGroup": {
+    "median": 9,
+    "avg": 28.9
+  },
+  "adsPerAdGroup": {
+    "median": 2,
+    "avg": 2.2
+  },
+  "sitelinksPerAccount": {
+    "median": 7,
+    "avg": 30.1
+  },
+  "calloutsPerAccount": {
+    "median": 5,
+    "avg": 11.4
+  },
+  "generatedAt": "2026-06-05T11:48:59.605Z"
+}
