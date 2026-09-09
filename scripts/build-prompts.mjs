@@ -39,21 +39,29 @@ const WAVES = [
      docs/parcels-programme-3-landed.json, so they no longer appear here — a
      re-run of a landed parcel is an agent rewriting a finished file. */
   { n: 9, keys: ["adgrant-site"], alone: true, landed: true },
+  /* Waves 10 to 12 have run and their parcels are retired to
+     docs/parcels-programme-3-landed.json. booking-gate landed clean. The other
+     two came back with defects and their code is on main but sealed; the two
+     waves below are what repairs and finishes them, so re-running the retired
+     parcels would undo that. */
   /*
-   * The booking popup's last two pieces, and they are two waves rather than
-   * one because they change the same dialog and the same booking server.
-   * booking-gate first: it turns the WhatsApp step from a receipt into a gate,
-   * which is what makes the sentence under the field true. booking-linkedin
-   * second, and it is blocked on the owner's LinkedIn app being approved
-   * anyway — the button is already on screen and disabled.
+   * Waves 11 and 12 came back reviewed: five dimensions, thirty-four claims,
+   * eighteen surviving an adversarial pass told to refute them. Their code is
+   * on main and SEALED — the guard block at the room-access routes in
+   * server/routes.ts names the three defects that put it there. These two
+   * waves fix it in place and unseal it, and each of them also finishes the
+   * feature the sealed half was only part of.
+   *
+   * room-login first, and not only because its defect is the worse of the two:
+   * it carries the one thing the owner has now asked for three times and still
+   * cannot see on the site. booking-linkedin's button is blocked on LinkedIn
+   * approving the app anyway.
+   *
+   * Still one parcel per wave on server/routes.ts, shared/api.ts and
+   * shared/schema.ts — both of these want the first two.
    */
-  { n: 10, keys: ["booking-gate"], alone: true },
-  { n: 11, keys: ["booking-linkedin"], alone: true },
-  /* The fork's other half. We decided a visitor who is not signed in has
-     nothing to look up, and for us that is fine — but a fork has no WhatsApp to
-     prove anybody with, so without this a cleared browser loses every room on
-     somebody else's deployment with no way back at all. */
-  { n: 12, keys: ["room-access-email"], alone: true },
+  { n: 13, keys: ["room-login"], alone: true },
+  { n: 14, keys: ["booking-signin-fix"], alone: true },
 ];
 
 function prompt(key) {
