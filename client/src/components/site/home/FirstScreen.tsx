@@ -141,24 +141,21 @@ export function FirstScreen() {
           the owner's instruction. Same arithmetic the header carries: the image
           sits on the baseline, so its top is its own height above it, and
           translate-y = height − cap-height brings that top to the cap line.
-          Outfit's cap is about 0.70em, so the
-          translate is height minus 0.70em at whatever height the mark is.
+          MEASURED, NOT DERIVED. The formula I kept applying —
+          translate = height minus cap-height — is for a box whose bottom sits
+          on the baseline by CSS default, and then it double-counts: an
+          inline-block with vertical-align baseline ALREADY has its bottom on
+          the baseline, so its top is already one em above it, which for this
+          face is already the ink top. Every translate I added pushed it below
+          the line, and I did it three times.
 
-          THE NUMBERS COME OFF THE OWNER'S OWN REFERENCE IMAGE rather than off
-          my judgement, because two rounds of adjusting by eye went past it in
-          both directions. Measured from it: the mark is 38px against a 38.5px
-          em, so 1em; its top sits one pixel under the cap line, so level; and
-          the gap to the D is 7px, so 0.18em. Height 1em with the top on the cap
-          line puts the bottom 0.30em under the baseline, which is what his
-          image shows. The
-          header adds a further 0.11em of overhang because there he asked for
-          slightly above; here he asked for level, so there is no overhang term.
-
-          The size steps down on a phone so the line holds: 44 characters at the
-          19px body size is about 410px against roughly 342px of content width.
-          !important because .type-body in the frozen index.css is a plain class
-          selector and beats a Tailwind utility of equal specificity — the first
-          attempt at this shrank nothing at all, silently.
+          So the number comes off a render measured the same way the owner's
+          reference image was measured: at 1440 and dpr 3 the mark's top landed
+          at 1637 against a text ink top of 1621, sixteen device pixels low,
+          and sixteen device pixels is the 0.3em that was there. At zero they
+          are level — 1620 against 1621 — which is what his reference shows,
+          where the mark sits one pixel under the ink top. 0.02em is that one
+          pixel. Do not reintroduce a cap-height term here.
         */}
         <p
           className="type-body mt-[var(--s2)] ps-[0.25rem] font-display font-medium [font-size:clamp(0.82rem,3.5vw,var(--type-body))!important]"
@@ -168,7 +165,7 @@ export function FirstScreen() {
             src="/assets/top-rated-logo.png"
             alt=""
             aria-hidden="true"
-            className="me-[0.18em] inline-block h-[1em] w-[1em] translate-y-[0.3em]"
+            className="me-[0.18em] inline-block h-[1em] w-[1em] translate-y-[0.02em]"
           />
           Digital Experts + any AI agents in one room.
         </p>
