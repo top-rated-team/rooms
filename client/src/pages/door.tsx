@@ -33,6 +33,7 @@ import Footer from "@/components/site/Footer";
 import { isPublicDoor } from "@/components/site/GatedOffers";
 import Header from "@/components/site/Header";
 import KeepStrip from "@/components/site/KeepStrip";
+import { RoomMenu } from "@/components/site/RoomMenu";
 import TalkToUs from "@/components/site/TalkToUs";
 import { DoorCases } from "@/components/site/Cases";
 import { DoorPrice } from "@/components/site/Ladder";
@@ -247,57 +248,14 @@ function DoorPage({ door }: { door: DoorDef }) {
    */
   const booking = useBooking();
   const [messageOpen, setMessageOpen] = useState(false);
-  const [openingRoom, setOpeningRoom] = useState(false);
-  const [roomError, setRoomError] = useState<string | null>(null);
 
-  const openRoom = useCallback(async () => {
-    if (openingRoom) return;
-    setOpeningRoom(true);
-    setRoomError(null);
-    const result = await createRoom();
-    setOpeningRoom(false);
-    if (!result.ok) {
-      setRoomError(result.error);
-      return;
-    }
-    navigate(result.room.path);
-  }, [createRoom, navigate, openingRoom]);
-
-  /*
-   * THE ROOM, IN EVERY SECTION OF THE PAGE, on the owner's instruction — and it
-   * replaces the nav item, which he had removed in the same breath. The reason
-   * he gave for both is one reason: a nav item points at a place, and this is an
-   * offer, so it belongs beside the offer rather than in the chrome.
-   *
-   * It repeats, and that is deliberate against this file's own older rule.
-   * "One action on the page" was written to stop a second "talk to a person"
-   * competing with the first, and it is still right about that. This is not a
-   * second call to action — it is the SAME one, said again where a reader who
-   * has scrolled past it can act on it. A door page runs to six screens; an
-   * offer made once at the top of it is an offer most readers never see.
-   *
-   * One handler, one error, one busy state, three call sites.
-   */
-  const openRoomAction = (where: "hero" | "panel" | "close") => (
-    <div>
-      <button
-        type="button"
-        /* Distinct per place: the same button rendered three times under one
-           id would make any assertion about "the" open-room button match
-           three, which is the kind of test that passes for the wrong reason. */
-        data-testid={`button-door-open-room-${where}`}
-        className={where === "hero" ? ACTION : ACTION_QUIET}
-        onClick={() => void openRoom()}
-        disabled={openingRoom}
-      >
-        {openingRoom ? "Opening a room…" : "Open a room"}
-      </button>
-      {roomError ? (
-        <p role="alert" className="type-note mt-[var(--s2)] text-destructive">
-          {roomError}
-        </p>
-      ) : null}
-    </div>
+  const roomMenu = (where: "hero" | "panel" | "close") => (
+    <RoomMenu
+      className={where === "hero" ? ACTION : ACTION_QUIET}
+      doorId={door.id}
+      agentId={door.firstAgentId}
+      testId={`button-door-open-room-${where}`}
+    />
   );
 
   const room = panel.stage === "kept" ? panel.room : null;
@@ -332,12 +290,11 @@ function DoorPage({ door }: { door: DoorDef }) {
 
           <div className="mt-[var(--s4)] grid items-end gap-[var(--s4)] pb-[var(--s6)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)]">
             {/*
-              THE HEADLINE STANDS ALONE, and the actions mirror the home page's
-              first screen: the same three, in the same order, under the
-              paragraph that explains the offer. The room moved out of here to
-              the panel band below — the owner's call, and it reads better: the
-              hero asks, and the section that shows what asking looks like is
-              the one that offers the room.
+              THE ACTIONS MIRROR THE HOME PAGE: the room first, then Book a call,
+              then Leave a message. Ask AI agent stays, quieter, because this
+              page is still the place you ask. The control is the fused one —
+              return to a room this browser remembers, or start a new one stamped
+              with this door.
             */}
             <h1 className={DISPLAY} data-testid="text-door-headline">
               {door.headline}
@@ -352,7 +309,8 @@ function DoorPage({ door }: { door: DoorDef }) {
                   once below, beside the sentence that says why there is no
                   panel — on that door the room is not ours to open either. */}
               {panelIsOpen ? (
-                <p className="mt-[var(--s4)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s2)]">
+                <div className="mt-[var(--s4)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s2)]">
+                  {roomMenu("hero")}
                   <button type="button" data-testid="button-door-ask" className={ACTION} onClick={askInPanel}>
                     Ask AI agent
                   </button>
@@ -374,16 +332,14 @@ function DoorPage({ door }: { door: DoorDef }) {
                   >
                     Leave a message
                   </button>
-                </p>
+                </div>
               ) : null}
             </div>
           </div>
         </div>
 
         {/* --------------------------- the panel band ------------------------ */}
-        {/* id="panel" is the header's "Open a room" target, and it is the same
-            id the home page's section uses so one handler serves both. The
-            scroll margin keeps the heading clear of the sticky bar. */}
+        {/* The scroll margin keeps the heading clear of the sticky bar. */}
         <div
           id="panel"
           className="scroll-mt-[var(--s4)] border-y border-border bg-card py-[var(--s5)] lg:py-[var(--s6)]"
@@ -411,7 +367,7 @@ function DoorPage({ door }: { door: DoorDef }) {
                     is what it is: the panel demonstrates, the room is the thing.
                     Under the heading it would have been a second title.
                   */}
-                  <div className="mt-[var(--s3)]">{openRoomAction("panel")}</div>
+                  <div className="mt-[var(--s3)]">{roomMenu("panel")}</div>
                 </>
               ) : (
                 <>
@@ -706,7 +662,7 @@ function DoorPage({ door }: { door: DoorDef }) {
                   Ask first if you would rather. It costs nothing, and it is the fastest way to find out whether you
                   need us at all — but the room is the thing, and it opens without a question.
                 </p>
-                <div className="mt-[var(--s3)]">{openRoomAction("close")}</div>
+                <div className="mt-[var(--s3)]">{roomMenu("close")}</div>
               </>
             ) : (
               <p className={READ_MUTED}>

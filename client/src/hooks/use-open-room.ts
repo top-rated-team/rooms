@@ -2,8 +2,6 @@ import { useCallback, useState } from "react";
 import { useLocation } from "wouter";
 
 import type { CreateWorkspaceResponse } from "@shared/api";
-import { GENERAL_ROOM_ID } from "@shared/playbook";
-import { roomSource } from "@/components/site/home/doorText";
 
 /**
  * Open a room with nothing asked first.
@@ -15,19 +13,44 @@ import { roomSource } from "@/components/site/home/doorText";
  * door page, which goes through usePanelState — and the first screen needs
  * neither of those, only the plain case. So the plain case is here, once.
  *
- * POST /api/workspaces takes no question. The door stamp is GENERAL_ROOM_ID
- * rather than the default door: a room opened from the front page is not a
- * conversion-tracking room, and stamping it as one gave it that door's
- * checklist and that door's name. See shared/playbook.ts.
+ * POST /api/workspaces takes no question. The default door stamp is `general`
+ * (GENERAL_ROOM_ID in shared/playbook.ts) rather than the site's default door:
+ * a room opened from the front page is not a conversion-tracking room, and
+ * stamping it as one gave it that door's checklist and that door's name. A
+ * door page passes its own id so the room that opens is that door's room.
+ *
+ * The id is written here as a literal so this hook can sit in the site header
+ * without pulling shared/playbook.ts — and the campaign keys are written here
+ * rather than imported from doorText.ts, for the same reason. Both must stay
+ * in step with those files.
  *
  * `entered: "direct"` is the same marker HouseAsk sets: the lead inbox should
  * not have to guess whether somebody walked in or kept an answer.
  */
+const GENERAL_ROOM_ID = "general";
+const SOURCE_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "oppref"];
+
 const RATE_LIMITED = "That is a lot of rooms from one address. Give it a minute, or book a call instead.";
 const FAILED = "The room could not be opened. Try again, or write to us.";
 const OFFLINE = "Network error, so no room was opened.";
 
-export function useOpenRoom() {
+function roomSource(doorId: string): Record<string, string> {
+  if (typeof window === "undefined") return { door: doorId };
+  const out: Record<string, string> = {};
+  const params = new URLSearchParams(window.location.search);
+  for (const key of SOURCE_KEYS) {
+    const value = params.get(key);
+    if (value) out[key] = value.slice(0, 200);
+  }
+  out.landing = window.location.pathname;
+  out.door = doorId;
+  if (document.referrer) out.referrer = document.referrer.slice(0, 300);
+  return out;
+}
+
+export function useOpenRoom(options?: { doorId?: string; agentId?: string | null }) {
+  const doorId = options?.doorId ?? GENERAL_ROOM_ID;
+  const agentId = options?.agentId ?? undefined;
   const [, navigate] = useLocation();
   const [opening, setOpening] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +64,8 @@ export function useOpenRoom() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          source: { ...roomSource(GENERAL_ROOM_ID), entered: "direct" },
+          ...(agentId ? { agentId } : {}),
+          source: { ...roomSource(doorId), entered: "direct" },
         }),
       });
       if (!res.ok) {
@@ -55,7 +79,7 @@ export function useOpenRoom() {
     } finally {
       setOpening(false);
     }
-  }, [navigate, opening]);
+  }, [agentId, doorId, navigate, opening]);
 
   return { open, opening, error };
 }

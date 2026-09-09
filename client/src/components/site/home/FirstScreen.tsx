@@ -19,7 +19,7 @@ import { Fragment, lazy, Suspense, useState } from "react";
 import { Link } from "wouter";
 
 import { BOOK_A_CALL_URL, PROOF, WHATSAPP_NUMBER, WHATSAPP_URL } from "@shared/roster";
-import { useOpenRoom } from "@/hooks/use-open-room";
+import { RoomMenu } from "@/components/site/RoomMenu";
 import { useBooking } from "@/hooks/use-booking";
 
 
@@ -41,7 +41,6 @@ const ACTION_QUIET =
 export function FirstScreen() {
   const [messageOpen, setMessageOpen] = useState(false);
   const booking = useBooking();
-  const room = useOpenRoom();
 
   return (
     <section className="mx-auto grid max-w-[var(--page)] grid-cols-1 items-end gap-[var(--s4)] px-[var(--s3)] py-[var(--s5)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)] lg:py-[var(--s6)]">
@@ -211,16 +210,8 @@ export function FirstScreen() {
           looking like body text. Stating the class on each one is the only
           version of this that cannot drift.
         */}
-        <p className="mt-[var(--s3)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]">
-          <button
-            type="button"
-            data-testid="button-home-open-a-room"
-            onClick={() => void room.open()}
-            disabled={room.opening}
-            className={`${ACTION_LOUD} disabled:opacity-50`}
-          >
-            {room.opening ? "Opening a room…" : "Open a room"}
-          </button>
+        <div className="mt-[var(--s3)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]">
+          <RoomMenu className={ACTION_LOUD} testId="button-home-open-a-room" />
           <a
             href={BOOK_A_CALL_URL}
             target="_blank"
@@ -251,12 +242,7 @@ export function FirstScreen() {
           >
             {WHATSAPP_NUMBER}
           </a>
-        </p>
-        {room.error ? (
-          <p role="alert" className="type-note mt-[var(--s2)] text-destructive">
-            {room.error}
-          </p>
-        ) : null}
+        </div>
       </div>
 
       {messageOpen ? (
