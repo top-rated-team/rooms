@@ -129,7 +129,22 @@ export function WorkspaceSidebar({
     };
   }, [agentChannels, members]);
 
-  const agentsShown = allAgents ? [...here, ...elsewhere] : here;
+  /*
+   * SIX BY DEFAULT, on the owner's instruction. It used to show only the agents
+   * already in the room — one in a general room, two in a door's — so the rest
+   * of the roster existed behind a button labelled with a number, and a visitor
+   * had no reason to press it.
+   *
+   * Six rather than all of them for the reason the seed is two: every agent
+   * channel a visitor opens renders four one-click starters, and each click
+   * spends one of the room's thirty turns an hour. Six names is a menu; twelve
+   * is an invitation to spend the hour reading it.
+   */
+  const AGENTS_SHOWN = 6;
+  const agentsShown = allAgents
+    ? [...here, ...elsewhere]
+    : [...here, ...elsewhere.slice(0, Math.max(0, AGENTS_SHOWN - here.length))];
+  const hidden = allAgents ? 0 : Math.max(0, here.length + elsewhere.length - agentsShown.length);
 
   return (
     <aside className={cn("flex w-[15rem] shrink-0 flex-col bg-muted", className)} data-testid="sidebar-workspace">
@@ -200,7 +215,7 @@ export function WorkspaceSidebar({
             </Row>
           );
         })}
-        {elsewhere.length > 0 ? (
+        {hidden > 0 || allAgents ? (
           <button
             type="button"
             onClick={() => setAllAgents((v) => !v)}
@@ -208,7 +223,7 @@ export function WorkspaceSidebar({
             aria-expanded={allAgents}
             data-testid="button-more-agents"
           >
-            {allAgents ? "Fewer" : `${elsewhere.length} more`}
+            {allAgents ? "Fewer" : `${hidden} more`}
           </button>
         ) : null}
       </nav>

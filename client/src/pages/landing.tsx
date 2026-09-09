@@ -32,11 +32,11 @@ import TalkToUs from "@/components/site/TalkToUs";
  * which is what the doors were always for.
  * ------------------------------------------------------------------------- */
 
-const PAGE_TITLE = "Top-Rated Team — paid ads, measurement, and the AI around them";
+const PAGE_TITLE = "Top-Rated Team — hire a hybrid team for your business";
 /* No offer is named. Which rows exist and what they are called is data, and a
  * description that lists them would keep naming a row the day it changes. */
 const PAGE_DESCRIPTION =
-  "Paid advertising, the measurement under it, and the custom AI around both — one workspace behind all of them. Ask an agent a question and get an answer from documentation, with the page it used, for free and without giving a name.";
+  "A free expert read of what the AI agents and automations in your ad accounts have been doing, then the work it turns up: paid advertising and the measurement under it, Google Ad Grants, inbound LinkedIn on the official API, and custom AI around all of it. Digital experts and AI agents in one room, with no signup.";
 
 export function Landing() {
   // No helmet dependency: each route sets its own and puts back what it found.

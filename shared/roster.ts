@@ -847,7 +847,7 @@ export const EXPERTS: ExpertDef[] = [
   {
     id: "dan",
     memberKey: "human:dan",
-    name: "Dan B.",
+    name: "Dan Burykin",
     title: "Founder & Lead Strategist",
     initials: "DB",
     specialties: ["Google Ads Strategy", "B2B SaaS", "Lead Generation", "Account Audits"],

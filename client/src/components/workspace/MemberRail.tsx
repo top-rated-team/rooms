@@ -359,6 +359,26 @@ interface MemberRowProps {
   onRevoke?: (memberKey: string) => void;
 }
 
+/**
+ * What a hover says about a person, and it is the roster's own words.
+ *
+ * The owner asked to see "a short description of their expertise" on hover.
+ * ExpertDef already carries `title` and `specialties`, which is exactly that
+ * and is already true — so this reads them rather than inventing a sentence.
+ *
+ * A native title attribute rather than a floating card: it needs no state, no
+ * portal and no decision about touch, and the room's interface is the one place
+ * in this project with a standing instruction not to complicate it. The same
+ * text is on the person's DM, where a phone can read it.
+ */
+function hoverFor(member: Member): string | undefined {
+  if (member.kind === "agent") return AGENT_BY_ID[member.memberKey.replace(/^agent:/, "")]?.title;
+  const expert = EXPERT_BY_KEY[member.memberKey];
+  if (!expert) return undefined;
+  const specialties = expert.specialties?.length ? ` — ${expert.specialties.join(", ")}` : "";
+  return `${expert.title}${specialties}`;
+}
+
 function MemberRow({ member, detail, viewer, company, onOpenDm, onRevoke }: MemberRowProps) {
   const [limitsOpen, setLimitsOpen] = useState(false);
   const badge = badgeFor(member, detail);
@@ -380,7 +400,7 @@ function MemberRow({ member, detail, viewer, company, onOpenDm, onRevoke }: Memb
         <MemberGlyph member={member} dimmed={Boolean(revoked)} />
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-3">
-            <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-2" title={hoverFor(member)}>
               {canDm ? (
                 <button
                   type="button"
@@ -396,6 +416,14 @@ function MemberRow({ member, detail, viewer, company, onOpenDm, onRevoke }: Memb
               <span className={LABEL} data-testid={`badge-${member.memberKey}`}>
                 {badge}
               </span>
+              {/* The role IN THIS ROOM — client, contractor, booster — beside the
+                  name and only where the room set one. A room that has not
+                  decided says nothing rather than falling back to a job title. */}
+              {member.role && member.kind !== "agent" ? (
+                <span className={cn(LABEL, "text-muted-foreground")} data-testid={`role-${member.memberKey}`}>
+                  {member.role}
+                </span>
+              ) : null}
             </div>
 
             {viewer === "owner" && !revoked && onRevoke && control ? (
@@ -412,7 +440,16 @@ function MemberRow({ member, detail, viewer, company, onOpenDm, onRevoke }: Memb
 
           <AccountabilityLine line={line} staysOpen={staysOpen} memberKey={member.memberKey} />
           {detail?.note ? <p className={cn(META, "mt-1 text-muted-foreground")}>{detail.note}</p> : null}
-          {!detail?.note && role && member.kind !== "agent" ? (
+          {/*
+            THE ROOM ROLE LEFT THIS LINE. It used to print under the name for
+            every person, which meant a roster job title — "Founder & Lead
+            Strategist" — sat in every room whether or not it told the reader
+            anything. What is worth saying there is the role IN THIS ROOM:
+            client, contractor, booster. That is `member.role`, it is set only
+            where a room has decided one, and it is now a right-aligned label
+            beside the name — see the header of the row above.
+          */}
+          {!detail?.note && role && member.kind !== "agent" && !member.role ? (
             <p className={cn(META, "mt-1 truncate text-muted-foreground")}>{role}</p>
           ) : null}
 
@@ -511,10 +548,17 @@ export function MemberRail({
     const visible = members.filter((m) => m.kind !== "system");
     const byName = (a: Member, b: Member) => a.displayName.localeCompare(b.displayName);
     return {
-      // The visitor stays at the top: the first row of the list is themselves.
+      /*
+       * The visitor stays first — the first row of this list is themselves, and
+       * that rule predates the rest of it. Then the owner, pinned, on his own
+       * instruction: he is in every room of ours and a client looking for
+       * somebody to hold answerable should not have to read down an
+       * alphabetical list for the name on the contract.
+       */
       people: [
         ...visible.filter((m) => m.kind === "visitor"),
-        ...visible.filter((m) => m.kind === "expert").sort(byName),
+        ...visible.filter((m) => m.kind === "expert" && OWNER_KEYS.has(m.memberKey)).sort(byName),
+        ...visible.filter((m) => m.kind === "expert" && !OWNER_KEYS.has(m.memberKey)).sort(byName),
       ],
       // Ours first, then agents somebody else brought, each group by name.
       agents: visible
@@ -536,7 +580,7 @@ export function MemberRail({
 
       {people.length > 0 ? (
         <>
-          <h3 className={cn(LABEL, "mt-5")}>People</h3>
+          <h3 className={cn(LABEL, "mt-5")}>Experts</h3>
           <ul className="mt-1">
             {people.map((member) => (
               <MemberRow
