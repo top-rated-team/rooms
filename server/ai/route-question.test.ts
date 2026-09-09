@@ -30,8 +30,13 @@ function assertOnlyLive(result: RouteQuestionResult, label: string): void {
     assert.ok(door, `${label}: ${id} is not a door`);
     assert.equal(door.status, "live", `${label}: router returned ${id}, whose status is ${door.status}`);
   }
-  assert.ok(!doorIds(result).includes("white-label"), `${label}: white-label is coming`);
-  assert.ok(!doorIds(result).includes("linkedin-growth"), `${label}: linkedin-growth is coming`);
+  /* Derived from the table, not named in it. These two lines used to name
+     white-label and linkedin-growth, and the first outlived its fact: the door
+     has a body now, it is live, and the router is right to offer it. A guard
+     that hardcodes a door has to be edited every time the table changes,
+     which is exactly how a guard turns into a lie. */
+  for (const door of DOORS.filter((row) => row.status !== "live"))
+    assert.ok(!doorIds(result).includes(door.id), `${label}: ${door.id} is ${door.status}`);
 }
 
 test("a question with an unmistakable subject routes to that door", () => {

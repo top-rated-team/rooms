@@ -334,7 +334,12 @@ const NOT_HERE = [
 /** One offer, one line, in the shape the convention uses: `- [name](url): notes`. */
 function indexLine(door: DoorDef): string {
   const tier = DOOR_TIERS[door.tier];
-  const state = answers(door) ? "" : " Not open yet.";
+  /* `answers` is about a panel, not about a door. A door that is open and has
+     no agent — the audit, white label — is open, and saying "Not open yet" of
+     it is a plain falsehood on a file written for machines to read. The long
+     entry below already draws the three-way distinction; this line now draws
+     the same one. */
+  const state = door.status === "live" ? "" : " Not open yet.";
   return `- [${door.headline}](${url(door.path)}): ${firstSentence(door.blurb)}${state} ${tier.label}; invoiced by ${door.contract.legalName}.`;
 }
 

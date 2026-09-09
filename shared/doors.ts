@@ -508,9 +508,12 @@ export const DOORS: DoorDef[] = [
      * is the two offers, the contact and a way to write — and no form pretending
      * to be onboarding.
      *
-     * `coming` because the page here is not built. The offer itself is live and
-     * has been for years, at top-rated.team/white-label, which is where the
-     * apex migration has to land it.
+     * `live` since the body was written. It was `coming` for one reason only —
+     * there was no page here — and WhiteLabelBody.tsx is that page: the two
+     * offers, the four questions before either is real, and the repository
+     * behind the second one. `firstAgentId` stays null on purpose, so the door
+     * says "no agent of ours answers in this door" rather than "not open yet".
+     * Those are different sentences and only the first is true.
      */
     id: "white-label",
     slug: "white-label",
@@ -532,9 +535,7 @@ export const DOORS: DoorDef[] = [
     contract: TOP_RATED_TEAM,
     tier: "white",
     priceTier: "custom",
-    status: "coming",
-    comingLine:
-      "This page is not written yet. Until it is, top-rated.team/white-label describes the arrangement and a call covers the rest.",
+    status: "live",
     // No corpus, and not because one is missing: what a white-label arrangement
     // looks like is not documented by any platform. It is our own commercial
     // terms, and a person states those.

@@ -343,9 +343,7 @@ clients and answering to you. Or this platform runs under your name, with your
 own set of services rather than ours. Agencies use both, and so do teams that
 are not agencies.
 
-Status: not open yet. This page is not written yet. Until it is,
-top-rated.team/white-label describes the arrangement and a call covers the
-rest.
+Status: open, and no agent of ours answers in it.
 
 Tier: Ours end to end. Nobody else is in this one. One company, one contract,
 one invoice, and one place to take a complaint.

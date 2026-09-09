@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Link } from "wouter";
 
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
@@ -72,6 +73,17 @@ export default function CaseStudies() {
               top-rated.team
             </a>
             , which is where the figures come from — no case here was written for this page.
+          </p>
+          {/* The arithmetic, on the reader's own numbers rather than ours. It
+              belongs here and not in the hero: somebody who has just read what
+              was done in twenty-two paid ads accounts is the one person on this
+              site with a reason to run it. */}
+          <p className={`mt-[var(--s3)] ${READ_MUTED}`}>
+            To put your own numbers through the same arithmetic, use the{" "}
+            <Link href="/roi-calculator" data-testid="link-cases-roi-calculator" className={LINK}>
+              Google Ads ROI calculator
+            </Link>
+            .
           </p>
         </section>
 
