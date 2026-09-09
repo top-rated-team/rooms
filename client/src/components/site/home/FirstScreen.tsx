@@ -20,8 +20,47 @@ import { Link } from "wouter";
 
 import { BOOK_A_CALL_URL, PROOF } from "@shared/roster";
 import { RoomMenu } from "@/components/site/RoomMenu";
+import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBooking } from "@/hooks/use-booking";
 
+
+/**
+ * A term in the subtitle that has something behind it.
+ *
+ * delayDuration={0} on the Root, not on the provider: the provider's 200ms is
+ * right for a dense panel where a pointer crosses many targets on its way
+ * somewhere, and wrong for two words in a sentence that the reader has
+ * deliberately stopped on.
+ *
+ * The trigger is a span rather than the button Radix renders by default,
+ * because this sits mid-sentence and a button would break the line's own
+ * typography. asChild does that, and tabIndex puts the keyboard back — the
+ * native title it replaces was never reachable that way at all.
+ *
+ * No touch branch. A tooltip does not open on tap, and neither did the title;
+ * making one do so means deciding what a tap on a word in a paragraph means,
+ * which is a bigger question than this sentence is asking.
+ */
+function Hover({ text, testId, children }: { text: string; testId: string; children: React.ReactNode }) {
+  return (
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>
+        <span
+          tabIndex={0}
+          className="underline decoration-from-font underline-offset-[0.18em] outline-none focus-visible:rounded-[2px] focus-visible:ring-2 focus-visible:ring-ring"
+          data-testid={testId}
+        >
+          {children}
+        </span>
+      </TooltipTrigger>
+      <TooltipPortal>
+        <TooltipContent side="bottom" align="start" className="max-w-[min(38ch,calc(100vw-2rem))] text-balance">
+          {text}
+        </TooltipContent>
+      </TooltipPortal>
+    </Tooltip>
+  );
+}
 
 /** The agency profile the record below is drawn from. */
 const UPWORK_AGENCY_URL = "https://www.upwork.com/agencies/google/";
@@ -165,6 +204,16 @@ export function FirstScreen() {
           measurement wins — here the box grows downward from a fixed top,
           which is exactly what was asked for. Proportions untouched: it was
           square and it is square.
+
+          THEN ONE MORE, same instruction, same arithmetic: 21/19 = 1.105em.
+          Re-measured rather than assumed, and this time the box did NOT hold
+          its top: an inline-block sits on the baseline, so a taller one grows
+          upward, and at 1.105em the mark's ink top read 1618 device pixels
+          against the D's 1622 — four above, which is the one thing the owner
+          ruled out. So the translate carries those four back: 4/3 CSS pixels
+          at a 19px font is 0.0702em, and 0.02 + 0.0702 rounds to 0.09em.
+          Measured from the ink, not from the boxes — a box top includes
+          leading and would have called this aligned when it was not.
         */}
         <p
           className="type-body mt-[var(--s2)] ps-[0.25rem] font-display font-medium [font-size:clamp(0.82rem,3.5vw,var(--type-body))!important]"
@@ -174,20 +223,28 @@ export function FirstScreen() {
             src="/assets/top-rated-logo.png"
             alt=""
             aria-hidden="true"
-            className="me-[0.18em] inline-block h-[1.053em] w-[1.053em] translate-y-[0.02em]"
+            className="me-[0.18em] inline-block h-[1.105em] w-[1.105em] translate-y-[0.09em]"
           />
-          Digital Experts +{" "}
-          {/* A native title rather than a portal: it needs no state, no
-              decision about touch, and it is the same device the member rail
-              uses for the same job. The underline says there is something to
-              read; without it a tooltip is a secret. */}
-          <span
-            className="underline decoration-from-font underline-offset-[0.18em]"
-            title="Every service here has its own agent, grounded in that service's own documentation. You can admit your own agents to a room as well, and they can work alongside ours."
-            data-testid="text-home-any-agents"
+          {/* Not the native title any more. That one waits about a second
+              before it appears, in a delay the page cannot set, and the owner
+              wants both of these to answer the moment the pointer arrives — so
+              Radix, whose Root takes delayDuration={0}. The provider in
+              main.tsx sets 200ms for everything else and is not changed here.
+
+              Both terms are underlined because both now carry something to
+              read, and one underlined term beside a bare one that behaves
+              identically would teach the reader the wrong rule. tabIndex makes
+              each reachable by keyboard, which the native title never was. */}
+          <Hover text="Come in. We're inside!" testId="text-home-digital-experts">
+            Digital Experts
+          </Hover>{" "}
+          +{" "}
+          <Hover
+            text="Every service here has its own agent, grounded in that service's own documentation. You can admit your own agents to a room as well, and they can work alongside ours."
+            testId="text-home-any-agents"
           >
             any AI agents
-          </span>{" "}
+          </Hover>{" "}
           in one room.
         </p>
       </div>

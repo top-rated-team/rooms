@@ -13,9 +13,9 @@
  * OpenAPI enum does: ["account_status"]. A wrong source is a webhook that
  * silently never fires.
  *
- * Both point at ${PUBLIC_BASE_URL}/api/unipile/inbound and carry the same
- * shared secret in a header we name. UNIPILE_WEBHOOK_SECRET is that secret,
- * not an address.
+ * Both point at ${PUBLIC_BASE_URL}${INBOUND_PATH} and carry the same shared
+ * secret in a header we name. UNIPILE_WEBHOOK_SECRET is that secret, not an
+ * address.
  *
  * Two silent failures if we skip the documented headers:
  *   1. A webhook created by API has no Content-Type by default, so
@@ -24,12 +24,30 @@
  *   2. There is no HMAC. Authentication is the secret in Unipile-Auth.
  *
  * Idempotent: list, find ours by request_url and source, create only when
- * absent, delete extras and anything pointing at a host we have retired.
+ * absent, delete extras and anything pointing at a host OR A PATH we have
+ * retired. That second half is what migrates the address without anybody
+ * opening a dashboard: change INBOUND_PATH, and the next boot deletes the
+ * webhooks on the old path and creates them on the new one.
  * Inert when Unipile, PUBLIC_BASE_URL or the secret is missing.
  */
 
 import {
   UNIPILE_UNCONFIGURED_LINE, available, unipileRequest, type UnipileResult } from "./client";
+
+/**
+ * Where the webhooks post. No vendor in it: this repository is public and
+ * forkable, a fork's provider may not be the one we use, and an address is
+ * the one part of a deployment a stranger reads before anything else.
+ */
+export const INBOUND_PATH = "/api/hooks/inbound";
+
+/**
+ * Addresses we used to answer on. Kept so the reconciler can recognise its own
+ * old webhooks and delete them; drop an entry only once no tenant can still
+ * hold a webhook pointing at it, because an unrecognised webhook is not
+ * cleaned up — it is left posting into a path that no longer exists.
+ */
+export const RETIRED_INBOUND_PATHS = ["/api/unipile/inbound"] as const;
 
 /** The header Unipile echoes back to us. Their own docs use this name. */
 export const UNIPILE_WEBHOOK_AUTH_HEADER = "Unipile-Auth";
@@ -83,11 +101,11 @@ function webhookSecret(): string | null {
   return raw && raw.length > 0 ? raw : null;
 }
 
-/** ${PUBLIC_BASE_URL}/api/unipile/inbound, or null when the base is unset. */
+/** ${PUBLIC_BASE_URL}${INBOUND_PATH}, or null when the base is unset. */
 export function inboundRequestUrl(): string | null {
   const raw = process.env.PUBLIC_BASE_URL?.trim().replace(/\/+$/, "");
   if (!raw) return null;
-  return `${raw}/api/unipile/inbound`;
+  return `${raw}${INBOUND_PATH}`;
 }
 
 function nameForSource(source: UnipileWebhookSource): string {
@@ -129,10 +147,10 @@ function sameUrl(left: string, right: string): boolean {
   return left.replace(/\/+$/, "") === right.replace(/\/+$/, "");
 }
 
-function isOurInboundPath(url: string): boolean {
+export function isOurInboundPath(url: string): boolean {
   try {
-    const parsed = new URL(url);
-    return parsed.pathname.replace(/\/+$/, "") === "/api/unipile/inbound";
+    const path = new URL(url).pathname.replace(/\/+$/, "");
+    return path === INBOUND_PATH || RETIRED_INBOUND_PATHS.includes(path as (typeof RETIRED_INBOUND_PATHS)[number]);
   } catch {
     return false;
   }

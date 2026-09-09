@@ -53,11 +53,18 @@ import { startDigestSchedule } from "./schedule";
 import { connectorMcp, connectorRouter } from "./connector";
 import { operatorGate, readOperator, writeOperator } from "./operator";
 import { acceptUnipileInbound, dispatchInbound } from "./unipile/inbound";
-import { ensureUnipileWebhooks, UNIPILE_WEBHOOK_AUTH_HEADER } from "./unipile/webhooks";
+import { ensureUnipileWebhooks, INBOUND_PATH, RETIRED_INBOUND_PATHS, UNIPILE_WEBHOOK_AUTH_HEADER } from "./unipile/webhooks";
 import { getBookingSlots, parseSlotsQuery } from "./booking/slots";
 import { postBooking } from "./booking/calendar";
 import { getBookingConfirmed, installBookingInbound } from "./booking/confirm";
+import {
+  bookingLinkedInAvailability,
+  completeBookingLinkedIn,
+  getBookingLinkedInSession,
+  startBookingLinkedIn,
+} from "./booking/signin";
 import { generateAdGrantStructure, getAdGrantGenerationQuota } from "./adgrant/generate";
+import { openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage } from "./room-access";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -589,6 +596,12 @@ export function registerRoutes(app: Express): void {
   });
   const identityWebhookLimit = rateLimit({ windowMs: 60_000, max: 120, message: "Too many requests. Wait a moment." });
   const bookingLimit = rateLimit({ windowMs: 60_000, max: 30, message: "Too many booking requests. Wait a moment." });
+  const roomAccessSendLimit = rateLimit({
+    windowMs: 60 * 60_000,
+    max: 10,
+    message: "Too many requests from this address. Try again later.",
+  });
+  const roomAccessOpenLimit = rateLimit({ windowMs: 60_000, max: 30, message: "Too many requests. Wait a moment." });
 
   /* --------------------------- workspaces --------------------------- */
 
@@ -1300,6 +1313,57 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
+  /* ---------------------- room access (emailed link) ---------------------- */
+  /*
+   * Two routes. POST sends a single-use link to an address, and the JSON it
+   * returns is the same whether or not a room was found. GET opens a room from
+   * that link — a different token from the room's own address, spent when it
+   * is used. GET without a token is whether sending is configured at all, so
+   * the form can say so before asking for an address.
+   */
+
+  app.get(
+    "/api/room-access",
+    roomAccessOpenLimit,
+    route(async (_req, res) => {
+      res.json(roomAccessAvailability());
+    }),
+  );
+
+  app.post(
+    "/api/room-access",
+    roomAccessSendLimit,
+    route(async (req, res) => {
+      const result = await sendRoomAccessLink({
+        email: req.body?.email,
+        publicBaseUrl: publicBaseUrl(req),
+      });
+      if (!result.ok) {
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.json(result.body);
+    }),
+  );
+
+  app.get(
+    "/api/room-access/:token",
+    roomAccessOpenLimit,
+    route(async (req, res) => {
+      const raw = req.params.token;
+      const token = Array.isArray(raw) ? raw[0] : raw;
+      const opened = openRoomAccess(token ?? "");
+      if (!opened.ok) {
+        res.setHeader("Cache-Control", "no-store");
+        res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+        res.status(404).type("html").send(spentPage(opened.line));
+        return;
+      }
+      res.setHeader("Cache-Control", "no-store");
+      res.redirect(302, `/w/${opened.workspaceToken}`);
+    }),
+  );
+
   /* ---------------------- room bridges (WhatsApp, ChatWoot, Slack, ClickUp) ---------------------- */
   /*
    * One route to connect or disconnect, and the inbound webhook from the other
@@ -1348,8 +1412,14 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
+  /* The retired addresses stay answerable. The reconciler moves the tenant's
+     webhooks onto INBOUND_PATH at boot, but it can only do that if it reaches
+     the provider, and a webhook still pointing at an address that 404s is a
+     confirmation silently thrown away — which is the exact failure this file
+     spent an evening on. Drop a retired path only after a boot has been seen
+     to reconcile. */
   app.post(
-    "/api/unipile/inbound",
+    [INBOUND_PATH, ...RETIRED_INBOUND_PATHS],
     identityWebhookLimit,
     route(async (req, res) => {
       const result = acceptUnipileInbound(req.body, req.get(UNIPILE_WEBHOOK_AUTH_HEADER) ?? undefined);
@@ -1401,6 +1471,56 @@ export function registerRoutes(app: Express): void {
          exists — not merely that a WhatsApp message arrived. */
       const code = typeof req.query.code === "string" ? req.query.code : "";
       res.json(getBookingConfirmed(code));
+    }),
+  );
+
+  app.get(
+    "/api/booking/linkedin",
+    bookingLimit,
+    route(async (req, res) => {
+      const sessionId = typeof req.query.session === "string" ? req.query.session : "";
+      if (sessionId) {
+        const session = getBookingLinkedInSession(sessionId);
+        if (!session) {
+          res.status(404).json({ error: "That sign-in has expired. Pick a time again." });
+          return;
+        }
+        res.json(session);
+        return;
+      }
+
+      const date = typeof req.query.date === "string" ? req.query.date : "";
+      const time = typeof req.query.time === "string" ? req.query.time : "";
+      if (!date && !time) {
+        res.json(bookingLinkedInAvailability());
+        return;
+      }
+
+      const start = startBookingLinkedIn({
+        date,
+        time,
+        name: typeof req.query.name === "string" ? req.query.name : "",
+        topic: typeof req.query.topic === "string" ? req.query.topic : "",
+        returnPath: typeof req.query.return === "string" ? req.query.return : "/",
+        publicBaseUrl: publicBaseUrl(req),
+      });
+      if (!start.ok) {
+        res.status(503).json({ error: start.line });
+        return;
+      }
+      res.redirect(302, start.url);
+    }),
+  );
+
+  app.get(
+    "/api/booking/linkedin/callback",
+    route(async (req, res) => {
+      const result = await completeBookingLinkedIn({
+        code: typeof req.query.code === "string" ? req.query.code : undefined,
+        state: typeof req.query.state === "string" ? req.query.state : undefined,
+        error: typeof req.query.error === "string" ? req.query.error : undefined,
+      });
+      res.redirect(302, result.redirectTo);
     }),
   );
 

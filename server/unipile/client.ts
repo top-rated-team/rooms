@@ -23,7 +23,15 @@ import { clearTimeout, setTimeout } from "node:timers";
 
 import { OPERATOR_ALERT_TYPES, parseUnipileError, visitorLine, type UnipileError } from "./errors";
 
-const REQUEST_MS = 10_000;
+/**
+ * Raised from 10s on the owner's instruction, after production returned two
+ * 503s at exactly 10004ms on 9 Sep 2026 and then answered the same query in
+ * 5472ms. The calendar list and the event list each get this budget, so a
+ * slots request can still take twice it in the worst case — that is the reason
+ * it is 20 and not 60. A visitor watching a spinner for a minute has been
+ * failed just as surely as one shown an error, only later.
+ */
+const REQUEST_MS = 20_000;
 /** Two pauses, then stop. There is no Retry-After to honour. */
 const BACKOFF_MS = [400, 1_200] as const;
 const RETRY_STATUSES = new Set([503, 504]);

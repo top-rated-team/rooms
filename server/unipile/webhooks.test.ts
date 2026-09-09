@@ -15,8 +15,11 @@ import {
   WEBHOOK_SOURCE_ACCOUNT_STATUS,
   WEBHOOK_SOURCE_MESSAGING,
   UNIPILE_WEBHOOK_AUTH_HEADER,
+  INBOUND_PATH,
+  RETIRED_INBOUND_PATHS,
   ensureUnipileWebhooks,
   inboundRequestUrl,
+  isOurInboundPath,
   parseWebhook,
 } from "./webhooks";
 
@@ -24,8 +27,12 @@ const DSN = "unipile.test.example:9443";
 const KEY = "test-unipile-key-do-not-log";
 const SECRET = "test-unipile-webhook-secret";
 const BASE = "https://top-rated.team";
-const CURRENT = `${BASE}/api/unipile/inbound`;
-const RETIRED = "https://ai.top-rated.team/api/unipile/inbound";
+const CURRENT = `${BASE}${INBOUND_PATH}`;
+/* A retired HOST on the address we answer on now. */
+const RETIRED = `https://ai.top-rated.team${INBOUND_PATH}`;
+/* A retired PATH on the host we are. Both have to be recognised as ours, or
+   the reconciler leaves them posting into an address that is gone. */
+const RETIRED_PATH = `${BASE}${RETIRED_INBOUND_PATHS[0]}`;
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -53,6 +60,27 @@ afterEach(() => {
   delete process.env.UNIPILE_API_KEY;
   delete process.env.UNIPILE_WEBHOOK_SECRET;
   delete process.env.PUBLIC_BASE_URL;
+});
+
+describe("isOurInboundPath", () => {
+  it("claims the current address and every address we have retired", () => {
+    assert.equal(isOurInboundPath(CURRENT), true);
+    assert.equal(isOurInboundPath(`${CURRENT}/`), true);
+    assert.equal(isOurInboundPath(RETIRED), true);
+    assert.equal(isOurInboundPath(RETIRED_PATH), true);
+  });
+
+  it("does not claim somebody else's webhook", () => {
+    /* The tenant holds dozens belonging to another product. Claiming one
+       would delete it. */
+    assert.equal(isOurInboundPath("https://example.repl.co/webhook"), false);
+    assert.equal(isOurInboundPath(`${BASE}/api/bridge/inbound`), false);
+    assert.equal(isOurInboundPath("not a url"), false);
+  });
+
+  it("keeps the vendor out of the address a stranger reads first", () => {
+    assert.equal(INBOUND_PATH.toLowerCase().includes("unipile"), false);
+  });
 });
 
 describe("inboundRequestUrl", () => {
@@ -202,5 +230,43 @@ describe("ensureUnipileWebhooks", () => {
     const result = await ensureUnipileWebhooks(fetchImpl);
     assert.equal(result.ok, true);
     assert.deepEqual(deleted.sort(), ["wh_msg_b", "wh_old"].sort());
+  });
+
+  it("moves the tenant off a retired PATH without anybody opening a dashboard", async () => {
+    /* The address changed on 9 Sep 2026 to keep the vendor's name out of it.
+       Nothing was reconfigured by hand: the reconciler recognises the webhooks
+       it made on the old path, deletes them, and makes them again on the new
+       one. If this test fails, changing INBOUND_PATH silently strands the live
+       webhooks on an address the server no longer answers. */
+    setConfigured();
+    const deleted: string[] = [];
+    const created: string[] = [];
+    const fetchImpl: typeof fetch = async (input, init) => {
+      const url = String(input);
+      const method = init?.method ?? "GET";
+      if (method === "GET") {
+        return jsonResponse(200, {
+          items: [
+            { id: "wh_old_msg", request_url: RETIRED_PATH, source: "messaging" },
+            { id: "wh_old_acc", request_url: RETIRED_PATH, source: "account_status" },
+          ],
+        });
+      }
+      if (method === "DELETE") {
+        deleted.push(url.slice(url.lastIndexOf("/") + 1));
+        return jsonResponse(200, {});
+      }
+      if (method === "POST") {
+        const body = JSON.parse(String(init?.body ?? "{}"));
+        created.push(String(body.request_url));
+        return jsonResponse(201, { id: `wh_new_${created.length}`, request_url: body.request_url, source: body.source });
+      }
+      return jsonResponse(500, {});
+    };
+
+    const result = await ensureUnipileWebhooks(fetchImpl);
+    assert.equal(result.ok, true);
+    assert.deepEqual(deleted.sort(), ["wh_old_acc", "wh_old_msg"]);
+    assert.deepEqual(created, [CURRENT, CURRENT]);
   });
 });

@@ -80,7 +80,17 @@ export const WHATSAPP_CHAT_WARNING =
 const LINKEDIN_AUTH = "https://www.linkedin.com/oauth/v2/authorization";
 const LINKEDIN_TOKEN = "https://www.linkedin.com/oauth/v2/accessToken";
 const LINKEDIN_USERINFO = "https://api.linkedin.com/v2/userinfo";
-const LINKEDIN_SCOPE = "openid profile";
+/*
+ * `email` is the third permission LinkedIn's own page names: "Required to
+ * retrieve the member's email address." It only works once Sign In with
+ * LinkedIn using OpenID Connect is provisioned on the app in LinkedIn's
+ * developer portal. Even then, LinkedIn documents `email` and
+ * `email_verified` as optional fields that may be absent from any response.
+ * Room binding still stores only `sub` and a name. Booking reads the address
+ * when it is there, and treats its absence as a booking with no address.
+ */
+export const LINKEDIN_SCOPE = "openid profile email";
+const MEMBER_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const OWN_MATERIAL_MIN_LENGTH = 200;
 const URL_PATTERN = /https?:\/\/\S+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)+\/\S+/i;
@@ -243,6 +253,14 @@ export function linkedinConfigured(): boolean {
   return Boolean(linkedinClientId() && linkedinClientSecret());
 }
 
+/** Client id and secret together, or nothing. Never logged. */
+export function linkedinCredentials(): { clientId: string; secret: string } | null {
+  const clientId = linkedinClientId();
+  const secret = linkedinClientSecret();
+  if (!clientId || !secret) return null;
+  return { clientId, secret };
+}
+
 function sweepPending(now: number = Date.now()): void {
   for (const [state, row] of pendingLinkedIn) {
     if (now - row.createdAt > PENDING_MS) pendingLinkedIn.delete(state);
@@ -257,6 +275,25 @@ function sweepPending(now: number = Date.now()): void {
 
 export function linkedinRedirectUri(publicBaseUrl: string): string {
   return `${publicBaseUrl.replace(/\/+$/, "")}/api/identity/linkedin/callback`;
+}
+
+/** Second redirect URI. A booking is not a room, so it cannot share the room callback. */
+export function bookingLinkedInRedirectUri(publicBaseUrl: string): string {
+  return `${publicBaseUrl.replace(/\/+$/, "")}/api/booking/linkedin/callback`;
+}
+
+export function linkedinAuthorizationUrl(input: {
+  clientId: string;
+  redirectUri: string;
+  state: string;
+}): string {
+  const url = new URL(LINKEDIN_AUTH);
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("client_id", input.clientId);
+  url.searchParams.set("redirect_uri", input.redirectUri);
+  url.searchParams.set("state", input.state);
+  url.searchParams.set("scope", LINKEDIN_SCOPE);
+  return url.toString();
 }
 
 export interface LinkedInStart {
@@ -292,13 +329,10 @@ export function startLinkedIn(input: {
     redirectUri,
     createdAt: Date.now(),
   });
-  const url = new URL(LINKEDIN_AUTH);
-  url.searchParams.set("response_type", "code");
-  url.searchParams.set("client_id", clientId);
-  url.searchParams.set("redirect_uri", redirectUri);
-  url.searchParams.set("state", state);
-  url.searchParams.set("scope", LINKEDIN_SCOPE);
-  return { ok: true, url: url.toString() };
+  return {
+    ok: true,
+    url: linkedinAuthorizationUrl({ clientId, redirectUri, state }),
+  };
 }
 
 export interface LinkedInComplete {
@@ -312,6 +346,22 @@ interface UserInfo {
   name?: unknown;
   given_name?: unknown;
   family_name?: unknown;
+  email?: unknown;
+  email_verified?: unknown;
+  profile?: unknown;
+  picture?: unknown;
+}
+
+export interface LinkedInMember {
+  sub: string;
+  displayName: string | null;
+  /** Null when LinkedIn omitted the optional email claim, or it was not an address. */
+  email: string | null;
+  /**
+   * A LinkedIn profile page URL when userinfo actually carried one. Null when
+   * it did not. Never built from a name, from `sub`, or from `picture`.
+   */
+  profileUrl: string | null;
 }
 
 function displayNameFromUserInfo(info: UserInfo): string | null {
@@ -320,6 +370,99 @@ function displayNameFromUserInfo(info: UserInfo): string | null {
   const family = typeof info.family_name === "string" ? info.family_name.trim() : "";
   const joined = `${given} ${family}`.trim();
   return joined.length > 0 ? joined : null;
+}
+
+function emailFromUserInfo(info: UserInfo): string | null {
+  if (typeof info.email !== "string") return null;
+  const email = info.email.trim();
+  if (!email || !MEMBER_EMAIL_RE.test(email)) return null;
+  return email;
+}
+
+function profileUrlFromUserInfo(info: UserInfo): string | null {
+  if (typeof info.profile !== "string") return null;
+  const raw = info.profile.trim();
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    const host = url.hostname.replace(/^www\./i, "").toLowerCase();
+    if (host !== "linkedin.com") return null;
+    if (!url.pathname.startsWith("/in/") && !url.pathname.startsWith("/pub/")) return null;
+    if (url.pathname === "/in/" || url.pathname === "/in" || url.pathname === "/pub/" || url.pathname === "/pub") {
+      return null;
+    }
+    return raw;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Reads the member off LinkedIn's userinfo body. `sub` is required. Name,
+ * email and profile URL are each optional and independent — a missing email
+ * is not a failed sign-in.
+ */
+export function memberFromUserInfo(info: unknown): LinkedInMember | null {
+  if (info === null || typeof info !== "object") return null;
+  const record = info as UserInfo;
+  const sub = typeof record.sub === "string" ? record.sub.trim() : "";
+  if (!sub) return null;
+  return {
+    sub,
+    displayName: displayNameFromUserInfo(record),
+    email: emailFromUserInfo(record),
+    profileUrl: profileUrlFromUserInfo(record),
+  };
+}
+
+/**
+ * Exchanges the authorization code and reads userinfo. The access token is a
+ * local variable and is dropped before this returns. Does not write a room
+ * binding — callers that are a booking must not, and room binding is
+ * completeLinkedIn's job.
+ */
+export async function exchangeLinkedInCode(input: {
+  code: string;
+  redirectUri: string;
+  fetchImpl?: typeof fetch;
+}): Promise<{ ok: true; member: LinkedInMember } | { ok: false }> {
+  const creds = linkedinCredentials();
+  if (!creds) return { ok: false };
+  const fetchImpl = input.fetchImpl ?? fetch;
+  let accessToken: string | null = null;
+  try {
+    const tokenRes = await fetchImpl(LINKEDIN_TOKEN, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code: input.code.trim(),
+        client_id: creds.clientId,
+        client_secret: creds.secret,
+        redirect_uri: input.redirectUri,
+      }),
+    });
+    if (!tokenRes.ok) return { ok: false };
+    const tokenBody = (await tokenRes.json()) as { access_token?: unknown };
+    if (typeof tokenBody.access_token !== "string" || !tokenBody.access_token) {
+      return { ok: false };
+    }
+    accessToken = tokenBody.access_token;
+
+    const infoRes = await fetchImpl(LINKEDIN_USERINFO, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
+    });
+    accessToken = null;
+    if (!infoRes.ok) return { ok: false };
+    const member = memberFromUserInfo(await infoRes.json());
+    if (!member) return { ok: false };
+    return { ok: true, member };
+  } catch {
+    accessToken = null;
+    return { ok: false };
+  }
 }
 
 function dropPendingLinkedIn(state: string): PendingLinkedIn | undefined {
@@ -347,54 +490,23 @@ export async function completeLinkedIn(input: {
   if (!pending) return { token: null, bound: false };
   if (input.error || !input.code?.trim()) return { token: pending.token, bound: false };
 
-  const clientId = linkedinClientId();
-  const clientSecret = linkedinClientSecret();
-  if (!clientId || !clientSecret) return { token: pending.token, bound: false };
-
-  const fetchImpl = input.fetchImpl ?? fetch;
-  let accessToken: string | null = null;
-  try {
-    const tokenRes = await fetchImpl(LINKEDIN_TOKEN, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-      body: new URLSearchParams({
-        grant_type: "authorization_code",
-        code: input.code.trim(),
-        client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: pending.redirectUri,
-      }),
-    });
-    if (!tokenRes.ok) return { token: pending.token, bound: false };
-    const tokenBody = (await tokenRes.json()) as { access_token?: unknown };
-    if (typeof tokenBody.access_token !== "string" || !tokenBody.access_token) {
-      return { token: pending.token, bound: false };
-    }
-    accessToken = tokenBody.access_token;
-
-    const infoRes = await fetchImpl(LINKEDIN_USERINFO, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
-    });
-    accessToken = null;
-    if (!infoRes.ok) return { token: pending.token, bound: false };
-    const info = (await infoRes.json()) as UserInfo;
-    const sub = typeof info.sub === "string" ? info.sub.trim() : "";
-    const displayName = displayNameFromUserInfo(info);
-    if (!sub || !displayName) return { token: pending.token, bound: false };
-
-    await putBinding({
-      workspaceId: pending.workspaceId,
-      provider: "linkedin",
-      providerId: `linkedin:${sub}`,
-      displayName,
-      boundAt: new Date().toISOString(),
-    });
-    return { token: pending.token, bound: true };
-  } catch {
-    accessToken = null;
+  const exchanged = await exchangeLinkedInCode({
+    code: input.code.trim(),
+    redirectUri: pending.redirectUri,
+    fetchImpl: input.fetchImpl,
+  });
+  if (!exchanged.ok || !exchanged.member.displayName) {
     return { token: pending.token, bound: false };
   }
+
+  await putBinding({
+    workspaceId: pending.workspaceId,
+    provider: "linkedin",
+    providerId: `linkedin:${exchanged.member.sub}`,
+    displayName: exchanged.member.displayName,
+    boundAt: new Date().toISOString(),
+  });
+  return { token: pending.token, bound: true };
 }
 
 /* --------------------------------- WhatsApp -------------------------------- */

@@ -10,6 +10,11 @@
  * The first binding on a room is its owner. A later bind does not replace it.
  * A number someone typed is a note, stored apart from a binding, so the two
  * cannot be printed as the same fact.
+ *
+ * Booking Sign in with LinkedIn is not a room claim. That flow lives in
+ * server/booking/signin.ts and must never call putBinding — a booker has no
+ * workspaceId, and writing them here would mint a room owner out of a
+ * calendar invite.
  */
 
 import { eq } from "drizzle-orm";
