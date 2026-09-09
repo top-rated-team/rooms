@@ -50,6 +50,8 @@ import {
 import { startDigestSchedule } from "./schedule";
 import { connectorMcp, connectorRouter } from "./connector";
 import { operatorGate, readOperator, writeOperator } from "./operator";
+import { acceptUnipileInbound, dispatchInbound } from "./unipile/inbound";
+import { ensureUnipileWebhooks, UNIPILE_WEBHOOK_AUTH_HEADER } from "./unipile/webhooks";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -1291,6 +1293,20 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
+  app.post(
+    "/api/unipile/inbound",
+    identityWebhookLimit,
+    route(async (req, res) => {
+      const result = acceptUnipileInbound(req.body, req.get(UNIPILE_WEBHOOK_AUTH_HEADER) ?? undefined);
+      if (!result.authorized) {
+        res.status(401).json({ error: "Not found" });
+        return;
+      }
+      res.status(200).json({ ok: true });
+      dispatchInbound(result);
+    }),
+  );
+
   app.use("/api/connector/mcp", connectorMcp);
   app.use("/api/connector", connectorRouter);
 
@@ -1302,4 +1318,5 @@ export function registerRoutes(app: Express): void {
 
   // Off unless WEEKLY_DIGEST is set. server/index.ts is frozen, so this is the mount.
   startDigestSchedule();
+  void ensureUnipileWebhooks();
 }

@@ -23,6 +23,7 @@ import Setup from "@/pages/setup";
  * imports anything out of @/pages/workspace or @/components/workspace, so a
  * visitor choosing a door still never downloads the room. */
 const Workspace = lazy(() => import("@/pages/workspace"));
+const AdGrantApp = lazy(() => import("@/pages/adgrant"));
 
 function RouteFallback() {
   return (
@@ -53,6 +54,20 @@ export default function App() {
         {/* /setup and /partner are one page: the form, then the same form as the cabinet. */}
         <Route path="/setup" component={Setup} />
         <Route path="/partner" component={Setup} />
+        {/* AdGrant.AI's own tree. Own chrome, not the site header. Mounted here
+            because client/index.html is the one head this process serves. Lazy
+            so the landing page does not download it. */}
+        <Route path="/adgrant">
+          <Suspense
+            fallback={
+              <div className="flex min-h-screen items-center justify-center bg-background">
+                <p className="type-note text-muted-foreground">Opening AdGrant.AI…</p>
+              </div>
+            }
+          >
+            <AdGrantApp />
+          </Suspense>
+        </Route>
         <Route component={NotFound} />
       </Switch>
     </Suspense>
