@@ -206,33 +206,45 @@ WHAT DONE MEANS FOR THIS PARCEL:
   or using an existing one, so it is the single upsert send path; pass account_id on it as a
   safety rail. THE WEBHOOK, IN CODE: at route registration, GET /api/v1/webhooks, find ours by
   request_url, create it only when absent - idempotent, never a second one - and delete ones
-  pointing at hosts we have retired. Two documented gotchas that both fail SILENTLY and must
-  both be handled: a webhook created by API carries no Content-Type header by default, so pass
-  headers: [{key: Content-Type, value: application/json}] or express.json() leaves req.body
-  empty; and there is no HMAC signature anywhere in Unipile, only a shared secret in a header
-  you name, so use UNIPILE_WEBHOOK_SECRET compared with timingSafeEqual.
-  server/identity.ts:466-474 shows the shape and ALSO shows the bug - when its env var is unset
-  the check passes. Here, no secret configured means the endpoint refuses everything. Do not
-  copy that line. THE INBOUND RULE, which is this parcel's real subject: the brief's seven
-  checks, each its own named exported function with its own test. (1) the secret matches. (2)
-  account_id is on an allowlist of accounts we operate, not merely present. (3)
-  sender.attendee_provider_id !== account_info.user_id - our own sent messages arrive as
-  message_received too and there is NO fromMe flag, so without this the room echoes our own
-  agents back as if the visitor said it. (4) chat_id is present and is the chat expected for
-  whatever this answers. (5) message_id has not been seen - five retries are guaranteed on any
-  non-200 within 30s, so idempotency is not optional. (6) event === message_received; the other
-  five events are not messages. (7) timestamp is recent, because a reconnect delivers a burst
-  from the disconnected period. Anything failing a check is recorded and dropped, never guessed
-  at. The body field is `message`, a string - the REST API calls it `text`, and that mismatch is
-  a bug waiting. Reply 200 in well under 30s and do the work after. IDENTITY:
-  attendee_provider_id is a TAGGED UNION, either &lt;phone&gt;@s.whatsapp.net or &lt;id&gt;@lid, and the
-  second form carries no number. Model it as a union and never regex it for digits: WhatsApp's
-  LID migration is real, Unipile's own docs contradict themselves about which form is internal,
-  and Unipile has no LID resolver where WAHA has one. Report that in your handoff. Contact reads
-  are GET /api/v1/chats/{chat_id}/attendees and GET /api/v1/chat_attendees/{id}: you get name (a
-  self-set push name, display only), picture_url and provider_id, and there is no phone field
-  and no WhatsApp branch of specifics. This parcel does not touch server/identity.ts or
-  server/waha.ts - room-identity owns that swap and will import you.
+  pointing at hosts we have retired. The address is ours to compute,
+  ${PUBLIC_BASE_URL}/api/unipile/inbound, which is why the owner sets no URL anywhere;
+  UNIPILE_WEBHOOK_SECRET is a random string, not an address. REGISTER TWO, and there is no
+  third: Unipile has five webhook types and a calendar is not among them, so the calendar is
+  polled and never pushed. One is source: messaging. The other is the account-lifecycle one,
+  because a linked WhatsApp device can be logged out from the phone, and the difference between
+  learning that from a webhook and discovering it from a silent send failure is a day of a room
+  looking broken. The exact source value for account status is NOT in the webhooks page - read
+  https://developer.unipile.com/docs/account-lifecycle and use the value that page gives. Do not
+  guess it: a webhook registered with an invalid source is one that silently never fires, and
+  you would report success. Both webhooks point at our one endpoint and carry the same secret,
+  and the handler branches on the payload - an account-status event is not a message and must
+  not reach the message path. Two documented gotchas that both fail SILENTLY and must both be
+  handled: a webhook created by API carries no Content-Type header by default, so pass headers:
+  [{key: Content-Type, value: application/json}] or express.json() leaves req.body empty; and
+  there is no HMAC signature anywhere in Unipile, only a shared secret in a header you name, so
+  use UNIPILE_WEBHOOK_SECRET compared with timingSafeEqual. server/identity.ts:466-474 shows the
+  shape and ALSO shows the bug - when its env var is unset the check passes. Here, no secret
+  configured means the endpoint refuses everything. Do not copy that line. THE INBOUND RULE,
+  which is this parcel's real subject: the brief's seven checks, each its own named exported
+  function with its own test. (1) the secret matches. (2) account_id is on an allowlist of
+  accounts we operate, not merely present. (3) sender.attendee_provider_id !==
+  account_info.user_id - our own sent messages arrive as message_received too and there is NO
+  fromMe flag, so without this the room echoes our own agents back as if the visitor said it.
+  (4) chat_id is present and is the chat expected for whatever this answers. (5) message_id has
+  not been seen - five retries are guaranteed on any non-200 within 30s, so idempotency is not
+  optional. (6) event === message_received; the other five events are not messages. (7)
+  timestamp is recent, because a reconnect delivers a burst from the disconnected period.
+  Anything failing a check is recorded and dropped, never guessed at. The body field is
+  `message`, a string - the REST API calls it `text`, and that mismatch is a bug waiting. Reply
+  200 in well under 30s and do the work after. IDENTITY: attendee_provider_id is a TAGGED UNION,
+  either &lt;phone&gt;@s.whatsapp.net or &lt;id&gt;@lid, and the second form carries no number. Model it as
+  a union and never regex it for digits: WhatsApp's LID migration is real, Unipile's own docs
+  contradict themselves about which form is internal, and Unipile has no LID resolver where WAHA
+  has one. Report that in your handoff. Contact reads are GET /api/v1/chats/{chat_id}/attendees
+  and GET /api/v1/chat_attendees/{id}: you get name (a self-set push name, display only),
+  picture_url and provider_id, and there is no phone field and no WhatsApp branch of specifics.
+  This parcel does not touch server/identity.ts or server/waha.ts - room-identity owns that swap
+  and will import you.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
   The owner asked for two things by name: create the webhook programmatically rather than by

@@ -1,8 +1,9 @@
 # Unipile, the room's identity, and our own booking widget
 
 **Programme three's brief. Every parcel in it says "read this first", and this is why:
-eight agents working from the owner's sentences alone would each invent a different
-Unipile, and six of them would invent endpoints that do not exist.**
+three things a reasonable person assumes Unipile has, it does not — a free/busy endpoint,
+a LID-to-phone resolver, and an HMAC signature on its webhooks. Eight agents working from
+the owner's sentences alone would each build on all three.**
 
 Everything below marked **[V]** was read in Unipile's own documentation or in this
 repository this week. Everything marked **[I]** is reasoning from it. Where a contract is
@@ -331,6 +332,26 @@ anywhere**).
 **Create it programmatically.** The owner asked for this directly. On boot: list, look for
 ours by `request_url`, create it when absent, and never create a second. Delete ones
 pointing at retired hosts. Idempotent, and inert without the env vars.
+
+**The secret is not a URL.** `UNIPILE_WEBHOOK_SECRET` is a random string we invent. Unipile
+sends it back to us in a header we name, and our endpoint compares it. The **address** is
+ours to compute — `${PUBLIC_BASE_URL}/api/unipile/inbound` — and ours to register in code,
+which is why the owner sets no URL anywhere.
+
+**Two webhooks, and no calendar one.** **[V]** Unipile has five webhook types and a
+calendar is not among them: account status updates, new messages, new emails, email
+tracking, new relation. So **the calendar is polled, never pushed** (§1.4), and there is
+nothing to register for it.
+
+Register two: `source: "messaging"` for the messages, and the account-lifecycle one, because
+a linked WhatsApp device can be logged out from the phone and the difference between
+learning that from a webhook and discovering it from a silent send failure is a day of a
+room looking broken. **[?] The exact `source` value for account status is not in the page I
+read** — read https://developer.unipile.com/docs/account-lifecycle and use the value that
+page gives. Do not guess it: a webhook registered with an invalid source is a webhook that
+silently never fires. Both go to our one endpoint and both carry the same secret; the
+handler branches on the payload, and an account-status event is not a message and must not
+reach the message path.
 
 **[V]** Two documented gotchas, both of which fail silently:
 
