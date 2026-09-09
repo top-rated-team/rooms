@@ -8,10 +8,15 @@
  * everything — identity.ts:466-474 does the same comparison and passes when
  * its env var is unset; that line is the bug, and it is not copied here.
  *
- * Our own sent messages arrive as message_received. There is no fromMe flag.
- * Without check 3 the room would echo our agents back as if the visitor said
- * them. The body field is `message`, a string; the REST send path calls it
- * `text`. Reading `text` here would hide that mismatch.
+ * Our own sent messages arrive as message_received too, so check 3 is what
+ * stops the room echoing our own agents back as if the visitor had said them.
+ * WhatsApp answers it with `is_sender`, the provider's own flag, and that is
+ * read first because it is a statement of fact rather than our inference. The
+ * documented `account_info.user_id` is the fallback: it is present on the
+ * LINKEDIN payload Unipile documents and ABSENT on the WhatsApp one, which is
+ * what dropped every WhatsApp message here as "unknown-self" until 9 Sep 2026.
+ * The body field is `message`, a string; the REST send path calls it `text`.
+ * Reading `text` here would hide that mismatch.
  *
  * Account-status payloads are not messages and never reach the message path.
  * Reply 200 fast; later parcels register a matcher and do their work after.
@@ -38,6 +43,10 @@ export type InboundDropReason =
      must not enter a room — but calling it an echo would send whoever reads
      the drops looking for a loop that is not there. */
   | "unknown-self"
+  /* The sender is missing. Distinct again from "unknown-self": we know who WE
+     are, we cannot tell who THEY are, and a message from nobody must not enter
+     a room under a name we invented for it. */
+  | "unknown-sender"
   | "chat"
   | "duplicate"
   | "event"
@@ -101,6 +110,20 @@ function recordDrop(reason: InboundDropReason, messageId: string | null = null):
   drops.push({ reason, at: Date.now(), messageId });
   if (drops.length > DROP_CAP) drops.splice(0, drops.length - DROP_CAP);
   console.info(`[unipile] inbound dropped: ${reason}`);
+}
+
+/**
+ * Both unattributable drops are silent by design about their contents — a
+ * WhatsApp payload holds a phone number and a person's message. The KEYS carry
+ * no such thing, and they are the whole diagnosis: this bug cost an evening
+ * because the log said "unknown-self" and not which fields had arrived.
+ */
+function reportUnattributable(reason: InboundDropReason, raw: unknown): void {
+  const root = asRecord(raw);
+  const top = root ? Object.keys(root).sort().join(",") : "(not an object)";
+  const info = root ? asRecord(root.account_info) : null;
+  const nested = info ? Object.keys(info).sort().join(",") : "(absent)";
+  console.info(`[unipile] ${reason}: fields=[${top}] account_info=[${nested}]`);
 }
 
 export function inboundDrops(): readonly InboundDrop[] {
@@ -168,15 +191,28 @@ export function isNotOurEcho(senderProviderId: unknown, ourUserId: unknown): boo
 }
 
 /**
+ * (3a) `is_sender` — the provider's own answer to "did this account send it".
+ * WhatsApp sends 0 or 1. true means our echo, false means the visitor, and
+ * null means the field was absent and the fallback below has to decide.
+ * Anything unrecognised is null rather than false: guessing "not ours" about a
+ * field we do not understand is the one wrong way to fail here.
+ */
+export function echoFlag(isSender: unknown): boolean | null {
+  if (typeof isSender === "boolean") return isSender;
+  if (typeof isSender === "number") return isSender !== 0;
+  if (isSender === "0" || isSender === "false") return false;
+  if (isSender === "1" || isSender === "true") return true;
+  return null;
+}
+
+/**
  * Whether the payload says who we are on this account, which check (3) needs.
  *
  * Unipile's documented payload carries `account_info.user_id`, but its example
- * is a LINKEDIN account and the WhatsApp shape is unverified. If this is
- * absent for WhatsApp then every inbound message drops, which is the safe
- * direction and the confusing one — so it drops under its own reason. If
- * nothing ever arrives and `inboundDrops()` is all "unknown-self", that is
- * what happened, and the fix is to compare the sender against our own
- * account's provider id from `getAccount` rather than to weaken the check.
+ * is a LINKEDIN account. It is ABSENT on WhatsApp — confirmed in production on
+ * 9 Sep 2026, when a real booking confirmation was answered 200 and dropped as
+ * "unknown-self" one millisecond later. So this is now the fallback, reached
+ * only when `is_sender` is absent, and it still drops rather than guessing.
  */
 export function selfIdKnown(ourUserId: unknown): boolean {
   return typeof ourUserId === "string" && ourUserId.length > 0;
@@ -242,6 +278,7 @@ function parseMessagePayload(raw: unknown): {
   messageId: unknown;
   message: unknown;
   event: unknown;
+  isSender: unknown;
   timestamp: unknown;
   senderProviderId: unknown;
   senderAttendeeId: unknown;
@@ -257,7 +294,11 @@ function parseMessagePayload(raw: unknown): {
     chatId: root.chat_id,
     messageId: root.message_id,
     message: root.message,
-    event: root.event,
+    /* The messaging webhook's field list names this `event_type`; the payload
+       observed on 9 Sep 2026 carried `event`. Accept either rather than bet on
+       which one a given source sends. */
+    event: root.event ?? root.event_type,
+    isSender: root.is_sender,
     timestamp: root.timestamp,
     senderProviderId: sender?.attendee_provider_id,
     senderAttendeeId: sender?.attendee_id,
@@ -304,13 +345,29 @@ export function acceptUnipileInbound(raw: unknown, providedSecret: string | unde
     recordDrop("account", asString(parsed.messageId));
     return { authorized: true, kind: "dropped", reason: "account" };
   }
-  if (!selfIdKnown(parsed.ourUserId)) {
-    recordDrop("unknown-self", asString(parsed.messageId));
-    return { authorized: true, kind: "dropped", reason: "unknown-self" };
-  }
-  if (!isNotOurEcho(parsed.senderProviderId, parsed.ourUserId)) {
+  const flagged = echoFlag(parsed.isSender);
+  if (flagged === true) {
     recordDrop("echo", asString(parsed.messageId));
     return { authorized: true, kind: "dropped", reason: "echo" };
+  }
+  if (flagged === null) {
+    if (!selfIdKnown(parsed.ourUserId)) {
+      reportUnattributable("unknown-self", raw);
+      recordDrop("unknown-self", asString(parsed.messageId));
+      return { authorized: true, kind: "dropped", reason: "unknown-self" };
+    }
+    if (!isNotOurEcho(parsed.senderProviderId, parsed.ourUserId)) {
+      recordDrop("echo", asString(parsed.messageId));
+      return { authorized: true, kind: "dropped", reason: "echo" };
+    }
+  }
+  /* isNotOurEcho was also the only thing insisting on a sender. On the
+     is_sender path nothing has looked at it yet, and the room would go on to
+     name the author from a field that is not there. */
+  if (!asString(parsed.senderProviderId)) {
+    reportUnattributable("unknown-sender", raw);
+    recordDrop("unknown-sender", asString(parsed.messageId));
+    return { authorized: true, kind: "dropped", reason: "unknown-sender" };
   }
   if (!chatIdIsExpected(parsed.chatId)) {
     recordDrop("chat", asString(parsed.messageId));

@@ -23,6 +23,7 @@ import {
   dispatchInbound,
   eventIsMessageReceived,
   inboundDrops,
+  echoFlag,
   isNotOurEcho,
   messageIdIsNew,
   registerInboundMatcher,
@@ -131,6 +132,57 @@ describe("accountIdIsOurs", () => {
     process.env.UNIPILE_WHATSAPP_ACCOUNT_ID = "wa_custom";
     assert.equal(accountIdIsOurs("wa_custom"), true);
     assert.equal(accountIdIsOurs(DEFAULT_WHATSAPP_ACCOUNT_ID), false);
+  });
+});
+
+describe("echoFlag", () => {
+  it("reads the provider's own flag, and refuses to guess when it is absent", () => {
+    /* WhatsApp sends 0 and 1. The strings are defensive: a webhook that
+       stringifies its numbers would otherwise read 0 as "present and ours". */
+    assert.equal(echoFlag(0), false);
+    assert.equal(echoFlag(1), true);
+    assert.equal(echoFlag(false), false);
+    assert.equal(echoFlag(true), true);
+    assert.equal(echoFlag("0"), false);
+    assert.equal(echoFlag("1"), true);
+    assert.equal(echoFlag(undefined), null);
+    assert.equal(echoFlag(null), null);
+    assert.equal(echoFlag("yes"), null);
+  });
+
+  it("accepts a WhatsApp message that never says who we are", () => {
+    /* The production bug, exactly: real account_info, no user_id in it, and
+       is_sender: 0. Before this the message was answered 200 and thrown away,
+       so a visitor who had done everything right watched a spinner. */
+    const live = liveMessage({ account_info: { type: "WHATSAPP" }, is_sender: 0 });
+    const result = acceptUnipileInbound(live, SECRET);
+    if (!result.authorized || result.kind !== "message") {
+      assert.fail(`is_sender: 0 has to be enough; got ${JSON.stringify(result)}`);
+      return;
+    }
+    assert.equal(result.message.message, "Room-bind ABCDEF");
+  });
+
+  it("drops our own message on the flag alone, whatever the sender says", () => {
+    const own = liveMessage({ account_info: { type: "WHATSAPP" }, is_sender: 1, message_id: "msg_live_2" });
+    const result = acceptUnipileInbound(own, SECRET);
+    assert.equal(result.authorized && result.kind === "dropped" && result.reason, "echo");
+  });
+
+  it("will not name an author it was not given", () => {
+    /* is_sender answers check (3) without ever looking at sender, so the
+       sender guard has to stand on its own or the room invents an author. */
+    const anonymous = liveMessage({ account_info: { type: "WHATSAPP" }, is_sender: 0, sender: {}, message_id: "msg_live_3" });
+    const result = acceptUnipileInbound(anonymous, SECRET);
+    assert.equal(result.authorized && result.kind === "dropped" && result.reason, "unknown-sender");
+  });
+});
+
+describe("event under either name", () => {
+  it("accepts event_type, which is what the webhook's field list calls it", () => {
+    const { event, ...rest } = liveMessage({ message_id: "msg_live_4" });
+    const result = acceptUnipileInbound({ ...rest, event_type: event }, SECRET);
+    assert.equal(result.authorized && result.kind, "message");
   });
 });
 

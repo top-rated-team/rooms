@@ -983,11 +983,11 @@ function DoneView({
 }) {
   const when = formatBookedWhen(booked.startsAt, booked.timezone);
   return (
-    <div>
-      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent">
+    <div className="text-center">
+      <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent">
         <Check className="h-5 w-5" />
       </div>
-      <Dialog.Title className="pr-8 text-xl font-semibold tracking-tight">
+      <Dialog.Title className="px-8 text-xl font-semibold tracking-tight">
         {viaWhatsApp ? "Confirmed" : "Booked"}
       </Dialog.Title>
       <Dialog.Description className="mt-2 text-sm text-muted-foreground">
@@ -1028,9 +1028,9 @@ function inviteLine(booked: BookedPayload, email: string | null) {
 function WaitingView({ hold, openedWhatsApp }: { hold: HoldBookingResponse; openedWhatsApp: boolean }) {
   const phone = isPhoneBooking();
   return (
-    <div>
-      <Dialog.Title className="pr-8 text-xl font-semibold tracking-tight">Send the WhatsApp message</Dialog.Title>
-      <Dialog.Description className="mt-2 text-sm text-muted-foreground">
+    <div className="text-center">
+      <Dialog.Title className="px-8 text-xl font-semibold tracking-tight">Send the WhatsApp message</Dialog.Title>
+      <Dialog.Description className="mx-auto mt-2 max-w-[42ch] text-sm text-muted-foreground">
         {openedWhatsApp
           ? "WhatsApp is open with a message ready. Send it. The call is booked only after that message arrives."
           : phone
@@ -1059,11 +1059,11 @@ function WaitingView({ hold, openedWhatsApp }: { hold: HoldBookingResponse; open
           </p>
         )
       ) : (
-        <div className="mt-4">
+        <div className="mt-4 flex justify-center">
           <BookingQr url={hold.whatsapp.url} />
         </div>
       )}
-      <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+      <p className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
         Waiting for the WhatsApp message. Nothing is booked yet.
       </p>
@@ -1073,16 +1073,16 @@ function WaitingView({ hold, openedWhatsApp }: { hold: HoldBookingResponse; open
 
 function ExpiredView({ code, onRetry }: { code: string; onRetry: () => void }) {
   return (
-    <div>
-      <Dialog.Title className="pr-8 text-xl font-semibold tracking-tight">Nothing was booked</Dialog.Title>
-      <Dialog.Description className="mt-2 text-sm text-muted-foreground">
+    <div className="text-center">
+      <Dialog.Title className="px-8 text-xl font-semibold tracking-tight">Nothing was booked</Dialog.Title>
+      <Dialog.Description className="mx-auto mt-2 max-w-[42ch] text-sm text-muted-foreground">
         Five minutes passed without a WhatsApp message for{" "}
         <code className="rounded border border-card-border bg-muted px-1 py-0.5 font-mono text-[11px] text-foreground">
           {code}
         </code>
         . The slot is free again.
       </Dialog.Description>
-      <div className="mt-6">
+      <div className="mt-6 flex justify-center">
         <button type="button" className={BTN_PRIMARY} onClick={onRetry} data-testid="button-booking-retry">
           Pick another time
         </button>

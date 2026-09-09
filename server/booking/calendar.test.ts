@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import { resetUnipileCalendarForTests } from "../unipile/calendar";
-import { SLOT_TAKEN_LINE, parseCreateBooking, postBooking } from "./calendar";
+import { SLOT_TAKEN_LINE, bookingEventTitle, parseCreateBooking, postBooking } from "./calendar";
 import { resetBookingCodesForTests } from "./confirm";
 import { ADDRESS_REQUIRED_LINE, HOST_LINKEDIN_LINE, resetHoldsForTests } from "./hold";
 import { resetSlotsCacheForTests } from "./slots";
@@ -110,6 +110,21 @@ function mockUnipile(opts: { busy?: boolean; meetUrl?: string | null } = {}): {
   };
   return { fetchImpl, posts };
 }
+
+describe("bookingEventTitle", () => {
+  it("puts the address on the row, because that is what tells two calls apart", () => {
+    assert.equal(bookingEventTitle({ name: "Ada", email: "ada@example.com" }), "Top-Rated Team <=> ada@example.com");
+  });
+
+  it("falls back to the name on the WhatsApp route, where there is no address", () => {
+    assert.equal(bookingEventTitle({ name: "Ada" }), "Top-Rated Team <=> Ada");
+    assert.equal(bookingEventTitle({ name: "Ada", email: "   " }), "Top-Rated Team <=> Ada");
+  });
+
+  it("leaves no dangling arrow when it was given nothing at all", () => {
+    assert.equal(bookingEventTitle({ name: "  " }), "Top-Rated Team");
+  });
+});
 
 describe("parseCreateBooking", () => {
   it("treats email as the only optional field", () => {

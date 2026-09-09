@@ -12,6 +12,7 @@
  * booking.
  */
 
+import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
 import type {
   BookingConflictResponse,
   CreateBookingRequest,
@@ -97,6 +98,25 @@ function attendeesFor(email: string | undefined): {
   return { invited: false, attendees: [], notify: false };
 }
 
+/**
+ * What the two of us see in our calendars. The owner asked for the address on
+ * the row because that is what he needs at a glance the morning of the call —
+ * "Call with Dan" is four identical rows in a week and tells him nothing about
+ * which one this is. Where there is no address (the WhatsApp route) the name
+ * is all we were given, and it goes in the same slot rather than leaving a
+ * dangling arrow. Read from the door so it cannot drift from the footer, the
+ * invoices and the legal pages, which all name the business the same way.
+ */
+export function bookingEventTitle(input: { name: string; email?: string }): string {
+  const other = (input.email ?? "").trim() || input.name.trim();
+  /* displayName is optional on the type — a room with no door behind it may
+     omit it — so fall back to the required legalName rather than to a
+     literal that would drift from the door the day the name changes. */
+  const ours = DOOR_BY_ID[DEFAULT_DOOR_ID].contract;
+  const us = ours.displayName ?? ours.legalName;
+  return other ? `${us} <=> ${other}` : us;
+}
+
 export async function createBookingEvent(
   input: {
     calendarId: string;
@@ -114,7 +134,7 @@ export async function createBookingEvent(
   const created = await createCalendarEvent(
     {
       calendarId: input.calendarId,
-      title: `Call with ${input.name}`,
+      title: bookingEventTitle(input),
       body: bookingEventDescription({ topic: input.topic, visitorProfile: input.visitorProfile }),
       attendees,
       start: { dateTime: input.starts.toISOString(), timeZone: input.timezone },
