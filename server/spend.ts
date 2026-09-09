@@ -1,6 +1,7 @@
 /**
  * Three bounds on what one room can spend on agent answers, and one line of
- * accounting per turn.
+ * accounting per turn. Two design-and-review agents also have a ledger of their
+ * own, claimed first, so they can answer at length without spending the room.
  *
  * The thing being defended against is not a spike. An agent reply costs about a
  * quarter of a cent and a human conversation about three, so a room that runs
@@ -26,6 +27,14 @@
  * off the wire, so a stream that dies mid-answer contributes nothing to it — see
  * recordTurnCost below. That gap is deliberate and is why the count and the clock
  * are not priced.
+ *
+ * PER-AGENT LEDGERS. google-ads-dev and linkedin-dev claim twice: their own key
+ * first, then the room's. The pattern is the one /api/ask already uses for
+ * ask:ip then ask:all. The numbers live in AGENT_CEILINGS below, not on
+ * AgentDef — roster.ts is imported by the client, and a dollar figure on an
+ * agent row would ship a cost number to the browser. ROOM_MONTHLY_BUDGET_USD,
+ * MAX_TURNS_PER_HOUR and MAX_ACTIVE_MINUTES are not changed: render.yaml says
+ * those are not configurable.
  *
  * WHERE THIS LIVES. In memory, in this process. There is no spend table in
  * shared/schema.ts and this parcel does not own that file, so every bound here
@@ -198,10 +207,44 @@ export function askLedgerKey(ip: string): string {
   return `ask:ip:${ip}`;
 }
 
+/**
+ * One agent's ledger inside one room. Same Map as the room's; the first
+ * argument to ledgerFor is just a string.
+ */
+export function agentLedgerKey(workspaceId: string, agentId: string): string {
+  return `${workspaceId}:${agentId}`;
+}
+
+/** Whether the refusal sentence talks about the room or about this agent. */
+export type SpendBound = "room" | "agent";
+
+/**
+ * Dollars and hourly turns for the two design-and-review agents.
+ *
+ * Two dollars is enough for long answers — a typical turn is a fraction of a
+ * cent — and is below the room's default five, so the room bound stays over
+ * the top: one agent cannot spend the room's whole month. Twelve turns an hour
+ * is enough to actually use them and below the room's thirty, so they cannot
+ * spend the room's hour either.
+ *
+ * Kept here, not on AgentDef. shared/roster.ts is imported by client code.
+ */
+const AGENT_CEILINGS: Record<string, { budgetUsd: number; maxTurnsPerHour: number }> = {
+  "google-ads-dev": { budgetUsd: 2, maxTurnsPerHour: 12 },
+  "linkedin-dev": { budgetUsd: 2, maxTurnsPerHour: 12 },
+};
+
+export function ceilingForAgent(agentId: string): { budgetUsd: number; maxTurnsPerHour: number } | undefined {
+  const ceiling = AGENT_CEILINGS[agentId];
+  return ceiling ? { ...ceiling } : undefined;
+}
+
 export function claimAgentTurn(
   workspaceId: string,
   now: number = Date.now(),
   budgetUsd: number = monthlyBudgetUsd(),
+  maxTurnsPerHour: number = MAX_TURNS_PER_HOUR,
+  bound: SpendBound = "room",
 ): SpendClaim {
   if (++claimsSinceSweep >= SWEEP_EVERY_CLAIMS) {
     claimsSinceSweep = 0;
@@ -214,7 +257,7 @@ export function claimAgentTurn(
   // merely asked too quickly this hour, because that sentence would be false and
   // would send the visitor back in five minutes to read it again.
   if (ledger.spentUsd >= budgetUsd) {
-    return { ok: false, stop: "monthly_budget", message: BUDGET_MESSAGE };
+    return { ok: false, stop: "monthly_budget", message: bound === "agent" ? AGENT_BUDGET_MESSAGE : BUDGET_MESSAGE };
   }
 
   // A quiet room starts a fresh clock, so a conversation picked up after lunch is
@@ -222,17 +265,45 @@ export function claimAgentTurn(
   // trips the bound below.
   if (now - ledger.lastTurnAt > IDLE_RESET_MS) ledger.activeSince = now;
   if (now - ledger.activeSince > MAX_ACTIVE_MS) {
-    return { ok: false, stop: "active_too_long", message: ACTIVE_MESSAGE };
+    return { ok: false, stop: "active_too_long", message: bound === "agent" ? AGENT_ACTIVE_MESSAGE : ACTIVE_MESSAGE };
   }
 
   ledger.turns = ledger.turns.filter((at) => now - at < TURN_WINDOW_MS);
-  if (ledger.turns.length >= MAX_TURNS_PER_HOUR) {
-    return { ok: false, stop: "turn_rate", message: rateMessage(ledger.turns[0] + TURN_WINDOW_MS - now) };
+  if (ledger.turns.length >= maxTurnsPerHour) {
+    return {
+      ok: false,
+      stop: "turn_rate",
+      message: rateMessage(ledger.turns[0] + TURN_WINDOW_MS - now, maxTurnsPerHour, bound),
+    };
   }
 
   ledger.turns.push(now);
   ledger.lastTurnAt = now;
   return { ok: true };
+}
+
+/**
+ * The double claim /api/ask already does for ask:ip then ask:all — agent's key
+ * first, then the room's — so one agent cannot spend the room's whole month.
+ * Agents not in AGENT_CEILINGS claim the room only, as they always did.
+ *
+ * Synchronous, same reason as claimAgentTurn: the second call has to see what
+ * the first wrote, in the same tick.
+ */
+export function claimGuardedTurn(room: Pick<RoomRef, "workspaceId" | "agentId">, now: number = Date.now()): SpendClaim {
+  const ceiling = AGENT_CEILINGS[room.agentId];
+  if (ceiling) {
+    const mine = claimAgentTurn(
+      agentLedgerKey(room.workspaceId, room.agentId),
+      now,
+      ceiling.budgetUsd,
+      ceiling.maxTurnsPerHour,
+      "agent",
+    );
+    const everyone = mine.ok ? claimAgentTurn(room.workspaceId, now) : mine;
+    return everyone;
+  }
+  return claimAgentTurn(room.workspaceId, now);
 }
 
 /**
@@ -244,7 +315,7 @@ export function claimAgentTurn(
  * atomicity when reached through here.
  */
 export async function guardAgentTurn(room: RoomRef): Promise<boolean> {
-  const claim = claimAgentTurn(room.workspaceId);
+  const claim = claimGuardedTurn(room);
   if (claim.ok) return true;
   await postStop(room, claim);
   return false;
@@ -322,23 +393,36 @@ export function recordTurnCost(workspaceId: string, agentId: string, usage: Toke
 
     const ledger = ledgerFor(workspaceId, now);
     ledger.spentUsd += event.usd;
+    warnIfCrossing(workspaceId, ledger, monthlyBudgetUsd(), "room");
 
-    const budget = monthlyBudgetUsd();
-    if (!ledger.warned && ledger.spentUsd >= budget * WARN_AT_FRACTION) {
-      ledger.warned = true;
-      // The operator, not the visitor. At 80% nothing has happened to the person
-      // in the room yet, and telling them about our cost accounting would be
-      // alarming about something that is not theirs. At 100% the room is told,
-      // because at 100% their agent stops answering.
-      console.warn(
-        `[spend] room=${workspaceId} has used $${ledger.spentUsd.toFixed(2)} of its $${budget.toFixed(2)} ` +
-          `monthly allowance for agent answers (${Math.round((ledger.spentUsd / budget) * 100)}%). ` +
-          "The agents in that room stop answering once it is used up, and say so in the room.",
-      );
+    const ceiling = AGENT_CEILINGS[agentId];
+    if (ceiling) {
+      const agentKey = agentLedgerKey(workspaceId, agentId);
+      const agentLedger = ledgerFor(agentKey, now);
+      agentLedger.spentUsd += event.usd;
+      warnIfCrossing(agentKey, agentLedger, ceiling.budgetUsd, "agent");
     }
   } catch (error) {
     console.error("[spend] could not record the cost of a turn:", error);
   }
+}
+
+function warnIfCrossing(key: string, ledger: RoomLedger, budget: number, bound: SpendBound): void {
+  if (ledger.warned || ledger.spentUsd < budget * WARN_AT_FRACTION) return;
+  ledger.warned = true;
+  // The operator, not the visitor. At 80% nothing has happened to the person
+  // in the room yet, and telling them about our cost accounting would be
+  // alarming about something that is not theirs. At 100% they are told,
+  // because at 100% that agent — or the room — stops answering.
+  const who = bound === "agent" ? `agent ledger ${key}` : `room=${key}`;
+  const whatStops =
+    bound === "agent"
+      ? "That agent stops answering once it is used up, and says so in the room. Other agents are unaffected."
+      : "The agents in that room stop answering once it is used up, and say so in the room.";
+  console.warn(
+    `[spend] ${who} has used $${ledger.spentUsd.toFixed(2)} of its $${budget.toFixed(2)} ` +
+      `monthly allowance for agent answers (${Math.round((ledger.spentUsd / budget) * 100)}%). ${whatStops}`,
+  );
 }
 
 /* --------------------------- what the room reads --------------------------- */
@@ -355,14 +439,27 @@ const BUDGET_MESSAGE = `AI answers here are capped for the month, and the cap ha
 
 The rest of the room is unaffected. ${HUMAN_ROUTE}`;
 
+const AGENT_BUDGET_MESSAGE = `This agent has reached its cap for the month, so this question was not sent to the model.
+
+Other agents in the room can still answer. ${HUMAN_ROUTE}`;
+
 const ACTIVE_MESSAGE = `An agent has been answering in this room for ${MAX_ACTIVE_MINUTES} minutes without a break, so it has stopped. Leave the room quiet for ${IDLE_RESET_MINUTES} minutes and it can answer again.
 
 Nothing else here is affected. ${HUMAN_ROUTE}`;
 
-function rateMessage(waitMs: number): string {
+const AGENT_ACTIVE_MESSAGE = `This agent has been answering for ${MAX_ACTIVE_MINUTES} minutes without a break, so it has stopped. Leave it quiet for ${IDLE_RESET_MINUTES} minutes and it can answer again.
+
+Other agents in the room are unaffected. ${HUMAN_ROUTE}`;
+
+function rateMessage(waitMs: number, maxTurns: number = MAX_TURNS_PER_HOUR, bound: SpendBound = "room"): string {
   const minutes = Math.max(1, Math.ceil(waitMs / 60_000));
   const wait = minutes === 1 ? "about a minute" : `about ${minutes} minutes`;
-  return `This room has put ${MAX_TURNS_PER_HOUR} questions to the agents in the past hour, which is as many as it gets, so this one was not sent to the model. The next one can go through in ${wait}.
+  if (bound === "agent") {
+    return `This agent has answered ${maxTurns} questions in the past hour, which is as many as it gets, so this one was not sent to the model. The next one can go through in ${wait}.
+
+Other agents in the room can still answer. ${HUMAN_ROUTE}`;
+  }
+  return `This room has put ${maxTurns} questions to the agents in the past hour, which is as many as it gets, so this one was not sent to the model. The next one can go through in ${wait}.
 
 Nothing else here is affected. ${HUMAN_ROUTE}`;
 }

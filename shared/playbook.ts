@@ -218,6 +218,15 @@ export function seedFor(door: DoorSeedInput): DoorSeed {
   });
 
   /*
+   * google-ads-dev and linkedin-dev are not seeded. They sit on AGENTS, so
+   * they are already reachable in every room via @mention — including every
+   * Google Ads, paid ads and custom-AI (dev) room. Seeding would add a
+   * channel and a member row per room, and the only house-wide seeded agent
+   * is the lawyer above. They arrive when somebody asks, the way
+   * shopping-feed does.
+   */
+
+  /*
    * ONE DOOR HAS A WRITTEN CHECKLIST, and the others get none rather than that
    * one. An empty checklist is a room waiting to be filled; a checklist about
    * somebody else's engagement is a room telling the client the wrong thing.

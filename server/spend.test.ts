@@ -5,12 +5,18 @@ import assert from "node:assert/strict";
 import { postMessageSchema } from "@shared/schema";
 
 import { costUsd, priceFor } from "./ai/usage";
+import { AGENT_BY_ID } from "@shared/roster";
+
 import {
   IDLE_RESET_MINUTES,
   MAX_ACTIVE_MINUTES,
   MAX_TURNS_PER_HOUR,
+  agentLedgerKey,
+  ceilingForAgent,
   claimAgentTurn,
+  claimGuardedTurn,
   guardAgentTurn,
+  monthlyBudgetUsd,
   recordTurnCost,
   resetSpendLedgerForTests,
   type RoomRef,
@@ -389,5 +395,128 @@ describe("where the guard sits", () => {
     // OPENAI_API_KEY answers honestly and spends nothing, so it must not burn a
     // room's hour doing it.
     assert.ok(reply.indexOf("llmReady()") < reply.indexOf("guardAgentTurn"));
+  });
+});
+
+describe("a per-agent ceiling, claimed before the room's", () => {
+  const DEV = "google-ads-dev";
+  const OTHER = "linkedin-dev";
+
+  it("names agents that exist, with a ceiling below the room's", () => {
+    for (const id of [DEV, OTHER]) {
+      const agent = AGENT_BY_ID[id];
+      assert.ok(agent, `${id} is not on AGENTS`);
+      const ceiling = ceilingForAgent(id);
+      assert.ok(ceiling, `${id} has no ceiling in server/spend.ts`);
+      assert.ok(
+        ceiling.budgetUsd < monthlyBudgetUsd(),
+        `${id}'s $${ceiling.budgetUsd} is not below the room's $${monthlyBudgetUsd()}, so one agent could spend the month`,
+      );
+      assert.ok(
+        ceiling.maxTurnsPerHour < MAX_TURNS_PER_HOUR,
+        `${id}'s ${ceiling.maxTurnsPerHour} turns is not below the room's ${MAX_TURNS_PER_HOUR}`,
+      );
+    }
+    assert.equal(AGENT_BY_ID[DEV]?.kbNamespace, "google-ads-api");
+    assert.equal(AGENT_BY_ID[OTHER]?.kbNamespace, "unipile-api");
+    assert.equal(AGENT_BY_ID[DEV]?.useKb, true);
+    assert.equal(AGENT_BY_ID[OTHER]?.useKb, true);
+    assert.equal(/unipile/i.test(AGENT_BY_ID[OTHER]?.systemPrompt ?? ""), false);
+    assert.equal(/unipile/i.test(AGENT_BY_ID[OTHER]?.blurb ?? ""), false);
+    assert.equal(/unipile/i.test(AGENT_BY_ID[OTHER]?.name ?? ""), false);
+  });
+
+  it("parameterises the hourly count, so an agent can have a tighter cap than the room", () => {
+    const cap = 3;
+    for (let i = 0; i < cap; i += 1) {
+      assert.equal(claimAgentTurn("agent-key", T0 + i, monthlyBudgetUsd(), cap, "agent").ok, true);
+    }
+    const refused = claimAgentTurn("agent-key", T0 + cap, monthlyBudgetUsd(), cap, "agent");
+    assert.equal(refused.ok, false);
+    assert.equal(refused.ok === false && refused.stop, "turn_rate");
+    assert.match(refused.ok === false ? refused.message : "", /This agent has answered 3 questions/);
+    assert.equal(claimAgentTurn(ROOM, T0).ok, true, "the room still has its own hour");
+  });
+
+  it("claims the agent first, then the room, the way /api/ask claims ip then ask:all", () => {
+    const ceiling = ceilingForAgent(DEV);
+    assert.ok(ceiling);
+    const room = { workspaceId: ROOM, agentId: DEV };
+
+    for (let i = 0; i < ceiling.maxTurnsPerHour; i += 1) {
+      assert.equal(claimGuardedTurn(room, T0 + i).ok, true, `dev turn ${i + 1} should have been allowed`);
+    }
+
+    const refused = claimGuardedTurn(room, T0 + ceiling.maxTurnsPerHour);
+    assert.equal(refused.ok, false);
+    assert.equal(refused.ok === false && refused.stop, "turn_rate");
+    assert.match(refused.ok === false ? refused.message : "", /This agent has answered/);
+
+    // The room still has turns left, so a different agent in the same room can answer.
+    assert.equal(claimGuardedTurn({ workspaceId: ROOM, agentId: "chatgpt-ads" }, T0).ok, true);
+  });
+
+  it("stops this agent at its own dollars and leaves the room's budget standing", () => {
+    const ceiling = ceilingForAgent(DEV);
+    assert.ok(ceiling);
+    // gpt-5-mini input is $0.25 / million tokens: eight million tokens is two dollars.
+    recordTurnCost(ROOM, DEV, usage("gpt-5-mini", 8_000_000, 0), T0);
+
+    const agentRefused = claimAgentTurn(
+      agentLedgerKey(ROOM, DEV),
+      T0 + MINUTE,
+      ceiling.budgetUsd,
+      ceiling.maxTurnsPerHour,
+      "agent",
+    );
+    assert.equal(agentRefused.ok, false);
+    assert.equal(agentRefused.ok === false && agentRefused.stop, "monthly_budget");
+    assert.match(agentRefused.ok === false ? agentRefused.message : "", /This agent has reached its cap/);
+
+    assert.equal(claimAgentTurn(ROOM, T0 + MINUTE).ok, true, "the room still has budget for other agents");
+    assert.equal(
+      claimGuardedTurn({ workspaceId: ROOM, agentId: "chatgpt-ads" }, T0 + MINUTE).ok,
+      true,
+      "another agent in the same room is not silenced",
+    );
+  });
+
+  it("holds through guardAgentTurn for a capped agent, and still posts the stop", async () => {
+    const created = await storage.createWorkspace({ name: "Dev agent spend" });
+    const ceiling = ceilingForAgent(DEV);
+    assert.ok(ceiling);
+    const room: RoomRef = {
+      token: created.token,
+      workspaceId: created.workspace.id,
+      channelId: created.channels[0].id,
+      agentId: DEV,
+    };
+
+    const attempts = ceiling.maxTurnsPerHour + 6;
+    const allowed = await Promise.all(Array.from({ length: attempts }, () => guardAgentTurn(room)));
+    assert.equal(allowed.filter(Boolean).length, ceiling.maxTurnsPerHour);
+
+    const state = await storage.getWorkspaceByToken(created.token);
+    const stopped = (state?.messages ?? []).filter((message) => message.meta?.stopped === "turn_rate");
+    assert.equal(stopped.length, attempts - ceiling.maxTurnsPerHour);
+    assert.match(stopped[0]?.body ?? "", /This agent has answered/);
+  });
+
+  it("keeps the house voice on the agent-bound sentences too", () => {
+    const ceiling = ceilingForAgent(DEV);
+    assert.ok(ceiling);
+    const cap = ceiling.maxTurnsPerHour;
+    for (let i = 0; i < cap; i += 1) claimAgentTurn("voice-agent", T0, 5, cap, "agent");
+    const rate = claimAgentTurn("voice-agent", T0, 5, cap, "agent");
+    recordTurnCost("voice-room", DEV, usage("gpt-5-mini", 8_000_000, 0), T0);
+    const budget = claimAgentTurn(agentLedgerKey("voice-room", DEV), T0, ceiling.budgetUsd, cap, "agent");
+
+    for (const claim of [rate, budget]) {
+      assert.equal(claim.ok, false);
+      const message = claim.ok === false ? claim.message : "";
+      assert.ok(!message.includes("!"), `an exclamation mark got into: ${message}`);
+      assert.match(message, /A person on the team can answer/);
+      assert.ok(!/next month|tomorrow|in \d+ days?/i.test(message), `promises a date: ${message}`);
+    }
   });
 });
