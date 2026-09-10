@@ -56,6 +56,46 @@ room asks for one. What is missing is the handover and the link.
 
 ---
 
+## room-account — Logout, and one account with several ways in
+
+The owner's design, and the half of it that cannot be built yet.
+
+WHAT IS DONE: the pair is `Login | Open a room` in every state, and each half
+owns its own hover — hovering *Open a room* drops the rooms this browser
+remembers, hovering *Login* shows the ways in.
+
+WHAT IS NOT: he also wants the left half to read **Logout** once somebody is
+signed in, clickable to sign out, with its own hover offering to attach
+another way in — and the rooms already opened under that other way — to the
+account they are already using.
+
+**None of that is possible today, because there is no account.** Wave 13's
+login is stateless: you prove who you are, the server answers with the rooms
+bound to that identity, you pick one, and what remembers you afterwards is the
+room token in this browser's localStorage. There is no session, no cookie, and
+therefore nothing for a Logout to end and nothing for a second method to be
+attached *to*.
+
+So this parcel is a session and an identity, and it should be written as one:
+
+- **A durable identity row**, and a cookie that points at it. The cookie is a
+  credential, so: HttpOnly, Secure, SameSite, rotated on sign-in, and long —
+  the owner's instruction is to remember somebody for as long as possible.
+- **Logout ends the session and nothing else.** It must not forget the rooms
+  in localStorage: a person signing out of a shared browser and losing their
+  own rooms on their own laptop would be the same word doing two jobs.
+- **Attaching a second method merges what it can reach.** Signing in with
+  LinkedIn while already signed in by email adds that identity to the same
+  account, and the rooms bound to it become reachable from it. The merge is
+  the risky operation in the whole feature — think about what happens when the
+  second identity already belongs to another account, and refuse rather than
+  guess.
+- **The label is state, so it must be read from the server**, not from a
+  localStorage flag. A page that says Logout to somebody with no session, or
+  Login to somebody who has one, is worse than one that says neither.
+
+---
+
 ## booking-return — blocked on wave 14 releasing `BookingDialog.tsx`
 
 The owner booked through the QR code and it worked. What is missing is

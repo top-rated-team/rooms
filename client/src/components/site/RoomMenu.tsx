@@ -196,11 +196,17 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
     return () => window.clearInterval(id);
   }, [whatsapp]);
 
-  const showList = open && rooms.length > 0;
-  const newest = rooms[0];
+  /* Inline is the phone burger, where there is no hover and nothing to open:
+     the rooms are simply there, under the control, the moment the sheet is.
+     Everywhere else the list belongs to the "Open a room" half's hover. */
+  const showList = rooms.length > 0 && (layout === "inline" || open);
 
   const openLogin = async () => {
-    setOpen(true);
+    /* setOpen(false), not true. It used to force the remembered-room list open
+       alongside the ways in, from when one control opened one panel. Now each
+       half owns its own hover, and showing somebody their rooms because they
+       asked how to sign in is answering a question they did not ask. */
+    setOpen(false);
     setLogin({ phase: "loading" });
     setEmailForm({ phase: "idle" });
     setWhatsapp(null);
@@ -297,7 +303,7 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
       className={
         layout === "inline"
           ? "mt-[var(--s2)] flex min-w-[16rem] flex-col border-t border-border pt-[var(--s2)]"
-          : "flex min-w-[18rem] flex-col"
+          : "flex w-[min(22rem,calc(100vw-3.5rem))] flex-col"
       }
     >
       {rooms.map((room) => {
@@ -337,7 +343,10 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
         className={
           layout === "inline"
             ? `mt-[var(--s2)] max-w-[22rem] border-t border-border pt-[var(--s2)] ${FORM_COPY}`
-            : `max-w-[22rem] px-[var(--s2)] py-[var(--s2)] ${FORM_COPY} ${showList ? "border-t border-border" : ""}`
+            /* w- and not max-w-: on a 390px phone 22rem plus the panel's own
+               padding is wider than the screen, and the login copy ran off the
+               right edge. Clamped to the viewport with a gutter. */
+            : `w-[min(22rem,calc(100vw-3.5rem))] px-[var(--s2)] py-[var(--s2)] ${FORM_COPY} ${showList ? "border-t border-border" : ""}`
         }
       >
         {login.phase === "loading" ? <p>Checking the ways in.</p> : null}
@@ -448,9 +457,20 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
       </div>
     ) : null;
 
+  /* whitespace-normal is not cosmetic. This control sits inside the hero's
+     action row, which is whitespace-nowrap so no label breaks in the middle,
+     and the panel inherited it — a paragraph of login copy became one 411px
+     line that widened the whole document to 456 on a 390px phone. That is the
+     "the text does not fit" the owner reported.
+
+     3.5rem is the page's two gutters at 390. The panel is absolutely
+     positioned in a box whose overflow is visible, so anything wider than the
+     column it hangs under does not merely look wrong — it widens the document
+     and the whole page scrolls sideways. Measured: 22rem here took the page
+     from 390 to 456. */
   const dropdownPanel =
     layout === "dropdown" && (showList || loginOpen) ? (
-      <div className="absolute left-0 top-full z-50 min-w-[18rem] pt-[var(--s1)]">
+      <div className="absolute left-0 top-full z-50 w-[min(22rem,calc(100vw-3.5rem))] whitespace-normal pt-[var(--s1)]">
         {/* pt- and not mt-: a margin here is 8px of nothing between the
             trigger and the panel, and the root's mouseleave fires while the
             pointer crosses it. Padding keeps the gap inside the hit area. */}
@@ -465,84 +485,74 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
     <div
       ref={rootRef}
       className={layout === "inline" ? "relative flex flex-col items-stretch" : "relative inline-flex flex-col items-start"}
-      onMouseEnter={() => {
-        const next = listRememberedRooms();
-        setRooms(next);
-        if (next.length > 0 && !isCoarsePointer() && !loginOpen) setOpen(true);
-      }}
+      /* Opening belongs to the halves; the root only tidies up on the way
+         out, and it closes BOTH — a login panel left open because the pointer
+         went to the other half is the bug this replaced. */
       onMouseLeave={() => {
-        if (!isCoarsePointer() && !loginOpen) setOpen(false);
+        if (isCoarsePointer()) return;
+        setOpen(false);
+        setLogin({ phase: "closed" });
       }}
     >
-      {rooms.length === 0 ? (
-        <span className={`relative inline-flex items-baseline gap-[var(--s2)] ${className}`}>
-          <button
-            type="button"
-            data-testid={`${testId}-login-open`}
-            aria-expanded={loginOpen}
-            onClick={() => {
-              if (loginOpen) setLogin({ phase: "closed" });
-              else void openLogin();
-            }}
-            className={`${INNER} disabled:opacity-50`}
-          >
-            Login
-          </button>
-          <span aria-hidden="true" className="text-muted-foreground">
-            |
-          </span>
-          <button
-            type="button"
-            data-testid={testId}
-            onClick={() => void create()}
-            disabled={opening}
-            className={`${INNER} disabled:opacity-50`}
-          >
-            {opening ? "Opening a room…" : "Open a room"}
-          </button>
-          {dropdownPanel}
+      {/* ONE PAIR IN EVERY STATE, and each half owns its own hover.
+          Hovering "Open a room" drops the rooms this browser remembers;
+          hovering "Login" shows the ways in. The old "Your rooms" label is
+          gone: it was a third name for a gesture the reader already had, and
+          the list it opened is now under the half that is about rooms.
+
+          A coarse pointer has no hover, so there a tap on Login opens the
+          ways and a tap on Open a room creates. The remembered list is not
+          lost on a phone — the burger renders this control with
+          layout="inline", which shows it without needing to hover at all. */}
+      <span className={`relative inline-flex items-baseline gap-[var(--s2)] ${className}`}>
+        <button
+          type="button"
+          data-testid={`${testId}-login-open`}
+          aria-expanded={loginOpen}
+          onMouseEnter={() => {
+            if (isCoarsePointer()) return;
+            setOpen(false);
+            if (!loginOpen) void openLogin();
+          }}
+          onClick={() => {
+            if (loginOpen) setLogin({ phase: "closed" });
+            else void openLogin();
+          }}
+          className={`${INNER} disabled:opacity-50`}
+        >
+          Login
+        </button>
+        <span aria-hidden="true" className="text-muted-foreground">
+          |
         </span>
-      ) : newest ? (
-        <span className={`relative inline-flex items-baseline gap-[var(--s2)] ${className}`}>
-          <Link
-            href={`/w/${newest.token}`}
-            data-testid={`${testId}-return`}
-            aria-haspopup="menu"
-            aria-expanded={showList}
-            aria-controls={listId}
-            className={INNER}
-            onClick={(event) => {
+        <button
+          type="button"
+          data-testid={testId}
+          aria-haspopup={rooms.length > 0 ? "menu" : undefined}
+          aria-expanded={rooms.length > 0 ? showList : undefined}
+          aria-controls={rooms.length > 0 ? listId : undefined}
+          onMouseEnter={() => {
+            if (isCoarsePointer()) return;
+            const next = listRememberedRooms();
+            setRooms(next);
+            setLogin({ phase: "closed" });
+            if (next.length > 0) setOpen(true);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowDown" && rooms.length > 0) {
+              event.preventDefault();
               refresh();
-              if (isCoarsePointer()) {
-                event.preventDefault();
-                setOpen((was) => !was);
-              }
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "ArrowDown") {
-                event.preventDefault();
-                refresh();
-                setOpen(true);
-              }
-            }}
-          >
-            Your rooms
-          </Link>
-          <span aria-hidden="true" className="text-muted-foreground">
-            |
-          </span>
-          <button
-            type="button"
-            data-testid={testId}
-            onClick={() => void create()}
-            disabled={opening}
-            className={`${INNER} disabled:opacity-50`}
-          >
-            {opening ? "Opening a room…" : "Open a room"}
-          </button>
-          {dropdownPanel}
-        </span>
-      ) : null}
+              setOpen(true);
+            }
+          }}
+          onClick={() => void create()}
+          disabled={opening}
+          className={`${INNER} disabled:opacity-50`}
+        >
+          {opening ? "Opening a room…" : "Open a room"}
+        </button>
+        {dropdownPanel}
+      </span>
       {layout === "inline" ? (
         <>
           {list}

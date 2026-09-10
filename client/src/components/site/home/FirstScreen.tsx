@@ -54,7 +54,16 @@ function Hover({ text, testId, children }: { text: string; testId: string; child
         </span>
       </TooltipTrigger>
       <TooltipPortal>
-        <TooltipContent side="bottom" align="start" className="max-w-[min(38ch,calc(100vw-2rem))] text-balance">
+        {/* w-fit and no text-balance. Balancing makes every line the same
+            short length while the box stays at its max width, which on a phone
+            left a wide empty margin down the right of the tooltip. Filling to
+            the measure and shrinking the box to the text is what closes it. */}
+        <TooltipContent
+          side="bottom"
+          align="start"
+          collisionPadding={12}
+          className="w-fit max-w-[min(38ch,calc(100vw-1.5rem))]"
+        >
           {text}
         </TooltipContent>
       </TooltipPortal>
@@ -65,7 +74,6 @@ function Hover({ text, testId, children }: { text: string; testId: string; child
 /** The agency profile the record below is drawn from. */
 const UPWORK_AGENCY_URL = "https://www.upwork.com/agencies/google/";
 
-const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) => ({ default: m.LeadDialog })));
 
 /** The one loud action. Uppercase and the display face are stated, not inherited. */
 const ACTION_LOUD =
@@ -78,7 +86,6 @@ const ACTION_QUIET =
   "hover:border-foreground hover:text-foreground";
 
 export function FirstScreen() {
-  const [messageOpen, setMessageOpen] = useState(false);
   const booking = useBooking();
 
   return (
@@ -352,22 +359,12 @@ export function FirstScreen() {
           >
             Book a call
           </a>
-          <button
-            type="button"
-            onClick={() => setMessageOpen(true)}
-            data-testid="button-home-leave-a-message"
-            className={ACTION_QUIET}
-          >
-            Message us
-          </button>
+          {/* "Message us" used to sit here. It is the footer's Contact now —
+              one way to write to us, in the place a person looks for one,
+              instead of the same button repeated in every action row on every
+              page. The owner's instruction, and it shortens this row again. */}
         </div>
       </div>
-
-      {messageOpen ? (
-        <Suspense fallback={null}>
-          <LeadDialog open={messageOpen} onOpenChange={setMessageOpen} prefill={null} />
-        </Suspense>
-      ) : null}
     </section>
   );
 }

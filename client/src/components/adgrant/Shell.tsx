@@ -61,8 +61,12 @@ export function Shell({ children }: { children: ReactNode }) {
                 {section.name}
               </Link>
             ))}
+            {/* A different site, so a new tab: somebody reading a glossary
+                entry has not finished with it. */}
             <a
               href={MAIN_SITE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               data-testid="link-adgrant-top-rated"
               className={NAV_LINK}
             >
@@ -99,14 +103,24 @@ export function Shell({ children }: { children: ReactNode }) {
             aria-label={`${ADGRANT_MARK} footer`}
             className="type-meta mt-[var(--s3)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]"
           >
-            {ADGRANT_SECTIONS.map((section) => (
-              <Link key={section.segment} href={section.path} className={LINK}>
-                {section.name}
-              </Link>
-            ))}
+            {/* The five sections used to be repeated here from the header.
+                A footer that restates the menu is a menu the reader has
+                already dismissed once, and it pushed the legal links — the
+                only things a footer is actually read for — off the end of the
+                row. */}
+            <a
+              href={`${MAIN_SITE_URL}/privacy`}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="link-adgrant-privacy"
+              className={LINK}
+            >
+              Privacy
+            </a>
             {CONTRACT.termsUrl ? (
               <a
                 href={CONTRACT.termsUrl}
+                target="_blank"
                 rel="noopener noreferrer"
                 data-testid="link-adgrant-terms"
                 className={LINK}
@@ -118,7 +132,13 @@ export function Shell({ children }: { children: ReactNode }) {
                 "Top-Rated Team" itself, which is two ways to say the same thing
                 in a row of six words. The site link stays; the contact address
                 is on the page it leads to. */}
-            <a href={MAIN_SITE_URL} data-testid="link-adgrant-footer-top-rated" className={LINK}>
+            <a
+              href={MAIN_SITE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="link-adgrant-footer-top-rated"
+              className={LINK}
+            >
               Top-Rated Team
             </a>
           </nav>

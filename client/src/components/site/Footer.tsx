@@ -1,8 +1,11 @@
+import { lazy, Suspense, useState } from "react";
 import { useRoute, Link } from "wouter";
 import { RoomMenu } from "@/components/site/RoomMenu";
 
 import { DEFAULT_DOOR_ID, DOOR_BY_ID, DOOR_BY_SLUG, type DoorContract, type DoorDef } from "@shared/doors";
 import { GITHUB_URL } from "@shared/roster";
+
+const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) => ({ default: m.LeadDialog })));
 
 /* ---------------------------------------------------------------------------
  * THE FOOTER
@@ -75,6 +78,7 @@ const LINK_QUIET = "draw text-muted-foreground hover:text-foreground [text-trans
 
 export function Footer() {
   const theirs = useSomebodyElsesDoor();
+  const [messageOpen, setMessageOpen] = useState(false);
   /* The year a person is reading in, not the year this was written in. */
   const year = new Date().getFullYear();
 
@@ -166,7 +170,7 @@ export function Footer() {
             className={`${MARK_LINK} inline-flex items-center`}
             aria-label="This site's source on GitHub"
           >
-            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-[1.15em] w-[1.15em] translate-y-[0.07em] fill-current">
+            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-[1.15em] w-[1.15em] translate-y-[0.19em] fill-current">
               <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
             </svg>
           </a>
@@ -197,11 +201,21 @@ export function Footer() {
             <Link href="/privacy" data-testid="link-footer-privacy" className={LINK}>
               Privacy
             </Link>
-            {OURS.contact ? (
-              <a href={contactHref(OURS.contact)} rel="noopener noreferrer" data-testid="link-footer-contact" className={LINK}>
-                Contact
-              </a>
-            ) : null}
+            {/* Contact is the popup now, not an address. It is the same
+                LeadDialog every "Message us" in the action rows used to open,
+                and those are gone — one way to write to us, in the place a
+                person looks for one, instead of the same button repeated in
+                every row on every page. A door whose contract is somebody
+                else's still shows THEIR address, elsewhere in this file, and
+                that one stays a real link. */}
+            <button
+              type="button"
+              onClick={() => setMessageOpen(true)}
+              data-testid="link-footer-contact"
+              className={LINK}
+            >
+              Contact
+            </button>
             {/* Real <a>, not a wouter Link: these are files in client/public, and
                 a client-side route would 404 them. Filenames as written, so they
                 sit in this row without looking like a fourth legal page. */}
@@ -214,6 +228,13 @@ export function Footer() {
           </nav>
         </div>
       </div>
+      {/* Lazy, like every other caller: the footer is on every page and this
+          dialog is opened on almost none of them. */}
+      {messageOpen ? (
+        <Suspense fallback={null}>
+          <LeadDialog open={messageOpen} onOpenChange={setMessageOpen} prefill={null} />
+        </Suspense>
+      ) : null}
     </footer>
   );
 }

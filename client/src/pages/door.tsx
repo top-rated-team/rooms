@@ -39,9 +39,6 @@ import { DoorCases } from "@/components/site/Cases";
 import { DoorPrice } from "@/components/site/Ladder";
 import { collectSource } from "@/components/site/LeadDialog";
 
-/* Lazily loaded, same as the header does it: LeadDialog pulls in Radix, and a
-   door page should not download a modal nobody has opened. */
-const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) => ({ default: m.LeadDialog })));
 import { usePanelState, type CreateRoomResult } from "@/hooks/use-panel-state";
 import NotFound from "@/pages/not-found";
 
@@ -247,7 +244,6 @@ function DoorPage({ door }: { door: DoorDef }) {
    * rooms wearing their name.
    */
   const booking = useBooking();
-  const [messageOpen, setMessageOpen] = useState(false);
 
   const roomMenu = (where: "hero" | "panel" | "close") => (
     <RoomMenu
@@ -334,14 +330,7 @@ function DoorPage({ door }: { door: DoorDef }) {
                   >
                     Book a call
                   </a>
-                  <button
-                    type="button"
-                    data-testid="button-door-hero-leave-a-message"
-                    className={ACTION_QUIET}
-                    onClick={() => setMessageOpen(true)}
-                  >
-                    Message us
-                  </button>
+                  {/* "Message us" is the footer's Contact now, everywhere. */}
                 </div>
               ) : null}
             </div>
@@ -695,12 +684,6 @@ function DoorPage({ door }: { door: DoorDef }) {
 
         <DoorPrice door={door} />
       </main>
-
-      {messageOpen ? (
-        <Suspense fallback={null}>
-          <LeadDialog open={messageOpen} onOpenChange={setMessageOpen} prefill={null} />
-        </Suspense>
-      ) : null}
 
       <Footer />
     </div>

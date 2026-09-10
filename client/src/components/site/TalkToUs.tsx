@@ -32,7 +32,6 @@ import { useBooking } from "@/hooks/use-booking";
  * paid traffic downloads first.
  * ------------------------------------------------------------------------- */
 
-const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) => ({ default: m.LeadDialog })));
 
 const ACTION_LINE = "type-body font-medium";
 
@@ -42,7 +41,6 @@ export interface TalkToUsProps {
 }
 
 export function TalkToUs({ className = "" }: TalkToUsProps) {
-  const [messageOpen, setMessageOpen] = useState(false);
   const booking = useBooking();
 
   return (
@@ -71,12 +69,11 @@ export function TalkToUs({ className = "" }: TalkToUsProps) {
             <span className={`ml-[var(--s2)] ${META}`}>20 minutes, free, with a person who does the work</span>
           </p>
 
-          <p className={ACTION_LINE}>
-            <button type="button" onClick={() => setMessageOpen(true)} data-testid="button-leave-a-message" className={LINK}>
-              Message us
-            </button>
-            <span className={`ml-[var(--s2)] ${META}`}>Goes to one inbox, answered by a person</span>
-          </p>
+          {/* "Message us" is the footer's Contact now, everywhere — the
+              owner's instruction. Worth knowing that this block is the one
+              place whose whole job was to list the ways to reach a person, so
+              it is now shorter by the one that reaches an inbox. Say the word
+              and it comes back here alone. */}
 
           {/* A fourth way, on the owner's instruction, and it is the only one
               here that reaches a person in a minute rather than a day. The
@@ -93,20 +90,6 @@ export function TalkToUs({ className = "" }: TalkToUsProps) {
         </div>
       </div>
 
-      {messageOpen ? (
-        <Suspense fallback={null}>
-          <LeadDialog
-            open={messageOpen}
-            onOpenChange={setMessageOpen}
-            /* No prefill. `intent` on LeadPrefill is a ServiceDef id that the
-               dialog pre-selects in its own list, so a made-up value like
-               "message:google-ads" would select nothing and quietly break the
-               field. The door a message came from is already recorded: the
-               dialog calls collectSource() itself and sends it with the lead. */
-            prefill={null}
-          />
-        </Suspense>
-      ) : null}
     </section>
   );
 }

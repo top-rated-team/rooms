@@ -10,7 +10,6 @@ import { useBooking } from "@/hooks/use-booking";
 
 const importAnswerMarkdown = () => import("@/components/site/AnswerMarkdown");
 const AnswerMarkdown = lazy(importAnswerMarkdown);
-const LeadDialog = lazy(() => import("@/components/site/LeadDialog").then((m) => ({ default: m.LeadDialog })));
 
 /* ---------------------------------------------------------------------------
  * THE HOUSE ASK
@@ -70,7 +69,6 @@ export function HouseAsk() {
   const [routing, setRouting] = useState(false);
   const [opening, setOpening] = useState(false);
   const [roomError, setRoomError] = useState<string | null>(null);
-  const [messageOpen, setMessageOpen] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -390,14 +388,7 @@ export function HouseAsk() {
                   >
                     Book a call
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => setMessageOpen(true)}
-                    data-testid="button-house-ask-leave-a-message"
-                    className="border-b border-border pb-[var(--s1)] text-muted-foreground hover:border-foreground hover:text-foreground"
-                  >
-                    Message us
-                  </button>
+                  {/* "Message us" is the footer's Contact now, everywhere. */}
                 </p>
               ) : null}
 
@@ -577,12 +568,6 @@ export function HouseAsk() {
           ) : null}
         </div>
       </div>
-
-      {messageOpen ? (
-        <Suspense fallback={null}>
-          <LeadDialog open={messageOpen} onOpenChange={setMessageOpen} prefill={null} />
-        </Suspense>
-      ) : null}
     </section>
   );
 }
