@@ -41,7 +41,18 @@ import { useBooking } from "@/hooks/use-booking";
  * making one do so means deciding what a tap on a word in a paragraph means,
  * which is a bigger question than this sentence is asking.
  */
-function Hover({ text, testId, children }: { text: string; testId: string; children: React.ReactNode }) {
+function Hover({
+  text,
+  testId,
+  children,
+  below,
+}: {
+  text: string;
+  testId: string;
+  children: React.ReactNode;
+  /** Rendered under the sentence, inside the same panel. */
+  below?: React.ReactNode;
+}) {
   return (
     <Tooltip delayDuration={0}>
       <TooltipTrigger asChild>
@@ -65,6 +76,17 @@ function Hover({ text, testId, children }: { text: string; testId: string; child
           className="w-fit max-w-[min(38ch,calc(100vw-1.5rem))]"
         >
           {text}
+          {below ? (
+            /* Inside the same panel rather than a second floating layer. The
+               owner's own instruction, and his own worry about it: the pair
+               has a hover of its own, so two panels over one another would be
+               two things to keep track of. layout="inline" is the mode the
+               phone burger already uses — the rooms sit under the control and
+               this panel simply grows downward. */
+            /* No rule of its own: the inline room list draws one already, and
+               two hairlines a few pixels apart read as a rendering fault. */
+            <div className="mt-[var(--s1)]">{below}</div>
+          ) : null}
         </TooltipContent>
       </TooltipPortal>
     </Tooltip>
@@ -242,7 +264,11 @@ export function FirstScreen() {
               read, and one underlined term beside a bare one that behaves
               identically would teach the reader the wrong rule. tabIndex makes
               each reachable by keyboard, which the native title never was. */}
-          <Hover text="Come in. We're inside!" testId="text-home-digital-experts">
+          <Hover
+            text="Come in. We're inside!"
+            testId="text-home-digital-experts"
+            below={<RoomMenu className={ACTION_QUIET} testId="button-hover-open-a-room" layout="inline" />}
+          >
             Digital experts
           </Hover>{" "}
           +{" "}
@@ -274,7 +300,7 @@ export function FirstScreen() {
             with. Panel.tsx carries it. */}
         <p className="type-body m-0">
           Start with a free expert audit of what the AI agents and automations in your ad accounts and beyond have
-          been doing. Then the work it turns up: any automations, Google Ad, any advertising, and the measurement
+          been doing. Then the work it turns up: digital assets, Google Ads, any advertising, and the measurement
           under it, inbound LinkedIn on the official API, custom AI around all of it &mdash; for you and/or your
           clients.
         </p>

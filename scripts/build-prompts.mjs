@@ -71,6 +71,12 @@ const WAVES = [
      already work. One after another, not together: all three want
      server/routes.ts and shared/api.ts. */
   { n: 18, keys: ["room-account"], alone: true },
+  /* The thing the owner has asked for four times and that has never existed.
+     It cannot be started until two values exist — the client id and secret of
+     his separate Google app, the one with only calendar.freebusy on it. The
+     parcel is written to be completely inert without them, so running it early
+     costs nothing but produces nothing either. */
+  { n: 19, keys: ["visitor-calendar"], alone: true },
 ];
 
 function prompt(key) {
