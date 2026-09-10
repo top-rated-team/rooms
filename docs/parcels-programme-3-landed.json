@@ -393,5 +393,29 @@
     "runAlone": false,
     "why": "The AdGrant.AI front page and shell exist from an earlier wave, built from what the repository already knew. Now there is the real material - 23 written pages, 12 starter templates and a measured statistic over 4,539 accounts - and the owner wants the four sections rebuilt in this design system, with AdGrant.AI's own mark, menu and footer, and the front page turned from a form into a conversation.",
     "done": "A four-section site in the top-rated.team design system wearing AdGrant.AI's own chrome. THE SECTIONS, named as the live site names them: Ad Grant Glossary (Terminology explained), Case Studies, Tips & Tricks (Custom workarounds), Starter Templates. Each gets an index and a leaf page, rendered from shared/adgrant.ts, which the previous wave generated. KEEP THE URL SHAPES - /glossary/<slug>, /tricks/<slug> and their siblings - because every page carries relatedLinks into the others and the internal link graph is worth more than a tidier path. SET TITLE AND DESCRIPTION PER ROUTE from each page's own metaTitle and metaDescription, the way client/src/pages/landing.tsx does it. The live site serves one title and one canonical for all 74 URLs and injects the rest client-side, so this metadata exists and is currently wasted; this is the cheapest real improvement on the whole site. THE FRONT PAGE: the measured statistic goes on it. 4,539 Ad Grant accounts processed, 16,575 campaigns, 3,142,469 keywords, with the medians beside them - that is the most valuable thing this product owns and the current site does almost nothing with it. State what each number is a number OF, and do not round it into a marketing figure. Then the conversation: the front page's action is an agent that asks what the nonprofit needs, not a form. Identity is required before it generates, and generating is the previous wave's endpoint - call it, do not reimplement it, and print the remaining count of three where a person can see it before they spend one. Say plainly what happens: a structure is produced and shown, and a person sets up the account link afterwards. Do NOT write any sentence implying the structure was uploaded into their Google Ads account. THE CHROME: its own mark, its own top menu, its own footer, both linking back to top-rated.team. Extend the accent and wordmark in client/src/components/site/doors/adgrant-style.ts rather than starting a second palette; the type scale, the spacing scale and the class vocabulary in client/src/components/site/doors/quiet.ts stay exactly as they are. No import of the site's Header or Footer. Build it so it can move to its own host later: nothing that assumes the apex. Two faces of type, not the twenty-eight the live site loads; no pinch-zoom lock; and no machine-translation gadget - English only is an honest state. Where a section's material is thin, say less rather than padding it."
+  },
+  "adgrant-setup-files": {
+    "owns": [
+      "client/src/components/adgrant/TemplatePage.tsx",
+      "client/src/components/adgrant/TemplatesIndex.tsx",
+      "client/src/components/adgrant/Structure.tsx",
+      "server/adgrant/templates.ts",
+      "server/adgrant/templates.test.ts",
+      "server/adgrant/generate.ts",
+      "server/adgrant/generate.test.ts",
+      "scripts/build-adgrant.ts",
+      "shared/adgrant.ts"
+    ],
+    "seams": {
+      "server/routes.ts": [
+        "the route that hands a template's setup files over"
+      ],
+      "shared/api.ts": [
+        "what a template's setup files look like to the page"
+      ]
+    },
+    "runAlone": true,
+    "why": "A starter template page today prints seven counts and hands over nothing. The owner's point is that a template IS the setup: the person reading it wants the files, not the arithmetic. The live product already has them — /api/templates/<slug> returns the whole structure, 14KB of campaigns, ad groups, keywords, sitelinks, callouts and snippets — and our build fetches only the list endpoint, which omits it. So the data exists, the CSV writer exists, and nothing joins them.",
+    "done": "A TEMPLATE PAGE HANDS OVER ITS SETUP FILES, including the single one Google Ads Editor imports. Four things are known and each one is a trap if you find it late. (1) THE STRUCTURE IS ALREADY PUBLISHED but not at the endpoint we use: `/api/templates` omits it and `/api/templates/<slug>` returns it. Fetch per template in scripts/build-adgrant.ts. (2) IT IS NOT OUR SHAPE. The live template structure is {callouts, campaigns[{name, status, dailyBudget, adGroups}], languageCodes, languageIds, locationIds, locationList, sitelinks, structuredSnippets, totalDailyBudget}. structureToEditorCsv in server/adgrant/generate.ts takes AdGrantAccountStructure, which has authorisedDomain, per-campaign bidStrategy and per-campaign sitelinks. Map one to the other deliberately and test the mapping; do not widen the CSV writer until it accepts anything, because it is the file somebody imports into a live Google Ads account. (3) DO NOT PUT TWELVE STRUCTURES IN THE CLIENT BUNDLE. shared/adgrant.ts is imported by the landing page; twelve 14KB structures is about 170KB of JavaScript for a page that shows seven numbers. The structures belong behind a route, fetched when the visitor asks for the files, which is also what makes it \"the result of a submit\" rather than a page weight. (4) THE FILE IS THE PRODUCT AND IT MUST BE HONEST: a CSV that imports cleanly and does nothing is worse than none. Every campaign it writes is Paused, as the generator's already are, and the page says so before the download rather than after. WHAT MUST NOT CHANGE: nothing is written into anybody's Google Ads account by this parcel — that is the next one — and the page keeps saying so."
   }
 }

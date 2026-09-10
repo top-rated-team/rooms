@@ -17,6 +17,7 @@ import { remainingForPerson, resetAdgrantQuotaForTests, personKeyFor } from "./q
 import {
   CAP_REACHED_LINE,
   EDITOR_LINE,
+  PAUSED_LINE,
   UNBOUND_LINE,
   buildStructureFromSite,
   generateAdGrantStructure,
@@ -103,6 +104,24 @@ describe("structureToEditorCsv", () => {
     assert.equal(/oauth/i.test(csv), false);
     assert.match(EDITOR_LINE, /Google Ads Editor/);
     assert.equal(/upload/i.test(EDITOR_LINE), false);
+    assert.match(PAUSED_LINE, /Paused/);
+    assert.match(csv, /Headline 15/);
+    assert.match(csv, /Description 4/);
+  });
+
+  it("writes every headline and description the structure carries, up to the Editor RSA limits", () => {
+    const site = parseSiteHtml(HTML, new URL(SITE_URL));
+    const structure = buildStructureFromSite(site, "Oregon");
+    structure.campaigns[0].adGroups[0].ads[0].headlines = Array.from({ length: 12 }, (_, i) => `Headline slot ${i + 1}`);
+    structure.campaigns[0].adGroups[0].ads[0].descriptions = [
+      "First description for the ad.",
+      "Second description for the ad.",
+      "Third description for the ad.",
+      "Fourth description for the ad.",
+    ];
+    const csv = structureToEditorCsv(structure);
+    assert.match(csv, /Headline slot 12/);
+    assert.match(csv, /Fourth description for the ad\./);
   });
 });
 
@@ -130,6 +149,7 @@ describe("generateAdGrantStructure", () => {
     assert.equal(first.body.remaining, 2);
     assert.equal(first.body.cap, 3);
     assert.equal(first.body.editorLine, EDITOR_LINE);
+    assert.equal(first.body.pausedLine, PAUSED_LINE);
     assert.equal(policyHolds(first.body.structure), true);
     assert.match(first.body.csv, /Hope Shelter/);
     assert.match(first.body.capReason, /15,000/);

@@ -58,7 +58,6 @@ const WAVES = [
    * endpoint that omits them — so this parcel joins data that exists to a CSV
    * writer that exists. It does NOT touch anybody's Google Ads account.
    */
-  { n: 16, keys: ["adgrant-setup-files"], alone: true },
   /*
    * Everything after a booking: remember it, come back to it, change it,
    * cancel it. It waited for wave 14 to release BookingDialog.tsx.

@@ -1,7 +1,9 @@
 /**
  * Fetches adgrant.ai's public content API into data/adgrant, corrects six
  * statements that are wrong against Google's current documentation, and writes
- * shared/adgrant.ts.
+ * shared/adgrant.ts. Template structures are fetched per slug from
+ * /api/templates/<slug> into data/adgrant/structures — the list endpoint
+ * omits them, and they must not enter shared/adgrant.ts.
  *
  *   npm run adgrant:build
  *   npx tsx scripts/build-adgrant.ts
@@ -866,6 +868,30 @@ async function fetchLibrary(takeTheirs: boolean): Promise<void> {
   const stats = await fetchJson<AdGrantStats>(`${API}/api/templates/stats`);
   writeJsonGuarded(path.join(SOURCE, "templates.json"), templates, takeTheirs);
   writeJsonGuarded(path.join(SOURCE, "stats.json"), stats, takeTheirs);
+
+  /* The list endpoint omits the structure. GET /api/templates/<slug> returns
+     it — about 14KB of campaigns, ad groups, keywords, sitelinks, callouts
+     and snippets. Written beside the list, not into shared/adgrant.ts. */
+  fs.mkdirSync(path.join(SOURCE, "structures"), { recursive: true });
+  for (const template of templates) {
+    const detail = await fetchJson<Record<string, unknown>>(
+      `${API}/api/templates/${encodeURIComponent(template.slug)}`,
+    );
+    const structure = detail.structure;
+    if (!structure || typeof structure !== "object") {
+      throw new Error(`/api/templates/${template.slug} has no structure`);
+    }
+    writeJsonGuarded(
+      path.join(SOURCE, "structures", `${template.slug}.json`),
+      {
+        slug: template.slug,
+        title: typeof detail.title === "string" ? detail.title : template.title,
+        niche: typeof detail.niche === "string" ? detail.niche : template.niche,
+        structure,
+      },
+      takeTheirs,
+    );
+  }
 }
 
 function writeJsonGuarded(file: string, value: unknown, takeTheirs: boolean): void {
@@ -944,6 +970,16 @@ export function assertLibrary(pages: AdGrantPage[], stats: AdGrantStats, templat
   if (templates.length === 0) {
     throw new Error("no starter templates on disk");
   }
+  for (const template of templates) {
+    const file = path.join(SOURCE, "structures", `${template.slug}.json`);
+    if (!fs.existsSync(file)) {
+      throw new Error(`${file} is missing — the list endpoint omits the structure; fetch /api/templates/${template.slug}`);
+    }
+    const payload = JSON.parse(fs.readFileSync(file, "utf8")) as { structure?: { campaigns?: unknown } };
+    if (!Array.isArray(payload.structure?.campaigns) || payload.structure.campaigns.length === 0) {
+      throw new Error(`${file} has no campaigns`);
+    }
+  }
 }
 
 function generate(pages: AdGrantPage[], stats: AdGrantStats, templates: AdGrantTemplate[]): void {
@@ -958,6 +994,11 @@ function generate(pages: AdGrantPage[], stats: AdGrantStats, templates: AdGrantT
  * STATS is the measured figure from GET /api/templates/stats. It is the
  * number this library may quote. The unsourced percentages that used to
  * stand in front of it are not in these pages.
+ *
+ * TEMPLATE STRUCTURES are not in this file. They live under
+ * data/adgrant/structures and the server reads them when a visitor asks
+ * for the setup files. Twelve of them are about 170KB; this module is
+ * imported by the landing page, which shows seven numbers.
  */
 
 export interface RelatedLink {

@@ -525,7 +525,9 @@ function csvCell(value: string | number | undefined): string {
 const EDITOR_HEADLINES = 15;
 const EDITOR_DESCRIPTIONS = 4;
 
-const EDITOR_COLUMNS = [
+/* Exported so a test can count the columns of every row rather than
+   trusting that the writer quoted a field with a comma in it. */
+export const EDITOR_COLUMNS = [
   "Row Type",
   "Campaign",
   "Campaign type",

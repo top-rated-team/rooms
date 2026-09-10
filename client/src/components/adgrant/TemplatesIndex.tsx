@@ -19,7 +19,17 @@ export function TemplatesIndex() {
         <h1 className={`mt-[var(--s2)] ${DISPLAY}`} data-testid="text-adgrant-templates-headline">
           {SECTION.name}
         </h1>
+        {/* SECTION.line still ends "not a generated account", and the
+            sentence under it used to begin "Opening a template hands over the
+            setup files" — two claims a reader meets a line apart, one saying
+            this is only a count and the next saying it is a file. Both are
+            true of different things; said in that order they read as a
+            contradiction, so this one names which is which. */}
         <p className={`mt-[var(--s3)] max-w-[46ch] ${READ_MUTED}`}>{SECTION.line}</p>
+        <p className={`mt-[var(--s2)] max-w-[46ch] ${READ_MUTED}`}>
+          The counts are the shape. Open one and it also hands over the files that shape imports from, including the
+          Google Ads Editor CSV, with every campaign Paused. Nothing is written into a Google Ads account.
+        </p>
 
         <ol className="mt-[var(--s5)] list-none p-0">
           {TEMPLATES.map((template, index) => (

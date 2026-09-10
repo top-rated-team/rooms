@@ -28,8 +28,18 @@ import { domainFromHost, EDITOR_LINE, PAUSED_LINE, structureToEditorCsv } from "
 export const UPLOAD_LINE =
   "Nothing is written into a Google Ads account. A person sets up the manager-account link afterwards if the structure should go into the grant account.";
 
+/*
+ * The second clause used to read "that file's importer does not write those
+ * row types", which is untrue: Google Ads Editor imports callout and
+ * structured-snippet assets, and this repository's own writer emits Sitelink
+ * rows, which are an asset of the same class. The limit is ours —
+ * EDITOR_COLUMNS in generate.ts declares no callout or snippet column — and
+ * blaming the tool sent a reader off to retype by hand what Editor would have
+ * taken from a file. A sentence on this page has to be true of the code AND
+ * of the world.
+ */
 export const ASSETS_LINE =
-  "Callouts and structured snippets from the published template, as a list. They are not in the Google Ads Editor file; that file's importer does not write those row types.";
+  "Callouts and structured snippets from the published template, as a list. The Google Ads Editor file does not carry them yet — add them in Editor or in the web interface.";
 
 export const EDITOR_FILE_LINE =
   "The file Google Ads Editor imports. Campaigns, ad groups, keywords, ads and sitelinks. Every campaign row is Paused.";

@@ -9,6 +9,11 @@
  * STATS is the measured figure from GET /api/templates/stats. It is the
  * number this library may quote. The unsourced percentages that used to
  * stand in front of it are not in these pages.
+ *
+ * TEMPLATE STRUCTURES are not in this file. They live under
+ * data/adgrant/structures and the server reads them when a visitor asks
+ * for the setup files. Twelve of them are about 170KB; this module is
+ * imported by the landing page, which shows seven numbers.
  */
 
 export interface RelatedLink {

@@ -25,30 +25,6 @@
   "//alone": "Parcels marked runAlone touch the room, the panel or the shell - everything reads those, and two agents in them at once produce a merge nobody can check. One agent, let it finish, then start the others.",
   "//order": "The waves are in scripts/build-prompts.mjs and check-parcels.mjs reads them back. Programme three's ordering is a dependency chain, not a preference, and it has three links. (1) unipile-core is wave one ALONE because four parcels import its client; a parcel that writes its own Unipile client because the shared one did not exist yet is four incompatible error mappers. (2) booking-server and booking-dialog are the same wave and build to the request and response shapes fixed in the brief's section 3 - that is what fixing them in writing was for. (3) room-identity precedes login-create-room, because the claim dialog the site's new menu opens is the one room-identity builds. Beyond the chain, one standing rule: AT MOST ONE PARCEL PER WAVE MAY TOUCH server/routes.ts. Three parcels here need a route, and they are in three different waves for that reason alone.",
   "parcels": {
-    "adgrant-setup-files": {
-      "owns": [
-        "client/src/components/adgrant/TemplatePage.tsx",
-        "client/src/components/adgrant/TemplatesIndex.tsx",
-        "client/src/components/adgrant/Structure.tsx",
-        "server/adgrant/templates.ts",
-        "server/adgrant/templates.test.ts",
-        "server/adgrant/generate.ts",
-        "server/adgrant/generate.test.ts",
-        "scripts/build-adgrant.ts",
-        "shared/adgrant.ts"
-      ],
-      "seams": {
-        "server/routes.ts": [
-          "the route that hands a template's setup files over"
-        ],
-        "shared/api.ts": [
-          "what a template's setup files look like to the page"
-        ]
-      },
-      "runAlone": true,
-      "why": "A starter template page today prints seven counts and hands over nothing. The owner's point is that a template IS the setup: the person reading it wants the files, not the arithmetic. The live product already has them — /api/templates/<slug> returns the whole structure, 14KB of campaigns, ad groups, keywords, sitelinks, callouts and snippets — and our build fetches only the list endpoint, which omits it. So the data exists, the CSV writer exists, and nothing joins them.",
-      "done": "A TEMPLATE PAGE HANDS OVER ITS SETUP FILES, including the single one Google Ads Editor imports. Four things are known and each one is a trap if you find it late. (1) THE STRUCTURE IS ALREADY PUBLISHED but not at the endpoint we use: `/api/templates` omits it and `/api/templates/<slug>` returns it. Fetch per template in scripts/build-adgrant.ts. (2) IT IS NOT OUR SHAPE. The live template structure is {callouts, campaigns[{name, status, dailyBudget, adGroups}], languageCodes, languageIds, locationIds, locationList, sitelinks, structuredSnippets, totalDailyBudget}. structureToEditorCsv in server/adgrant/generate.ts takes AdGrantAccountStructure, which has authorisedDomain, per-campaign bidStrategy and per-campaign sitelinks. Map one to the other deliberately and test the mapping; do not widen the CSV writer until it accepts anything, because it is the file somebody imports into a live Google Ads account. (3) DO NOT PUT TWELVE STRUCTURES IN THE CLIENT BUNDLE. shared/adgrant.ts is imported by the landing page; twelve 14KB structures is about 170KB of JavaScript for a page that shows seven numbers. The structures belong behind a route, fetched when the visitor asks for the files, which is also what makes it \"the result of a submit\" rather than a page weight. (4) THE FILE IS THE PRODUCT AND IT MUST BE HONEST: a CSV that imports cleanly and does nothing is worse than none. Every campaign it writes is Paused, as the generator's already are, and the page says so before the download rather than after. WHAT MUST NOT CHANGE: nothing is written into anybody's Google Ads account by this parcel — that is the next one — and the page keeps saying so."
-    },
     "booking-return": {
       "owns": [
         "client/src/components/site/BookingDialog.tsx",

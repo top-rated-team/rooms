@@ -64,6 +64,7 @@ import {
   startBookingLinkedIn,
 } from "./booking/signin";
 import { generateAdGrantStructure, getAdGrantGenerationQuota } from "./adgrant/generate";
+import { templateSetupFiles } from "./adgrant/templates";
 import { adGrantStats } from "./adgrant/stats";
 import { adgrantRobotsTxt, adgrantSitemapXml } from "./adgrant/site";
 import { rewriteHead } from "./adgrant/head";
@@ -1734,6 +1735,19 @@ export function registerRoutes(app: Express): void {
       const { stats, live } = await adGrantStats();
       res.setHeader("Cache-Control", "public, max-age=1800");
       res.json({ stats, live });
+    }),
+  );
+
+  /* Setup files for one starter template. Fetched when the visitor asks, not
+     shipped in the page: the structure is 14KB and twelve of them would sit
+     in every bundle that imports shared/adgrant.ts. Nothing here writes into
+     a Google Ads account. */
+  app.get(
+    "/api/adgrant/templates/:slug/files",
+    route(async (req, res) => {
+      const slug = typeof req.params.slug === "string" ? req.params.slug : "";
+      const result = templateSetupFiles(slug);
+      res.status(result.status).json(result.body);
     }),
   );
 

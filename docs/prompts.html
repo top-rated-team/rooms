@@ -45,7 +45,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">4 still to run. Copy one, paste
+  <p class="lede">3 still to run. Copy one, paste
   it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -60,110 +60,6 @@
     <li>Run the same two commands again. If they pass, commit. Then the next wave.</li>
   </ol>
 
-    <section class="wave">
-      <h2>Wave 16 — this one runs alone</h2>
-      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
-      <article class="parcel">
-        <header>
-          <h3>adgrant-setup-files</h3>
-          <button class="copy" data-target="p-adgrant-setup-files">Copy this prompt</button>
-        </header>
-        <p class="what">A starter template page today prints seven counts and hands over nothing.</p>
-        <pre id="p-adgrant-setup-files">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "adgrant-setup-files".
-
-Read these first, before you write anything, in this order:
-  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
-    content API and what was captured through it; the six statements in that material
-    that are wrong against Google's current documentation, each with the page that
-    contradicts it; why "generate and upload" is two products with a Google approval
-    between them; and the answer to the owner's question about per-agent limits.
-  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
-    endpoint it touches, transcribed with the URL it came from. Four decisions already
-    made, with the reasoning, so you do not spend your wave relitigating them. The
-    request and response shapes two parcels build to in parallel. And the rule the
-    owner set: every message is checked for who it is from, who it is to and which
-    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
-    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
-    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
-    A paraphrase would not, and you would find out after building on all three.
-  README.md, private/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  client/src/components/adgrant/TemplatePage.tsx
-  client/src/components/adgrant/TemplatesIndex.tsx
-  client/src/components/adgrant/Structure.tsx
-  server/adgrant/templates.ts
-  server/adgrant/templates.test.ts
-  server/adgrant/generate.ts
-  server/adgrant/generate.test.ts
-  scripts/build-adgrant.ts
-  shared/adgrant.ts
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  server/routes.ts
-      - the route that hands a template's setup files over
-  shared/api.ts
-      - what a template's setup files look like to the page
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  A TEMPLATE PAGE HANDS OVER ITS SETUP FILES, including the single one Google Ads Editor
-  imports. Four things are known and each one is a trap if you find it late. (1) THE STRUCTURE
-  IS ALREADY PUBLISHED but not at the endpoint we use: `/api/templates` omits it and
-  `/api/templates/&lt;slug&gt;` returns it. Fetch per template in scripts/build-adgrant.ts. (2) IT IS
-  NOT OUR SHAPE. The live template structure is {callouts, campaigns[{name, status, dailyBudget,
-  adGroups}], languageCodes, languageIds, locationIds, locationList, sitelinks,
-  structuredSnippets, totalDailyBudget}. structureToEditorCsv in server/adgrant/generate.ts
-  takes AdGrantAccountStructure, which has authorisedDomain, per-campaign bidStrategy and
-  per-campaign sitelinks. Map one to the other deliberately and test the mapping; do not widen
-  the CSV writer until it accepts anything, because it is the file somebody imports into a live
-  Google Ads account. (3) DO NOT PUT TWELVE STRUCTURES IN THE CLIENT BUNDLE. shared/adgrant.ts
-  is imported by the landing page; twelve 14KB structures is about 170KB of JavaScript for a
-  page that shows seven numbers. The structures belong behind a route, fetched when the visitor
-  asks for the files, which is also what makes it "the result of a submit" rather than a page
-  weight. (4) THE FILE IS THE PRODUCT AND IT MUST BE HONEST: a CSV that imports cleanly and does
-  nothing is worse than none. Every campaign it writes is Paused, as the generator's already
-  are, and the page says so before the download rather than after. WHAT MUST NOT CHANGE: nothing
-  is written into anybody's Google Ads account by this parcel — that is the next one — and the
-  page keeps saying so.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  A starter template page today prints seven counts and hands over nothing. The owner's point is
-  that a template IS the setup: the person reading it wants the files, not the arithmetic. The
-  live product already has them — /api/templates/&lt;slug&gt; returns the whole structure, 14KB of
-  campaigns, ad groups, keywords, sitelinks, callouts and snippets — and our build fetches only
-  the list endpoint, which omits it. So the data exists, the CSV writer exists, and nothing
-  joins them.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-    </section>
     <section class="wave">
       <h2>Wave 17 — this one runs alone</h2>
       <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>

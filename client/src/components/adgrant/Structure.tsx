@@ -39,6 +39,7 @@ export function Structure({ result }: { result: AdGrantGenerateResponse }) {
   return (
     <div data-testid="block-adgrant-structure">
       <p className={READ}>{result.editorLine}</p>
+      <p className={`mt-[var(--s2)] ${READ}`}>{result.pausedLine}</p>
       <p className={`mt-[var(--s2)] ${READ_MUTED}`}>
         A person sets up the manager-account link afterwards if the structure should go into the grant account. This
         page did not write it there.
