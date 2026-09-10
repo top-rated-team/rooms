@@ -145,26 +145,61 @@ was found. That row now says it is not built.
 
 ---
 
-## adgrant.ai — a decision, not a configuration
+## adgrant.ai — the code is done; the domain is yours to point
 
-The new AdGrant.AI site is served at `top-rated.team/adgrant`, mounted in
-`client/src/App.tsx`. Pointing the `adgrant.ai` domain at Render today would
-serve the top-rated.team landing page at `adgrant.ai/`, because nothing in this
-codebase looks at the hostname. Four things have to be settled first:
+Written 10 September 2026. Everything in this repository is ready: one build
+answers as both sites and decides which it is per request. Nothing here waits
+on another commit.
 
-1. **A host-aware root.** `adgrant.ai/` must mount the AdGrant tree at `/`,
-   while `top-rated.team/adgrant` keeps working or redirects.
-2. **The 33 + 74 pages already on adgrant.ai.** This repo links out to them as
-   an external library. Taking the domain over replaces whatever serves them
-   now — that is a content decision, not a deployment one.
-3. **`HOUSE_HOSTS` in `shared/operator.ts`.** `adgrant.ai` is ours, so it
-   belongs there; without it the booking gate treats the domain as a fork and
-   refuses a booking with no address.
-4. **Canonicals, sitemap and `llms.txt`** would otherwise publish the same
-   pages under two domains.
+### What to do, in order
 
-The Render and DNS half is small once that is settled: add `adgrant.ai` and
-`www.adgrant.ai` as custom domains on service `srv-daeq2bv40ujc7389ao4g`, then
-put the ALIAS/ANAME and CNAME records Render hands back at the registrar.
-`PUBLIC_BASE_URL` stays `https://top-rated.team` — webhooks and magic links are
-built from it.
+1. **Render.** Service `srv-daeq2bv40ujc7389ao4g` → Settings → Custom Domains →
+   add **`adgrant.ai`** and **`www.adgrant.ai`**. Render then shows the DNS
+   records to create, and verifies once they resolve.
+2. **The registrar, where adgrant.ai's DNS lives.** Create what Render asked
+   for — normally an **ALIAS/ANAME** (or **A**) record on the apex pointing at
+   Render, and a **CNAME** on `www` pointing at the service's
+   `*.onrender.com` hostname. If the DNS is on Cloudflare, set both records to
+   **DNS only** (grey cloud) until Render says Verified, then turn the proxy
+   back on if you want it.
+3. **Wait for Render to say Verified** and issue the certificate. Minutes,
+   usually; up to an hour if the old records were cached.
+4. **Open `https://adgrant.ai/`.** You should get the AdGrant home at the
+   root, with the menu links reading `/glossary` and not `/adgrant/glossary`.
+5. **Tell me it is live** and I will remove the canonicals in one commit —
+   see below. Nothing breaks if that waits a day.
+
+`PUBLIC_BASE_URL` stays `https://top-rated.team`. It is what webhooks and
+magic links are built from, and neither belongs to the AdGrant site.
+
+### What the code already does
+
+- `shared/adgrant-site.ts` names the two hostnames, and both the client and the
+  server ask it, so they cannot disagree about which site this is.
+- On adgrant.ai the tree answers at the root and the Top-Rated Team routes are
+  **absent**, not hidden — `/pricing` and `/team` existing on both domains with
+  no canonical between them is how both lose.
+- `top-rated.team/adgrant` keeps working, so no published link breaks.
+- `robots.txt` and `sitemap.xml` are routes, and the AdGrant sitemap is
+  generated from the same pages that render — 33 addresses today.
+- Both hostnames are house hosts, so the booking gate does not treat our own
+  domain as a fork.
+
+### The one thing to remove afterwards
+
+While the pages are duplicated, every AdGrant page on top-rated.team declares
+the live adgrant.ai URL as its canonical. Once the domain answers, that is a
+page declaring itself a copy of itself. The condition is written as
+"`ADGRANT_MOUNT` is not empty" in `client/src/components/adgrant/Meta.tsx`, so
+it switches itself off **on the AdGrant host** the moment the domain resolves —
+but the copies still served under `top-rated.team/adgrant` keep pointing at
+adgrant.ai, which is correct and can stay indefinitely.
+
+### Still open, and it is a content question rather than a technical one
+
+adgrant.ai serves 27 pages today in the old design, and this repository now has
+all 27 in the new one. Taking the domain over replaces whatever serves them
+now. If anything lives there that is not in `shared/adgrant.ts` — the
+`/nonprofits` set here is four pages, all `animal-shelters/<city>` — say what
+it is before the DNS changes.
+
