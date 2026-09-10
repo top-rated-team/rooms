@@ -67,7 +67,14 @@ export function serveStatic(app: Express): void {
   });
 }
 
-function resolveDistPath(): string {
+/**
+ * Exported because server/routes.ts serves a rewritten index.html to the
+ * AdGrant hosts and must look in the same place. It did not, for one deploy:
+ * a hand-rolled path with an extra ".." in it resolved next to the bundle's
+ * parent, the existsSync guard failed silently, and adgrant.ai served the
+ * other site's head while everything else about it was right.
+ */
+export function resolveDistPath(): string {
   // This file is bundled into dist/index.js, so "public" next to the bundle is
   // dist/public. The second candidate covers running the server from source.
   const candidates = [path.resolve(import.meta.dirname, "public"), path.resolve(process.cwd(), "dist", "public")];

@@ -68,6 +68,7 @@ import { adGrantStats } from "./adgrant/stats";
 import { adgrantRobotsTxt, adgrantSitemapXml } from "./adgrant/site";
 import { rewriteHead } from "./adgrant/head";
 import { ADGRANT_ORIGIN } from "@shared/adgrant-site";
+import { resolveDistPath } from "./vite";
 import fs from "node:fs";
 import path from "node:path";
 import { isAdGrantHost } from "@shared/adgrant-site";
@@ -1677,15 +1678,31 @@ export function registerRoutes(app: Express): void {
     res.redirect(301, `${ADGRANT_ORIGIN}${rest}${query}`);
   });
 
-  const distIndex = path.resolve(import.meta.dirname, "..", "public", "index.html");
+  /* resolveDistPath and not a path of our own: the first version of this
+     line had an extra ".." in it, existsSync said no, and the route fell
+     through in silence — adgrant.ai served the other site's head for a
+     deploy while its redirects, its sitemap and its icon were all correct.
+     Resolved once, lazily, because in development there is no dist at all
+     and resolveDistPath throws rather than returning nothing. */
+  let distIndex: string | null | undefined;
+  const adgrantIndexPath = (): string | null => {
+    if (distIndex !== undefined) return distIndex;
+    try {
+      distIndex = path.join(resolveDistPath(), "index.html");
+    } catch {
+      distIndex = null;
+    }
+    return distIndex;
+  };
   app.get(/.*/, (req, res, next) => {
     if (req.method !== "GET") return next();
     if (!isAdGrantHost(req.hostname)) return next();
     if (path.extname(req.path)) return next();
     if (req.path.startsWith("/api/")) return next();
     if (!req.accepts("html")) return next();
-    if (!fs.existsSync(distIndex)) return next();
-    const { html, missed } = rewriteHead(fs.readFileSync(distIndex, "utf8"));
+    const index = adgrantIndexPath();
+    if (!index || !fs.existsSync(index)) return next();
+    const { html, missed } = rewriteHead(fs.readFileSync(index, "utf8"));
     if (missed.length > 0) {
       /* The frozen file changed under us. Serving a head that is half one
          site and half the other would look fine and be wrong, so say so. */
