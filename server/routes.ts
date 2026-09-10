@@ -65,6 +65,8 @@ import {
 } from "./booking/signin";
 import { generateAdGrantStructure, getAdGrantGenerationQuota } from "./adgrant/generate";
 import { adGrantStats } from "./adgrant/stats";
+import { adgrantRobotsTxt, adgrantSitemapXml } from "./adgrant/site";
+import { isAdGrantHost } from "@shared/adgrant-site";
 import { openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage, bindRoomAddressForToken } from "./room-access";
 import {
   completeRoomLoginLinkedIn,
@@ -1625,6 +1627,19 @@ export function registerRoutes(app: Express): void {
       res.redirect(302, result.redirectTo);
     }),
   );
+
+  /* One process answers two domains, so these two files cannot be static.
+     registerRoutes runs before express.static, so an AdGrant host is answered
+     here and ours falls through to client/public untouched. */
+  app.get("/robots.txt", (req, res, next) => {
+    if (!isAdGrantHost(req.hostname)) return next();
+    res.type("text/plain").send(adgrantRobotsTxt());
+  });
+
+  app.get("/sitemap.xml", (req, res, next) => {
+    if (!isAdGrantHost(req.hostname)) return next();
+    res.type("application/xml").send(adgrantSitemapXml());
+  });
 
   /* Today's figures for the AdGrant.AI home page. A proxy because the source
      sends no CORS header, cached for six hours, and it answers with the

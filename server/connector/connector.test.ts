@@ -21,6 +21,7 @@ import express, { type Request } from "express";
 import { CASES } from "@shared/cases";
 import { DOORS } from "@shared/doors";
 import { PRICES } from "@shared/pricing";
+import { AGENT_BY_ID } from "@shared/roster";
 
 import { ASK_LEDGER_KEY, askBudgetUsd, claimAgentTurn, recordTurnCost, resetSpendLedgerForTests } from "../spend";
 import { askQuestion, createRoom, listCases, listPrices, listServices } from "./handlers";
@@ -49,17 +50,21 @@ describe("the published rows leave this file as they arrived", () => {
     assert.deepEqual(listCases(), { cases: CASES });
   });
 
-  it("returns every door, and copies headline, blurb and contract rather than rewriting them", () => {
+  it("returns every published door, and copies headline, blurb and contract rather than rewriting them", () => {
+    /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
+    const published = DOORS.filter((door) => !door.hidden);
     const { services } = listServices();
-    assert.equal(services.length, DOORS.length);
-    for (const [index, door] of DOORS.entries()) {
+    assert.equal(services.length, published.length);
+    for (const [index, door] of published.entries()) {
       const row = services[index];
       assert.equal(row.id, door.id);
       assert.equal(row.headline, door.headline);
       assert.equal(row.blurb, door.blurb);
       assert.deepEqual(row.contract, door.contract);
       assert.equal(row.status, door.status);
-      assert.equal(row.firstAgentId, door.firstAgentId);
+      const expectedAgentId =
+        door.firstAgentId && AGENT_BY_ID[door.firstAgentId]?.hidden ? null : door.firstAgentId;
+      assert.equal(row.firstAgentId, expectedAgentId);
       assert.equal(row.priceTier, door.priceTier);
       if (door.status === "coming") {
         assert.equal(row.comingLine, door.comingLine);
@@ -153,6 +158,19 @@ describe("a room response is an address, not a workspace", () => {
     assert.equal(result.status, 400);
     assert.ok("error" in result.payload);
   });
+
+  /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete these two cases when the application is answered. */
+  it("rejects a hidden door as unknown", async () => {
+    const result = await createRoom(fakeReq(), { doorId: "linkedin-automation" });
+    assert.equal(result.status, 400);
+    assert.deepEqual(result.payload, { error: "Unknown door: linkedin-automation" });
+  });
+
+  it("rejects a hidden agent as unknown", async () => {
+    const result = await askQuestion(fakeReq(), { question: "What can be automated?", agentId: "linkedin-dev" });
+    assert.equal(result.status, 400);
+    assert.deepEqual(result.payload, { error: "Unknown agent: linkedin-dev" });
+  });
 });
 
 describe("the HTTP mounts and the MCP front door", () => {
@@ -189,6 +207,15 @@ describe("the HTTP mounts and the MCP front door", () => {
     };
     assert.equal(spec.openapi, "3.1.0");
     assert.equal(spec.servers[0]?.url, origin);
+    const agentEnum = (
+      spec.paths["/api/connector/ask"] as {
+        post: { requestBody: { content: { "application/json": { schema: { properties: { agentId: { enum: string[] } } } } } } };
+      }
+    ).post.requestBody.content["application/json"].schema.properties.agentId.enum;
+    /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
+    assert.ok(agentEnum.includes("linkedin-ads"));
+    assert.ok(!agentEnum.includes("linkedin-automation"));
+    assert.ok(!agentEnum.includes("linkedin-dev"));
     for (const path of [
       "/api/connector/services",
       "/api/connector/prices",
@@ -212,14 +239,17 @@ describe("the HTTP mounts and the MCP front door", () => {
     assert.deepEqual(await res.json(), { cases: CASES });
   });
 
-  it("GET /api/connector/services lists every door", async () => {
+  it("GET /api/connector/services lists every published door", async () => {
     const res = await fetch(`${origin}/api/connector/services`);
     assert.equal(res.status, 200);
     const body = (await res.json()) as { services: Array<{ id: string }> };
+    /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
     assert.deepEqual(
       body.services.map((row) => row.id),
-      DOORS.map((door) => door.id),
+      DOORS.filter((door) => !door.hidden).map((door) => door.id),
     );
+    assert.ok(!body.services.some((row) => row.id === "linkedin-automation"));
+    assert.ok(!body.services.some((row) => row.id === "linkedin-growth"));
   });
 
   it("does not list rooms, leads or members", async () => {

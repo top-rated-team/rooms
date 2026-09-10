@@ -25,6 +25,12 @@ export const HOUSE_HOSTS = [
   "ai.top-rated.team",
   "top-rated.team",
   "www.top-rated.team",
+  /* AdGrant.AI is our own second product on the same deployment, not a fork.
+     Without these two the booking gate reads that domain as somebody else's
+     and refuses a booking with no address on it, and the white-label check
+     would let our own site be dressed as a partner's. */
+  "adgrant.ai",
+  "www.adgrant.ai",
 ] as const;
 
 /**

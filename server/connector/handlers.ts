@@ -17,7 +17,7 @@ import { z } from "zod";
 import { CASES } from "@shared/cases";
 import { DOOR_BY_ID, DOOR_TIERS, DOORS, type DoorDef } from "@shared/doors";
 import { PRICES } from "@shared/pricing";
-import { AGENT_BY_ID, DEFAULT_AGENT_ID } from "@shared/roster";
+import { AGENT_BY_ID, DEFAULT_AGENT_ID, type AgentDef } from "@shared/roster";
 import { askSchema, createWorkspaceSchema, type Citation } from "@shared/schema";
 
 import { llmReady, streamAgentAnswer } from "../ai/agentRuntime";
@@ -82,6 +82,7 @@ export type CreateRoomInput = z.infer<typeof createRoomSchema>;
 
 function publicService(door: DoorDef): ServiceRow {
   const tier = DOOR_TIERS[door.tier];
+  const firstAgentId = publishedAgentId(door.firstAgentId);
   const row: ServiceRow = {
     id: door.id,
     slug: door.slug,
@@ -95,7 +96,7 @@ function publicService(door: DoorDef): ServiceRow {
     contract: door.contract,
     agentLine: door.agentLine,
     starters: door.starters,
-    firstAgentId: door.firstAgentId,
+    firstAgentId,
     priceTier: door.priceTier,
   };
   if (door.comingLine) row.comingLine = door.comingLine;
@@ -103,9 +104,32 @@ function publicService(door: DoorDef): ServiceRow {
   return row;
 }
 
-/** Every door, in the order shared/doors.ts writes them. */
+/** HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
+function publishedDoors(): DoorDef[] {
+  return DOORS.filter((door) => !door.hidden);
+}
+
+/** HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
+function answerableAgent(id: string): AgentDef | undefined {
+  const agent = AGENT_BY_ID[id];
+  if (!agent || agent.hidden) return undefined;
+  return agent;
+}
+
+function publishedAgentId(id: string | null): string | null {
+  if (!id) return null;
+  return answerableAgent(id) ? id : null;
+}
+
+function publishedDoor(id: string): DoorDef | undefined {
+  const door = DOOR_BY_ID[id];
+  if (!door || door.hidden) return undefined;
+  return door;
+}
+
+/** Every published door, in the order shared/doors.ts writes them. */
 export function listServices(): { services: ServiceRow[] } {
-  return { services: DOORS.map(publicService) };
+  return { services: publishedDoors().map(publicService) };
 }
 
 /** The published ladder, row for row, with no figure added or removed. */
@@ -143,7 +167,8 @@ export async function askQuestion(
   }
 
   const agentId = parsed.data.agentId ?? DEFAULT_AGENT_ID;
-  if (!AGENT_BY_ID[agentId]) {
+  /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
+  if (!answerableAgent(agentId)) {
     return { status: 400, payload: { error: `Unknown agent: ${agentId}` } };
   }
 
@@ -209,7 +234,8 @@ export async function createRoom(
   }
 
   const doorId = parsed.data.doorId;
-  if (doorId && !DOOR_BY_ID[doorId]) {
+  /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
+  if (doorId && !publishedDoor(doorId)) {
     return { status: 400, payload: { error: `Unknown door: ${doorId}` } };
   }
 

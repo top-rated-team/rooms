@@ -135,9 +135,11 @@ export function WorkspaceSidebar({
     const inRoom = new Set<string>();
     for (const member of members) if (member.kind === "agent") inRoom.add(member.memberKey);
     for (const channel of agentChannels) if (channel.counterpartKey) inRoom.add(channel.counterpartKey);
+    /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
+    const listed = AGENTS.filter((agent) => !agent.hidden);
     return {
-      here: AGENTS.filter((agent) => inRoom.has(`agent:${agent.id}`)),
-      elsewhere: AGENTS.filter((agent) => !inRoom.has(`agent:${agent.id}`)),
+      here: listed.filter((agent) => inRoom.has(`agent:${agent.id}`)),
+      elsewhere: listed.filter((agent) => !inRoom.has(`agent:${agent.id}`)),
     };
   }, [agentChannels, members]);
 

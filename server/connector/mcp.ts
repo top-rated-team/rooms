@@ -35,7 +35,7 @@ export const MCP_TOOLS: ToolDef[] = [
   {
     name: "list_services",
     description:
-      "List every offer Top-Rated Team publishes: headline, who invoices, whether the panel is open, and which agent answers first. Quote the fields as returned.",
+      "List every published offer: headline, who invoices, whether the panel is open, and which agent answers first. Quote the fields as returned.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {

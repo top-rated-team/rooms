@@ -1,4 +1,5 @@
 import { Suspense, lazy } from "react";
+import { isAdGrantHost } from "@shared/adgrant-site";
 import { Route, Switch } from "wouter";
 
 import Door from "@/pages/door";
@@ -35,7 +36,27 @@ function RouteFallback() {
   );
 }
 
+/**
+ * On adgrant.ai this process is a different site, and the Top-Rated Team
+ * routes are not part of it. Not merely hidden: /pricing and /team on that
+ * domain must be nothing at all, or the same nine pages exist twice on two
+ * domains with no canonical between them, which is how both ranks are lost.
+ *
+ * The tree's own Switch routes on absolute paths built from ADGRANT_MOUNT,
+ * which is "" here, so it already answers "/", "/glossary" and the rest.
+ */
+function AdGrantSite() {
+  return (
+    <Suspense fallback={<RouteFallback />}>
+      <AdGrantApp />
+    </Suspense>
+  );
+}
+
 export default function App() {
+  if (isAdGrantHost(typeof window === "undefined" ? undefined : window.location.hostname)) {
+    return <AdGrantSite />;
+  }
   return (
     <Suspense fallback={<RouteFallback />}>
       <Switch>
@@ -71,7 +92,11 @@ export default function App() {
             the day it was built, and only the home page ever rendered. The
             optional wildcard keeps /adgrant itself matching and hands the full
             path to the tree's own Switch, which routes on absolute paths that
-            already carry the mount. */}
+            already carry the mount.
+
+            On adgrant.ai the mount is "" and this route is unreachable, because
+            the whole Switch is replaced above. The route stays so that every
+            /adgrant address ever published keeps answering from either host. */}
         <Route path="/adgrant/*?">
           <Suspense
             fallback={

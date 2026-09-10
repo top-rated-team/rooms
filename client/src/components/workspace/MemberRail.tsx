@@ -269,7 +269,8 @@ function roleFor(member: Member): string {
   if (member.role) return member.role;
   if (member.kind === "agent") {
     const agent: AgentDef | undefined = AGENT_BY_ID[member.memberKey.replace(/^agent:/, "")];
-    if (agent) return agent.title;
+    /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
+    if (agent && !agent.hidden) return agent.title;
   }
   return "";
 }
@@ -372,7 +373,11 @@ interface MemberRowProps {
  * text is on the person's DM, where a phone can read it.
  */
 export function hoverForKey(memberKey: string, kind: MemberKind): string | undefined {
-  if (kind === "agent") return AGENT_BY_ID[memberKey.replace(/^agent:/, "")]?.title;
+  if (kind === "agent") {
+    const agent = AGENT_BY_ID[memberKey.replace(/^agent:/, "")];
+    /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
+    return agent && !agent.hidden ? agent.title : undefined;
+  }
   const expert = EXPERT_BY_KEY[memberKey];
   if (!expert) return undefined;
   const specialties = expert.specialties?.length ? ` — ${expert.specialties.join(", ")}` : "";
@@ -565,8 +570,10 @@ export function MemberRail({
         ...visible.filter((m) => m.kind === "expert" && !OWNER_KEYS.has(m.memberKey)).sort(byName),
       ],
       // Ours first, then agents somebody else brought, each group by name.
+      /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
       agents: visible
         .filter((m) => m.kind === "agent")
+        .filter((m) => !AGENT_BY_ID[m.memberKey.replace(/^agent:/, "")]?.hidden)
         .sort((a, b) => Number(Boolean(detail?.[a.memberKey]?.outside)) - Number(Boolean(detail?.[b.memberKey]?.outside)) || byName(a, b)),
     };
   }, [members, detail]);

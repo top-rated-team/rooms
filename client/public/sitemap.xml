@@ -1,33 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  The public pages: the overview, and every door in a public tier at the address
-  its own row gives.
+  Written from the public-door rule: every white and light-grey row that is
+  not hidden, at the path its own row gives, plus the site pages that are
+  not doors. /services and the landing page already read that rule. A static
+  file cannot import it, so this is that list written out. The durable
+  writer belongs next to scripts/build-llms.ts, which already computes the
+  same set for llms.txt.
 
-  This list is not written by hand. It is PUBLIC_DOORS — the white and
-  light-grey rows, the rule in client/src/components/site/GatedOffers.tsx that
-  /services and the landing page already read — mapped to each row's `path`, plus
-  /services itself. A static file cannot import that rule, so the URLs are copied
-  out of it here; change a row's tier or its `path` in shared/doors.ts and this
-  file has to be regenerated with it, which is why it should be generated rather
-  than edited. See docs/DEPLOY.md for the domain, and the handoff about a
-  build-time generator.
-
-  / is the index of every public door. /services/chatgpt-ads is the door itself —
-  the argument for conversion tracking that used to be the home page.
+  HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW: hidden doors are
+  omitted. Delete the hidden flags when the application is answered and
+  rewrite this file from that list.
 
   Two kinds of address are absent on purpose.
 
-  - The gated doors, today /services/linkedin-growth. A sitemap is a public list of
-    URLs handed to crawlers, so a gated offer listed here is a published offer:
-    the page /services asks for an email address before naming would be fetched,
-    indexed, and shown in search results under the partner's name — and the
-    file itself is readable by anyone who types /sitemap.xml. A robots.txt
-    Disallow line would print the same address just as publicly. Leaving it out
-    is the only entry that does not publish it. The page still answers for
-    anyone who has the address; keeping it out of search is a noindex on the
-    page, not a line here.
-  - /w/:token. A workspace token is a bearer credential that lives in the URL,
-    and listing one would publish the credential.
+  - Partner and hidden doors. A sitemap is a public list of URLs handed to
+    crawlers, so an omitted offer listed here is a published offer. A
+    robots.txt Disallow line would print the same address just as publicly.
+    Leaving those addresses out is the only entry that does not publish them.
+  - /w/:token. A workspace token is a bearer credential that lives in the
+    URL, and listing one would publish the credential.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
@@ -36,9 +27,9 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://top-rated.team/case-studies</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <loc>https://top-rated.team/services</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://top-rated.team/pricing</loc>
@@ -46,9 +37,14 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://top-rated.team/services</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <loc>https://top-rated.team/case-studies</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://top-rated.team/services/paid-ads-audit</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://top-rated.team/services/chatgpt-ads</loc>
@@ -61,17 +57,12 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://top-rated.team/services/ad-grants</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://top-rated.team/services/linkedin-ads</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://top-rated.team/services/linkedin-automation</loc>
+    <loc>https://top-rated.team/services/ad-grants</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -81,7 +72,9 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://top-rated.team/case-studies</loc>
+    <loc>https://top-rated.team/services/white-label</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://top-rated.team/blog</loc>

@@ -9,7 +9,8 @@ import type { Request } from "express";
 
 import { publicBaseUrl } from "./handlers";
 
-const AGENT_IDS = Object.keys(AGENT_BY_ID);
+/* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
+const AGENT_IDS = Object.keys(AGENT_BY_ID).filter((id) => !AGENT_BY_ID[id]?.hidden);
 
 export function openApiDocument(baseUrl: string) {
   return {
@@ -27,7 +28,7 @@ export function openApiDocument(baseUrl: string) {
           operationId: "list_services",
           summary: "List the published services",
           description:
-            "Returns every offer in shared/doors.ts: the headline, the two sentences under it, whose name is on the contract, whether the panel is open, and which agent answers first. Use this to explain the company. Quote the fields as returned. A coming door has a comingLine saying why its panel is shut; do not describe that panel as open.",
+            "Returns every published offer: the headline, the two sentences under it, whose name is on the contract, whether the panel is open, and which agent answers first. Use this to explain the company. Quote the fields as returned. A coming door has a comingLine saying why its panel is shut; do not describe that panel as open.",
           responses: {
             "200": {
               description: "The services, in the order the site lists them.",

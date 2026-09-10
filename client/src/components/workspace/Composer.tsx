@@ -43,7 +43,8 @@ const SLASH_HINTS = [
 ];
 
 function mentionOptions(members: Member[]): MentionOption[] {
-  const agents: MentionOption[] = AGENTS.map((agent) => ({
+  /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
+  const agents: MentionOption[] = AGENTS.filter((agent) => !agent.hidden).map((agent) => ({
     key: `agent:${agent.id}`,
     handle: agent.handle,
     label: agent.name,
@@ -63,6 +64,8 @@ function mentionOptions(members: Member[]): MentionOption[] {
   const known = new Set([...agents, ...experts].map((o) => o.key));
   const extras: MentionOption[] = members
     .filter((m) => m.kind !== "visitor" && m.kind !== "system" && !known.has(m.memberKey))
+    /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
+    .filter((m) => m.kind !== "agent" || !AGENT_BY_ID[m.memberKey.replace(/^agent:/, "")]?.hidden)
     .map((m) => ({
       key: m.memberKey,
       handle: m.displayName.toLowerCase().split(" ")[0].replace(/[^a-z0-9-]/g, ""),
@@ -135,7 +138,8 @@ export function Composer({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const options = useMemo(() => mentionOptions(members), [members]);
-  const askAgent = askAgentId ? AGENT_BY_ID[askAgentId] : undefined;
+  /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
+  const askAgent = askAgentId && !AGENT_BY_ID[askAgentId]?.hidden ? AGENT_BY_ID[askAgentId] : undefined;
   const slashHints = useMemo(() => {
     const ask = askAgent
       ? [{ command: "/ask ", label: "/ask", detail: `ask ${askAgent.name}` }]
