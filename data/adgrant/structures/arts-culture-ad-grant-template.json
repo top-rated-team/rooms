@@ -1,0 +1,659 @@
+{
+  "slug": "arts-culture-ad-grant-template",
+  "title": "Arts & Culture Starter Template",
+  "niche": "arts-culture",
+  "structure": {
+    "callouts": [
+      {
+        "text": "Free Community Classes"
+      },
+      {
+        "text": "Family Friendly Events"
+      },
+      {
+        "text": "Expert-Led Workshops"
+      },
+      {
+        "text": "Accessible Venue"
+      },
+      {
+        "text": "Local Artists Featured"
+      },
+      {
+        "text": "Seasonal Exhibits"
+      }
+    ],
+    "campaigns": [
+      {
+        "name": "Programs & Services",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "arts-nonprofit",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Arts Nonprofit",
+                  "Discover Local Arts Events",
+                  "Support Community Art Today",
+                  "Join Our Arts Membership",
+                  "Free Arts Classes Available",
+                  "Volunteer in the Arts",
+                  "Explore Museum Exhibits",
+                  "Attend Live Theater Shows",
+                  "Become a Docent Volunteer",
+                  "Donate to Arts Programs",
+                  "Experience Art & Culture",
+                  "Sign Up for Event Tickets"
+                ],
+                "descriptions": [
+                  "Explore exhibits, classes, and events at your local arts nonprofit.",
+                  "Join us to support and enjoy community art experiences.",
+                  "Volunteer or donate to help arts programs thrive and grow.",
+                  "Sign up for tickets and memberships today."
+                ]
+              },
+              {
+                "path1": "arts-nonprofit",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Free Arts Classes Available",
+                  "Volunteer in the Arts",
+                  "Explore Museum Exhibits",
+                  "Attend Live Theater Shows",
+                  "Become a Docent Volunteer",
+                  "Donate to Arts Programs",
+                  "Experience Art & Culture",
+                  "Sign Up for Event Tickets",
+                  "Support Creative Education",
+                  "Discover Local Arts Events",
+                  "Support Community Art Today",
+                  "Join Our Arts Membership"
+                ],
+                "descriptions": [
+                  "Explore exhibits, classes, and events at your local arts nonprofit.",
+                  "Join us to support and enjoy community art experiences.",
+                  "Volunteer or donate to help arts programs thrive and grow.",
+                  "Sign up for tickets and memberships today."
+                ]
+              }
+            ],
+            "name": "Arts Nonprofit",
+            "keywords": [
+              {
+                "text": "arts nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "arts nonprofit near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "local arts nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "arts nonprofit services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "art classes",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support the arts",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "cultural programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community service",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "photoshop classes",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "community-theat",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Community Theater",
+                  "Discover Local Arts Events",
+                  "Support Community Art Today",
+                  "Join Our Arts Membership",
+                  "Free Arts Classes Available",
+                  "Volunteer in the Arts",
+                  "Explore Museum Exhibits",
+                  "Attend Live Theater Shows",
+                  "Become a Docent Volunteer",
+                  "Donate to Arts Programs",
+                  "Experience Art & Culture",
+                  "Sign Up for Event Tickets"
+                ],
+                "descriptions": [
+                  "Explore exhibits, classes, and events at your local arts nonprofit.",
+                  "Join us to support and enjoy community art experiences.",
+                  "Volunteer or donate to help arts programs thrive and grow.",
+                  "Sign up for tickets and memberships today."
+                ]
+              },
+              {
+                "path1": "community-theat",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Free Arts Classes Available",
+                  "Volunteer in the Arts",
+                  "Explore Museum Exhibits",
+                  "Attend Live Theater Shows",
+                  "Become a Docent Volunteer",
+                  "Donate to Arts Programs",
+                  "Experience Art & Culture",
+                  "Sign Up for Event Tickets",
+                  "Support Creative Education",
+                  "Discover Local Arts Events",
+                  "Support Community Art Today",
+                  "Join Our Arts Membership"
+                ],
+                "descriptions": [
+                  "Explore exhibits, classes, and events at your local arts nonprofit.",
+                  "Join us to support and enjoy community art experiences.",
+                  "Volunteer or donate to help arts programs thrive and grow.",
+                  "Sign up for tickets and memberships today."
+                ]
+              }
+            ],
+            "name": "Community Theater",
+            "keywords": [
+              {
+                "text": "excel classes",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "acting classes",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "microsoft classes",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donations nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "endowment funds nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "impact on community",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "music arts",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "giving back to community",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "nonprofits list",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Get Involved",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer",
+                  "Discover Local Arts Events",
+                  "Support Community Art Today",
+                  "Join Our Arts Membership",
+                  "Free Arts Classes Available",
+                  "Volunteer in the Arts",
+                  "Explore Museum Exhibits",
+                  "Attend Live Theater Shows",
+                  "Become a Docent Volunteer",
+                  "Donate to Arts Programs",
+                  "Experience Art & Culture",
+                  "Sign Up for Event Tickets"
+                ],
+                "descriptions": [
+                  "Explore exhibits, classes, and events at your local arts nonprofit.",
+                  "Join us to support and enjoy community art experiences.",
+                  "Volunteer or donate to help arts programs thrive and grow.",
+                  "Sign up for tickets and memberships today."
+                ]
+              },
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Free Arts Classes Available",
+                  "Volunteer in the Arts",
+                  "Explore Museum Exhibits",
+                  "Attend Live Theater Shows",
+                  "Become a Docent Volunteer",
+                  "Donate to Arts Programs",
+                  "Experience Art & Culture",
+                  "Sign Up for Event Tickets",
+                  "Support Creative Education",
+                  "Discover Local Arts Events",
+                  "Support Community Art Today",
+                  "Join Our Arts Membership"
+                ],
+                "descriptions": [
+                  "Explore exhibits, classes, and events at your local arts nonprofit.",
+                  "Join us to support and enjoy community art experiences.",
+                  "Volunteer or donate to help arts programs thrive and grow.",
+                  "Sign up for tickets and memberships today."
+                ]
+              }
+            ],
+            "name": "Volunteer",
+            "keywords": [
+              {
+                "text": "volunteer for arts nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "arts nonprofit volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ways to volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "coding classes",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community impact",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "planned giving nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "fundraising nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community volunteer",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate",
+                  "Discover Local Arts Events",
+                  "Support Community Art Today",
+                  "Join Our Arts Membership",
+                  "Free Arts Classes Available",
+                  "Volunteer in the Arts",
+                  "Explore Museum Exhibits",
+                  "Attend Live Theater Shows",
+                  "Become a Docent Volunteer",
+                  "Donate to Arts Programs",
+                  "Experience Art & Culture",
+                  "Sign Up for Event Tickets"
+                ],
+                "descriptions": [
+                  "Explore exhibits, classes, and events at your local arts nonprofit.",
+                  "Join us to support and enjoy community art experiences.",
+                  "Volunteer or donate to help arts programs thrive and grow.",
+                  "Sign up for tickets and memberships today."
+                ]
+              },
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Free Arts Classes Available",
+                  "Volunteer in the Arts",
+                  "Explore Museum Exhibits",
+                  "Attend Live Theater Shows",
+                  "Become a Docent Volunteer",
+                  "Donate to Arts Programs",
+                  "Experience Art & Culture",
+                  "Sign Up for Event Tickets",
+                  "Support Creative Education",
+                  "Discover Local Arts Events",
+                  "Support Community Art Today",
+                  "Join Our Arts Membership"
+                ],
+                "descriptions": [
+                  "Explore exhibits, classes, and events at your local arts nonprofit.",
+                  "Join us to support and enjoy community art experiences.",
+                  "Volunteer or donate to help arts programs thrive and grow.",
+                  "Sign up for tickets and memberships today."
+                ]
+              }
+            ],
+            "name": "Donate",
+            "keywords": [
+              {
+                "text": "donate to arts nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support arts and culture nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "arts nonprofit donations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how to donate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "acting classes beginners",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "performing arts summer camps",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "summer acting classes",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "gaming nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "social media management classes",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Find Help & Learn More",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Help",
+                  "Discover Local Arts Events",
+                  "Support Community Art Today",
+                  "Join Our Arts Membership",
+                  "Free Arts Classes Available",
+                  "Volunteer in the Arts",
+                  "Explore Museum Exhibits",
+                  "Attend Live Theater Shows",
+                  "Become a Docent Volunteer",
+                  "Donate to Arts Programs",
+                  "Experience Art & Culture",
+                  "Sign Up for Event Tickets"
+                ],
+                "descriptions": [
+                  "Explore exhibits, classes, and events at your local arts nonprofit.",
+                  "Join us to support and enjoy community art experiences.",
+                  "Volunteer or donate to help arts programs thrive and grow.",
+                  "Sign up for tickets and memberships today."
+                ]
+              },
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Free Arts Classes Available",
+                  "Volunteer in the Arts",
+                  "Explore Museum Exhibits",
+                  "Attend Live Theater Shows",
+                  "Become a Docent Volunteer",
+                  "Donate to Arts Programs",
+                  "Experience Art & Culture",
+                  "Sign Up for Event Tickets",
+                  "Support Creative Education",
+                  "Discover Local Arts Events",
+                  "Support Community Art Today",
+                  "Join Our Arts Membership"
+                ],
+                "descriptions": [
+                  "Explore exhibits, classes, and events at your local arts nonprofit.",
+                  "Join us to support and enjoy community art experiences.",
+                  "Volunteer or donate to help arts programs thrive and grow.",
+                  "Sign up for tickets and memberships today."
+                ]
+              }
+            ],
+            "name": "Find Help",
+            "keywords": [
+              {
+                "text": "arts nonprofit help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help from arts and culture nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "arts nonprofit assistance",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "get help near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "low income nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support low income nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "foundations grants nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community volunteer organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community service ideas",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Learn More",
+                  "Discover Local Arts Events",
+                  "Support Community Art Today",
+                  "Join Our Arts Membership",
+                  "Free Arts Classes Available",
+                  "Volunteer in the Arts",
+                  "Explore Museum Exhibits",
+                  "Attend Live Theater Shows",
+                  "Become a Docent Volunteer",
+                  "Donate to Arts Programs",
+                  "Experience Art & Culture",
+                  "Sign Up for Event Tickets"
+                ],
+                "descriptions": [
+                  "Explore exhibits, classes, and events at your local arts nonprofit.",
+                  "Join us to support and enjoy community art experiences.",
+                  "Volunteer or donate to help arts programs thrive and grow.",
+                  "Sign up for tickets and memberships today."
+                ]
+              },
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Free Arts Classes Available",
+                  "Volunteer in the Arts",
+                  "Explore Museum Exhibits",
+                  "Attend Live Theater Shows",
+                  "Become a Docent Volunteer",
+                  "Donate to Arts Programs",
+                  "Experience Art & Culture",
+                  "Sign Up for Event Tickets",
+                  "Support Creative Education",
+                  "Discover Local Arts Events",
+                  "Support Community Art Today",
+                  "Join Our Arts Membership"
+                ],
+                "descriptions": [
+                  "Explore exhibits, classes, and events at your local arts nonprofit.",
+                  "Join us to support and enjoy community art experiences.",
+                  "Volunteer or donate to help arts programs thrive and grow.",
+                  "Sign up for tickets and memberships today."
+                ]
+              }
+            ],
+            "name": "Learn More",
+            "keywords": [
+              {
+                "text": "about arts and culture nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "arts nonprofit programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how arts and culture nonprofits help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community impact awards",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "impact community",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community impact programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community impact grant",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community impact project",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community impact grants",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      }
+    ],
+    "sitelinks": [
+      {
+        "text": "Upcoming Events",
+        "finalUrl": "https://www.example.org/events",
+        "description1": "Check dates and details",
+        "description2": "Plan your visit today"
+      },
+      {
+        "text": "Membership Benefits",
+        "finalUrl": "https://www.example.org/membership",
+        "description1": "Exclusive offers and news",
+        "description2": "Join our arts community"
+      },
+      {
+        "text": "Volunteer Opportunities",
+        "finalUrl": "https://www.example.org/volunteer",
+        "description1": "Help support local arts",
+        "description2": "Make a difference today"
+      },
+      {
+        "text": "Donate to Support Art",
+        "finalUrl": "https://www.example.org/donate",
+        "description1": "Fund community programs",
+        "description2": "Give to keep arts thriving"
+      }
+    ],
+    "languageIds": [
+      "1000"
+    ],
+    "locationIds": [
+      "2840"
+    ],
+    "locationList": [
+      {
+        "id": "2840",
+        "name": "United States",
+        "canonicalName": "United States"
+      }
+    ],
+    "languageCodes": "en",
+    "totalDailyBudget": 329,
+    "structuredSnippets": [
+      {
+        "header": "Services",
+        "values": [
+          "Guided Tours",
+          "Art Classes",
+          "Event Hosting",
+          "Educational Programs",
+          "Volunteer Training"
+        ]
+      },
+      {
+        "header": "Programs",
+        "values": [
+          "Youth Art Workshops",
+          "Senior Art Classes",
+          "Community Exhibitions",
+          "Live Performances",
+          "Outreach Initiatives"
+        ]
+      }
+    ]
+  }
+}

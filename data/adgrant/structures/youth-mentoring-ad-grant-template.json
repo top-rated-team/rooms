@@ -1,0 +1,659 @@
+{
+  "slug": "youth-mentoring-ad-grant-template",
+  "title": "Youth Mentoring Starter Template",
+  "niche": "youth-mentoring",
+  "structure": {
+    "callouts": [
+      {
+        "text": "Trusted local program"
+      },
+      {
+        "text": "Safe & supportive"
+      },
+      {
+        "text": "Flexible volunteer roles"
+      },
+      {
+        "text": "Scholarships available"
+      },
+      {
+        "text": "Positive youth impact"
+      },
+      {
+        "text": "Inclusive community"
+      }
+    ],
+    "campaigns": [
+      {
+        "name": "Programs & Services",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "youth-mentoring",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Youth Mentoring",
+                  "Become a Youth Mentor Today",
+                  "Support Local Youth Growth",
+                  "Join Our Mentoring Program",
+                  "Help Kids Reach Their Potentia",
+                  "Enroll in After-School Care",
+                  "Volunteer To Make a Difference",
+                  "Donate for Scholarship Funds",
+                  "Safe & Fun Summer Camps",
+                  "Mentors Needed in Your Area",
+                  "Empower Youth With Your Time",
+                  "After-School Programs Open"
+                ],
+                "descriptions": [
+                  "Connect youth with caring adult mentors in your community.",
+                  "Enroll children in safe after-school programs near you.",
+                  "Support scholarships to help kids join enrichment camps.",
+                  "Volunteer and make a lasting impact on young lives."
+                ]
+              },
+              {
+                "path1": "youth-mentoring",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Help Kids Reach Their Potentia",
+                  "Enroll in After-School Care",
+                  "Volunteer To Make a Difference",
+                  "Donate for Scholarship Funds",
+                  "Safe & Fun Summer Camps",
+                  "Mentors Needed in Your Area",
+                  "Empower Youth With Your Time",
+                  "After-School Programs Open",
+                  "Give Youth a Brighter Future",
+                  "Become a Youth Mentor Today",
+                  "Support Local Youth Growth",
+                  "Join Our Mentoring Program"
+                ],
+                "descriptions": [
+                  "Connect youth with caring adult mentors in your community.",
+                  "Enroll children in safe after-school programs near you.",
+                  "Support scholarships to help kids join enrichment camps.",
+                  "Volunteer and make a lasting impact on young lives."
+                ]
+              }
+            ],
+            "name": "Youth Mentoring",
+            "keywords": [
+              {
+                "text": "youth mentoring",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "youth mentoring near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "local youth mentoring",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "youth mentoring services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "mentor a child",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "after school program",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "at-risk youth",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "big brother big sister",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "youth development",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "mentor-a-child",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Mentor A Child",
+                  "Become a Youth Mentor Today",
+                  "Support Local Youth Growth",
+                  "Join Our Mentoring Program",
+                  "Help Kids Reach Their Potentia",
+                  "Enroll in After-School Care",
+                  "Volunteer To Make a Difference",
+                  "Donate for Scholarship Funds",
+                  "Safe & Fun Summer Camps",
+                  "Mentors Needed in Your Area",
+                  "Empower Youth With Your Time",
+                  "After-School Programs Open"
+                ],
+                "descriptions": [
+                  "Connect youth with caring adult mentors in your community.",
+                  "Enroll children in safe after-school programs near you.",
+                  "Support scholarships to help kids join enrichment camps.",
+                  "Volunteer and make a lasting impact on young lives."
+                ]
+              },
+              {
+                "path1": "mentor-a-child",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Help Kids Reach Their Potentia",
+                  "Enroll in After-School Care",
+                  "Volunteer To Make a Difference",
+                  "Donate for Scholarship Funds",
+                  "Safe & Fun Summer Camps",
+                  "Mentors Needed in Your Area",
+                  "Empower Youth With Your Time",
+                  "After-School Programs Open",
+                  "Give Youth a Brighter Future",
+                  "Become a Youth Mentor Today",
+                  "Support Local Youth Growth",
+                  "Join Our Mentoring Program"
+                ],
+                "descriptions": [
+                  "Connect youth with caring adult mentors in your community.",
+                  "Enroll children in safe after-school programs near you.",
+                  "Support scholarships to help kids join enrichment camps.",
+                  "Volunteer and make a lasting impact on young lives."
+                ]
+              }
+            ],
+            "name": "Mentor A Child",
+            "keywords": [
+              {
+                "text": "mentor a child near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free mentor a child",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "mentor a child help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "summer programs kids",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "professional development teachers",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "youth summer camps",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "scholarships high school seniors",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "planned giving program",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Get Involved",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer",
+                  "Become a Youth Mentor Today",
+                  "Support Local Youth Growth",
+                  "Join Our Mentoring Program",
+                  "Help Kids Reach Their Potentia",
+                  "Enroll in After-School Care",
+                  "Volunteer To Make a Difference",
+                  "Donate for Scholarship Funds",
+                  "Safe & Fun Summer Camps",
+                  "Mentors Needed in Your Area",
+                  "Empower Youth With Your Time",
+                  "After-School Programs Open"
+                ],
+                "descriptions": [
+                  "Connect youth with caring adult mentors in your community.",
+                  "Enroll children in safe after-school programs near you.",
+                  "Support scholarships to help kids join enrichment camps.",
+                  "Volunteer and make a lasting impact on young lives."
+                ]
+              },
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Help Kids Reach Their Potentia",
+                  "Enroll in After-School Care",
+                  "Volunteer To Make a Difference",
+                  "Donate for Scholarship Funds",
+                  "Safe & Fun Summer Camps",
+                  "Mentors Needed in Your Area",
+                  "Empower Youth With Your Time",
+                  "After-School Programs Open",
+                  "Give Youth a Brighter Future",
+                  "Become a Youth Mentor Today",
+                  "Support Local Youth Growth",
+                  "Join Our Mentoring Program"
+                ],
+                "descriptions": [
+                  "Connect youth with caring adult mentors in your community.",
+                  "Enroll children in safe after-school programs near you.",
+                  "Support scholarships to help kids join enrichment camps.",
+                  "Volunteer and make a lasting impact on young lives."
+                ]
+              }
+            ],
+            "name": "Volunteer",
+            "keywords": [
+              {
+                "text": "volunteer for youth mentoring program",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "youth mentoring program volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ways to volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "summer camp programs kids",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "easter activities school",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community development empowerment",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer travel programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer abroad programs",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate",
+                  "Become a Youth Mentor Today",
+                  "Support Local Youth Growth",
+                  "Join Our Mentoring Program",
+                  "Help Kids Reach Their Potentia",
+                  "Enroll in After-School Care",
+                  "Volunteer To Make a Difference",
+                  "Donate for Scholarship Funds",
+                  "Safe & Fun Summer Camps",
+                  "Mentors Needed in Your Area",
+                  "Empower Youth With Your Time",
+                  "After-School Programs Open"
+                ],
+                "descriptions": [
+                  "Connect youth with caring adult mentors in your community.",
+                  "Enroll children in safe after-school programs near you.",
+                  "Support scholarships to help kids join enrichment camps.",
+                  "Volunteer and make a lasting impact on young lives."
+                ]
+              },
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Help Kids Reach Their Potentia",
+                  "Enroll in After-School Care",
+                  "Volunteer To Make a Difference",
+                  "Donate for Scholarship Funds",
+                  "Safe & Fun Summer Camps",
+                  "Mentors Needed in Your Area",
+                  "Empower Youth With Your Time",
+                  "After-School Programs Open",
+                  "Give Youth a Brighter Future",
+                  "Become a Youth Mentor Today",
+                  "Support Local Youth Growth",
+                  "Join Our Mentoring Program"
+                ],
+                "descriptions": [
+                  "Connect youth with caring adult mentors in your community.",
+                  "Enroll children in safe after-school programs near you.",
+                  "Support scholarships to help kids join enrichment camps.",
+                  "Volunteer and make a lasting impact on young lives."
+                ]
+              }
+            ],
+            "name": "Donate",
+            "keywords": [
+              {
+                "text": "donate to youth mentoring program",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support youth mentoring programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "youth mentoring program donations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how to donate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "youth volunteer opportunities",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "empathy activities elementary school",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "empathy activities high school",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "empathy development activities",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "learn wordpress development",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Find Help & Learn More",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Help",
+                  "Become a Youth Mentor Today",
+                  "Support Local Youth Growth",
+                  "Join Our Mentoring Program",
+                  "Help Kids Reach Their Potentia",
+                  "Enroll in After-School Care",
+                  "Volunteer To Make a Difference",
+                  "Donate for Scholarship Funds",
+                  "Safe & Fun Summer Camps",
+                  "Mentors Needed in Your Area",
+                  "Empower Youth With Your Time",
+                  "After-School Programs Open"
+                ],
+                "descriptions": [
+                  "Connect youth with caring adult mentors in your community.",
+                  "Enroll children in safe after-school programs near you.",
+                  "Support scholarships to help kids join enrichment camps.",
+                  "Volunteer and make a lasting impact on young lives."
+                ]
+              },
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Help Kids Reach Their Potentia",
+                  "Enroll in After-School Care",
+                  "Volunteer To Make a Difference",
+                  "Donate for Scholarship Funds",
+                  "Safe & Fun Summer Camps",
+                  "Mentors Needed in Your Area",
+                  "Empower Youth With Your Time",
+                  "After-School Programs Open",
+                  "Give Youth a Brighter Future",
+                  "Become a Youth Mentor Today",
+                  "Support Local Youth Growth",
+                  "Join Our Mentoring Program"
+                ],
+                "descriptions": [
+                  "Connect youth with caring adult mentors in your community.",
+                  "Enroll children in safe after-school programs near you.",
+                  "Support scholarships to help kids join enrichment camps.",
+                  "Volunteer and make a lasting impact on young lives."
+                ]
+              }
+            ],
+            "name": "Find Help",
+            "keywords": [
+              {
+                "text": "youth mentoring program help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help from youth mentoring programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "youth mentoring assistance",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "get help near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "student volunteer programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer work programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "teacher professional development",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "empathy activities middle school",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "career training programs",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Learn More",
+                  "Become a Youth Mentor Today",
+                  "Support Local Youth Growth",
+                  "Join Our Mentoring Program",
+                  "Help Kids Reach Their Potentia",
+                  "Enroll in After-School Care",
+                  "Volunteer To Make a Difference",
+                  "Donate for Scholarship Funds",
+                  "Safe & Fun Summer Camps",
+                  "Mentors Needed in Your Area",
+                  "Empower Youth With Your Time",
+                  "After-School Programs Open"
+                ],
+                "descriptions": [
+                  "Connect youth with caring adult mentors in your community.",
+                  "Enroll children in safe after-school programs near you.",
+                  "Support scholarships to help kids join enrichment camps.",
+                  "Volunteer and make a lasting impact on young lives."
+                ]
+              },
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Help Kids Reach Their Potentia",
+                  "Enroll in After-School Care",
+                  "Volunteer To Make a Difference",
+                  "Donate for Scholarship Funds",
+                  "Safe & Fun Summer Camps",
+                  "Mentors Needed in Your Area",
+                  "Empower Youth With Your Time",
+                  "After-School Programs Open",
+                  "Give Youth a Brighter Future",
+                  "Become a Youth Mentor Today",
+                  "Support Local Youth Growth",
+                  "Join Our Mentoring Program"
+                ],
+                "descriptions": [
+                  "Connect youth with caring adult mentors in your community.",
+                  "Enroll children in safe after-school programs near you.",
+                  "Support scholarships to help kids join enrichment camps.",
+                  "Volunteer and make a lasting impact on young lives."
+                ]
+              }
+            ],
+            "name": "Learn More",
+            "keywords": [
+              {
+                "text": "about youth mentoring programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "youth mentoring program programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how youth mentoring programs help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "mentor a child information",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "scholarships high school students",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "high school senior scholarships",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "scholarships high school graduates",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "scholarships high school juniors",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "scholarship programs",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      }
+    ],
+    "sitelinks": [
+      {
+        "text": "Volunteer as Mentor",
+        "finalUrl": "https://www.example.org/volunteer",
+        "description1": "Learn how to become a mentor",
+        "description2": "Make a positive impact today"
+      },
+      {
+        "text": "After-School Programs",
+        "finalUrl": "https://www.example.org/after-school",
+        "description1": "Safe, supportive care options",
+        "description2": "Enroll your child now"
+      },
+      {
+        "text": "Donate for Scholarships",
+        "finalUrl": "https://www.example.org/donate",
+        "description1": "Help fund youth programs",
+        "description2": "Support kids\u2019 opportunities"
+      },
+      {
+        "text": "Summer Enrichment Camps",
+        "finalUrl": "https://www.example.org/summer-camps",
+        "description1": "Fun learning experiences",
+        "description2": "Register for summer camps"
+      }
+    ],
+    "languageIds": [
+      "1000"
+    ],
+    "locationIds": [
+      "2840"
+    ],
+    "locationList": [
+      {
+        "id": "2840",
+        "name": "United States",
+        "canonicalName": "United States"
+      }
+    ],
+    "languageCodes": "en",
+    "totalDailyBudget": 329,
+    "structuredSnippets": [
+      {
+        "header": "Services",
+        "values": [
+          "Mentor matching",
+          "After-school care",
+          "Scholarship funding",
+          "Summer camps",
+          "Family support"
+        ]
+      },
+      {
+        "header": "Programs",
+        "values": [
+          "Youth mentoring",
+          "Academic tutoring",
+          "Life skills coaching",
+          "Outdoor activities",
+          "Arts & enrichment"
+        ]
+      }
+    ]
+  }
+}

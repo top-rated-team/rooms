@@ -1,0 +1,659 @@
+{
+  "slug": "domestic-violence-ad-grant-template",
+  "title": "Domestic Violence Support Starter Template",
+  "niche": "domestic-violence",
+  "structure": {
+    "callouts": [
+      {
+        "text": "Confidential Support"
+      },
+      {
+        "text": "24/7 Hotline Available"
+      },
+      {
+        "text": "Safe Shelter Provided"
+      },
+      {
+        "text": "Volunteer Opportunities"
+      },
+      {
+        "text": "Emergency Funds Needed"
+      },
+      {
+        "text": "Advocacy and Outreach"
+      }
+    ],
+    "campaigns": [
+      {
+        "name": "Programs & Services",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "domestic-violen",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Domestic Violence Help",
+                  "Help Survivors Find Safety",
+                  "Confidential Support Available",
+                  "24/7 Domestic Violence Hotline",
+                  "Safe Housing for Survivors",
+                  "Support Victims of Abuse",
+                  "Volunteer to Make a Change",
+                  "Donate to Save Lives",
+                  "Advocacy for Survivors",
+                  "Find Crisis Shelter Near You",
+                  "Get Help Now, Stay Safe",
+                  "Stand Against Domestic Abuse"
+                ],
+                "descriptions": [
+                  "Connect with confidential support and safe shelter today.",
+                  "Volunteers needed to support survivors of domestic violence.",
+                  "Donate now to help provide emergency housing and care.",
+                  "Access 24/7 hotlines for immediate assistance and guidance."
+                ]
+              },
+              {
+                "path1": "domestic-violen",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Safe Housing for Survivors",
+                  "Support Victims of Abuse",
+                  "Volunteer to Make a Change",
+                  "Donate to Save Lives",
+                  "Advocacy for Survivors",
+                  "Find Crisis Shelter Near You",
+                  "Get Help Now, Stay Safe",
+                  "Stand Against Domestic Abuse",
+                  "Resources for Survivors",
+                  "Help Survivors Find Safety",
+                  "Confidential Support Available",
+                  "24/7 Domestic Violence Hotline"
+                ],
+                "descriptions": [
+                  "Connect with confidential support and safe shelter today.",
+                  "Volunteers needed to support survivors of domestic violence.",
+                  "Donate now to help provide emergency housing and care.",
+                  "Access 24/7 hotlines for immediate assistance and guidance."
+                ]
+              }
+            ],
+            "name": "Domestic Violence Help",
+            "keywords": [
+              {
+                "text": "domestic violence help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "domestic violence help near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "local domestic violence help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "domestic violence help services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "women's shelter",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "abuse hotline",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "survivor support",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "safe housing",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "crisis services",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "womens-shelter",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Women'S Shelter",
+                  "Help Survivors Find Safety",
+                  "Confidential Support Available",
+                  "24/7 Domestic Violence Hotline",
+                  "Safe Housing for Survivors",
+                  "Support Victims of Abuse",
+                  "Volunteer to Make a Change",
+                  "Donate to Save Lives",
+                  "Advocacy for Survivors",
+                  "Find Crisis Shelter Near You",
+                  "Get Help Now, Stay Safe",
+                  "Stand Against Domestic Abuse"
+                ],
+                "descriptions": [
+                  "Connect with confidential support and safe shelter today.",
+                  "Volunteers needed to support survivors of domestic violence.",
+                  "Donate now to help provide emergency housing and care.",
+                  "Access 24/7 hotlines for immediate assistance and guidance."
+                ]
+              },
+              {
+                "path1": "womens-shelter",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Safe Housing for Survivors",
+                  "Support Victims of Abuse",
+                  "Volunteer to Make a Change",
+                  "Donate to Save Lives",
+                  "Advocacy for Survivors",
+                  "Find Crisis Shelter Near You",
+                  "Get Help Now, Stay Safe",
+                  "Stand Against Domestic Abuse",
+                  "Resources for Survivors",
+                  "Help Survivors Find Safety",
+                  "Confidential Support Available",
+                  "24/7 Domestic Violence Hotline"
+                ],
+                "descriptions": [
+                  "Connect with confidential support and safe shelter today.",
+                  "Volunteers needed to support survivors of domestic violence.",
+                  "Donate now to help provide emergency housing and care.",
+                  "Access 24/7 hotlines for immediate assistance and guidance."
+                ]
+              }
+            ],
+            "name": "Women'S Shelter",
+            "keywords": [
+              {
+                "text": "women's shelter near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free women's shelter",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "women's shelter help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "foundation women",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "preventing student violence",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "preventing violence toward animals",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "prevent kids violence",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "companies that abuse animals",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal abuse organizations",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Get Involved",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer",
+                  "Help Survivors Find Safety",
+                  "Confidential Support Available",
+                  "24/7 Domestic Violence Hotline",
+                  "Safe Housing for Survivors",
+                  "Support Victims of Abuse",
+                  "Volunteer to Make a Change",
+                  "Donate to Save Lives",
+                  "Advocacy for Survivors",
+                  "Find Crisis Shelter Near You",
+                  "Get Help Now, Stay Safe",
+                  "Stand Against Domestic Abuse"
+                ],
+                "descriptions": [
+                  "Connect with confidential support and safe shelter today.",
+                  "Volunteers needed to support survivors of domestic violence.",
+                  "Donate now to help provide emergency housing and care.",
+                  "Access 24/7 hotlines for immediate assistance and guidance."
+                ]
+              },
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Safe Housing for Survivors",
+                  "Support Victims of Abuse",
+                  "Volunteer to Make a Change",
+                  "Donate to Save Lives",
+                  "Advocacy for Survivors",
+                  "Find Crisis Shelter Near You",
+                  "Get Help Now, Stay Safe",
+                  "Stand Against Domestic Abuse",
+                  "Resources for Survivors",
+                  "Help Survivors Find Safety",
+                  "Confidential Support Available",
+                  "24/7 Domestic Violence Hotline"
+                ],
+                "descriptions": [
+                  "Connect with confidential support and safe shelter today.",
+                  "Volunteers needed to support survivors of domestic violence.",
+                  "Donate now to help provide emergency housing and care.",
+                  "Access 24/7 hotlines for immediate assistance and guidance."
+                ]
+              }
+            ],
+            "name": "Volunteer",
+            "keywords": [
+              {
+                "text": "volunteer for domestic violence nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "domestic violence nonprofit volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ways to volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "women classical composers",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "all women composers",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "indigenous women",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support indigenous women",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "resources indigenous women",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate",
+                  "Help Survivors Find Safety",
+                  "Confidential Support Available",
+                  "24/7 Domestic Violence Hotline",
+                  "Safe Housing for Survivors",
+                  "Support Victims of Abuse",
+                  "Volunteer to Make a Change",
+                  "Donate to Save Lives",
+                  "Advocacy for Survivors",
+                  "Find Crisis Shelter Near You",
+                  "Get Help Now, Stay Safe",
+                  "Stand Against Domestic Abuse"
+                ],
+                "descriptions": [
+                  "Connect with confidential support and safe shelter today.",
+                  "Volunteers needed to support survivors of domestic violence.",
+                  "Donate now to help provide emergency housing and care.",
+                  "Access 24/7 hotlines for immediate assistance and guidance."
+                ]
+              },
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Safe Housing for Survivors",
+                  "Support Victims of Abuse",
+                  "Volunteer to Make a Change",
+                  "Donate to Save Lives",
+                  "Advocacy for Survivors",
+                  "Find Crisis Shelter Near You",
+                  "Get Help Now, Stay Safe",
+                  "Stand Against Domestic Abuse",
+                  "Resources for Survivors",
+                  "Help Survivors Find Safety",
+                  "Confidential Support Available",
+                  "24/7 Domestic Violence Hotline"
+                ],
+                "descriptions": [
+                  "Connect with confidential support and safe shelter today.",
+                  "Volunteers needed to support survivors of domestic violence.",
+                  "Donate now to help provide emergency housing and care.",
+                  "Access 24/7 hotlines for immediate assistance and guidance."
+                ]
+              }
+            ],
+            "name": "Donate",
+            "keywords": [
+              {
+                "text": "donate to domestic violence nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support domestic violence support organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "domestic violence nonprofit donations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how to donate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "resources native women",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "women discrimination",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "student debt crisis",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "murdered missing indigenous women",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "water crisis",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Find Help & Learn More",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Help",
+                  "Help Survivors Find Safety",
+                  "Confidential Support Available",
+                  "24/7 Domestic Violence Hotline",
+                  "Safe Housing for Survivors",
+                  "Support Victims of Abuse",
+                  "Volunteer to Make a Change",
+                  "Donate to Save Lives",
+                  "Advocacy for Survivors",
+                  "Find Crisis Shelter Near You",
+                  "Get Help Now, Stay Safe",
+                  "Stand Against Domestic Abuse"
+                ],
+                "descriptions": [
+                  "Connect with confidential support and safe shelter today.",
+                  "Volunteers needed to support survivors of domestic violence.",
+                  "Donate now to help provide emergency housing and care.",
+                  "Access 24/7 hotlines for immediate assistance and guidance."
+                ]
+              },
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Safe Housing for Survivors",
+                  "Support Victims of Abuse",
+                  "Volunteer to Make a Change",
+                  "Donate to Save Lives",
+                  "Advocacy for Survivors",
+                  "Find Crisis Shelter Near You",
+                  "Get Help Now, Stay Safe",
+                  "Stand Against Domestic Abuse",
+                  "Resources for Survivors",
+                  "Help Survivors Find Safety",
+                  "Confidential Support Available",
+                  "24/7 Domestic Violence Hotline"
+                ],
+                "descriptions": [
+                  "Connect with confidential support and safe shelter today.",
+                  "Volunteers needed to support survivors of domestic violence.",
+                  "Donate now to help provide emergency housing and care.",
+                  "Access 24/7 hotlines for immediate assistance and guidance."
+                ]
+              }
+            ],
+            "name": "Find Help",
+            "keywords": [
+              {
+                "text": "domestic violence nonprofit help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help from domestic violence support organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "domestic violence help assistance",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "get help near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "assault hotline",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "victim hotline",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "anonymous hotline",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "confidential hotline",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "crime hotline",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Learn More",
+                  "Help Survivors Find Safety",
+                  "Confidential Support Available",
+                  "24/7 Domestic Violence Hotline",
+                  "Safe Housing for Survivors",
+                  "Support Victims of Abuse",
+                  "Volunteer to Make a Change",
+                  "Donate to Save Lives",
+                  "Advocacy for Survivors",
+                  "Find Crisis Shelter Near You",
+                  "Get Help Now, Stay Safe",
+                  "Stand Against Domestic Abuse"
+                ],
+                "descriptions": [
+                  "Connect with confidential support and safe shelter today.",
+                  "Volunteers needed to support survivors of domestic violence.",
+                  "Donate now to help provide emergency housing and care.",
+                  "Access 24/7 hotlines for immediate assistance and guidance."
+                ]
+              },
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Safe Housing for Survivors",
+                  "Support Victims of Abuse",
+                  "Volunteer to Make a Change",
+                  "Donate to Save Lives",
+                  "Advocacy for Survivors",
+                  "Find Crisis Shelter Near You",
+                  "Get Help Now, Stay Safe",
+                  "Stand Against Domestic Abuse",
+                  "Resources for Survivors",
+                  "Help Survivors Find Safety",
+                  "Confidential Support Available",
+                  "24/7 Domestic Violence Hotline"
+                ],
+                "descriptions": [
+                  "Connect with confidential support and safe shelter today.",
+                  "Volunteers needed to support survivors of domestic violence.",
+                  "Donate now to help provide emergency housing and care.",
+                  "Access 24/7 hotlines for immediate assistance and guidance."
+                ]
+              }
+            ],
+            "name": "Learn More",
+            "keywords": [
+              {
+                "text": "about domestic violence support organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "domestic violence nonprofit programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how domestic violence support organizations help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "women's shelter information",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "safe music download sites",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "employment discrimination against women",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "wage discrimination against women",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "discrimination to women",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "discrimination against women today",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      }
+    ],
+    "sitelinks": [
+      {
+        "text": "Get Help Now",
+        "finalUrl": "https://www.example.org/get-help",
+        "description1": "Immediate crisis support",
+        "description2": "Confidential and free"
+      },
+      {
+        "text": "Our Shelter Services",
+        "finalUrl": "https://www.example.org/shelter-services",
+        "description1": "Safe housing options",
+        "description2": "Comfort and security"
+      },
+      {
+        "text": "Volunteer With Us",
+        "finalUrl": "https://www.example.org/volunteer",
+        "description1": "Join our advocacy team",
+        "description2": "Make a difference today"
+      },
+      {
+        "text": "Donate to Support",
+        "finalUrl": "https://www.example.org/donate",
+        "description1": "Fund emergency aid",
+        "description2": "Help survivors heal"
+      }
+    ],
+    "languageIds": [
+      "1000"
+    ],
+    "locationIds": [
+      "2840"
+    ],
+    "locationList": [
+      {
+        "id": "2840",
+        "name": "United States",
+        "canonicalName": "United States"
+      }
+    ],
+    "languageCodes": "en",
+    "totalDailyBudget": 329,
+    "structuredSnippets": [
+      {
+        "header": "Services",
+        "values": [
+          "Crisis Hotline",
+          "Safe Housing",
+          "Legal Advocacy",
+          "Counseling Support",
+          "Emergency Assistance"
+        ]
+      },
+      {
+        "header": "Programs",
+        "values": [
+          "Survivor Advocacy",
+          "Volunteer Training",
+          "Community Outreach",
+          "Emergency Fund",
+          "Support Groups"
+        ]
+      }
+    ]
+  }
+}

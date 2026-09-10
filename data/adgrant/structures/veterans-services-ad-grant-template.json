@@ -1,0 +1,659 @@
+{
+  "slug": "veterans-services-ad-grant-template",
+  "title": "Veterans Services Starter Template",
+  "niche": "veterans-services",
+  "structure": {
+    "callouts": [
+      {
+        "text": "Free veteran services"
+      },
+      {
+        "text": "Trusted community support"
+      },
+      {
+        "text": "Experienced staff"
+      },
+      {
+        "text": "Accessible programs"
+      },
+      {
+        "text": "Join volunteer network"
+      },
+      {
+        "text": "Support veteran families"
+      }
+    ],
+    "campaigns": [
+      {
+        "name": "Programs & Services",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "veterans-servic",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Veterans Services",
+                  "Support Veterans Today",
+                  "Helping Veterans Find Jobs",
+                  "Veteran Housing Assistance",
+                  "Connect Veterans to Benefits",
+                  "Volunteer for Veterans",
+                  "Donate to Veterans Care",
+                  "Veteran Job Placement Help",
+                  "Secure Homes for Veterans",
+                  "Veterans Benefit Support",
+                  "Join Our Veteran Programs",
+                  "Help Veterans Thrive"
+                ],
+                "descriptions": [
+                  "Providing housing and job support for veterans in need.",
+                  "Connect veterans with benefits and community resources.",
+                  "Join us in supporting veterans through volunteering.",
+                  "Donate now to help veterans access care and housing."
+                ]
+              },
+              {
+                "path1": "veterans-servic",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Connect Veterans to Benefits",
+                  "Volunteer for Veterans",
+                  "Donate to Veterans Care",
+                  "Veteran Job Placement Help",
+                  "Secure Homes for Veterans",
+                  "Veterans Benefit Support",
+                  "Join Our Veteran Programs",
+                  "Help Veterans Thrive",
+                  "Care for Those Who Served",
+                  "Support Veterans Today",
+                  "Helping Veterans Find Jobs",
+                  "Veteran Housing Assistance"
+                ],
+                "descriptions": [
+                  "Providing housing and job support for veterans in need.",
+                  "Connect veterans with benefits and community resources.",
+                  "Join us in supporting veterans through volunteering.",
+                  "Donate now to help veterans access care and housing."
+                ]
+              }
+            ],
+            "name": "Veterans Services",
+            "keywords": [
+              {
+                "text": "veterans services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "veterans services near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "local veterans services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "veterans services services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help for veterans",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "veteran housing",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "veteran jobs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ptsd support",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donate to veterans",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "help-for-vetera",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Help For Veterans",
+                  "Support Veterans Today",
+                  "Helping Veterans Find Jobs",
+                  "Veteran Housing Assistance",
+                  "Connect Veterans to Benefits",
+                  "Volunteer for Veterans",
+                  "Donate to Veterans Care",
+                  "Veteran Job Placement Help",
+                  "Secure Homes for Veterans",
+                  "Veterans Benefit Support",
+                  "Join Our Veteran Programs",
+                  "Help Veterans Thrive"
+                ],
+                "descriptions": [
+                  "Providing housing and job support for veterans in need.",
+                  "Connect veterans with benefits and community resources.",
+                  "Join us in supporting veterans through volunteering.",
+                  "Donate now to help veterans access care and housing."
+                ]
+              },
+              {
+                "path1": "help-for-vetera",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Connect Veterans to Benefits",
+                  "Volunteer for Veterans",
+                  "Donate to Veterans Care",
+                  "Veteran Job Placement Help",
+                  "Secure Homes for Veterans",
+                  "Veterans Benefit Support",
+                  "Join Our Veteran Programs",
+                  "Help Veterans Thrive",
+                  "Care for Those Who Served",
+                  "Support Veterans Today",
+                  "Helping Veterans Find Jobs",
+                  "Veteran Housing Assistance"
+                ],
+                "descriptions": [
+                  "Providing housing and job support for veterans in need.",
+                  "Connect veterans with benefits and community resources.",
+                  "Join us in supporting veterans through volunteering.",
+                  "Donate now to help veterans access care and housing."
+                ]
+              }
+            ],
+            "name": "Help For Veterans",
+            "keywords": [
+              {
+                "text": "help for veterans near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free help for veterans",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help for veterans help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "non profit organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charitable organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charity organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "top charity organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "philanthropic organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer organizations",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Get Involved",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer",
+                  "Support Veterans Today",
+                  "Helping Veterans Find Jobs",
+                  "Veteran Housing Assistance",
+                  "Connect Veterans to Benefits",
+                  "Volunteer for Veterans",
+                  "Donate to Veterans Care",
+                  "Veteran Job Placement Help",
+                  "Secure Homes for Veterans",
+                  "Veterans Benefit Support",
+                  "Join Our Veteran Programs",
+                  "Help Veterans Thrive"
+                ],
+                "descriptions": [
+                  "Providing housing and job support for veterans in need.",
+                  "Connect veterans with benefits and community resources.",
+                  "Join us in supporting veterans through volunteering.",
+                  "Donate now to help veterans access care and housing."
+                ]
+              },
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Connect Veterans to Benefits",
+                  "Volunteer for Veterans",
+                  "Donate to Veterans Care",
+                  "Veteran Job Placement Help",
+                  "Secure Homes for Veterans",
+                  "Veterans Benefit Support",
+                  "Join Our Veteran Programs",
+                  "Help Veterans Thrive",
+                  "Care for Those Who Served",
+                  "Support Veterans Today",
+                  "Helping Veterans Find Jobs",
+                  "Veteran Housing Assistance"
+                ],
+                "descriptions": [
+                  "Providing housing and job support for veterans in need.",
+                  "Connect veterans with benefits and community resources.",
+                  "Join us in supporting veterans through volunteering.",
+                  "Donate now to help veterans access care and housing."
+                ]
+              }
+            ],
+            "name": "Volunteer",
+            "keywords": [
+              {
+                "text": "volunteer for veterans nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "veterans nonprofit volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ways to volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "non profit organizations list",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "top veteran charities",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "list of volunteer organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donate to nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charty organizations",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate",
+                  "Support Veterans Today",
+                  "Helping Veterans Find Jobs",
+                  "Veteran Housing Assistance",
+                  "Connect Veterans to Benefits",
+                  "Volunteer for Veterans",
+                  "Donate to Veterans Care",
+                  "Veteran Job Placement Help",
+                  "Secure Homes for Veterans",
+                  "Veterans Benefit Support",
+                  "Join Our Veteran Programs",
+                  "Help Veterans Thrive"
+                ],
+                "descriptions": [
+                  "Providing housing and job support for veterans in need.",
+                  "Connect veterans with benefits and community resources.",
+                  "Join us in supporting veterans through volunteering.",
+                  "Donate now to help veterans access care and housing."
+                ]
+              },
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Connect Veterans to Benefits",
+                  "Volunteer for Veterans",
+                  "Donate to Veterans Care",
+                  "Veteran Job Placement Help",
+                  "Secure Homes for Veterans",
+                  "Veterans Benefit Support",
+                  "Join Our Veteran Programs",
+                  "Help Veterans Thrive",
+                  "Care for Those Who Served",
+                  "Support Veterans Today",
+                  "Helping Veterans Find Jobs",
+                  "Veteran Housing Assistance"
+                ],
+                "descriptions": [
+                  "Providing housing and job support for veterans in need.",
+                  "Connect veterans with benefits and community resources.",
+                  "Join us in supporting veterans through volunteering.",
+                  "Donate now to help veterans access care and housing."
+                ]
+              }
+            ],
+            "name": "Donate",
+            "keywords": [
+              {
+                "text": "donate to veterans nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support veterans service organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "veterans nonprofit donations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how to donate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "world charity organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "christian charity organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "mission trip organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "best mission trip organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "organizations looking volunteers",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Find Help & Learn More",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Help",
+                  "Support Veterans Today",
+                  "Helping Veterans Find Jobs",
+                  "Veteran Housing Assistance",
+                  "Connect Veterans to Benefits",
+                  "Volunteer for Veterans",
+                  "Donate to Veterans Care",
+                  "Veteran Job Placement Help",
+                  "Secure Homes for Veterans",
+                  "Veterans Benefit Support",
+                  "Join Our Veteran Programs",
+                  "Help Veterans Thrive"
+                ],
+                "descriptions": [
+                  "Providing housing and job support for veterans in need.",
+                  "Connect veterans with benefits and community resources.",
+                  "Join us in supporting veterans through volunteering.",
+                  "Donate now to help veterans access care and housing."
+                ]
+              },
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Connect Veterans to Benefits",
+                  "Volunteer for Veterans",
+                  "Donate to Veterans Care",
+                  "Veteran Job Placement Help",
+                  "Secure Homes for Veterans",
+                  "Veterans Benefit Support",
+                  "Join Our Veteran Programs",
+                  "Help Veterans Thrive",
+                  "Care for Those Who Served",
+                  "Support Veterans Today",
+                  "Helping Veterans Find Jobs",
+                  "Veteran Housing Assistance"
+                ],
+                "descriptions": [
+                  "Providing housing and job support for veterans in need.",
+                  "Connect veterans with benefits and community resources.",
+                  "Join us in supporting veterans through volunteering.",
+                  "Donate now to help veterans access care and housing."
+                ]
+              }
+            ],
+            "name": "Find Help",
+            "keywords": [
+              {
+                "text": "veterans nonprofit help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help from veterans service organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "veterans services assistance",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "get help near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer work organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "organizations that need volunteers",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "organizations to join",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "organizations that give donations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "best donation organizations",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Learn More",
+                  "Support Veterans Today",
+                  "Helping Veterans Find Jobs",
+                  "Veteran Housing Assistance",
+                  "Connect Veterans to Benefits",
+                  "Volunteer for Veterans",
+                  "Donate to Veterans Care",
+                  "Veteran Job Placement Help",
+                  "Secure Homes for Veterans",
+                  "Veterans Benefit Support",
+                  "Join Our Veteran Programs",
+                  "Help Veterans Thrive"
+                ],
+                "descriptions": [
+                  "Providing housing and job support for veterans in need.",
+                  "Connect veterans with benefits and community resources.",
+                  "Join us in supporting veterans through volunteering.",
+                  "Donate now to help veterans access care and housing."
+                ]
+              },
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Connect Veterans to Benefits",
+                  "Volunteer for Veterans",
+                  "Donate to Veterans Care",
+                  "Veteran Job Placement Help",
+                  "Secure Homes for Veterans",
+                  "Veterans Benefit Support",
+                  "Join Our Veteran Programs",
+                  "Help Veterans Thrive",
+                  "Care for Those Who Served",
+                  "Support Veterans Today",
+                  "Helping Veterans Find Jobs",
+                  "Veteran Housing Assistance"
+                ],
+                "descriptions": [
+                  "Providing housing and job support for veterans in need.",
+                  "Connect veterans with benefits and community resources.",
+                  "Join us in supporting veterans through volunteering.",
+                  "Donate now to help veterans access care and housing."
+                ]
+              }
+            ],
+            "name": "Learn More",
+            "keywords": [
+              {
+                "text": "about veterans service organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "veterans nonprofit programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how veterans service organizations help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help for veterans information",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "organizations to donate to",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "nonprofit organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "administrative service fee",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "most effective charity organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "most popular charity organizations",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      }
+    ],
+    "sitelinks": [
+      {
+        "text": "Veteran Housing Help",
+        "finalUrl": "https://www.example.org/housing",
+        "description1": "Find safe housing options",
+        "description2": "Support veteran stability"
+      },
+      {
+        "text": "Job Placement Programs",
+        "finalUrl": "https://www.example.org/jobs",
+        "description1": "Career support for vets",
+        "description2": "Training and job search"
+      },
+      {
+        "text": "Volunteer Opportunities",
+        "finalUrl": "https://www.example.org/volunteer",
+        "description1": "Make a difference today",
+        "description2": "Help veterans in need"
+      },
+      {
+        "text": "Donate to Veterans",
+        "finalUrl": "https://www.example.org/donate",
+        "description1": "Support vital services",
+        "description2": "Give veterans new hope"
+      }
+    ],
+    "languageIds": [
+      "1000"
+    ],
+    "locationIds": [
+      "2840"
+    ],
+    "locationList": [
+      {
+        "id": "2840",
+        "name": "United States",
+        "canonicalName": "United States"
+      }
+    ],
+    "languageCodes": "en",
+    "totalDailyBudget": 329,
+    "structuredSnippets": [
+      {
+        "header": "Services",
+        "values": [
+          "Housing assistance",
+          "Job placement",
+          "Benefit navigation",
+          "Healthcare referrals",
+          "Counseling support"
+        ]
+      },
+      {
+        "header": "Programs",
+        "values": [
+          "Employment training",
+          "Volunteer engagement",
+          "Donor support campaigns",
+          "Community outreach",
+          "Year-end giving"
+        ]
+      }
+    ]
+  }
+}

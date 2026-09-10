@@ -1226,7 +1226,12 @@ function inviteLine(booked: BookedPayload, email: string | null) {
    like one product. type-note carries the size; [text-transform:none] is
    needed because .type-note uppercases by default in the frozen index.css. */
 const DIALOG_COPY = "type-note [text-transform:none] text-foreground";
-const DIALOG_HEADING = "type-note [text-transform:none] font-medium text-foreground";
+/* No font-medium: .type-note in the frozen index.css sets the weight and
+   beats a Tailwind utility of equal specificity, so the class was decoration
+   on a rule that never applied — measured at 400 either way. The title is the
+   same 13px as the body and differs only in the face, which is the site's own
+   convention: labels in the sans, prose in the serif. */
+const DIALOG_HEADING = "type-note [text-transform:none] text-foreground";
 
 function WaitingView({ hold, openedWhatsApp }: { hold: HoldBookingResponse; openedWhatsApp: boolean }) {
   const phone = isPhoneBooking();

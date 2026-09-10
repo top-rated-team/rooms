@@ -1,0 +1,659 @@
+{
+  "slug": "religious-faith-ad-grant-template",
+  "title": "Faith-Based Nonprofits Starter Template",
+  "niche": "religious-faith",
+  "structure": {
+    "callouts": [
+      {
+        "text": "Community Focused"
+      },
+      {
+        "text": "Faith-Based Support"
+      },
+      {
+        "text": "Volunteer Friendly"
+      },
+      {
+        "text": "All Are Welcome"
+      },
+      {
+        "text": "Safe & Inclusive"
+      },
+      {
+        "text": "Events Weekly"
+      }
+    ],
+    "campaigns": [
+      {
+        "name": "Programs & Services",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "faith-based-cha",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Faith Based Charity",
+                  "Join Our Community Events",
+                  "Faith-Based Support & Care",
+                  "Volunteer With Us Today",
+                  "Find Hope & Purpose Here",
+                  "Discover Local Ministries",
+                  "Support Our Mission",
+                  "Attend Worship Services",
+                  "Serve Those in Need",
+                  "Connect Through Faith",
+                  "Give Generously Today",
+                  "Explore Our Programs"
+                ],
+                "descriptions": [
+                  "Join our welcoming faith community and grow spiritually.",
+                  "Volunteer opportunities available to serve locally.",
+                  "Support our work with a gift or donation today.",
+                  "Attend programs that uplift and inspire all ages."
+                ]
+              },
+              {
+                "path1": "faith-based-cha",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Hope & Purpose Here",
+                  "Discover Local Ministries",
+                  "Support Our Mission",
+                  "Attend Worship Services",
+                  "Serve Those in Need",
+                  "Connect Through Faith",
+                  "Give Generously Today",
+                  "Explore Our Programs",
+                  "Make a Difference Now",
+                  "Join Our Community Events",
+                  "Faith-Based Support & Care",
+                  "Volunteer With Us Today"
+                ],
+                "descriptions": [
+                  "Join our welcoming faith community and grow spiritually.",
+                  "Volunteer opportunities available to serve locally.",
+                  "Support our work with a gift or donation today.",
+                  "Attend programs that uplift and inspire all ages."
+                ]
+              }
+            ],
+            "name": "Faith Based Charity",
+            "keywords": [
+              {
+                "text": "faith based charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "faith based charity near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "local faith based charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "faith based charity services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "church outreach",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ministry programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community missions",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "faith based services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donate to ministry",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "church-outreach",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Church Outreach",
+                  "Join Our Community Events",
+                  "Faith-Based Support & Care",
+                  "Volunteer With Us Today",
+                  "Find Hope & Purpose Here",
+                  "Discover Local Ministries",
+                  "Support Our Mission",
+                  "Attend Worship Services",
+                  "Serve Those in Need",
+                  "Connect Through Faith",
+                  "Give Generously Today",
+                  "Explore Our Programs"
+                ],
+                "descriptions": [
+                  "Join our welcoming faith community and grow spiritually.",
+                  "Volunteer opportunities available to serve locally.",
+                  "Support our work with a gift or donation today.",
+                  "Attend programs that uplift and inspire all ages."
+                ]
+              },
+              {
+                "path1": "church-outreach",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Hope & Purpose Here",
+                  "Discover Local Ministries",
+                  "Support Our Mission",
+                  "Attend Worship Services",
+                  "Serve Those in Need",
+                  "Connect Through Faith",
+                  "Give Generously Today",
+                  "Explore Our Programs",
+                  "Make a Difference Now",
+                  "Join Our Community Events",
+                  "Faith-Based Support & Care",
+                  "Volunteer With Us Today"
+                ],
+                "descriptions": [
+                  "Join our welcoming faith community and grow spiritually.",
+                  "Volunteer opportunities available to serve locally.",
+                  "Support our work with a gift or donation today.",
+                  "Attend programs that uplift and inspire all ages."
+                ]
+              }
+            ],
+            "name": "Church Outreach",
+            "keywords": [
+              {
+                "text": "church outreach near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free church outreach",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "church outreach help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donate to charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donate money to charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charity giving",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charity work year olds",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "gaming charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charity philanthropy",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Get Involved",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer",
+                  "Join Our Community Events",
+                  "Faith-Based Support & Care",
+                  "Volunteer With Us Today",
+                  "Find Hope & Purpose Here",
+                  "Discover Local Ministries",
+                  "Support Our Mission",
+                  "Attend Worship Services",
+                  "Serve Those in Need",
+                  "Connect Through Faith",
+                  "Give Generously Today",
+                  "Explore Our Programs"
+                ],
+                "descriptions": [
+                  "Join our welcoming faith community and grow spiritually.",
+                  "Volunteer opportunities available to serve locally.",
+                  "Support our work with a gift or donation today.",
+                  "Attend programs that uplift and inspire all ages."
+                ]
+              },
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Hope & Purpose Here",
+                  "Discover Local Ministries",
+                  "Support Our Mission",
+                  "Attend Worship Services",
+                  "Serve Those in Need",
+                  "Connect Through Faith",
+                  "Give Generously Today",
+                  "Explore Our Programs",
+                  "Make a Difference Now",
+                  "Join Our Community Events",
+                  "Faith-Based Support & Care",
+                  "Volunteer With Us Today"
+                ],
+                "descriptions": [
+                  "Join our welcoming faith community and grow spiritually.",
+                  "Volunteer opportunities available to serve locally.",
+                  "Support our work with a gift or donation today.",
+                  "Attend programs that uplift and inspire all ages."
+                ]
+              }
+            ],
+            "name": "Volunteer",
+            "keywords": [
+              {
+                "text": "volunteer for faith-based nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "faith-based nonprofit volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ways to volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "save children charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "to charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "give money to charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "local charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charity gifts",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate",
+                  "Join Our Community Events",
+                  "Faith-Based Support & Care",
+                  "Volunteer With Us Today",
+                  "Find Hope & Purpose Here",
+                  "Discover Local Ministries",
+                  "Support Our Mission",
+                  "Attend Worship Services",
+                  "Serve Those in Need",
+                  "Connect Through Faith",
+                  "Give Generously Today",
+                  "Explore Our Programs"
+                ],
+                "descriptions": [
+                  "Join our welcoming faith community and grow spiritually.",
+                  "Volunteer opportunities available to serve locally.",
+                  "Support our work with a gift or donation today.",
+                  "Attend programs that uplift and inspire all ages."
+                ]
+              },
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Hope & Purpose Here",
+                  "Discover Local Ministries",
+                  "Support Our Mission",
+                  "Attend Worship Services",
+                  "Serve Those in Need",
+                  "Connect Through Faith",
+                  "Give Generously Today",
+                  "Explore Our Programs",
+                  "Make a Difference Now",
+                  "Join Our Community Events",
+                  "Faith-Based Support & Care",
+                  "Volunteer With Us Today"
+                ],
+                "descriptions": [
+                  "Join our welcoming faith community and grow spiritually.",
+                  "Volunteer opportunities available to serve locally.",
+                  "Support our work with a gift or donation today.",
+                  "Attend programs that uplift and inspire all ages."
+                ]
+              }
+            ],
+            "name": "Donate",
+            "keywords": [
+              {
+                "text": "donate to faith-based nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support faith-based nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "faith-based nonprofit donations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how to donate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charity endowment fund",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charity event",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "top charity websites",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donating to charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charity donation",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Find Help & Learn More",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Help",
+                  "Join Our Community Events",
+                  "Faith-Based Support & Care",
+                  "Volunteer With Us Today",
+                  "Find Hope & Purpose Here",
+                  "Discover Local Ministries",
+                  "Support Our Mission",
+                  "Attend Worship Services",
+                  "Serve Those in Need",
+                  "Connect Through Faith",
+                  "Give Generously Today",
+                  "Explore Our Programs"
+                ],
+                "descriptions": [
+                  "Join our welcoming faith community and grow spiritually.",
+                  "Volunteer opportunities available to serve locally.",
+                  "Support our work with a gift or donation today.",
+                  "Attend programs that uplift and inspire all ages."
+                ]
+              },
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Hope & Purpose Here",
+                  "Discover Local Ministries",
+                  "Support Our Mission",
+                  "Attend Worship Services",
+                  "Serve Those in Need",
+                  "Connect Through Faith",
+                  "Give Generously Today",
+                  "Explore Our Programs",
+                  "Make a Difference Now",
+                  "Join Our Community Events",
+                  "Faith-Based Support & Care",
+                  "Volunteer With Us Today"
+                ],
+                "descriptions": [
+                  "Join our welcoming faith community and grow spiritually.",
+                  "Volunteer opportunities available to serve locally.",
+                  "Support our work with a gift or donation today.",
+                  "Attend programs that uplift and inspire all ages."
+                ]
+              }
+            ],
+            "name": "Find Help",
+            "keywords": [
+              {
+                "text": "faith-based nonprofit help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help from faith-based nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "faith based charity assistance",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "get help near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "video game charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "play games charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "video games charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charity remainder trust",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "gift to charity",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Learn More",
+                  "Join Our Community Events",
+                  "Faith-Based Support & Care",
+                  "Volunteer With Us Today",
+                  "Find Hope & Purpose Here",
+                  "Discover Local Ministries",
+                  "Support Our Mission",
+                  "Attend Worship Services",
+                  "Serve Those in Need",
+                  "Connect Through Faith",
+                  "Give Generously Today",
+                  "Explore Our Programs"
+                ],
+                "descriptions": [
+                  "Join our welcoming faith community and grow spiritually.",
+                  "Volunteer opportunities available to serve locally.",
+                  "Support our work with a gift or donation today.",
+                  "Attend programs that uplift and inspire all ages."
+                ]
+              },
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Hope & Purpose Here",
+                  "Discover Local Ministries",
+                  "Support Our Mission",
+                  "Attend Worship Services",
+                  "Serve Those in Need",
+                  "Connect Through Faith",
+                  "Give Generously Today",
+                  "Explore Our Programs",
+                  "Make a Difference Now",
+                  "Join Our Community Events",
+                  "Faith-Based Support & Care",
+                  "Volunteer With Us Today"
+                ],
+                "descriptions": [
+                  "Join our welcoming faith community and grow spiritually.",
+                  "Volunteer opportunities available to serve locally.",
+                  "Support our work with a gift or donation today.",
+                  "Attend programs that uplift and inspire all ages."
+                ]
+              }
+            ],
+            "name": "Learn More",
+            "keywords": [
+              {
+                "text": "about faith-based nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "faith-based nonprofit programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how faith-based nonprofits help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "church outreach information",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charity websites",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charity donations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "top charity donors",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "top charity foundations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charity work",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      }
+    ],
+    "sitelinks": [
+      {
+        "text": "Upcoming Events",
+        "finalUrl": "https://www.example.org/events",
+        "description1": "See our latest community events",
+        "description2": "Join us for worship and fellowship"
+      },
+      {
+        "text": "Volunteer Opportunities",
+        "finalUrl": "https://www.example.org/volunteer",
+        "description1": "Serve and support our mission",
+        "description2": "Learn how you can get involved"
+      },
+      {
+        "text": "Programs & Services",
+        "finalUrl": "https://www.example.org/programs",
+        "description1": "Explore spiritual growth programs",
+        "description2": "Support for families and youth"
+      },
+      {
+        "text": "Donate Now",
+        "finalUrl": "https://www.example.org/donate",
+        "description1": "Help us make an impact today",
+        "description2": "Give safely and securely online"
+      }
+    ],
+    "languageIds": [
+      "1000"
+    ],
+    "locationIds": [
+      "2840"
+    ],
+    "locationList": [
+      {
+        "id": "2840",
+        "name": "United States",
+        "canonicalName": "United States"
+      }
+    ],
+    "languageCodes": "en",
+    "totalDailyBudget": 329,
+    "structuredSnippets": [
+      {
+        "header": "Services",
+        "values": [
+          "Worship Services",
+          "Counseling Support",
+          "Youth Programs",
+          "Food Assistance",
+          "Outreach Ministries"
+        ]
+      },
+      {
+        "header": "Programs",
+        "values": [
+          "Bible Study Groups",
+          "Volunteer Training",
+          "Family Support",
+          "Community Events",
+          "Donation Drives"
+        ]
+      }
+    ]
+  }
+}

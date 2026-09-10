@@ -1,0 +1,657 @@
+{
+  "slug": "education-literacy-ad-grant-template",
+  "title": "Education & Literacy Starter Template",
+  "niche": "education-literacy",
+  "structure": {
+    "callouts": [
+      {
+        "text": "Free learning programs"
+      },
+      {
+        "text": "Volunteer opportunities"
+      },
+      {
+        "text": "Books and supplies needed"
+      },
+      {
+        "text": "Scholarships available"
+      },
+      {
+        "text": "Accessible education"
+      },
+      {
+        "text": "Community focused"
+      }
+    ],
+    "campaigns": [
+      {
+        "name": "Programs & Services",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "literacy-progra",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Literacy Program",
+                  "Free Classes for All Ages",
+                  "Join Our Volunteer Tutors",
+                  "Support Literacy Programs",
+                  "Enroll in Adult Education",
+                  "Help Us Provide Books",
+                  "Apply for Scholarships",
+                  "Learn to Read and Write",
+                  "Make a Donation Today",
+                  "Volunteer to Teach Skills",
+                  "Expand Educational Access",
+                  "Books and Supplies Needed"
+                ],
+                "descriptions": [
+                  "Sign up for free classes and improve your skills today.",
+                  "Become a volunteer tutor and help learners succeed.",
+                  "Donate books or supplies to support education access.",
+                  "Apply for scholarships to fund your learning journey."
+                ]
+              },
+              {
+                "path1": "literacy-progra",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Enroll in Adult Education",
+                  "Help Us Provide Books",
+                  "Apply for Scholarships",
+                  "Learn to Read and Write",
+                  "Make a Donation Today",
+                  "Volunteer to Teach Skills",
+                  "Expand Educational Access",
+                  "Books and Supplies Needed",
+                  "Improve Literacy Now",
+                  "Free Classes for All Ages",
+                  "Join Our Volunteer Tutors",
+                  "Support Literacy Programs"
+                ],
+                "descriptions": [
+                  "Sign up for free classes and improve your skills today.",
+                  "Become a volunteer tutor and help learners succeed.",
+                  "Donate books or supplies to support education access.",
+                  "Apply for scholarships to fund your learning journey."
+                ]
+              }
+            ],
+            "name": "Literacy Program",
+            "keywords": [
+              {
+                "text": "literacy program",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "literacy program near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "local literacy program",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "literacy program services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free tutoring",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "adult education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ged classes",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "esl classes",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "education nonprofit",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "free-tutoring",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Free Tutoring",
+                  "Free Classes for All Ages",
+                  "Join Our Volunteer Tutors",
+                  "Support Literacy Programs",
+                  "Enroll in Adult Education",
+                  "Help Us Provide Books",
+                  "Apply for Scholarships",
+                  "Learn to Read and Write",
+                  "Make a Donation Today",
+                  "Volunteer to Teach Skills",
+                  "Expand Educational Access",
+                  "Books and Supplies Needed"
+                ],
+                "descriptions": [
+                  "Sign up for free classes and improve your skills today.",
+                  "Become a volunteer tutor and help learners succeed.",
+                  "Donate books or supplies to support education access.",
+                  "Apply for scholarships to fund your learning journey."
+                ]
+              },
+              {
+                "path1": "free-tutoring",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Enroll in Adult Education",
+                  "Help Us Provide Books",
+                  "Apply for Scholarships",
+                  "Learn to Read and Write",
+                  "Make a Donation Today",
+                  "Volunteer to Teach Skills",
+                  "Expand Educational Access",
+                  "Books and Supplies Needed",
+                  "Improve Literacy Now",
+                  "Free Classes for All Ages",
+                  "Join Our Volunteer Tutors",
+                  "Support Literacy Programs"
+                ],
+                "descriptions": [
+                  "Sign up for free classes and improve your skills today.",
+                  "Become a volunteer tutor and help learners succeed.",
+                  "Donate books or supplies to support education access.",
+                  "Apply for scholarships to fund your learning journey."
+                ]
+              }
+            ],
+            "name": "Free Tutoring",
+            "keywords": [
+              {
+                "text": "free tutoring near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free free tutoring",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free tutoring help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "human education websites",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "events music education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donor education blog",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donor education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "blogs on donor education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "nature education",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Get Involved",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer",
+                  "Free Classes for All Ages",
+                  "Join Our Volunteer Tutors",
+                  "Support Literacy Programs",
+                  "Enroll in Adult Education",
+                  "Help Us Provide Books",
+                  "Apply for Scholarships",
+                  "Learn to Read and Write",
+                  "Make a Donation Today",
+                  "Volunteer to Teach Skills",
+                  "Expand Educational Access",
+                  "Books and Supplies Needed"
+                ],
+                "descriptions": [
+                  "Sign up for free classes and improve your skills today.",
+                  "Become a volunteer tutor and help learners succeed.",
+                  "Donate books or supplies to support education access.",
+                  "Apply for scholarships to fund your learning journey."
+                ]
+              },
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Enroll in Adult Education",
+                  "Help Us Provide Books",
+                  "Apply for Scholarships",
+                  "Learn to Read and Write",
+                  "Make a Donation Today",
+                  "Volunteer to Teach Skills",
+                  "Expand Educational Access",
+                  "Books and Supplies Needed",
+                  "Improve Literacy Now",
+                  "Free Classes for All Ages",
+                  "Join Our Volunteer Tutors",
+                  "Support Literacy Programs"
+                ],
+                "descriptions": [
+                  "Sign up for free classes and improve your skills today.",
+                  "Become a volunteer tutor and help learners succeed.",
+                  "Donate books or supplies to support education access.",
+                  "Apply for scholarships to fund your learning journey."
+                ]
+              }
+            ],
+            "name": "Volunteer",
+            "keywords": [
+              {
+                "text": "volunteer for education nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "education nonprofit volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ways to volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "best investment is education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "education equity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "violence prevention education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "education webinars teachers",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "financial literacy course",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate",
+                  "Free Classes for All Ages",
+                  "Join Our Volunteer Tutors",
+                  "Support Literacy Programs",
+                  "Enroll in Adult Education",
+                  "Help Us Provide Books",
+                  "Apply for Scholarships",
+                  "Learn to Read and Write",
+                  "Make a Donation Today",
+                  "Volunteer to Teach Skills",
+                  "Expand Educational Access",
+                  "Books and Supplies Needed"
+                ],
+                "descriptions": [
+                  "Sign up for free classes and improve your skills today.",
+                  "Become a volunteer tutor and help learners succeed.",
+                  "Donate books or supplies to support education access.",
+                  "Apply for scholarships to fund your learning journey."
+                ]
+              },
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Enroll in Adult Education",
+                  "Help Us Provide Books",
+                  "Apply for Scholarships",
+                  "Learn to Read and Write",
+                  "Make a Donation Today",
+                  "Volunteer to Teach Skills",
+                  "Expand Educational Access",
+                  "Books and Supplies Needed",
+                  "Improve Literacy Now",
+                  "Free Classes for All Ages",
+                  "Join Our Volunteer Tutors",
+                  "Support Literacy Programs"
+                ],
+                "descriptions": [
+                  "Sign up for free classes and improve your skills today.",
+                  "Become a volunteer tutor and help learners succeed.",
+                  "Donate books or supplies to support education access.",
+                  "Apply for scholarships to fund your learning journey."
+                ]
+              }
+            ],
+            "name": "Donate",
+            "keywords": [
+              {
+                "text": "donate to education nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support education and literacy nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "education nonprofit donations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how to donate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "financial literacy",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "media literacy",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "events about music education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "music education concerts",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "music education concert",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Find Help & Learn More",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Help",
+                  "Free Classes for All Ages",
+                  "Join Our Volunteer Tutors",
+                  "Support Literacy Programs",
+                  "Enroll in Adult Education",
+                  "Help Us Provide Books",
+                  "Apply for Scholarships",
+                  "Learn to Read and Write",
+                  "Make a Donation Today",
+                  "Volunteer to Teach Skills",
+                  "Expand Educational Access",
+                  "Books and Supplies Needed"
+                ],
+                "descriptions": [
+                  "Sign up for free classes and improve your skills today.",
+                  "Become a volunteer tutor and help learners succeed.",
+                  "Donate books or supplies to support education access.",
+                  "Apply for scholarships to fund your learning journey."
+                ]
+              },
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Enroll in Adult Education",
+                  "Help Us Provide Books",
+                  "Apply for Scholarships",
+                  "Learn to Read and Write",
+                  "Make a Donation Today",
+                  "Volunteer to Teach Skills",
+                  "Expand Educational Access",
+                  "Books and Supplies Needed",
+                  "Improve Literacy Now",
+                  "Free Classes for All Ages",
+                  "Join Our Volunteer Tutors",
+                  "Support Literacy Programs"
+                ],
+                "descriptions": [
+                  "Sign up for free classes and improve your skills today.",
+                  "Become a volunteer tutor and help learners succeed.",
+                  "Donate books or supplies to support education access.",
+                  "Apply for scholarships to fund your learning journey."
+                ]
+              }
+            ],
+            "name": "Find Help",
+            "keywords": [
+              {
+                "text": "education nonprofit help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help from education and literacy nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "literacy program assistance",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "get help near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "event about music education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "music education event",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "event music education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "music education events",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "event with music education",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Learn More",
+                  "Free Classes for All Ages",
+                  "Join Our Volunteer Tutors",
+                  "Support Literacy Programs",
+                  "Enroll in Adult Education",
+                  "Help Us Provide Books",
+                  "Apply for Scholarships",
+                  "Learn to Read and Write",
+                  "Make a Donation Today",
+                  "Volunteer to Teach Skills",
+                  "Expand Educational Access",
+                  "Books and Supplies Needed"
+                ],
+                "descriptions": [
+                  "Sign up for free classes and improve your skills today.",
+                  "Become a volunteer tutor and help learners succeed.",
+                  "Donate books or supplies to support education access.",
+                  "Apply for scholarships to fund your learning journey."
+                ]
+              },
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Enroll in Adult Education",
+                  "Help Us Provide Books",
+                  "Apply for Scholarships",
+                  "Learn to Read and Write",
+                  "Make a Donation Today",
+                  "Volunteer to Teach Skills",
+                  "Expand Educational Access",
+                  "Books and Supplies Needed",
+                  "Improve Literacy Now",
+                  "Free Classes for All Ages",
+                  "Join Our Volunteer Tutors",
+                  "Support Literacy Programs"
+                ],
+                "descriptions": [
+                  "Sign up for free classes and improve your skills today.",
+                  "Become a volunteer tutor and help learners succeed.",
+                  "Donate books or supplies to support education access.",
+                  "Apply for scholarships to fund your learning journey."
+                ]
+              }
+            ],
+            "name": "Learn More",
+            "keywords": [
+              {
+                "text": "about education and literacy nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "education nonprofit programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how education and literacy nonprofits help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free tutoring information",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "music education resources",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "music education worksheets",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "funds education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "education investment",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "stem education",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      }
+    ],
+    "sitelinks": [
+      {
+        "text": "Free Classes",
+        "finalUrl": "https://www.example.org/free-classes",
+        "description1": "Explore courses for all ages",
+        "description2": "Enroll at no cost today"
+      },
+      {
+        "text": "Volunteer Tutors",
+        "finalUrl": "https://www.example.org/volunteer-tutors",
+        "description1": "Join our tutor community",
+        "description2": "Make a difference locally"
+      },
+      {
+        "text": "Donate Books",
+        "finalUrl": "https://www.example.org/donate-books",
+        "description1": "Provide needed supplies",
+        "description2": "Support literacy efforts"
+      },
+      {
+        "text": "Scholarship Info",
+        "finalUrl": "https://www.example.org/scholarships",
+        "description1": "Apply for education aid",
+        "description2": "Learn about eligibility"
+      }
+    ],
+    "languageIds": [
+      "1000"
+    ],
+    "locationIds": [
+      "2840"
+    ],
+    "locationList": [
+      {
+        "id": "2840",
+        "name": "United States",
+        "canonicalName": "United States"
+      }
+    ],
+    "languageCodes": "en",
+    "totalDailyBudget": 329,
+    "structuredSnippets": [
+      {
+        "header": "Services",
+        "values": [
+          "Adult literacy classes",
+          "Tutoring for students",
+          "Volunteer training",
+          "Book donation drives"
+        ]
+      },
+      {
+        "header": "Programs",
+        "values": [
+          "Adult education",
+          "Youth tutoring",
+          "Scholarship grants",
+          "Volunteer support"
+        ]
+      }
+    ]
+  }
+}

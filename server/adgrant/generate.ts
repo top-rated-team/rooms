@@ -36,6 +36,9 @@ import {
 export const EDITOR_LINE =
   "This CSV is for Google Ads Editor. Import it there. Nothing was written into a Google Ads account.";
 
+export const PAUSED_LINE =
+  "Every campaign in this file is Paused. Importing it does not start ads.";
+
 export const UNBOUND_LINE =
   "A generation needs a room bound to you, through LinkedIn sign-in or a WhatsApp message to us. Those are the two identification routes that already exist; there is not a third.";
 
@@ -519,6 +522,9 @@ function csvCell(value: string | number | undefined): string {
   return text;
 }
 
+const EDITOR_HEADLINES = 15;
+const EDITOR_DESCRIPTIONS = 4;
+
 const EDITOR_COLUMNS = [
   "Row Type",
   "Campaign",
@@ -534,13 +540,8 @@ const EDITOR_COLUMNS = [
   "Keyword",
   "Match type",
   "Ad type",
-  "Headline 1",
-  "Headline 2",
-  "Headline 3",
-  "Headline 4",
-  "Headline 5",
-  "Description 1",
-  "Description 2",
+  ...Array.from({ length: EDITOR_HEADLINES }, (_, i) => `Headline ${i + 1}`),
+  ...Array.from({ length: EDITOR_DESCRIPTIONS }, (_, i) => `Description ${i + 1}`),
   "Path 1",
   "Path 2",
   "Final URL",
@@ -614,22 +615,22 @@ export function structureToEditorCsv(structure: AdGrantAccountStructure): string
         });
       }
       for (const rsa of adGroup.ads) {
-        rows.push({
+        const adRow: EditorRow = {
           "Row Type": "Ad",
           Campaign: campaign.name,
           "Ad group": adGroup.name,
           "Ad type": "Responsive search ad",
-          "Headline 1": rsa.headlines[0] ?? "",
-          "Headline 2": rsa.headlines[1] ?? "",
-          "Headline 3": rsa.headlines[2] ?? "",
-          "Headline 4": rsa.headlines[3] ?? "",
-          "Headline 5": rsa.headlines[4] ?? "",
-          "Description 1": rsa.descriptions[0] ?? "",
-          "Description 2": rsa.descriptions[1] ?? "",
           "Path 1": rsa.path1 ?? "",
           "Path 2": rsa.path2 ?? "",
           "Final URL": rsa.finalUrl,
-        });
+        };
+        for (let i = 0; i < EDITOR_HEADLINES; i += 1) {
+          adRow[`Headline ${i + 1}`] = rsa.headlines[i] ?? "";
+        }
+        for (let i = 0; i < EDITOR_DESCRIPTIONS; i += 1) {
+          adRow[`Description ${i + 1}`] = rsa.descriptions[i] ?? "";
+        }
+        rows.push(adRow);
       }
     }
   }
@@ -724,6 +725,7 @@ export async function generateAdGrantStructure(input: {
     structure,
     csv: structureToEditorCsv(structure),
     editorLine: EDITOR_LINE,
+    pausedLine: PAUSED_LINE,
   };
   return { status: 200, body };
 }

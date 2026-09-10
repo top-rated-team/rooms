@@ -1,0 +1,659 @@
+{
+  "slug": "animal-shelters-ad-grant-template",
+  "title": "Animal Shelters Starter Template",
+  "niche": "animal-shelters",
+  "structure": {
+    "callouts": [
+      {
+        "text": "No-Kill Shelter"
+      },
+      {
+        "text": "Pet Adoption Events"
+      },
+      {
+        "text": "Foster Care Needed"
+      },
+      {
+        "text": "Volunteer Opportunities"
+      },
+      {
+        "text": "Affordable Vet Care"
+      },
+      {
+        "text": "Support Emergency Care"
+      }
+    ],
+    "campaigns": [
+      {
+        "name": "Programs & Services",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "animal-shelter",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Animal Shelter",
+                  "Adopt a Pet Today",
+                  "Find Your New Best Friend",
+                  "Foster a Pet in Need",
+                  "Volunteer to Help Animals",
+                  "Support Animal Care",
+                  "Low-Cost Spay & Neuter",
+                  "Help Save Lives Now",
+                  "Meet Adoptable Pets",
+                  "Donate to Rescue Efforts",
+                  "Join Our Foster Program",
+                  "Care for Homeless Pets"
+                ],
+                "descriptions": [
+                  "Explore adoptable cats and dogs ready for a new home.",
+                  "Become a foster and provide temporary care to pets.",
+                  "Volunteer your time to support local animal rescue.",
+                  "Join efforts to help pets with spay and neuter services."
+                ]
+              },
+              {
+                "path1": "animal-shelter",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer to Help Animals",
+                  "Support Animal Care",
+                  "Low-Cost Spay & Neuter",
+                  "Help Save Lives Now",
+                  "Meet Adoptable Pets",
+                  "Donate to Rescue Efforts",
+                  "Join Our Foster Program",
+                  "Care for Homeless Pets",
+                  "Give Pets a Second Chance",
+                  "Adopt a Pet Today",
+                  "Find Your New Best Friend",
+                  "Foster a Pet in Need"
+                ],
+                "descriptions": [
+                  "Explore adoptable cats and dogs ready for a new home.",
+                  "Become a foster and provide temporary care to pets.",
+                  "Volunteer your time to support local animal rescue.",
+                  "Join efforts to help pets with spay and neuter services."
+                ]
+              }
+            ],
+            "name": "Animal Shelter",
+            "keywords": [
+              {
+                "text": "animal shelter",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal shelter near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "local animal shelter",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal shelter services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "pet adoption",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal rescue",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "foster a pet",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "spay and neuter",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "humane education lesson plans",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "pet-adoption",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Pet Adoption",
+                  "Adopt a Pet Today",
+                  "Find Your New Best Friend",
+                  "Foster a Pet in Need",
+                  "Volunteer to Help Animals",
+                  "Support Animal Care",
+                  "Low-Cost Spay & Neuter",
+                  "Help Save Lives Now",
+                  "Meet Adoptable Pets",
+                  "Donate to Rescue Efforts",
+                  "Join Our Foster Program",
+                  "Care for Homeless Pets"
+                ],
+                "descriptions": [
+                  "Explore adoptable cats and dogs ready for a new home.",
+                  "Become a foster and provide temporary care to pets.",
+                  "Volunteer your time to support local animal rescue.",
+                  "Join efforts to help pets with spay and neuter services."
+                ]
+              },
+              {
+                "path1": "pet-adoption",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer to Help Animals",
+                  "Support Animal Care",
+                  "Low-Cost Spay & Neuter",
+                  "Help Save Lives Now",
+                  "Meet Adoptable Pets",
+                  "Donate to Rescue Efforts",
+                  "Join Our Foster Program",
+                  "Care for Homeless Pets",
+                  "Give Pets a Second Chance",
+                  "Adopt a Pet Today",
+                  "Find Your New Best Friend",
+                  "Foster a Pet in Need"
+                ],
+                "descriptions": [
+                  "Explore adoptable cats and dogs ready for a new home.",
+                  "Become a foster and provide temporary care to pets.",
+                  "Volunteer your time to support local animal rescue.",
+                  "Join efforts to help pets with spay and neuter services."
+                ]
+              }
+            ],
+            "name": "Pet Adoption",
+            "keywords": [
+              {
+                "text": "pet adoption near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free pet adoption",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "pet adoption help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "humane education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "humane education curriculum",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "humane education programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "teaching humane education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "humane education lessons",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "is humane education",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Get Involved",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer",
+                  "Adopt a Pet Today",
+                  "Find Your New Best Friend",
+                  "Foster a Pet in Need",
+                  "Volunteer to Help Animals",
+                  "Support Animal Care",
+                  "Low-Cost Spay & Neuter",
+                  "Help Save Lives Now",
+                  "Meet Adoptable Pets",
+                  "Donate to Rescue Efforts",
+                  "Join Our Foster Program",
+                  "Care for Homeless Pets"
+                ],
+                "descriptions": [
+                  "Explore adoptable cats and dogs ready for a new home.",
+                  "Become a foster and provide temporary care to pets.",
+                  "Volunteer your time to support local animal rescue.",
+                  "Join efforts to help pets with spay and neuter services."
+                ]
+              },
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer to Help Animals",
+                  "Support Animal Care",
+                  "Low-Cost Spay & Neuter",
+                  "Help Save Lives Now",
+                  "Meet Adoptable Pets",
+                  "Donate to Rescue Efforts",
+                  "Join Our Foster Program",
+                  "Care for Homeless Pets",
+                  "Give Pets a Second Chance",
+                  "Adopt a Pet Today",
+                  "Find Your New Best Friend",
+                  "Foster a Pet in Need"
+                ],
+                "descriptions": [
+                  "Explore adoptable cats and dogs ready for a new home.",
+                  "Become a foster and provide temporary care to pets.",
+                  "Volunteer your time to support local animal rescue.",
+                  "Join efforts to help pets with spay and neuter services."
+                ]
+              }
+            ],
+            "name": "Volunteer",
+            "keywords": [
+              {
+                "text": "volunteer for animal shelter",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal shelter volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ways to volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "humane education teachers",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "humane education ideas",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "define humane education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal rights animal welfare",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "best animal charities",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate",
+                  "Adopt a Pet Today",
+                  "Find Your New Best Friend",
+                  "Foster a Pet in Need",
+                  "Volunteer to Help Animals",
+                  "Support Animal Care",
+                  "Low-Cost Spay & Neuter",
+                  "Help Save Lives Now",
+                  "Meet Adoptable Pets",
+                  "Donate to Rescue Efforts",
+                  "Join Our Foster Program",
+                  "Care for Homeless Pets"
+                ],
+                "descriptions": [
+                  "Explore adoptable cats and dogs ready for a new home.",
+                  "Become a foster and provide temporary care to pets.",
+                  "Volunteer your time to support local animal rescue.",
+                  "Join efforts to help pets with spay and neuter services."
+                ]
+              },
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer to Help Animals",
+                  "Support Animal Care",
+                  "Low-Cost Spay & Neuter",
+                  "Help Save Lives Now",
+                  "Meet Adoptable Pets",
+                  "Donate to Rescue Efforts",
+                  "Join Our Foster Program",
+                  "Care for Homeless Pets",
+                  "Give Pets a Second Chance",
+                  "Adopt a Pet Today",
+                  "Find Your New Best Friend",
+                  "Foster a Pet in Need"
+                ],
+                "descriptions": [
+                  "Explore adoptable cats and dogs ready for a new home.",
+                  "Become a foster and provide temporary care to pets.",
+                  "Volunteer your time to support local animal rescue.",
+                  "Join efforts to help pets with spay and neuter services."
+                ]
+              }
+            ],
+            "name": "Donate",
+            "keywords": [
+              {
+                "text": "donate to animal shelter",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support animal shelters",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal shelter donations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how to donate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal welfare rights",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal welfare",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal abuse",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "top animal charities",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal lesson plans toddlers",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Find Help & Learn More",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Help",
+                  "Adopt a Pet Today",
+                  "Find Your New Best Friend",
+                  "Foster a Pet in Need",
+                  "Volunteer to Help Animals",
+                  "Support Animal Care",
+                  "Low-Cost Spay & Neuter",
+                  "Help Save Lives Now",
+                  "Meet Adoptable Pets",
+                  "Donate to Rescue Efforts",
+                  "Join Our Foster Program",
+                  "Care for Homeless Pets"
+                ],
+                "descriptions": [
+                  "Explore adoptable cats and dogs ready for a new home.",
+                  "Become a foster and provide temporary care to pets.",
+                  "Volunteer your time to support local animal rescue.",
+                  "Join efforts to help pets with spay and neuter services."
+                ]
+              },
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer to Help Animals",
+                  "Support Animal Care",
+                  "Low-Cost Spay & Neuter",
+                  "Help Save Lives Now",
+                  "Meet Adoptable Pets",
+                  "Donate to Rescue Efforts",
+                  "Join Our Foster Program",
+                  "Care for Homeless Pets",
+                  "Give Pets a Second Chance",
+                  "Adopt a Pet Today",
+                  "Find Your New Best Friend",
+                  "Foster a Pet in Need"
+                ],
+                "descriptions": [
+                  "Explore adoptable cats and dogs ready for a new home.",
+                  "Become a foster and provide temporary care to pets.",
+                  "Volunteer your time to support local animal rescue.",
+                  "Join efforts to help pets with spay and neuter services."
+                ]
+              }
+            ],
+            "name": "Find Help",
+            "keywords": [
+              {
+                "text": "animal shelter help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help from animal shelters",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal shelter assistance",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "get help near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal protective services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal charities",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "credit shelter trust",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "prevent animal violence",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal cruelty investigator",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Learn More",
+                  "Adopt a Pet Today",
+                  "Find Your New Best Friend",
+                  "Foster a Pet in Need",
+                  "Volunteer to Help Animals",
+                  "Support Animal Care",
+                  "Low-Cost Spay & Neuter",
+                  "Help Save Lives Now",
+                  "Meet Adoptable Pets",
+                  "Donate to Rescue Efforts",
+                  "Join Our Foster Program",
+                  "Care for Homeless Pets"
+                ],
+                "descriptions": [
+                  "Explore adoptable cats and dogs ready for a new home.",
+                  "Become a foster and provide temporary care to pets.",
+                  "Volunteer your time to support local animal rescue.",
+                  "Join efforts to help pets with spay and neuter services."
+                ]
+              },
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer to Help Animals",
+                  "Support Animal Care",
+                  "Low-Cost Spay & Neuter",
+                  "Help Save Lives Now",
+                  "Meet Adoptable Pets",
+                  "Donate to Rescue Efforts",
+                  "Join Our Foster Program",
+                  "Care for Homeless Pets",
+                  "Give Pets a Second Chance",
+                  "Adopt a Pet Today",
+                  "Find Your New Best Friend",
+                  "Foster a Pet in Need"
+                ],
+                "descriptions": [
+                  "Explore adoptable cats and dogs ready for a new home.",
+                  "Become a foster and provide temporary care to pets.",
+                  "Volunteer your time to support local animal rescue.",
+                  "Join efforts to help pets with spay and neuter services."
+                ]
+              }
+            ],
+            "name": "Learn More",
+            "keywords": [
+              {
+                "text": "about animal shelters",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal shelter programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how animal shelters help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "pet adoption information",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "report animal cruelty",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal cruelty articles",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animal cruelty news",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "meaning of humane",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "being humane meaning",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      }
+    ],
+    "sitelinks": [
+      {
+        "text": "Adopt a Pet",
+        "finalUrl": "https://www.example.org/adopt",
+        "description1": "View cats and dogs ready for adopti",
+        "description2": "Find your new companion today"
+      },
+      {
+        "text": "Foster a Pet",
+        "finalUrl": "https://www.example.org/foster",
+        "description1": "Provide temporary care for pets",
+        "description2": "Help animals in need of homes"
+      },
+      {
+        "text": "Volunteer",
+        "finalUrl": "https://www.example.org/volunteer",
+        "description1": "Join our volunteer team",
+        "description2": "Make a difference for pets"
+      },
+      {
+        "text": "Donate Now",
+        "finalUrl": "https://www.example.org/donate",
+        "description1": "Support medical and rescue care",
+        "description2": "Help save animals' lives"
+      }
+    ],
+    "languageIds": [
+      "1000"
+    ],
+    "locationIds": [
+      "2840"
+    ],
+    "locationList": [
+      {
+        "id": "2840",
+        "name": "United States",
+        "canonicalName": "United States"
+      }
+    ],
+    "languageCodes": "en",
+    "totalDailyBudget": 329,
+    "structuredSnippets": [
+      {
+        "header": "Services",
+        "values": [
+          "Pet Adoption",
+          "Foster Care",
+          "Spay & Neuter",
+          "Volunteer Programs",
+          "Medical Support"
+        ]
+      },
+      {
+        "header": "Programs",
+        "values": [
+          "Adoption Events",
+          "Foster Recruitment",
+          "Volunteer Training",
+          "Fundraising Campaigns",
+          "Emergency Rescue"
+        ]
+      }
+    ]
+  }
+}

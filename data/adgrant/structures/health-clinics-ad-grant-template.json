@@ -1,0 +1,659 @@
+{
+  "slug": "health-clinics-ad-grant-template",
+  "title": "Community Health Clinics Starter Template",
+  "niche": "health-clinics",
+  "structure": {
+    "callouts": [
+      {
+        "text": "Free and low-cost care"
+      },
+      {
+        "text": "Walk-ins welcome"
+      },
+      {
+        "text": "Licensed medical staff"
+      },
+      {
+        "text": "Confidential services"
+      },
+      {
+        "text": "Community focused"
+      },
+      {
+        "text": "Multilingual support"
+      }
+    ],
+    "campaigns": [
+      {
+        "name": "Programs & Services",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "free-clinic",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Free Clinic",
+                  "Book Your Free Health Visit",
+                  "Affordable Care For All",
+                  "Free Medical & Dental Care",
+                  "Mental Health Support Here",
+                  "Join Our Volunteer Team",
+                  "Protect With Vaccinations",
+                  "Schedule A Screening Today",
+                  "Your Health Is Our Focus",
+                  "Donate To Help Patients",
+                  "Compassionate Care Clinic",
+                  "Care For You & Your Family"
+                ],
+                "descriptions": [
+                  "Get free or low-cost medical, dental, and mental health care today.",
+                  "Book your appointment online for free health screenings and vaccines.",
+                  "Join our volunteer team and support community health efforts locally.",
+                  "Donate now to provide care for patients in need in your community."
+                ]
+              },
+              {
+                "path1": "free-clinic",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Mental Health Support Here",
+                  "Join Our Volunteer Team",
+                  "Protect With Vaccinations",
+                  "Schedule A Screening Today",
+                  "Your Health Is Our Focus",
+                  "Donate To Help Patients",
+                  "Compassionate Care Clinic",
+                  "Care For You & Your Family",
+                  "Accessible Health Services",
+                  "Book Your Free Health Visit",
+                  "Affordable Care For All",
+                  "Free Medical & Dental Care"
+                ],
+                "descriptions": [
+                  "Get free or low-cost medical, dental, and mental health care today.",
+                  "Book your appointment online for free health screenings and vaccines.",
+                  "Join our volunteer team and support community health efforts locally.",
+                  "Donate now to provide care for patients in need in your community."
+                ]
+              }
+            ],
+            "name": "Free Clinic",
+            "keywords": [
+              {
+                "text": "free clinic",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free clinic near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "local free clinic",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free clinic services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community health center",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "low cost healthcare",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free dental",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "mental health services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "uninsured care",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "community-healt",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Community Health Center",
+                  "Book Your Free Health Visit",
+                  "Affordable Care For All",
+                  "Free Medical & Dental Care",
+                  "Mental Health Support Here",
+                  "Join Our Volunteer Team",
+                  "Protect With Vaccinations",
+                  "Schedule A Screening Today",
+                  "Your Health Is Our Focus",
+                  "Donate To Help Patients",
+                  "Compassionate Care Clinic",
+                  "Care For You & Your Family"
+                ],
+                "descriptions": [
+                  "Get free or low-cost medical, dental, and mental health care today.",
+                  "Book your appointment online for free health screenings and vaccines.",
+                  "Join our volunteer team and support community health efforts locally.",
+                  "Donate now to provide care for patients in need in your community."
+                ]
+              },
+              {
+                "path1": "community-healt",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Mental Health Support Here",
+                  "Join Our Volunteer Team",
+                  "Protect With Vaccinations",
+                  "Schedule A Screening Today",
+                  "Your Health Is Our Focus",
+                  "Donate To Help Patients",
+                  "Compassionate Care Clinic",
+                  "Care For You & Your Family",
+                  "Accessible Health Services",
+                  "Book Your Free Health Visit",
+                  "Affordable Care For All",
+                  "Free Medical & Dental Care"
+                ],
+                "descriptions": [
+                  "Get free or low-cost medical, dental, and mental health care today.",
+                  "Book your appointment online for free health screenings and vaccines.",
+                  "Join our volunteer team and support community health efforts locally.",
+                  "Donate now to provide care for patients in need in your community."
+                ]
+              }
+            ],
+            "name": "Community Health Center",
+            "keywords": [
+              {
+                "text": "community health center near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free community health center",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community health center help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "fitness center",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "national center family philanthropy",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "jewish community center",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "low income charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "center planetarium",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "top health charities",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Get Involved",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer",
+                  "Book Your Free Health Visit",
+                  "Affordable Care For All",
+                  "Free Medical & Dental Care",
+                  "Mental Health Support Here",
+                  "Join Our Volunteer Team",
+                  "Protect With Vaccinations",
+                  "Schedule A Screening Today",
+                  "Your Health Is Our Focus",
+                  "Donate To Help Patients",
+                  "Compassionate Care Clinic",
+                  "Care For You & Your Family"
+                ],
+                "descriptions": [
+                  "Get free or low-cost medical, dental, and mental health care today.",
+                  "Book your appointment online for free health screenings and vaccines.",
+                  "Join our volunteer team and support community health efforts locally.",
+                  "Donate now to provide care for patients in need in your community."
+                ]
+              },
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Mental Health Support Here",
+                  "Join Our Volunteer Team",
+                  "Protect With Vaccinations",
+                  "Schedule A Screening Today",
+                  "Your Health Is Our Focus",
+                  "Donate To Help Patients",
+                  "Compassionate Care Clinic",
+                  "Care For You & Your Family",
+                  "Accessible Health Services",
+                  "Book Your Free Health Visit",
+                  "Affordable Care For All",
+                  "Free Medical & Dental Care"
+                ],
+                "descriptions": [
+                  "Get free or low-cost medical, dental, and mental health care today.",
+                  "Book your appointment online for free health screenings and vaccines.",
+                  "Join our volunteer team and support community health efforts locally.",
+                  "Donate now to provide care for patients in need in your community."
+                ]
+              }
+            ],
+            "name": "Volunteer",
+            "keywords": [
+              {
+                "text": "volunteer for community health clinic",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community health clinic volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ways to volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "pregnancy test center",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "fitness center with pool",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "aquatic fitness center",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community empowerment center",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "center family philanthropy",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate",
+                  "Book Your Free Health Visit",
+                  "Affordable Care For All",
+                  "Free Medical & Dental Care",
+                  "Mental Health Support Here",
+                  "Join Our Volunteer Team",
+                  "Protect With Vaccinations",
+                  "Schedule A Screening Today",
+                  "Your Health Is Our Focus",
+                  "Donate To Help Patients",
+                  "Compassionate Care Clinic",
+                  "Care For You & Your Family"
+                ],
+                "descriptions": [
+                  "Get free or low-cost medical, dental, and mental health care today.",
+                  "Book your appointment online for free health screenings and vaccines.",
+                  "Join our volunteer team and support community health efforts locally.",
+                  "Donate now to provide care for patients in need in your community."
+                ]
+              },
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Mental Health Support Here",
+                  "Join Our Volunteer Team",
+                  "Protect With Vaccinations",
+                  "Schedule A Screening Today",
+                  "Your Health Is Our Focus",
+                  "Donate To Help Patients",
+                  "Compassionate Care Clinic",
+                  "Care For You & Your Family",
+                  "Accessible Health Services",
+                  "Book Your Free Health Visit",
+                  "Affordable Care For All",
+                  "Free Medical & Dental Care"
+                ],
+                "descriptions": [
+                  "Get free or low-cost medical, dental, and mental health care today.",
+                  "Book your appointment online for free health screenings and vaccines.",
+                  "Join our volunteer team and support community health efforts locally.",
+                  "Donate now to provide care for patients in need in your community."
+                ]
+              }
+            ],
+            "name": "Donate",
+            "keywords": [
+              {
+                "text": "donate to community health clinic",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support community health clinics",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community health clinic donations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how to donate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "planned giving design center",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "pregnancy center",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "health clubs with pools",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "event at conference center",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "events at conference center",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Find Help & Learn More",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Help",
+                  "Book Your Free Health Visit",
+                  "Affordable Care For All",
+                  "Free Medical & Dental Care",
+                  "Mental Health Support Here",
+                  "Join Our Volunteer Team",
+                  "Protect With Vaccinations",
+                  "Schedule A Screening Today",
+                  "Your Health Is Our Focus",
+                  "Donate To Help Patients",
+                  "Compassionate Care Clinic",
+                  "Care For You & Your Family"
+                ],
+                "descriptions": [
+                  "Get free or low-cost medical, dental, and mental health care today.",
+                  "Book your appointment online for free health screenings and vaccines.",
+                  "Join our volunteer team and support community health efforts locally.",
+                  "Donate now to provide care for patients in need in your community."
+                ]
+              },
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Mental Health Support Here",
+                  "Join Our Volunteer Team",
+                  "Protect With Vaccinations",
+                  "Schedule A Screening Today",
+                  "Your Health Is Our Focus",
+                  "Donate To Help Patients",
+                  "Compassionate Care Clinic",
+                  "Care For You & Your Family",
+                  "Accessible Health Services",
+                  "Book Your Free Health Visit",
+                  "Affordable Care For All",
+                  "Free Medical & Dental Care"
+                ],
+                "descriptions": [
+                  "Get free or low-cost medical, dental, and mental health care today.",
+                  "Book your appointment online for free health screenings and vaccines.",
+                  "Join our volunteer team and support community health efforts locally.",
+                  "Donate now to provide care for patients in need in your community."
+                ]
+              }
+            ],
+            "name": "Find Help",
+            "keywords": [
+              {
+                "text": "community health clinic help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help from community health clinics",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free clinic assistance",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "get help near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "conference center event",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "conference center events",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "medical center events",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "medical center event",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "event at medical center",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Learn More",
+                  "Book Your Free Health Visit",
+                  "Affordable Care For All",
+                  "Free Medical & Dental Care",
+                  "Mental Health Support Here",
+                  "Join Our Volunteer Team",
+                  "Protect With Vaccinations",
+                  "Schedule A Screening Today",
+                  "Your Health Is Our Focus",
+                  "Donate To Help Patients",
+                  "Compassionate Care Clinic",
+                  "Care For You & Your Family"
+                ],
+                "descriptions": [
+                  "Get free or low-cost medical, dental, and mental health care today.",
+                  "Book your appointment online for free health screenings and vaccines.",
+                  "Join our volunteer team and support community health efforts locally.",
+                  "Donate now to provide care for patients in need in your community."
+                ]
+              },
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Mental Health Support Here",
+                  "Join Our Volunteer Team",
+                  "Protect With Vaccinations",
+                  "Schedule A Screening Today",
+                  "Your Health Is Our Focus",
+                  "Donate To Help Patients",
+                  "Compassionate Care Clinic",
+                  "Care For You & Your Family",
+                  "Accessible Health Services",
+                  "Book Your Free Health Visit",
+                  "Affordable Care For All",
+                  "Free Medical & Dental Care"
+                ],
+                "descriptions": [
+                  "Get free or low-cost medical, dental, and mental health care today.",
+                  "Book your appointment online for free health screenings and vaccines.",
+                  "Join our volunteer team and support community health efforts locally.",
+                  "Donate now to provide care for patients in need in your community."
+                ]
+              }
+            ],
+            "name": "Learn More",
+            "keywords": [
+              {
+                "text": "about community health clinics",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community health clinic programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how community health clinics help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "community health center information",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "events at medical center",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "center kids",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "impact community services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "family planning clinic",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "std clinic",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      }
+    ],
+    "sitelinks": [
+      {
+        "text": "Book Free Appointment",
+        "finalUrl": "https://www.example.org/book-appointment",
+        "description1": "Schedule your visit online",
+        "description2": "Easy and convenient booking"
+      },
+      {
+        "text": "Vaccination Clinic",
+        "finalUrl": "https://www.example.org/vaccination-services",
+        "description1": "Protect your family today",
+        "description2": "Flu, COVID, and more shots"
+      },
+      {
+        "text": "Volunteer With Us",
+        "finalUrl": "https://www.example.org/volunteer",
+        "description1": "Make a difference locally",
+        "description2": "Join our caring team now"
+      },
+      {
+        "text": "Support Patient Care",
+        "finalUrl": "https://www.example.org/donate",
+        "description1": "Donate to help those in need",
+        "description2": "Your gift saves lives"
+      }
+    ],
+    "languageIds": [
+      "1000"
+    ],
+    "locationIds": [
+      "2840"
+    ],
+    "locationList": [
+      {
+        "id": "2840",
+        "name": "United States",
+        "canonicalName": "United States"
+      }
+    ],
+    "languageCodes": "en",
+    "totalDailyBudget": 329,
+    "structuredSnippets": [
+      {
+        "header": "Services",
+        "values": [
+          "Primary care",
+          "Dental care",
+          "Mental health",
+          "Vaccinations",
+          "Health screenings"
+        ]
+      },
+      {
+        "header": "Programs",
+        "values": [
+          "Volunteer opportunities",
+          "Patient education",
+          "Community outreach",
+          "Donation drives",
+          "Health workshops"
+        ]
+      }
+    ]
+  }
+}

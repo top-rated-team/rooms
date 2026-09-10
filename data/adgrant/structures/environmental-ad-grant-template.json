@@ -1,0 +1,659 @@
+{
+  "slug": "environmental-ad-grant-template",
+  "title": "Environmental Nonprofits Starter Template",
+  "niche": "environmental",
+  "structure": {
+    "callouts": [
+      {
+        "text": "Community Driven"
+      },
+      {
+        "text": "Local Impact"
+      },
+      {
+        "text": "Volunteer Friendly"
+      },
+      {
+        "text": "Eco-Friendly Projects"
+      },
+      {
+        "text": "Nonprofit Supported"
+      },
+      {
+        "text": "Sustainable Solutions"
+      }
+    ],
+    "campaigns": [
+      {
+        "name": "Programs & Services",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "environmental-n",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Environmental Nonprofit",
+                  "Join Local Clean-Up Efforts",
+                  "Protect Our Natural Spaces",
+                  "Help Plant Trees Today",
+                  "Support Land Conservation",
+                  "Volunteer for Climate Action",
+                  "Restore Local Ecosystems",
+                  "Donate to Save Wildlife",
+                  "Take Part in Green Initiatives",
+                  "Advocate for a Cleaner Earth",
+                  "Together for a Healthy Planet",
+                  "Get Involved in Restoration"
+                ],
+                "descriptions": [
+                  "Join community clean-up events and protect local habitats.",
+                  "Donate now to support land conservation and restoration.",
+                  "Volunteer opportunities available for all skill levels.",
+                  "Sign up to receive updates on climate action programs."
+                ]
+              },
+              {
+                "path1": "environmental-n",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Support Land Conservation",
+                  "Volunteer for Climate Action",
+                  "Restore Local Ecosystems",
+                  "Donate to Save Wildlife",
+                  "Take Part in Green Initiatives",
+                  "Advocate for a Cleaner Earth",
+                  "Together for a Healthy Planet",
+                  "Get Involved in Restoration",
+                  "Make a Difference Outdoors",
+                  "Join Local Clean-Up Efforts",
+                  "Protect Our Natural Spaces",
+                  "Help Plant Trees Today"
+                ],
+                "descriptions": [
+                  "Join community clean-up events and protect local habitats.",
+                  "Donate now to support land conservation and restoration.",
+                  "Volunteer opportunities available for all skill levels.",
+                  "Sign up to receive updates on climate action programs."
+                ]
+              }
+            ],
+            "name": "Environmental Nonprofit",
+            "keywords": [
+              {
+                "text": "environmental nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental nonprofit near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "local environmental nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental nonprofit services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "climate action",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "tree planting",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "river cleanup",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "protect wildlife",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental education",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "conservation",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Conservation",
+                  "Join Local Clean-Up Efforts",
+                  "Protect Our Natural Spaces",
+                  "Help Plant Trees Today",
+                  "Support Land Conservation",
+                  "Volunteer for Climate Action",
+                  "Restore Local Ecosystems",
+                  "Donate to Save Wildlife",
+                  "Take Part in Green Initiatives",
+                  "Advocate for a Cleaner Earth",
+                  "Together for a Healthy Planet",
+                  "Get Involved in Restoration"
+                ],
+                "descriptions": [
+                  "Join community clean-up events and protect local habitats.",
+                  "Donate now to support land conservation and restoration.",
+                  "Volunteer opportunities available for all skill levels.",
+                  "Sign up to receive updates on climate action programs."
+                ]
+              },
+              {
+                "path1": "conservation",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Support Land Conservation",
+                  "Volunteer for Climate Action",
+                  "Restore Local Ecosystems",
+                  "Donate to Save Wildlife",
+                  "Take Part in Green Initiatives",
+                  "Advocate for a Cleaner Earth",
+                  "Together for a Healthy Planet",
+                  "Get Involved in Restoration",
+                  "Make a Difference Outdoors",
+                  "Join Local Clean-Up Efforts",
+                  "Protect Our Natural Spaces",
+                  "Help Plant Trees Today"
+                ],
+                "descriptions": [
+                  "Join community clean-up events and protect local habitats.",
+                  "Donate now to support land conservation and restoration.",
+                  "Volunteer opportunities available for all skill levels.",
+                  "Sign up to receive updates on climate action programs."
+                ]
+              }
+            ],
+            "name": "Conservation",
+            "keywords": [
+              {
+                "text": "conservation near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free conservation",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "conservation help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "to protect animals",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental foundation grants",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "conservation of environment",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "best environmental charities",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "water conservation",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ocean conservation",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Get Involved",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer",
+                  "Join Local Clean-Up Efforts",
+                  "Protect Our Natural Spaces",
+                  "Help Plant Trees Today",
+                  "Support Land Conservation",
+                  "Volunteer for Climate Action",
+                  "Restore Local Ecosystems",
+                  "Donate to Save Wildlife",
+                  "Take Part in Green Initiatives",
+                  "Advocate for a Cleaner Earth",
+                  "Together for a Healthy Planet",
+                  "Get Involved in Restoration"
+                ],
+                "descriptions": [
+                  "Join community clean-up events and protect local habitats.",
+                  "Donate now to support land conservation and restoration.",
+                  "Volunteer opportunities available for all skill levels.",
+                  "Sign up to receive updates on climate action programs."
+                ]
+              },
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Support Land Conservation",
+                  "Volunteer for Climate Action",
+                  "Restore Local Ecosystems",
+                  "Donate to Save Wildlife",
+                  "Take Part in Green Initiatives",
+                  "Advocate for a Cleaner Earth",
+                  "Together for a Healthy Planet",
+                  "Get Involved in Restoration",
+                  "Make a Difference Outdoors",
+                  "Join Local Clean-Up Efforts",
+                  "Protect Our Natural Spaces",
+                  "Help Plant Trees Today"
+                ],
+                "descriptions": [
+                  "Join community clean-up events and protect local habitats.",
+                  "Donate now to support land conservation and restoration.",
+                  "Volunteer opportunities available for all skill levels.",
+                  "Sign up to receive updates on climate action programs."
+                ]
+              }
+            ],
+            "name": "Volunteer",
+            "keywords": [
+              {
+                "text": "volunteer for environmental nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental nonprofit volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ways to volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "affirmative action",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "importance of environmental education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental educator",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "is environmental education",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental education lesson plans",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate",
+                  "Join Local Clean-Up Efforts",
+                  "Protect Our Natural Spaces",
+                  "Help Plant Trees Today",
+                  "Support Land Conservation",
+                  "Volunteer for Climate Action",
+                  "Restore Local Ecosystems",
+                  "Donate to Save Wildlife",
+                  "Take Part in Green Initiatives",
+                  "Advocate for a Cleaner Earth",
+                  "Together for a Healthy Planet",
+                  "Get Involved in Restoration"
+                ],
+                "descriptions": [
+                  "Join community clean-up events and protect local habitats.",
+                  "Donate now to support land conservation and restoration.",
+                  "Volunteer opportunities available for all skill levels.",
+                  "Sign up to receive updates on climate action programs."
+                ]
+              },
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Support Land Conservation",
+                  "Volunteer for Climate Action",
+                  "Restore Local Ecosystems",
+                  "Donate to Save Wildlife",
+                  "Take Part in Green Initiatives",
+                  "Advocate for a Cleaner Earth",
+                  "Together for a Healthy Planet",
+                  "Get Involved in Restoration",
+                  "Make a Difference Outdoors",
+                  "Join Local Clean-Up Efforts",
+                  "Protect Our Natural Spaces",
+                  "Help Plant Trees Today"
+                ],
+                "descriptions": [
+                  "Join community clean-up events and protect local habitats.",
+                  "Donate now to support land conservation and restoration.",
+                  "Volunteer opportunities available for all skill levels.",
+                  "Sign up to receive updates on climate action programs."
+                ]
+              }
+            ],
+            "name": "Donate",
+            "keywords": [
+              {
+                "text": "donate to environmental nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support environmental nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental nonprofit donations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how to donate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental education research",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental education definition",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental activities schools",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "wildlife lesson plans",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "animals that protect",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Find Help & Learn More",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Help",
+                  "Join Local Clean-Up Efforts",
+                  "Protect Our Natural Spaces",
+                  "Help Plant Trees Today",
+                  "Support Land Conservation",
+                  "Volunteer for Climate Action",
+                  "Restore Local Ecosystems",
+                  "Donate to Save Wildlife",
+                  "Take Part in Green Initiatives",
+                  "Advocate for a Cleaner Earth",
+                  "Together for a Healthy Planet",
+                  "Get Involved in Restoration"
+                ],
+                "descriptions": [
+                  "Join community clean-up events and protect local habitats.",
+                  "Donate now to support land conservation and restoration.",
+                  "Volunteer opportunities available for all skill levels.",
+                  "Sign up to receive updates on climate action programs."
+                ]
+              },
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Support Land Conservation",
+                  "Volunteer for Climate Action",
+                  "Restore Local Ecosystems",
+                  "Donate to Save Wildlife",
+                  "Take Part in Green Initiatives",
+                  "Advocate for a Cleaner Earth",
+                  "Together for a Healthy Planet",
+                  "Get Involved in Restoration",
+                  "Make a Difference Outdoors",
+                  "Join Local Clean-Up Efforts",
+                  "Protect Our Natural Spaces",
+                  "Help Plant Trees Today"
+                ],
+                "descriptions": [
+                  "Join community clean-up events and protect local habitats.",
+                  "Donate now to support land conservation and restoration.",
+                  "Volunteer opportunities available for all skill levels.",
+                  "Sign up to receive updates on climate action programs."
+                ]
+              }
+            ],
+            "name": "Find Help",
+            "keywords": [
+              {
+                "text": "environmental nonprofit help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help from environmental nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental nonprofit assistance",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "get help near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental consulting",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental companies",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental consulting firms",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental conservation",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "habitat conservation fund",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Learn More",
+                  "Join Local Clean-Up Efforts",
+                  "Protect Our Natural Spaces",
+                  "Help Plant Trees Today",
+                  "Support Land Conservation",
+                  "Volunteer for Climate Action",
+                  "Restore Local Ecosystems",
+                  "Donate to Save Wildlife",
+                  "Take Part in Green Initiatives",
+                  "Advocate for a Cleaner Earth",
+                  "Together for a Healthy Planet",
+                  "Get Involved in Restoration"
+                ],
+                "descriptions": [
+                  "Join community clean-up events and protect local habitats.",
+                  "Donate now to support land conservation and restoration.",
+                  "Volunteer opportunities available for all skill levels.",
+                  "Sign up to receive updates on climate action programs."
+                ]
+              },
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Support Land Conservation",
+                  "Volunteer for Climate Action",
+                  "Restore Local Ecosystems",
+                  "Donate to Save Wildlife",
+                  "Take Part in Green Initiatives",
+                  "Advocate for a Cleaner Earth",
+                  "Together for a Healthy Planet",
+                  "Get Involved in Restoration",
+                  "Make a Difference Outdoors",
+                  "Join Local Clean-Up Efforts",
+                  "Protect Our Natural Spaces",
+                  "Help Plant Trees Today"
+                ],
+                "descriptions": [
+                  "Join community clean-up events and protect local habitats.",
+                  "Donate now to support land conservation and restoration.",
+                  "Volunteer opportunities available for all skill levels.",
+                  "Sign up to receive updates on climate action programs."
+                ]
+              }
+            ],
+            "name": "Learn More",
+            "keywords": [
+              {
+                "text": "about environmental nonprofits",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "environmental nonprofit programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how environmental nonprofits help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "conservation information",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "habitat conservation plan",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "conservation banking",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "impact of climate change",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "protecting climate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "climate change",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      }
+    ],
+    "sitelinks": [
+      {
+        "text": "Volunteer Opportunities",
+        "finalUrl": "https://www.example.org/volunteer",
+        "description1": "Find events near you",
+        "description2": "Make an impact locally"
+      },
+      {
+        "text": "Donate to Conservation",
+        "finalUrl": "https://www.example.org/donate",
+        "description1": "Support land and wildlife",
+        "description2": "Secure our ecosystems"
+      },
+      {
+        "text": "Newsletter Sign-Up",
+        "finalUrl": "https://www.example.org/newsletter",
+        "description1": "Stay informed monthly",
+        "description2": "Get climate updates"
+      },
+      {
+        "text": "Tree Planting Programs",
+        "finalUrl": "https://www.example.org/tree-planting",
+        "description1": "Help restore forests",
+        "description2": "Join planting events"
+      }
+    ],
+    "languageIds": [
+      "1000"
+    ],
+    "locationIds": [
+      "2840"
+    ],
+    "locationList": [
+      {
+        "id": "2840",
+        "name": "United States",
+        "canonicalName": "United States"
+      }
+    ],
+    "languageCodes": "en",
+    "totalDailyBudget": 329,
+    "structuredSnippets": [
+      {
+        "header": "Services",
+        "values": [
+          "Habitat Restoration",
+          "Community Clean-Ups",
+          "Tree Planting",
+          "Environmental Education",
+          "Advocacy Programs"
+        ]
+      },
+      {
+        "header": "Programs",
+        "values": [
+          "Volunteer Engagement",
+          "Land Conservation",
+          "Climate Action",
+          "Wildlife Protection",
+          "Sustainable Outreach"
+        ]
+      }
+    ]
+  }
+}

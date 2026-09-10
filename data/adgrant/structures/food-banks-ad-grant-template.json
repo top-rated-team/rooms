@@ -1,0 +1,657 @@
+{
+  "slug": "food-banks-ad-grant-template",
+  "title": "Food Banks Starter Template",
+  "niche": "food-banks",
+  "structure": {
+    "callouts": [
+      {
+        "text": "Free food assistance"
+      },
+      {
+        "text": "Volunteer welcome"
+      },
+      {
+        "text": "Donate food or funds"
+      },
+      {
+        "text": "Serving all ages"
+      },
+      {
+        "text": "Community focused"
+      },
+      {
+        "text": "Mobile pantries"
+      }
+    ],
+    "campaigns": [
+      {
+        "name": "Programs & Services",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "food-bank",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Food Bank",
+                  "Find Free Food Near You",
+                  "Help Families in Need",
+                  "Volunteer for Food Drives",
+                  "Donate Food or Money",
+                  "Mobile Pantry Schedule",
+                  "Support Local Food Banks",
+                  "End Hunger in Your Area",
+                  "Join Our Volunteer Team",
+                  "Food Assistance Available",
+                  "Give Back Today",
+                  "Find Pantry Locations"
+                ],
+                "descriptions": [
+                  "Locate free food programs nearby and get assistance today.",
+                  "Join us in distributing food to families facing hunger.",
+                  "Donate food or money to support local food services.",
+                  "Check our mobile pantry dates and find food near you."
+                ]
+              },
+              {
+                "path1": "food-bank",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate Food or Money",
+                  "Mobile Pantry Schedule",
+                  "Support Local Food Banks",
+                  "End Hunger in Your Area",
+                  "Join Our Volunteer Team",
+                  "Food Assistance Available",
+                  "Give Back Today",
+                  "Find Pantry Locations",
+                  "Help Feed Families",
+                  "Find Free Food Near You",
+                  "Help Families in Need",
+                  "Volunteer for Food Drives"
+                ],
+                "descriptions": [
+                  "Locate free food programs nearby and get assistance today.",
+                  "Join us in distributing food to families facing hunger.",
+                  "Donate food or money to support local food services.",
+                  "Check our mobile pantry dates and find food near you."
+                ]
+              }
+            ],
+            "name": "Food Bank",
+            "keywords": [
+              {
+                "text": "food bank",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food bank near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "local food bank",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food bank services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food pantry",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free groceries",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "hunger relief",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donate food",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food assistance",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "food-pantry",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Food Pantry",
+                  "Find Free Food Near You",
+                  "Help Families in Need",
+                  "Volunteer for Food Drives",
+                  "Donate Food or Money",
+                  "Mobile Pantry Schedule",
+                  "Support Local Food Banks",
+                  "End Hunger in Your Area",
+                  "Join Our Volunteer Team",
+                  "Food Assistance Available",
+                  "Give Back Today",
+                  "Find Pantry Locations"
+                ],
+                "descriptions": [
+                  "Locate free food programs nearby and get assistance today.",
+                  "Join us in distributing food to families facing hunger.",
+                  "Donate food or money to support local food services.",
+                  "Check our mobile pantry dates and find food near you."
+                ]
+              },
+              {
+                "path1": "food-pantry",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate Food or Money",
+                  "Mobile Pantry Schedule",
+                  "Support Local Food Banks",
+                  "End Hunger in Your Area",
+                  "Join Our Volunteer Team",
+                  "Food Assistance Available",
+                  "Give Back Today",
+                  "Find Pantry Locations",
+                  "Help Feed Families",
+                  "Find Free Food Near You",
+                  "Help Families in Need",
+                  "Volunteer for Food Drives"
+                ],
+                "descriptions": [
+                  "Locate free food programs nearby and get assistance today.",
+                  "Join us in distributing food to families facing hunger.",
+                  "Donate food or money to support local food services.",
+                  "Check our mobile pantry dates and find food near you."
+                ]
+              }
+            ],
+            "name": "Food Pantry",
+            "keywords": [
+              {
+                "text": "food pantry near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free food pantry",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food pantry help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "charities to donate to",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donate to",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food donation",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donate money",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "to donate money",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donate to kids",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Get Involved",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer",
+                  "Find Free Food Near You",
+                  "Help Families in Need",
+                  "Volunteer for Food Drives",
+                  "Donate Food or Money",
+                  "Mobile Pantry Schedule",
+                  "Support Local Food Banks",
+                  "End Hunger in Your Area",
+                  "Join Our Volunteer Team",
+                  "Food Assistance Available",
+                  "Give Back Today",
+                  "Find Pantry Locations"
+                ],
+                "descriptions": [
+                  "Locate free food programs nearby and get assistance today.",
+                  "Join us in distributing food to families facing hunger.",
+                  "Donate food or money to support local food services.",
+                  "Check our mobile pantry dates and find food near you."
+                ]
+              },
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate Food or Money",
+                  "Mobile Pantry Schedule",
+                  "Support Local Food Banks",
+                  "End Hunger in Your Area",
+                  "Join Our Volunteer Team",
+                  "Food Assistance Available",
+                  "Give Back Today",
+                  "Find Pantry Locations",
+                  "Help Feed Families",
+                  "Find Free Food Near You",
+                  "Help Families in Need",
+                  "Volunteer for Food Drives"
+                ],
+                "descriptions": [
+                  "Locate free food programs nearby and get assistance today.",
+                  "Join us in distributing food to families facing hunger.",
+                  "Donate food or money to support local food services.",
+                  "Check our mobile pantry dates and find food near you."
+                ]
+              }
+            ],
+            "name": "Volunteer",
+            "keywords": [
+              {
+                "text": "volunteer for food bank",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food bank volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ways to volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donate plasma",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "to donate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donate to hunger relief",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "hunger relief programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donate fish",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate",
+                  "Find Free Food Near You",
+                  "Help Families in Need",
+                  "Volunteer for Food Drives",
+                  "Donate Food or Money",
+                  "Mobile Pantry Schedule",
+                  "Support Local Food Banks",
+                  "End Hunger in Your Area",
+                  "Join Our Volunteer Team",
+                  "Food Assistance Available",
+                  "Give Back Today",
+                  "Find Pantry Locations"
+                ],
+                "descriptions": [
+                  "Locate free food programs nearby and get assistance today.",
+                  "Join us in distributing food to families facing hunger.",
+                  "Donate food or money to support local food services.",
+                  "Check our mobile pantry dates and find food near you."
+                ]
+              },
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate Food or Money",
+                  "Mobile Pantry Schedule",
+                  "Support Local Food Banks",
+                  "End Hunger in Your Area",
+                  "Join Our Volunteer Team",
+                  "Food Assistance Available",
+                  "Give Back Today",
+                  "Find Pantry Locations",
+                  "Help Feed Families",
+                  "Find Free Food Near You",
+                  "Help Families in Need",
+                  "Volunteer for Food Drives"
+                ],
+                "descriptions": [
+                  "Locate free food programs nearby and get assistance today.",
+                  "Join us in distributing food to families facing hunger.",
+                  "Donate food or money to support local food services.",
+                  "Check our mobile pantry dates and find food near you."
+                ]
+              }
+            ],
+            "name": "Donate",
+            "keywords": [
+              {
+                "text": "donate to food bank",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support food banks",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food bank donations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how to donate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "hunger relief organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "best charities hunger relief",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food recovery",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donate money to",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Find Help & Learn More",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Help",
+                  "Find Free Food Near You",
+                  "Help Families in Need",
+                  "Volunteer for Food Drives",
+                  "Donate Food or Money",
+                  "Mobile Pantry Schedule",
+                  "Support Local Food Banks",
+                  "End Hunger in Your Area",
+                  "Join Our Volunteer Team",
+                  "Food Assistance Available",
+                  "Give Back Today",
+                  "Find Pantry Locations"
+                ],
+                "descriptions": [
+                  "Locate free food programs nearby and get assistance today.",
+                  "Join us in distributing food to families facing hunger.",
+                  "Donate food or money to support local food services.",
+                  "Check our mobile pantry dates and find food near you."
+                ]
+              },
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate Food or Money",
+                  "Mobile Pantry Schedule",
+                  "Support Local Food Banks",
+                  "End Hunger in Your Area",
+                  "Join Our Volunteer Team",
+                  "Food Assistance Available",
+                  "Give Back Today",
+                  "Find Pantry Locations",
+                  "Help Feed Families",
+                  "Find Free Food Near You",
+                  "Help Families in Need",
+                  "Volunteer for Food Drives"
+                ],
+                "descriptions": [
+                  "Locate free food programs nearby and get assistance today.",
+                  "Join us in distributing food to families facing hunger.",
+                  "Donate food or money to support local food services.",
+                  "Check our mobile pantry dates and find food near you."
+                ]
+              }
+            ],
+            "name": "Find Help",
+            "keywords": [
+              {
+                "text": "food bank help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help from food banks",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food bank assistance",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "get help near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "to donate my car",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food insecurity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "global hunger",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "hunger relief organization",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food donation app",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Learn More",
+                  "Find Free Food Near You",
+                  "Help Families in Need",
+                  "Volunteer for Food Drives",
+                  "Donate Food or Money",
+                  "Mobile Pantry Schedule",
+                  "Support Local Food Banks",
+                  "End Hunger in Your Area",
+                  "Join Our Volunteer Team",
+                  "Food Assistance Available",
+                  "Give Back Today",
+                  "Find Pantry Locations"
+                ],
+                "descriptions": [
+                  "Locate free food programs nearby and get assistance today.",
+                  "Join us in distributing food to families facing hunger.",
+                  "Donate food or money to support local food services.",
+                  "Check our mobile pantry dates and find food near you."
+                ]
+              },
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate Food or Money",
+                  "Mobile Pantry Schedule",
+                  "Support Local Food Banks",
+                  "End Hunger in Your Area",
+                  "Join Our Volunteer Team",
+                  "Food Assistance Available",
+                  "Give Back Today",
+                  "Find Pantry Locations",
+                  "Help Feed Families",
+                  "Find Free Food Near You",
+                  "Help Families in Need",
+                  "Volunteer for Food Drives"
+                ],
+                "descriptions": [
+                  "Locate free food programs nearby and get assistance today.",
+                  "Join us in distributing food to families facing hunger.",
+                  "Donate food or money to support local food services.",
+                  "Check our mobile pantry dates and find food near you."
+                ]
+              }
+            ],
+            "name": "Learn More",
+            "keywords": [
+              {
+                "text": "about food banks",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food bank programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how food banks help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food pantry information",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "to plate food",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "us food plate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "plating up food",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food waste donation",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "food waste non profit",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      }
+    ],
+    "sitelinks": [
+      {
+        "text": "Find Food Locations",
+        "finalUrl": "https://www.example.org/find-food",
+        "description1": "Search pantries near you",
+        "description2": "Get free food assistance"
+      },
+      {
+        "text": "Volunteer Opportunities",
+        "finalUrl": "https://www.example.org/volunteer",
+        "description1": "Help with food distribution",
+        "description2": "Join our volunteer team"
+      },
+      {
+        "text": "Make a Donation",
+        "finalUrl": "https://www.example.org/donate",
+        "description1": "Support food programs",
+        "description2": "Give food or money"
+      },
+      {
+        "text": "Mobile Pantry Schedule",
+        "finalUrl": "https://www.example.org/mobile-pantry",
+        "description1": "Find dates & locations",
+        "description2": "Food delivered to you"
+      }
+    ],
+    "languageIds": [
+      "1000"
+    ],
+    "locationIds": [
+      "2840"
+    ],
+    "locationList": [
+      {
+        "id": "2840",
+        "name": "United States",
+        "canonicalName": "United States"
+      }
+    ],
+    "languageCodes": "en",
+    "totalDailyBudget": 329,
+    "structuredSnippets": [
+      {
+        "header": "Services",
+        "values": [
+          "Food distribution",
+          "Mobile pantries",
+          "Nutrition education",
+          "Family support"
+        ]
+      },
+      {
+        "header": "Programs",
+        "values": [
+          "Weekly food boxes",
+          "Volunteer events",
+          "Donation drives",
+          "Child meal programs"
+        ]
+      }
+    ]
+  }
+}

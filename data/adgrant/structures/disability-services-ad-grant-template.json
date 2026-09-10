@@ -1,0 +1,659 @@
+{
+  "slug": "disability-services-ad-grant-template",
+  "title": "Disability Services Starter Template",
+  "niche": "disability-services",
+  "structure": {
+    "callouts": [
+      {
+        "text": "Free program enrollment"
+      },
+      {
+        "text": "Community based support"
+      },
+      {
+        "text": "Trusted disability expert"
+      },
+      {
+        "text": "Inclusive events for all"
+      },
+      {
+        "text": "Volunteer opportunities"
+      },
+      {
+        "text": "Secure online donations"
+      }
+    ],
+    "campaigns": [
+      {
+        "name": "Programs & Services",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "disability-serv",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Disability Services",
+                  "Support for People with Disabi",
+                  "Join Our Disability Programs",
+                  "Inclusive Services for All",
+                  "Adaptive Recreation Opportunit",
+                  "Volunteer to Make a Difference",
+                  "Donate to Expand Accessibility",
+                  "Advocacy for Disability Rights",
+                  "Therapy Services for Everyone",
+                  "Empower Families with Support",
+                  "Get Involved with Our Mission",
+                  "Accessible Programs Nearby"
+                ],
+                "descriptions": [
+                  "Enroll in our support programs for individuals with disabilities.",
+                  "Explore adaptive therapy and recreation services near you.",
+                  "Volunteer or donate to support disability inclusion efforts.",
+                  "Join us in advocating for equal access and opportunity."
+                ]
+              },
+              {
+                "path1": "disability-serv",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Adaptive Recreation Opportunit",
+                  "Volunteer to Make a Difference",
+                  "Donate to Expand Accessibility",
+                  "Advocacy for Disability Rights",
+                  "Therapy Services for Everyone",
+                  "Empower Families with Support",
+                  "Get Involved with Our Mission",
+                  "Accessible Programs Nearby",
+                  "Help Us Create Inclusion",
+                  "Support for People with Disabi",
+                  "Join Our Disability Programs",
+                  "Inclusive Services for All"
+                ],
+                "descriptions": [
+                  "Enroll in our support programs for individuals with disabilities.",
+                  "Explore adaptive therapy and recreation services near you.",
+                  "Volunteer or donate to support disability inclusion efforts.",
+                  "Join us in advocating for equal access and opportunity."
+                ]
+              }
+            ],
+            "name": "Disability Services",
+            "keywords": [
+              {
+                "text": "disability services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "disability services near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "local disability services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "disability services services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "special needs support",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "adaptive programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "disability advocacy",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "inclusive programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "caregiver support",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "special-needs-s",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Special Needs Support",
+                  "Support for People with Disabi",
+                  "Join Our Disability Programs",
+                  "Inclusive Services for All",
+                  "Adaptive Recreation Opportunit",
+                  "Volunteer to Make a Difference",
+                  "Donate to Expand Accessibility",
+                  "Advocacy for Disability Rights",
+                  "Therapy Services for Everyone",
+                  "Empower Families with Support",
+                  "Get Involved with Our Mission",
+                  "Accessible Programs Nearby"
+                ],
+                "descriptions": [
+                  "Enroll in our support programs for individuals with disabilities.",
+                  "Explore adaptive therapy and recreation services near you.",
+                  "Volunteer or donate to support disability inclusion efforts.",
+                  "Join us in advocating for equal access and opportunity."
+                ]
+              },
+              {
+                "path1": "special-needs-s",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Adaptive Recreation Opportunit",
+                  "Volunteer to Make a Difference",
+                  "Donate to Expand Accessibility",
+                  "Advocacy for Disability Rights",
+                  "Therapy Services for Everyone",
+                  "Empower Families with Support",
+                  "Get Involved with Our Mission",
+                  "Accessible Programs Nearby",
+                  "Help Us Create Inclusion",
+                  "Support for People with Disabi",
+                  "Join Our Disability Programs",
+                  "Inclusive Services for All"
+                ],
+                "descriptions": [
+                  "Enroll in our support programs for individuals with disabilities.",
+                  "Explore adaptive therapy and recreation services near you.",
+                  "Volunteer or donate to support disability inclusion efforts.",
+                  "Join us in advocating for equal access and opportunity."
+                ]
+              }
+            ],
+            "name": "Special Needs Support",
+            "keywords": [
+              {
+                "text": "special needs support near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free special needs support",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "special needs support help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "special needs trust",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "horseback special needs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "supplemental needs trust",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "adaptive horseback",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "horse special needs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "maternity leave disability",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Get Involved",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer",
+                  "Support for People with Disabi",
+                  "Join Our Disability Programs",
+                  "Inclusive Services for All",
+                  "Adaptive Recreation Opportunit",
+                  "Volunteer to Make a Difference",
+                  "Donate to Expand Accessibility",
+                  "Advocacy for Disability Rights",
+                  "Therapy Services for Everyone",
+                  "Empower Families with Support",
+                  "Get Involved with Our Mission",
+                  "Accessible Programs Nearby"
+                ],
+                "descriptions": [
+                  "Enroll in our support programs for individuals with disabilities.",
+                  "Explore adaptive therapy and recreation services near you.",
+                  "Volunteer or donate to support disability inclusion efforts.",
+                  "Join us in advocating for equal access and opportunity."
+                ]
+              },
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Adaptive Recreation Opportunit",
+                  "Volunteer to Make a Difference",
+                  "Donate to Expand Accessibility",
+                  "Advocacy for Disability Rights",
+                  "Therapy Services for Everyone",
+                  "Empower Families with Support",
+                  "Get Involved with Our Mission",
+                  "Accessible Programs Nearby",
+                  "Help Us Create Inclusion",
+                  "Support for People with Disabi",
+                  "Join Our Disability Programs",
+                  "Inclusive Services for All"
+                ],
+                "descriptions": [
+                  "Enroll in our support programs for individuals with disabilities.",
+                  "Explore adaptive therapy and recreation services near you.",
+                  "Volunteer or donate to support disability inclusion efforts.",
+                  "Join us in advocating for equal access and opportunity."
+                ]
+              }
+            ],
+            "name": "Volunteer",
+            "keywords": [
+              {
+                "text": "volunteer for disability nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "disability nonprofit volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ways to volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "caregiver support services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "nys disability pregnancy",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "fmla disability",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "caring caregiver",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "caregiver provider",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate",
+                  "Support for People with Disabi",
+                  "Join Our Disability Programs",
+                  "Inclusive Services for All",
+                  "Adaptive Recreation Opportunit",
+                  "Volunteer to Make a Difference",
+                  "Donate to Expand Accessibility",
+                  "Advocacy for Disability Rights",
+                  "Therapy Services for Everyone",
+                  "Empower Families with Support",
+                  "Get Involved with Our Mission",
+                  "Accessible Programs Nearby"
+                ],
+                "descriptions": [
+                  "Enroll in our support programs for individuals with disabilities.",
+                  "Explore adaptive therapy and recreation services near you.",
+                  "Volunteer or donate to support disability inclusion efforts.",
+                  "Join us in advocating for equal access and opportunity."
+                ]
+              },
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Adaptive Recreation Opportunit",
+                  "Volunteer to Make a Difference",
+                  "Donate to Expand Accessibility",
+                  "Advocacy for Disability Rights",
+                  "Therapy Services for Everyone",
+                  "Empower Families with Support",
+                  "Get Involved with Our Mission",
+                  "Accessible Programs Nearby",
+                  "Help Us Create Inclusion",
+                  "Support for People with Disabi",
+                  "Join Our Disability Programs",
+                  "Inclusive Services for All"
+                ],
+                "descriptions": [
+                  "Enroll in our support programs for individuals with disabilities.",
+                  "Explore adaptive therapy and recreation services near you.",
+                  "Volunteer or donate to support disability inclusion efforts.",
+                  "Join us in advocating for equal access and opportunity."
+                ]
+              }
+            ],
+            "name": "Donate",
+            "keywords": [
+              {
+                "text": "donate to disability nonprofit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support disability service organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "disability nonprofit donations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how to donate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "caregiver websites",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "elderly parent caregiver support",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "elderly caregiver pay",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "family caregiver stipend",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "social security caregiver pay",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Find Help & Learn More",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Help",
+                  "Support for People with Disabi",
+                  "Join Our Disability Programs",
+                  "Inclusive Services for All",
+                  "Adaptive Recreation Opportunit",
+                  "Volunteer to Make a Difference",
+                  "Donate to Expand Accessibility",
+                  "Advocacy for Disability Rights",
+                  "Therapy Services for Everyone",
+                  "Empower Families with Support",
+                  "Get Involved with Our Mission",
+                  "Accessible Programs Nearby"
+                ],
+                "descriptions": [
+                  "Enroll in our support programs for individuals with disabilities.",
+                  "Explore adaptive therapy and recreation services near you.",
+                  "Volunteer or donate to support disability inclusion efforts.",
+                  "Join us in advocating for equal access and opportunity."
+                ]
+              },
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Adaptive Recreation Opportunit",
+                  "Volunteer to Make a Difference",
+                  "Donate to Expand Accessibility",
+                  "Advocacy for Disability Rights",
+                  "Therapy Services for Everyone",
+                  "Empower Families with Support",
+                  "Get Involved with Our Mission",
+                  "Accessible Programs Nearby",
+                  "Help Us Create Inclusion",
+                  "Support for People with Disabi",
+                  "Join Our Disability Programs",
+                  "Inclusive Services for All"
+                ],
+                "descriptions": [
+                  "Enroll in our support programs for individuals with disabilities.",
+                  "Explore adaptive therapy and recreation services near you.",
+                  "Volunteer or donate to support disability inclusion efforts.",
+                  "Join us in advocating for equal access and opportunity."
+                ]
+              }
+            ],
+            "name": "Find Help",
+            "keywords": [
+              {
+                "text": "disability nonprofit help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help from disability service organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "disability services assistance",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "get help near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "caregiver support line",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "special needs teaching resources",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "special effect charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "special effect gamers charity",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "special needs equestrian center",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Learn More",
+                  "Support for People with Disabi",
+                  "Join Our Disability Programs",
+                  "Inclusive Services for All",
+                  "Adaptive Recreation Opportunit",
+                  "Volunteer to Make a Difference",
+                  "Donate to Expand Accessibility",
+                  "Advocacy for Disability Rights",
+                  "Therapy Services for Everyone",
+                  "Empower Families with Support",
+                  "Get Involved with Our Mission",
+                  "Accessible Programs Nearby"
+                ],
+                "descriptions": [
+                  "Enroll in our support programs for individuals with disabilities.",
+                  "Explore adaptive therapy and recreation services near you.",
+                  "Volunteer or donate to support disability inclusion efforts.",
+                  "Join us in advocating for equal access and opportunity."
+                ]
+              },
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Adaptive Recreation Opportunit",
+                  "Volunteer to Make a Difference",
+                  "Donate to Expand Accessibility",
+                  "Advocacy for Disability Rights",
+                  "Therapy Services for Everyone",
+                  "Empower Families with Support",
+                  "Get Involved with Our Mission",
+                  "Accessible Programs Nearby",
+                  "Help Us Create Inclusion",
+                  "Support for People with Disabi",
+                  "Join Our Disability Programs",
+                  "Inclusive Services for All"
+                ],
+                "descriptions": [
+                  "Enroll in our support programs for individuals with disabilities.",
+                  "Explore adaptive therapy and recreation services near you.",
+                  "Volunteer or donate to support disability inclusion efforts.",
+                  "Join us in advocating for equal access and opportunity."
+                ]
+              }
+            ],
+            "name": "Learn More",
+            "keywords": [
+              {
+                "text": "about disability service organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "disability nonprofit programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how disability service organizations help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "special needs support information",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "special needs horse therapy",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "crime victim advocacy",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "disability office",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "day programs special needs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "intellectual disability support",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      }
+    ],
+    "sitelinks": [
+      {
+        "text": "Support Programs",
+        "finalUrl": "https://www.example.org/support-programs",
+        "description1": "Find programs for families",
+        "description2": "and individuals"
+      },
+      {
+        "text": "Volunteer With Us",
+        "finalUrl": "https://www.example.org/volunteer",
+        "description1": "Make an impact locally",
+        "description2": "and support our cause"
+      },
+      {
+        "text": "Donate Today",
+        "finalUrl": "https://www.example.org/donate",
+        "description1": "Help fund accessibility",
+        "description2": "and support services"
+      },
+      {
+        "text": "Adaptive Recreation",
+        "finalUrl": "https://www.example.org/adaptive-recreation",
+        "description1": "Discover inclusive sports",
+        "description2": "and therapy activities"
+      }
+    ],
+    "languageIds": [
+      "1000"
+    ],
+    "locationIds": [
+      "2840"
+    ],
+    "locationList": [
+      {
+        "id": "2840",
+        "name": "United States",
+        "canonicalName": "United States"
+      }
+    ],
+    "languageCodes": "en",
+    "totalDailyBudget": 329,
+    "structuredSnippets": [
+      {
+        "header": "Services",
+        "values": [
+          "Support groups",
+          "Advocacy",
+          "Therapy sessions",
+          "Adaptive sports",
+          "Accessibility consulting"
+        ]
+      },
+      {
+        "header": "Programs",
+        "values": [
+          "Family support",
+          "Youth recreation",
+          "Volunteer training",
+          "Donor engagement",
+          "Community outreach"
+        ]
+      }
+    ]
+  }
+}

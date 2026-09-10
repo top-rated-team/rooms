@@ -548,9 +548,41 @@ export interface AdGrantGenerateResponse extends AdGrantQuotaView {
   /** CSV for Google Ads Editor. Import it there. Nothing was written into an account. */
   csv: string;
   editorLine: string;
+  /** True of the CSV: every campaign row is Paused. */
+  pausedLine: string;
 }
 
 export interface AdGrantGenerateError extends Partial<AdGrantQuotaView> {
+  error: string;
+}
+
+/**
+ * Files a starter template page hands over when the visitor asks for them.
+ * Fetched on submit, not shipped in the page bundle: twelve live structures
+ * are about 170KB, and the landing page that imports shared/adgrant.ts only
+ * needs seven numbers.
+ */
+export type AdGrantTemplateFileKind = "editor" | "assets";
+
+export interface AdGrantTemplateFile {
+  kind: AdGrantTemplateFileKind;
+  filename: string;
+  mime: string;
+  body: string;
+  /** What this file is, in one sentence the page can print. */
+  line: string;
+}
+
+export interface AdGrantTemplateFilesResponse {
+  slug: string;
+  files: AdGrantTemplateFile[];
+  pausedLine: string;
+  editorLine: string;
+  uploadLine: string;
+  destinationLine: string;
+}
+
+export interface AdGrantTemplateFilesError {
   error: string;
 }
 

@@ -1,0 +1,659 @@
+{
+  "slug": "homeless-shelters-ad-grant-template",
+  "title": "Homeless Shelters Starter Template",
+  "niche": "homeless-shelters",
+  "structure": {
+    "callouts": [
+      {
+        "text": "24/7 Shelter Access"
+      },
+      {
+        "text": "Meal Services Offered"
+      },
+      {
+        "text": "Volunteer Opportunities"
+      },
+      {
+        "text": "Job Training Available"
+      },
+      {
+        "text": "Emergency Help Now"
+      },
+      {
+        "text": "All Are Welcome"
+      }
+    ],
+    "campaigns": [
+      {
+        "name": "Programs & Services",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "homeless-shelte",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Homeless Shelter",
+                  "Find Shelter Tonight",
+                  "Safe Beds Available Now",
+                  "Support Homeless Families",
+                  "Join Our Volunteer Team",
+                  "Help End Homelessness",
+                  "Emergency Shelter Open",
+                  "Meals for Those in Need",
+                  "Get Support and Resources",
+                  "Donate to Help Today",
+                  "Winter Fundraising Drive",
+                  "Job Training Programs"
+                ],
+                "descriptions": [
+                  "Access safe shelter and meals for those in need tonight.",
+                  "Join us to support people experiencing homelessness.",
+                  "Volunteer, donate, or learn about our programs today.",
+                  "Help provide emergency beds and vital services now."
+                ]
+              },
+              {
+                "path1": "homeless-shelte",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Join Our Volunteer Team",
+                  "Help End Homelessness",
+                  "Emergency Shelter Open",
+                  "Meals for Those in Need",
+                  "Get Support and Resources",
+                  "Donate to Help Today",
+                  "Winter Fundraising Drive",
+                  "Job Training Programs",
+                  "Connect with Case Managers",
+                  "Find Shelter Tonight",
+                  "Safe Beds Available Now",
+                  "Support Homeless Families"
+                ],
+                "descriptions": [
+                  "Access safe shelter and meals for those in need tonight.",
+                  "Join us to support people experiencing homelessness.",
+                  "Volunteer, donate, or learn about our programs today.",
+                  "Help provide emergency beds and vital services now."
+                ]
+              }
+            ],
+            "name": "Homeless Shelter",
+            "keywords": [
+              {
+                "text": "homeless shelter",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "homeless shelter near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "local homeless shelter",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "homeless shelter services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "emergency housing",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "transitional housing",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "homeless services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "shelter near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "donate to homeless",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "emergency-housi",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Emergency Housing",
+                  "Find Shelter Tonight",
+                  "Safe Beds Available Now",
+                  "Support Homeless Families",
+                  "Join Our Volunteer Team",
+                  "Help End Homelessness",
+                  "Emergency Shelter Open",
+                  "Meals for Those in Need",
+                  "Get Support and Resources",
+                  "Donate to Help Today",
+                  "Winter Fundraising Drive",
+                  "Job Training Programs"
+                ],
+                "descriptions": [
+                  "Access safe shelter and meals for those in need tonight.",
+                  "Join us to support people experiencing homelessness.",
+                  "Volunteer, donate, or learn about our programs today.",
+                  "Help provide emergency beds and vital services now."
+                ]
+              },
+              {
+                "path1": "emergency-housi",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Join Our Volunteer Team",
+                  "Help End Homelessness",
+                  "Emergency Shelter Open",
+                  "Meals for Those in Need",
+                  "Get Support and Resources",
+                  "Donate to Help Today",
+                  "Winter Fundraising Drive",
+                  "Job Training Programs",
+                  "Connect with Case Managers",
+                  "Find Shelter Tonight",
+                  "Safe Beds Available Now",
+                  "Support Homeless Families"
+                ],
+                "descriptions": [
+                  "Access safe shelter and meals for those in need tonight.",
+                  "Join us to support people experiencing homelessness.",
+                  "Volunteer, donate, or learn about our programs today.",
+                  "Help provide emergency beds and vital services now."
+                ]
+              }
+            ],
+            "name": "Emergency Housing",
+            "keywords": [
+              {
+                "text": "emergency housing near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "free emergency housing",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "emergency housing help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "planned giving services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "foundation teacher housing",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "homeless non profit",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "homeless volunteer organizations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "emergency housing assistance",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "covid emergency grants",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Get Involved",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Volunteer",
+                  "Find Shelter Tonight",
+                  "Safe Beds Available Now",
+                  "Support Homeless Families",
+                  "Join Our Volunteer Team",
+                  "Help End Homelessness",
+                  "Emergency Shelter Open",
+                  "Meals for Those in Need",
+                  "Get Support and Resources",
+                  "Donate to Help Today",
+                  "Winter Fundraising Drive",
+                  "Job Training Programs"
+                ],
+                "descriptions": [
+                  "Access safe shelter and meals for those in need tonight.",
+                  "Join us to support people experiencing homelessness.",
+                  "Volunteer, donate, or learn about our programs today.",
+                  "Help provide emergency beds and vital services now."
+                ]
+              },
+              {
+                "path1": "volunteer",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Join Our Volunteer Team",
+                  "Help End Homelessness",
+                  "Emergency Shelter Open",
+                  "Meals for Those in Need",
+                  "Get Support and Resources",
+                  "Donate to Help Today",
+                  "Winter Fundraising Drive",
+                  "Job Training Programs",
+                  "Connect with Case Managers",
+                  "Find Shelter Tonight",
+                  "Safe Beds Available Now",
+                  "Support Homeless Families"
+                ],
+                "descriptions": [
+                  "Access safe shelter and meals for those in need tonight.",
+                  "Join us to support people experiencing homelessness.",
+                  "Volunteer, donate, or learn about our programs today.",
+                  "Help provide emergency beds and vital services now."
+                ]
+              }
+            ],
+            "name": "Volunteer",
+            "keywords": [
+              {
+                "text": "volunteer for homeless shelter",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "homeless shelter volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "volunteer near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "ways to volunteer",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "coronavirus emergency grants",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "emergency grant money",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "emergency grant funds",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "emergency grants",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "public health emergency grants",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Donate",
+                  "Find Shelter Tonight",
+                  "Safe Beds Available Now",
+                  "Support Homeless Families",
+                  "Join Our Volunteer Team",
+                  "Help End Homelessness",
+                  "Emergency Shelter Open",
+                  "Meals for Those in Need",
+                  "Get Support and Resources",
+                  "Donate to Help Today",
+                  "Winter Fundraising Drive",
+                  "Job Training Programs"
+                ],
+                "descriptions": [
+                  "Access safe shelter and meals for those in need tonight.",
+                  "Join us to support people experiencing homelessness.",
+                  "Volunteer, donate, or learn about our programs today.",
+                  "Help provide emergency beds and vital services now."
+                ]
+              },
+              {
+                "path1": "donate",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Join Our Volunteer Team",
+                  "Help End Homelessness",
+                  "Emergency Shelter Open",
+                  "Meals for Those in Need",
+                  "Get Support and Resources",
+                  "Donate to Help Today",
+                  "Winter Fundraising Drive",
+                  "Job Training Programs",
+                  "Connect with Case Managers",
+                  "Find Shelter Tonight",
+                  "Safe Beds Available Now",
+                  "Support Homeless Families"
+                ],
+                "descriptions": [
+                  "Access safe shelter and meals for those in need tonight.",
+                  "Join us to support people experiencing homelessness.",
+                  "Volunteer, donate, or learn about our programs today.",
+                  "Help provide emergency beds and vital services now."
+                ]
+              }
+            ],
+            "name": "Donate",
+            "keywords": [
+              {
+                "text": "donate to homeless shelter",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "support homeless shelters",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "homeless shelter donations",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how to donate",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "helping homeless",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "homeless programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "emergency shelter",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "feed homeless",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "equine assisted services",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      },
+      {
+        "name": "Find Help & Learn More",
+        "status": "Enabled",
+        "adGroups": [
+          {
+            "ads": [
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Find Help",
+                  "Find Shelter Tonight",
+                  "Safe Beds Available Now",
+                  "Support Homeless Families",
+                  "Join Our Volunteer Team",
+                  "Help End Homelessness",
+                  "Emergency Shelter Open",
+                  "Meals for Those in Need",
+                  "Get Support and Resources",
+                  "Donate to Help Today",
+                  "Winter Fundraising Drive",
+                  "Job Training Programs"
+                ],
+                "descriptions": [
+                  "Access safe shelter and meals for those in need tonight.",
+                  "Join us to support people experiencing homelessness.",
+                  "Volunteer, donate, or learn about our programs today.",
+                  "Help provide emergency beds and vital services now."
+                ]
+              },
+              {
+                "path1": "find-help",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Join Our Volunteer Team",
+                  "Help End Homelessness",
+                  "Emergency Shelter Open",
+                  "Meals for Those in Need",
+                  "Get Support and Resources",
+                  "Donate to Help Today",
+                  "Winter Fundraising Drive",
+                  "Job Training Programs",
+                  "Connect with Case Managers",
+                  "Find Shelter Tonight",
+                  "Safe Beds Available Now",
+                  "Support Homeless Families"
+                ],
+                "descriptions": [
+                  "Access safe shelter and meals for those in need tonight.",
+                  "Join us to support people experiencing homelessness.",
+                  "Volunteer, donate, or learn about our programs today.",
+                  "Help provide emergency beds and vital services now."
+                ]
+              }
+            ],
+            "name": "Find Help",
+            "keywords": [
+              {
+                "text": "homeless shelter help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "help from homeless shelters",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "homeless shelter assistance",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "get help near me",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "victim services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "feeding homeless",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "broadband access services",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "emergency broadband benefit ebb",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "emergency broadband benefit",
+                "matchType": "Broad match"
+              }
+            ]
+          },
+          {
+            "ads": [
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Learn More",
+                  "Find Shelter Tonight",
+                  "Safe Beds Available Now",
+                  "Support Homeless Families",
+                  "Join Our Volunteer Team",
+                  "Help End Homelessness",
+                  "Emergency Shelter Open",
+                  "Meals for Those in Need",
+                  "Get Support and Resources",
+                  "Donate to Help Today",
+                  "Winter Fundraising Drive",
+                  "Job Training Programs"
+                ],
+                "descriptions": [
+                  "Access safe shelter and meals for those in need tonight.",
+                  "Join us to support people experiencing homelessness.",
+                  "Volunteer, donate, or learn about our programs today.",
+                  "Help provide emergency beds and vital services now."
+                ]
+              },
+              {
+                "path1": "learn-more",
+                "finalUrl": "https://www.example.org",
+                "headlines": [
+                  "Join Our Volunteer Team",
+                  "Help End Homelessness",
+                  "Emergency Shelter Open",
+                  "Meals for Those in Need",
+                  "Get Support and Resources",
+                  "Donate to Help Today",
+                  "Winter Fundraising Drive",
+                  "Job Training Programs",
+                  "Connect with Case Managers",
+                  "Find Shelter Tonight",
+                  "Safe Beds Available Now",
+                  "Support Homeless Families"
+                ],
+                "descriptions": [
+                  "Access safe shelter and meals for those in need tonight.",
+                  "Join us to support people experiencing homelessness.",
+                  "Volunteer, donate, or learn about our programs today.",
+                  "Help provide emergency beds and vital services now."
+                ]
+              }
+            ],
+            "name": "Learn More",
+            "keywords": [
+              {
+                "text": "about homeless shelters",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "homeless shelter programs",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "how homeless shelters help",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "emergency housing information",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "family emergency medical leave",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "emergency contraception",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "emergency boxes",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "bags homeless",
+                "matchType": "Broad match"
+              },
+              {
+                "text": "financial services",
+                "matchType": "Broad match"
+              }
+            ]
+          }
+        ],
+        "dailyBudget": 109.67
+      }
+    ],
+    "sitelinks": [
+      {
+        "text": "Find Shelter",
+        "finalUrl": "https://www.example.org/find-shelter",
+        "description1": "Locate available beds near you",
+        "description2": "Safe shelter options 24/7"
+      },
+      {
+        "text": "Volunteer With Us",
+        "finalUrl": "https://www.example.org/volunteer",
+        "description1": "Make a difference locally",
+        "description2": "Join supportive teams today"
+      },
+      {
+        "text": "Donate Now",
+        "finalUrl": "https://www.example.org/donate",
+        "description1": "Support emergency programs",
+        "description2": "Help fund shelter services"
+      },
+      {
+        "text": "Our Programs",
+        "finalUrl": "https://www.example.org/programs",
+        "description1": "Job training and case help",
+        "description2": "Meals and outreach support"
+      }
+    ],
+    "languageIds": [
+      "1000"
+    ],
+    "locationIds": [
+      "2840"
+    ],
+    "locationList": [
+      {
+        "id": "2840",
+        "name": "United States",
+        "canonicalName": "United States"
+      }
+    ],
+    "languageCodes": "en",
+    "totalDailyBudget": 329,
+    "structuredSnippets": [
+      {
+        "header": "Services",
+        "values": [
+          "Emergency Shelter",
+          "Meal Programs",
+          "Case Management",
+          "Outreach Support",
+          "Clothing Assistance"
+        ]
+      },
+      {
+        "header": "Programs",
+        "values": [
+          "Job Training",
+          "Counseling Services",
+          "Health Referrals",
+          "Volunteer Support",
+          "Winter Fundraising"
+        ]
+      }
+    ]
+  }
+}
