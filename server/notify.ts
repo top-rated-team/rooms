@@ -27,6 +27,7 @@
  */
 
 import { appendFileSync, closeSync, mkdirSync, openSync, readSync, statSync } from "node:fs";
+import { mailFrom } from "./mail-from";
 import { timingSafeEqual } from "node:crypto";
 import { dirname, isAbsolute, join } from "node:path";
 import { nanoid } from "nanoid";
@@ -307,7 +308,7 @@ async function attemptEmail(request: LeadRequest): Promise<LeadAttempt | null> {
   if (to.length === 0) {
     return attemptRecord("email", false, "RESEND_API_KEY is set but LEAD_NOTIFY_EMAIL is empty, so there is nobody to send to");
   }
-  const from = process.env.LEAD_EMAIL_FROM?.trim();
+  const from = mailFrom();
   if (!from) {
     return attemptRecord("email", false, "RESEND_API_KEY is set but LEAD_EMAIL_FROM is empty; it must be an address on a verified domain");
   }

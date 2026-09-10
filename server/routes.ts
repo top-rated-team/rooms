@@ -66,6 +66,10 @@ import {
 import { generateAdGrantStructure, getAdGrantGenerationQuota } from "./adgrant/generate";
 import { adGrantStats } from "./adgrant/stats";
 import { adgrantRobotsTxt, adgrantSitemapXml } from "./adgrant/site";
+import { rewriteHead } from "./adgrant/head";
+import { ADGRANT_ORIGIN } from "@shared/adgrant-site";
+import fs from "node:fs";
+import path from "node:path";
 import { isAdGrantHost } from "@shared/adgrant-site";
 import { openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage, bindRoomAddressForToken } from "./room-access";
 import {
@@ -1646,6 +1650,49 @@ export function registerRoutes(app: Express): void {
       res.redirect(302, result.redirectTo);
     }),
   );
+
+  /* The head adgrant.ai serves. An unfurler and most crawlers read the HTML
+     as delivered and never run the application, so a title set at runtime by
+     Meta.tsx is invisible to exactly the readers a preview exists for — and
+     client/index.html is frozen and is the other site's. Substituted on the
+     way out, for these hosts only.
+
+     Nothing here answers in development: setupVite owns index.html then, and
+     the dist file does not exist. Nothing here answers for a file either —
+     the extension test keeps assets, the sitemap and the API on their own
+     paths. */
+  /* The library moved to its own domain, so the copies under /adgrant are
+     duplicates of it. A permanent redirect rather than a canonical: a
+     canonical is a request to a crawler and a 301 is an answer, and every
+     link ever published keeps working either way.
+
+     Only from our own two names. localhost and the Render address keep
+     serving the tree in place, because that is where it is developed and a
+     redirect to production would make it impossible to see a change. */
+  const MOVED_FROM = new Set(["top-rated.team", "www.top-rated.team"]);
+  app.get(/^\/adgrant(\/.*)?$/, (req, res, next) => {
+    if (!MOVED_FROM.has(req.hostname)) return next();
+    const rest = req.path.slice("/adgrant".length) || "/";
+    const query = req.originalUrl.slice(req.path.length);
+    res.redirect(301, `${ADGRANT_ORIGIN}${rest}${query}`);
+  });
+
+  const distIndex = path.resolve(import.meta.dirname, "..", "public", "index.html");
+  app.get(/.*/, (req, res, next) => {
+    if (req.method !== "GET") return next();
+    if (!isAdGrantHost(req.hostname)) return next();
+    if (path.extname(req.path)) return next();
+    if (req.path.startsWith("/api/")) return next();
+    if (!req.accepts("html")) return next();
+    if (!fs.existsSync(distIndex)) return next();
+    const { html, missed } = rewriteHead(fs.readFileSync(distIndex, "utf8"));
+    if (missed.length > 0) {
+      /* The frozen file changed under us. Serving a head that is half one
+         site and half the other would look fine and be wrong, so say so. */
+      console.error(`[adgrant] head rewrite missed: ${missed.join(" | ")}`);
+    }
+    res.status(200).type("html").send(html);
+  });
 
   /* One process answers two domains, so these two files cannot be static.
      registerRoutes runs before express.static, so an AdGrant host is answered

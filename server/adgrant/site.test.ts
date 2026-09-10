@@ -13,6 +13,8 @@
  * the exact drift that made the hand-written client/public/sitemap.xml stale.
  */
 
+import fs from "node:fs";
+import path from "node:path";
 import { createServer, request as httpRequest, type Server } from "node:http";
 import { AddressInfo } from "node:net";
 import { after, before, describe, it } from "node:test";
@@ -23,6 +25,7 @@ import express from "express";
 import { PAGES } from "@shared/adgrant";
 import { ADGRANT_HOSTS, ADGRANT_ORIGIN, adgrantMountFor, isAdGrantHost } from "@shared/adgrant-site";
 import { adgrantRobotsTxt, adgrantSitemapXml, adgrantUrls } from "./site";
+import { ADGRANT_DESCRIPTION, ADGRANT_TITLE, rewriteHead } from "./head";
 
 let origin = "";
 let server: Server | null = null;
@@ -33,15 +36,20 @@ let server: Server | null = null;
  * asked as adgrant.ai has to speak HTTP itself. server/operator.test.ts
  * learned this the same way.
  */
-function asHost(path: string, host: string): Promise<{ status: number; type: string; body: string }> {
+function asHost(target: string, host: string): Promise<{ status: number; type: string; body: string; location: string }> {
   return new Promise((resolve, reject) => {
     const { port } = server!.address() as AddressInfo;
-    const req = httpRequest({ host: "127.0.0.1", port, path, method: "GET", headers: { Host: host } }, (res) => {
+    const req = httpRequest({ host: "127.0.0.1", port, path: target, method: "GET", headers: { Host: host } }, (res) => {
       let body = "";
       res.setEncoding("utf8");
       res.on("data", (chunk) => (body += chunk));
       res.on("end", () =>
-        resolve({ status: res.statusCode ?? 0, type: String(res.headers["content-type"] ?? ""), body }),
+        resolve({
+          status: res.statusCode ?? 0,
+          type: String(res.headers["content-type"] ?? ""),
+          location: String(res.headers.location ?? ""),
+          body,
+        }),
       );
     });
     req.on("error", reject);
@@ -123,6 +131,53 @@ describe("the generated sitemap", () => {
     assert.match(xml, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/);
     assert.ok(!xml.includes("top-rated.team"), "the AdGrant sitemap names the other site");
     assert.equal(xml.match(/<loc>/g)?.length, adgrantUrls().length);
+  });
+});
+
+describe("the head each site serves", () => {
+  it("rewrites every one of them, or says which it could not", () => {
+    /* client/index.html is frozen and belongs to the other site. If somebody
+       ever unfreezes it and rewords the title, this fails here rather than
+       serving adgrant.ai a head that is half Top-Rated Team — which would
+       look perfectly fine in a browser and be wrong in every unfurler. */
+    const source = fs.readFileSync(path.resolve(import.meta.dirname, "..", "..", "client", "index.html"), "utf8");
+    const { html, missed } = rewriteHead(source);
+    assert.deepEqual(missed, [], "the frozen head changed under the rewriter");
+    assert.ok(html.includes(`<title>${ADGRANT_TITLE}</title>`));
+    assert.ok(html.includes('href="/assets/adgrant-logo.png"'));
+    assert.ok(html.includes(`${ADGRANT_ORIGIN}/assets/adgrant-social.png`));
+    assert.ok(html.includes(ADGRANT_DESCRIPTION.slice(0, 40)));
+    assert.ok(!html.includes("hire a hybrid team"), "the other site's line survived");
+    assert.ok(!html.includes("top-rated.team/assets/social.png"), "the other site's card survived");
+  });
+
+  it("leaves our own head exactly as it was", async () => {
+    /* No dist in this harness, so the route falls through — which is the
+       assertion: nothing rewrites anything for top-rated.team. */
+    const res = await asHost("/", "top-rated.team");
+    assert.ok(!res.body.includes(ADGRANT_TITLE));
+  });
+});
+
+describe("the old addresses", () => {
+  it("redirect from top-rated.team to the domain, keeping the path and the query", async () => {
+    for (const [from, to] of [
+      ["/adgrant", `${ADGRANT_ORIGIN}/`],
+      ["/adgrant/glossary", `${ADGRANT_ORIGIN}/glossary`],
+      ["/adgrant/nonprofits/animal-shelters/houston", `${ADGRANT_ORIGIN}/nonprofits/animal-shelters/houston`],
+      ["/adgrant/templates?utm_source=x", `${ADGRANT_ORIGIN}/templates?utm_source=x`],
+    ] as const) {
+      const res = await asHost(from, "top-rated.team");
+      assert.equal(res.status, 301, from);
+      assert.equal(res.location, to, from);
+    }
+  });
+
+  it("does not redirect on a host where the tree is still served in place", async () => {
+    /* localhost is where this is developed; a redirect to production there
+       would make a change impossible to see. */
+    const res = await asHost("/adgrant/glossary", "localhost");
+    assert.notEqual(res.status, 301);
   });
 });
 

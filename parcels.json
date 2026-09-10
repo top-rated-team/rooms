@@ -77,6 +77,31 @@
       "runAlone": true,
       "why": "The owner booked through the QR code and it worked, and then everything after it was missing. Pressing Book a call again offers an empty picker as though nothing happened; there is no way to change the time and no way to cancel; and somebody who booked from a phone and closed the tab has no way back to the booking at all. A booking a person cannot get out of is a booking they will simply not attend, and the calendar keeps the slot.",
       "done": "A BOOKING YOU CAN COME BACK TO, CHANGE, AND CANCEL. Read docs/review/next-waves.md, section booking-return — it is the owner's own words and it is the specification. (1) THE BROWSER REMEMBERS. A successful booking is recorded in the site's own session, and pressing Book a call again opens the confirmation rather than the picker. THAT FLAG IS A POINTER, NOT A CREDENTIAL: on its own it must never be enough to read or change a booking, because a cookie is copyable and a booking carries somebody's name, time and address. The server decides what may be shown, every time. (2) TWO LINKS IN THE CONFIRMATION: change, and cancel. (3) A WAY BACK FROM ANYWHERE for a WhatsApp booking — a short address the owner writes as https://top-rated.team/<code> that opens the site with that booking's popup already open. The code IS the credential there, so treat it as one: it expires with the booking, it is single-purpose, and it is never logged. Decide deliberately whether a bare /<code> at the site root can collide with any existing route, and say what you decided. (4) CLEARING IT. Cancelling clears the flag; so does the call time passing. Neither can be relied on — the flag is per browser and a person may cancel from another device — so the SERVER's answer decides what the popup shows and the flag is only a hint about what to ask for. (5) CANCELLING DELETES THE EVENT. Where there is an address, let Google tell them. Where the booking was proved by WhatsApp, the message goes to the chat that proved it and nowhere else, and never to a chat that did not. (6) CHANGING IS A CANCEL AND A BOOK, in that order, and the new slot is re-checked as free before the old one is released — losing somebody's slot while moving it is worse than refusing the move."
+    },
+    "room-account": {
+      "owns": [
+        "server/room-account.ts",
+        "server/room-account.test.ts",
+        "server/room-login.ts",
+        "server/room-login.test.ts",
+        "server/identity-store.ts",
+        "server/identity-store.test.ts",
+        "client/src/components/site/RoomMenu.tsx"
+      ],
+      "seams": {
+        "server/routes.ts": [
+          "the session routes: who am I, and sign out"
+        ],
+        "shared/api.ts": [
+          "what the control learns about whoever is signed in"
+        ],
+        "shared/schema.ts": [
+          "one re-export line for the account and session tables"
+        ]
+      },
+      "runAlone": true,
+      "why": "The control says Login in every state, because there is no state to read. Wave 13's sign-in is stateless: you prove who you are, the server answers with the rooms bound to that identity, you pick one, and what remembers you afterwards is a room token in localStorage. There is no session, so there is nothing for a Logout to end and nothing for a second way in to be attached to. The owner has asked for both.",
+      "done": "AN ACCOUNT, A SESSION, AND THE THREE THINGS THAT FOLLOW. Read docs/review/next-waves.md, section room-account — it is the owner's own design. (1) A DURABLE IDENTITY with a cookie that points at it. The cookie is a credential: HttpOnly, Secure, SameSite, rotated on sign-in, and LONG — the owner's instruction is to remember somebody for as long as possible, so an expiry measured in days is wrong. (2) THE LABEL IS STATE AND MUST BE READ FROM THE SERVER, never from a localStorage flag. A page that says Logout to somebody with no session, or Login to somebody who has one, is worse than one that says neither, and a cookie is not readable from JavaScript if it is HttpOnly — which it must be. One small endpoint that answers who, if anyone, this is. (3) LOGOUT ENDS THE SESSION AND NOTHING ELSE. It must NOT forget the rooms in localStorage: signing out of a shared browser and losing your own rooms on your own laptop would be one word doing two jobs, and the owner's standing rule is to remember a visitor as long as possible. (4) HOVERING LOGOUT OFFERS THE OTHER WAYS IN, so a person signed in by email can attach LinkedIn, or WhatsApp on a house host, and the rooms already bound to that other identity become reachable from this account. THE MERGE IS THE DANGEROUS OPERATION IN THIS WHOLE PARCEL: decide what happens when the second identity already belongs to another account, and REFUSE rather than guess — silently joining two accounts hands one person's rooms to another, and a room token is a bearer credential. Write that branch's test first. WHAT MUST NOT CHANGE: the pair is Login | Open a room and Logout | Open a room — one pair in every state — and each half keeps its own hover, rooms under 'Open a room' and ways in under the left half. WhatsApp stays house-only, for the reason shared/operator.ts exists. A fork with no LinkedIn app and no mail configured must still render a control that says something true rather than an empty panel."
     }
   }
 }

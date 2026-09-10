@@ -403,23 +403,28 @@ export function BookingQr({ url }: { url: string }) {
     }
   }
   return (
+    /* The same code the login panel draws: 9rem, no white plate, no border,
+       modules in the page's own ink. It used to be 11rem of black on a white
+       card, which is the safer thing for a scanner but read as a different
+       component from the one two clicks away. Matched on the owner's
+       instruction — if it ever fails to scan on the dark theme, the plate is
+       what was protecting it and it goes back here. */
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
       data-testid="link-booking-whatsapp-qr"
-      className="inline-block rounded-md border border-border bg-white p-2 text-black hover-elevate"
+      className="inline-block w-36 text-foreground"
       aria-label="Open WhatsApp with the booking message"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${dim} ${dim}`}
-        className="h-44 w-44"
+        className="w-full"
         role="img"
         aria-hidden="true"
       >
-        <rect width={dim} height={dim} className="fill-white" />
-        <path className="fill-black" d={parts.join("")} />
+        <path className="fill-current" d={parts.join("")} />
       </svg>
       <span className="sr-only">Open WhatsApp</span>
     </a>

@@ -332,6 +332,12 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
   const house = typeof window !== "undefined" && isHouseHost(window.location.hostname);
   const ways = login.phase === "ready" ? login.ways : null;
   const showLinkedIn = ways?.linkedin.available === true;
+  /* LinkedIn is listed even when it is not on yet, with the reason, because a
+     way in that simply is not drawn reads as a way in that does not exist —
+     and the owner wants a person to see that it is coming. Compare WhatsApp,
+     which is not drawn at all off a house host: that is not "not yet", it is
+     "never here", because the number belongs to one deployment. */
+  const linkedInLine = ways?.linkedin.available === false ? ways.linkedin.unavailableLine : null;
   const showWhatsApp = house && ways?.whatsapp.available === true;
   const emailAvailable = ways?.email.available === true;
   const emailUnavailable = ways && ways.email.available === false ? ways.email.unavailableLine : null;
@@ -356,17 +362,32 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
           </p>
         ) : null}
         {login.phase === "ready" ? (
-          <div className="flex flex-col gap-[var(--s2)]">
-            {showLinkedIn ? (
-              <a
-                href="/api/room-login/linkedin"
-                data-testid={`${testId}-login-linkedin`}
-                className="self-start border-b border-primary pb-[var(--s1)] text-primary no-underline hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                LinkedIn
-              </a>
-            ) : null}
+          /* A real list, with a rule between the rows. They were a stack of
+             links and the owner read them as steps rather than as three ways
+             to do one thing — which is what a list of alternatives has to
+             announce before anything else. */
+          <ul
+            data-testid={`${testId}-login-ways`}
+            className="m-0 flex list-none flex-col gap-[var(--s2)] p-0 [&>li+li]:border-t [&>li+li]:border-border [&>li+li]:pt-[var(--s2)]"
+          >
+            <li>
+              {showLinkedIn ? (
+                <a
+                  href="/api/room-login/linkedin"
+                  data-testid={`${testId}-login-linkedin`}
+                  className="self-start border-b border-primary pb-[var(--s1)] text-primary no-underline hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  Sign in with LinkedIn
+                </a>
+              ) : (
+                <>
+                  <p className="text-muted-foreground">Sign in with LinkedIn</p>
+                  {linkedInLine ? <p className="mt-[var(--s1)]">{linkedInLine}</p> : null}
+                </>
+              )}
+            </li>
             {showWhatsApp ? (
+              <li>
               <button
                 type="button"
                 data-testid={`${testId}-login-whatsapp`}
@@ -376,7 +397,6 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
               >
                 {whatsappLoading ? "Opening WhatsApp" : "WhatsApp"}
               </button>
-            ) : null}
             {whatsappError ? (
               <p role="alert" className="text-destructive">
                 {whatsappError}
@@ -405,8 +425,12 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
                 ) : null}
               </div>
             ) : null}
+              </li>
+            ) : null}
 
-            {emailUnavailable ? <p>{emailUnavailable}</p> : null}
+            <li>
+            {emailUnavailable ? <p className="text-muted-foreground">A link to an address</p> : null}
+            {emailUnavailable ? <p className="mt-[var(--s1)]">{emailUnavailable}</p> : null}
             {emailAvailable ? (
               <>
                 <p>A link to an address</p>
@@ -449,10 +473,11 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
                 )}
               </>
             ) : null}
+            </li>
             {!showLinkedIn && !showWhatsApp && !emailAvailable && !emailUnavailable ? (
-              <p>No way in is configured on this deployment.</p>
+              <li>No way in is configured on this deployment.</li>
             ) : null}
-          </div>
+          </ul>
         ) : null}
       </div>
     ) : null;

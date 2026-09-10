@@ -45,7 +45,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">2 still to run. Copy one, paste
+  <p class="lede">3 still to run. Copy one, paste
   it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -250,6 +250,111 @@ WHY IT EXISTS, so you can judge the edge cases yourself:
   to change the time and no way to cancel; and somebody who booked from a phone and closed the
   tab has no way back to the booking at all. A booking a person cannot get out of is a booking
   they will simply not attend, and the calendar keeps the slot.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+    </section>
+    <section class="wave">
+      <h2>Wave 18 — this one runs alone</h2>
+      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
+      <article class="parcel">
+        <header>
+          <h3>room-account</h3>
+          <button class="copy" data-target="p-room-account">Copy this prompt</button>
+        </header>
+        <p class="what">The control says Login in every state, because there is no state to read.</p>
+        <pre id="p-room-account">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "room-account".
+
+Read these first, before you write anything, in this order:
+  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
+    content API and what was captured through it; the six statements in that material
+    that are wrong against Google's current documentation, each with the page that
+    contradicts it; why "generate and upload" is two products with a Google approval
+    between them; and the answer to the owner's question about per-agent limits.
+  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
+    endpoint it touches, transcribed with the URL it came from. Four decisions already
+    made, with the reasoning, so you do not spend your wave relitigating them. The
+    request and response shapes two parcels build to in parallel. And the rule the
+    owner set: every message is checked for who it is from, who it is to and which
+    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
+    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
+    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
+    A paraphrase would not, and you would find out after building on all three.
+  README.md, private/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  server/room-account.ts
+  server/room-account.test.ts
+  server/room-login.ts
+  server/room-login.test.ts
+  server/identity-store.ts
+  server/identity-store.test.ts
+  client/src/components/site/RoomMenu.tsx
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  server/routes.ts
+      - the session routes: who am I, and sign out
+  shared/api.ts
+      - what the control learns about whoever is signed in
+  shared/schema.ts
+      - one re-export line for the account and session tables
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  AN ACCOUNT, A SESSION, AND THE THREE THINGS THAT FOLLOW. Read docs/review/next-waves.md,
+  section room-account — it is the owner's own design. (1) A DURABLE IDENTITY with a cookie that
+  points at it. The cookie is a credential: HttpOnly, Secure, SameSite, rotated on sign-in, and
+  LONG — the owner's instruction is to remember somebody for as long as possible, so an expiry
+  measured in days is wrong. (2) THE LABEL IS STATE AND MUST BE READ FROM THE SERVER, never from
+  a localStorage flag. A page that says Logout to somebody with no session, or Login to somebody
+  who has one, is worse than one that says neither, and a cookie is not readable from JavaScript
+  if it is HttpOnly — which it must be. One small endpoint that answers who, if anyone, this is.
+  (3) LOGOUT ENDS THE SESSION AND NOTHING ELSE. It must NOT forget the rooms in localStorage:
+  signing out of a shared browser and losing your own rooms on your own laptop would be one word
+  doing two jobs, and the owner's standing rule is to remember a visitor as long as possible.
+  (4) HOVERING LOGOUT OFFERS THE OTHER WAYS IN, so a person signed in by email can attach
+  LinkedIn, or WhatsApp on a house host, and the rooms already bound to that other identity
+  become reachable from this account. THE MERGE IS THE DANGEROUS OPERATION IN THIS WHOLE PARCEL:
+  decide what happens when the second identity already belongs to another account, and REFUSE
+  rather than guess — silently joining two accounts hands one person's rooms to another, and a
+  room token is a bearer credential. Write that branch's test first. WHAT MUST NOT CHANGE: the
+  pair is Login | Open a room and Logout | Open a room — one pair in every state — and each half
+  keeps its own hover, rooms under 'Open a room' and ways in under the left half. WhatsApp stays
+  house-only, for the reason shared/operator.ts exists. A fork with no LinkedIn app and no mail
+  configured must still render a control that says something true rather than an empty panel.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  The control says Login in every state, because there is no state to read. Wave 13's sign-in is
+  stateless: you prove who you are, the server answers with the rooms bound to that identity,
+  you pick one, and what remembers you afterwards is a room token in localStorage. There is no
+  session, so there is nothing for a Logout to end and nothing for a second way in to be
+  attached to. The owner has asked for both.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.

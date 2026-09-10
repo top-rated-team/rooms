@@ -64,6 +64,13 @@ const WAVES = [
    * cancel it. It waited for wave 14 to release BookingDialog.tsx.
    */
   { n: 17, keys: ["booking-return"], alone: true },
+  /* Logout, and one account with several ways in. It is last of the three
+     because it is the only one that introduces a session — a credential in a
+     cookie and a merge that can hand one person's rooms to another if it is
+     written carelessly — and the other two are additions to things that
+     already work. One after another, not together: all three want
+     server/routes.ts and shared/api.ts. */
+  { n: 18, keys: ["room-account"], alone: true },
 ];
 
 function prompt(key) {

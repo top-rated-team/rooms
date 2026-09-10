@@ -1222,19 +1222,29 @@ function inviteLine(booked: BookedPayload, email: string | null) {
   return null;
 }
 
+/* Borrowed verbatim from the login panel in RoomMenu.tsx, so the two look
+   like one product. type-note carries the size; [text-transform:none] is
+   needed because .type-note uppercases by default in the frozen index.css. */
+const DIALOG_COPY = "type-note [text-transform:none] text-foreground";
+const DIALOG_HEADING = "type-note [text-transform:none] font-medium text-foreground";
+
 function WaitingView({ hold, openedWhatsApp }: { hold: HoldBookingResponse; openedWhatsApp: boolean }) {
   const phone = isPhoneBooking();
   return (
     <div className="text-center">
-      <Dialog.Title className="px-8 text-xl font-semibold tracking-tight">Send the WhatsApp message</Dialog.Title>
-      <Dialog.Description className="mx-auto mt-2 max-w-[42ch] text-sm text-muted-foreground">
+      {/* The same type as the login panel two clicks away, on the owner's
+          instruction: this used to be a bold sans title over grey body text
+          and that one is quiet, so the two read as different products. Still
+          centred — that part he asked to keep. */}
+      <Dialog.Title className={`px-8 ${DIALOG_HEADING}`}>Send the WhatsApp message</Dialog.Title>
+      <Dialog.Description className={`mx-auto mt-[var(--s2)] max-w-[42ch] ${DIALOG_COPY}`}>
         {openedWhatsApp
           ? "WhatsApp is open with a message ready. Send it. The call is booked only after that message arrives."
           : phone
             ? "Open WhatsApp and send the message. The call is booked only after that message arrives."
             : "Scan this code or click it. Both open the same WhatsApp message. The call is booked only after that message arrives."}
       </Dialog.Description>
-      <p className="mt-3 text-sm text-muted-foreground">
+      <p className={`mt-[var(--s2)] ${DIALOG_COPY}`}>
         The message contains the code{" "}
         <code className="rounded border border-card-border bg-muted px-1 py-0.5 font-mono text-[11px] text-foreground">
           {hold.whatsapp.code}
@@ -1255,11 +1265,11 @@ function WaitingView({ hold, openedWhatsApp }: { hold: HoldBookingResponse; open
           </p>
         )
       ) : (
-        <div className="mt-4 flex justify-center">
+        <div className="mt-[var(--s3)] flex justify-center">
           <BookingQr url={hold.whatsapp.url} />
         </div>
       )}
-      <p className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+      <p className={`mt-[var(--s3)] flex items-center justify-center gap-[var(--s1)] ${DIALOG_COPY}`}>
         <Loader2 className="h-4 w-4 animate-spin" />
         Waiting for the WhatsApp message. Nothing is booked yet.
       </p>

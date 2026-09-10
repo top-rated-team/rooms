@@ -18,6 +18,7 @@
  */
 
 import { createHash, randomBytes } from "node:crypto";
+import { mailFrom } from "./mail-from";
 import { and, eq } from "drizzle-orm";
 import { customAlphabet } from "nanoid";
 import {
@@ -254,7 +255,9 @@ function roomAccessReady(): SendRoomAccessResult | null {
  */
 async function sendViaResend(to: string, text: string): Promise<boolean> {
   const key = process.env.RESEND_API_KEY?.trim();
-  const from = process.env.LEAD_EMAIL_FROM?.trim();
+  /* mailFrom and not the bare variable: a client handed only an address shows
+     the local part as the sender, so this used to arrive from "contact". */
+  const from = mailFrom();
   if (!key || !from) return false;
 
   const started = Date.now();
