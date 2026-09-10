@@ -65,7 +65,20 @@ export function llmReady(): boolean {
 }
 
 export async function* streamAgentAnswer(opts: AgentTurn): AsyncGenerator<AgentStreamChunk> {
-  const agent: AgentDef = AGENT_BY_ID[opts.agentId] ?? AGENT_BY_ID[DEFAULT_AGENT_ID];
+  /* THE LAST LINE. Every other guard is a list somebody can walk around: the
+     mention menu, the panel, the connector's tool schema. This is the only
+     place an agent actually speaks, so a hidden agent is refused HERE and the
+     rest is defence in depth rather than the defence itself.
+     It does NOT fall back to the default agent. Answering a question addressed
+     to the LinkedIn Automation Agent in the Google Ads Agent's voice would be
+     a worse answer than none, and it would hide the refusal from whoever is
+     reading the logs. */
+  const requested = AGENT_BY_ID[opts.agentId];
+  if (requested?.hidden) {
+    yield { error: "That agent is not available." };
+    return;
+  }
+  const agent: AgentDef = requested ?? AGENT_BY_ID[DEFAULT_AGENT_ID];
   const question = opts.question.trim();
 
   if (!question) {

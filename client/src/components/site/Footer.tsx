@@ -57,7 +57,11 @@ function useSomebodyElsesDoor(): DoorContract | null {
   const [onDoorPage, params] = useRoute<{ slug: string }>("/services/:slug");
   if (!onDoorPage || !params) return null;
   const door: DoorDef | undefined = DOOR_BY_SLUG[params.slug];
-  if (!door) return null;
+  /* A hidden door's page answers "Page not found", and the footer still runs
+     under it — so without this test the 404 for a withheld partner door
+     printed that partner's contract block, which is the one thing the door
+     was hidden to stop. */
+  if (!door || door.hidden) return null;
   return door.contract.legalName === OURS.legalName ? null : door.contract;
 }
 

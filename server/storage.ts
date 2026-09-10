@@ -159,7 +159,7 @@ function buildSeed(workspaceId: string, input: CreateWorkspaceInput, now: Date):
   const plan = seedFor(
     general
       ? { id: GENERAL_ROOM_ID, slug: "room", headline: "A room of your own", firstAgentId: null, ours: true }
-      : { id: door.id, slug: door.slug, headline: door.headline, firstAgentId: door.firstAgentId, ours },
+      : { id: door.id, slug: door.slug, headline: door.headline, firstAgentId: door.firstAgentId, ours, hidden: door.hidden },
   );
 
   const channelRows: Channel[] = plan.channels.map((seed, index) => ({

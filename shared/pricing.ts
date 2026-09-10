@@ -1,3 +1,5 @@
+import { LINKEDIN_REVIEW_OPEN } from "./linkedin-review";
+
 /**
  * The ladder: one row per published price, and the only place in this
  * repository where a figure is written down.
@@ -129,7 +131,9 @@ export const PRICES: PriceRow[] = [
   {
     id: "ownKeys",
     price: "free",
-    buys: "LinkedIn content autopilot, and the AI agents.",
+    /* "LinkedIn content autopilot" names the withheld work; the AI agents
+       are the half of this row that is not about LinkedIn at all. */
+    buys: LINKEDIN_REVIEW_OPEN ? "The AI agents." : "LinkedIn content autopilot, and the AI agents.",
     /*
      * SECOND ON THE LADDER, beside the other free row, on the owner's
      * instruction. Two rows that cost nothing standing together is the
@@ -181,7 +185,9 @@ export const PRICES: PriceRow[] = [
   {
     id: "support",
     price: "$49 / month",
-    buys: "Content-generation support, or boosting support for top-voice.ai or warmlike.com.",
+    buys: LINKEDIN_REVIEW_OPEN
+      ? "Content-generation support."
+      : "Content-generation support, or boosting support for top-voice.ai or warmlike.com.",
     condition: "Run by us, on our own accounts.",
     ours: true,
   },

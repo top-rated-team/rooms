@@ -61,10 +61,14 @@ test("a question with an unmistakable subject routes to that door", () => {
       question: "How do we get LinkedIn spend and CRM pipeline into one report?",
       doorId: "linkedin-ads",
     },
-    {
-      question: "Can this be built against the official LinkedIn API instead of a browser session?",
-      doorId: "linkedin-automation",
-    },
+    /* This case used to assert that the question routes to
+       linkedin-automation. That door is hidden while the LinkedIn API
+       application is open, and a green test asserting a hidden door is
+       reachable is a test certifying the leak. It is not replaced by a case
+       for the same question: where that question goes while the door is
+       hidden is a judgement about routing, not a rule, and pinning today's
+       answer to it would be pinning an accident. Restore this case in the
+       commit that removes the hidden flag. */
     {
       question: "Can you build an agent that answers from our own documentation and cites it?",
       doorId: "ai-builds",
@@ -114,6 +118,31 @@ test("a question about price or contact routes to the page rather than to an age
     assert.equal(result.kind, "page", `"${question}" should go to a person, got ${result.kind}`);
     if (result.kind !== "page") continue;
     assert.equal(result.page, "contact");
+  }
+});
+
+test("the router never returns a hidden door, by score or by name", () => {
+  /* The scorer and the by-id path are two separate ways in and both were
+     open: scoreDoors read the raw DOORS array, and pickedLiveDoor honoured
+     any id the client posted as long as the row was live. */
+  const questions = [
+    "Can this be built against the official LinkedIn API instead of a browser session?",
+    "I want LinkedIn automation with a written legal assessment.",
+    "Can you run LinkedIn growth for us through a partner company?",
+  ];
+  for (const question of questions) {
+    const result = routeQuestion(question);
+    if (result.kind === "door") {
+      assert.equal(DOOR_BY_ID[result.doorId]?.hidden, undefined, `${question} routed to hidden ${result.doorId}`);
+    }
+    for (const choice of result.kind === "choices" ? result.choices : []) {
+      assert.equal(DOOR_BY_ID[choice.doorId]?.hidden, undefined, `hidden ${choice.doorId} offered as a choice`);
+    }
+  }
+
+  for (const hidden of DOORS.filter((door) => door.hidden)) {
+    const asked = routeQuestion("What can you do for us?", hidden.id);
+    assert.notEqual(asked.kind === "door" && asked.doorId, hidden.id, `${hidden.id} was honoured by id`);
   }
 });
 

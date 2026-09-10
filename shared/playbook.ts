@@ -42,6 +42,12 @@ export interface DoorSeedInput {
   firstAgentId: string | null;
   /** True when Top-Rated Team contracts and invoices this work. */
   ours: boolean;
+  /**
+   * Withheld from visitors. A hidden door seeds no agent channel: a room
+   * stamped with one would otherwise be born holding a member and a channel
+   * named after an agent nobody may reach, and the room renders both.
+   */
+  hidden?: boolean;
 }
 
 export interface DoorSeed {
@@ -176,7 +182,10 @@ export function seedFor(door: DoorSeedInput): DoorSeed {
   }
 
   const channels: SeedChannel[] = [project];
-  if (door.firstAgentId) {
+  /* A hidden door seeds no agent channel. Without this a room stamped with
+     one is born holding a member row and a channel named after an agent
+     nobody may reach, and the room renders both. */
+  if (door.firstAgentId && !door.hidden) {
     /*
      * `ask-` prefixed, because on several doors the agent's id IS the door's
      * slug — ad-grants, chatgpt-ads — and naming both channels the same thing

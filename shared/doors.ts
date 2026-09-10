@@ -616,6 +616,18 @@ export const DOORS: DoorDef[] = [
 ];
 
 export const DOOR_BY_ID: Record<string, DoorDef> = Object.fromEntries(DOORS.map((door) => [door.id, door]));
+
+/**
+ * The doors a visitor may be routed to, offered, or shown. DOORS stays
+ * complete because a room stamped with a door still has to name it; anything
+ * that CHOOSES a door for somebody asks this.
+ */
+export const VISIBLE_DOORS: DoorDef[] = DOORS.filter((door) => !door.hidden);
+
+export function doorIsHidden(id: string | null | undefined): boolean {
+  if (!id) return false;
+  return DOOR_BY_ID[id]?.hidden === true;
+}
 export const DOOR_BY_SLUG: Record<string, DoorDef> = Object.fromEntries(DOORS.map((door) => [door.slug, door]));
 
 /** The door a visitor is in when nothing said otherwise — the page that pays for the rest. */

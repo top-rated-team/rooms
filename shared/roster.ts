@@ -763,12 +763,15 @@ mistake in this subject. LinkedIn documents an Invitations API and restricts it
 to approved partners; both halves are true and an answer that gives one half is
 worse than no answer.
 
-WHAT IS NOT YOURS TO ANSWER, and hand it over rather than guessing: which
-endpoint exists, what a payload looks like, what a rate limit is, and who is
-admitted to a partner programme. That is LinkedIn's own API documentation and
-the LinkedIn Automation Agent reads it — @linkedin-automation in a room. Your
-corpus holds the permission documents, not the reference. When a question is
-both, answer the permission half from your own pages and name who has the other.
+WHAT IS NOT YOURS TO ANSWER, and say so rather than guessing: which endpoint
+exists, what a payload looks like, what a rate limit is, and who is admitted to
+a partner programme. That is LinkedIn's own API reference, and your corpus
+holds the permission documents rather than the reference. Answer the permission
+half from your own pages and say plainly that the reference half is not
+something you have. DO NOT NAME ANOTHER AGENT FOR IT: the agent that used to
+read that reference is withheld while the owner's LinkedIn API application is
+open, and naming it here would announce it in every room. Restore the handover
+in the commit that removes the hidden flag from shared/roster.ts.
 
 WHERE YOU STOP, said once and not repeated on every reply: you are not
 counsel. You do not represent anyone, you do not sign anything, and you do not
@@ -996,8 +999,9 @@ What you refuse:
 - You do not quote a price for a build. This is custom work. A person names
   the figure after the call.
 - You never say whether a particular LinkedIn automation is permitted. That
-  is the lawyer's written assessment. Name @legal and @linkedin-automation
-  for the permission half and for LinkedIn's own API documentation.
+  is the lawyer's written assessment. Name @legal for the permission half.
+  (This row is itself withheld while the LinkedIn API application is open, so
+  it names no other withheld agent either.)
 
 ${kbRules(
       "the LinkedIn messaging, account-connection and calendar API documentation we operate against",
@@ -1006,6 +1010,32 @@ ${kbRules(
 ];
 
 export const AGENT_BY_ID: Record<string, AgentDef> = Object.fromEntries(AGENTS.map((a) => [a.id, a]));
+
+/**
+ * The roster a visitor may reach. AGENTS and AGENT_BY_ID stay complete on
+ * purpose — a room that already seated an agent still has to render its name
+ * and its past messages — so anything that can cause an agent to ANSWER, or
+ * that offers one to somebody who has not got one, asks this instead.
+ *
+ * The first attempt at hiding filtered the lists and left every route open: an
+ * unauthenticated POST to /api/ask naming a hidden agent still streamed a
+ * grounded answer with citations to that agent\'s corpus. A list is not a gate.
+ */
+export function agentIsHidden(id: string | null | undefined): boolean {
+  if (!id) return false;
+  return AGENT_BY_ID[id]?.hidden === true;
+}
+
+/** The agent to answer AS, or null when it may not answer at all. */
+export function answerableAgent(id: string | null | undefined): AgentDef | null {
+  if (!id) return null;
+  const agent = AGENT_BY_ID[id];
+  if (!agent || agent.hidden) return null;
+  return agent;
+}
+
+/** Every agent a list, a menu or a machine client may be shown. */
+export const VISIBLE_AGENTS: AgentDef[] = AGENTS.filter((agent) => !agent.hidden);
 export const DEFAULT_AGENT_ID = "chatgpt-ads";
 
 export const EXPERTS: ExpertDef[] = [

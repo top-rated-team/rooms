@@ -96,7 +96,9 @@ export function houseLegalName(doors: readonly DoorDef[] = DOORS): string {
 export function operatorDoors(doors: readonly DoorDef[] = DOORS): OperatorDoorOption[] {
   const house = houseLegalName(doors);
   return doors
-    .filter((door) => house !== "" && door.contract.legalName === house)
+    /* Hidden rows are not offered to an operator either: GET /api/operator is
+       unauthenticated and /setup renders what it returns. */
+    .filter((door) => !door.hidden && house !== "" && door.contract.legalName === house)
     .map((door) => ({
       id: door.id,
       headline: door.headline,

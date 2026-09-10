@@ -262,7 +262,13 @@ describe("operator setup", () => {
       assert.equal(res.headers.get("location"), "/partner");
     });
 
-    it("still refuses a write that would name someone who is not answerable", async () => {
+    it("does not let an operator switch on a door that is hidden", async () => {
+      /* This used to assert a 400 for linkedin-automation, on the grounds that
+         its work belongs to somebody who is not answerable here. That door is
+         hidden now while the LinkedIn API application is open, so it is not
+         offered to an operator at all and the key is dropped before the
+         answerability check ever sees it. Both outcomes are correct; what
+         must stay true is that saving cannot turn a hidden row on. */
       const res = await fetch(`${origin}/api/operator`, {
         method: "PUT",
         headers: { "content-type": "application/json", Host: FORK_HOST },
@@ -272,9 +278,28 @@ describe("operator setup", () => {
           }),
         ),
       });
-      assert.equal(res.status, 400);
-      const payload = (await res.json()) as { error: string };
-      assert.match(payload.error, /someone who is not/);
+      assert.equal(res.status, 200);
+      const saved = (await res.json()) as { services?: Record<string, unknown> };
+      assert.equal(saved.services?.["linkedin-automation"], undefined);
+    });
+
+    it("still refuses a write that would name someone who is not answerable", () => {
+      /* Every door that is NOT white-labelable is hidden today — the two
+         LinkedIn rows — so this property cannot be exercised over HTTP
+         against the real catalogue any more. It is the rule the whole
+         operator page exists to keep, so it is tested here against a door
+         list of its own rather than quietly dropped. */
+      const notWhite = DOORS.find((door) => door.tier !== "white");
+      assert.ok(notWhite, "expected a door that may not be white-labelled to exist");
+      const offerable = { ...notWhite, hidden: false, contract: DOOR_BY_ID["google-ads"].contract };
+      assert.throws(
+        () =>
+          parseOperatorWrite(
+            validBody({ services: { [offerable.id]: { mode: "white-label", offered: true } } }),
+            [DOOR_BY_ID["google-ads"], offerable],
+          ),
+        /someone who is not|may not be/i,
+      );
     });
   });
 

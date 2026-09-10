@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { LINKEDIN_REVIEW_OPEN } from "@shared/linkedin-review";
 
 import DoorCard from "@/components/site/DoorCard";
 import { ACTION, ACTION_QUIET, HEADING, LINK, META, META_PLAIN, READ_MUTED } from "@/components/site/doors/quiet";
@@ -128,7 +129,7 @@ interface GatedProduct {
  * sites themselves before changing a word. No result is promised here, for the
  * same reason no door promises one.
  */
-const GATED_PRODUCTS: GatedProduct[] = [
+const ALL_GATED_PRODUCTS: GatedProduct[] = [
   {
     id: "top-voice",
     name: "Top-Voice",
@@ -146,6 +147,11 @@ const GATED_PRODUCTS: GatedProduct[] = [
     contract: OURS,
   },
 ];
+
+/* Both of these are LinkedIn activity on real profiles, which is exactly what
+   the owner asked to be invisible while his LinkedIn API application is read.
+   Emptied rather than deleted — see shared/linkedin-review.ts. */
+const GATED_PRODUCTS: GatedProduct[] = LINKEDIN_REVIEW_OPEN ? [] : ALL_GATED_PRODUCTS;
 
 /* --------------------------- remembering the visitor ---------------------- */
 
@@ -445,9 +451,13 @@ export function GatedOffers({ className }: GatedOffersProps) {
           </div>
 
           <p className={`mt-[var(--s4)] max-w-[62ch] ${READ_MUTED}`}>
-            They act on real LinkedIn accounts, and LinkedIn has rules about that which it enforces. Nothing here says
-            otherwise. If you want what is and is not allowed where you are written down before anything runs, that is
-            the LinkedIn automation door above — a lawyer writes the assessment first, and bills it separately.
+            {/* This paragraph named the LinkedIn automation door, which is
+                withheld, and it described products that are no longer shown —
+                so while the application is open it says the one thing that is
+                still true of what remains. */}
+            {LINKEDIN_REVIEW_OPEN
+              ? "Where a piece of work runs on somebody's own account rather than through an ad account, the platform has rules about it and enforces them. Nothing here says otherwise, and we write down what is and is not allowed before anything runs."
+              : "They act on real LinkedIn accounts, and LinkedIn has rules about that which it enforces. Nothing here says otherwise. If you want what is and is not allowed where you are written down before anything runs, that is the LinkedIn automation door above — a lawyer writes the assessment first, and bills it separately."}
           </p>
         </div>
       </div>

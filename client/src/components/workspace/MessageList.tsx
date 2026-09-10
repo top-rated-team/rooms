@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { AGENT_BY_ID, EXPERT_BY_KEY, type AgentDef, type ExpertDef } from "@shared/roster";
+import { AGENT_BY_ID, EXPERT_BY_KEY, type AgentDef, type ExpertDef, answerableAgent } from "@shared/roster";
 import type { Channel, Member, Message } from "@shared/schema";
 import type { ThreadPrice } from "@shared/api";
 import type { TypingSignal } from "@/hooks/use-workspace";
@@ -45,9 +45,12 @@ function startersFor(agent: AgentDef | undefined, count: number): Starter[] {
 }
 
 function starterQuestions(channel: Channel | null, doorAgentId?: string | null): Starter[] {
+  /* A starter is an invitation to make an agent answer, and a withheld agent
+     will refuse — so offering its four LinkedIn questions in a room stamped
+     with the hidden door both advertises it and leads to a dead end. */
   const channelAgent = agentForChannel(channel);
-  if (channelAgent) return startersFor(channelAgent, 4);
-  const doorAgent = doorAgentId ? AGENT_BY_ID[doorAgentId] : undefined;
+  if (channelAgent && !channelAgent.hidden) return startersFor(channelAgent, 4);
+  const doorAgent = doorAgentId ? answerableAgent(doorAgentId) : null;
   if (doorAgent) return startersFor(doorAgent, 4);
   return [];
 }

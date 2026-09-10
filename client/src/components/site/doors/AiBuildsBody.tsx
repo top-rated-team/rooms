@@ -62,25 +62,12 @@ const SHOWN: Record<string, Shown> = {
       "A content library on the same domain — glossary, templates, tricks, and nonprofit guides — kept there rather than copied here.",
     ],
   },
-  "top-voice": {
-    what: "A LinkedIn visibility platform built around reactions rather than outreach. You describe the business and who it sells to; it builds a feed of those people's posts and reacts to them from a profile or company page. LinkedIn then shows those posts to the author and to the author's connections, so the profile earns inbound visits instead of sending cold messages. The page is explicit about what it refuses: no bulk cold outreach or DMs, no engagement pods, and no AI comments.",
-    built: [
-      "A setup that takes four fields and produces an Influence Flow, a content campaign and a boosting campaign.",
-      "Influence Flows: synthesised influencer voices, including custom ones from a LinkedIn profile URL.",
-      "A Content Studio with Autopilot — post copy, images, carousel PDFs and video, published to profiles or company pages on a schedule.",
-      "A LinkedIn Booster: boolean searches that assemble a targeted posts feed, and a reaction engine with human-like pacing and selectable reaction types.",
-      "A pool of dedicated in-house LinkedIn accounts, so a campaign can run without the client handing over their own login.",
-      "MCP connectors — Add to ChatGPT and Add to Claude — alongside in-app, web-chat and LinkedIn DM entry points.",
-    ],
-  },
-  warmlike: {
-    what: "A LinkedIn visibility service around a second, managed company page rather than the client's own account. You tell them the profile and the niche, over a LinkedIn message or a short call. They spin up a company page from the business — name, logo and description — that points people at the client's profile. That page engages the posts of the people the client sells to, and reshares the client's own posts so those people are sent on. Suggested posts are reviewed from a private link, published to the client's own profile, and then reshared by the managed page. There is no dashboard to log into and no password to share.",
-    built: [
-      "The managed company page — a pre-lander — run as the service, not as access to the client's LinkedIn login.",
-      "Daily suggested posts, reviewed and approved from a private link, published to the client's own profile and reshared by that page.",
-      "The public site at warmlike.com, which is how the work is started: a message or a call, not a checkout.",
-    ],
-  },
+  /* "top-voice" and "warmlike" lived here, and they are the most detailed
+     description of LinkedIn activity anywhere on this site — on a page the
+     sitemap hands to crawlers. Withheld while the owner's LinkedIn API
+     application is read; see shared/linkedin-review.ts, which is the one line
+     to flip. The prose is not deleted, it is at
+     `git show HEAD:client/src/components/site/doors/AiBuildsBody.tsx`. */
   "upwork-auto-apply": {
     what: "A Claude Code skill that finds and scores Google Ads jobs on Upwork, drafts the cover letter and screening answers, and fills the proposal form. The proposal is submitted only after the user confirms that specific one. It drives the user's own logged-in Chrome session — there is no cloud browser and no shared Upwork account.",
     built: [
@@ -145,14 +132,22 @@ function BuildName({ build, href }: { build: Build; href: string | null }) {
   );
 }
 
+
+const WORDS = ["none", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"] as const;
+const SHOWN_COUNT = BUILDS.filter((build) => SHOWN[build.slug]).length;
+const SHOWN_COUNT_WORD: string = WORDS[SHOWN_COUNT] ?? String(SHOWN_COUNT);
+
 export function AiBuildsBody() {
   return (
     <section id="ai-builds-portfolio" className={`${PAGE} pt-[var(--s6)]`} data-testid="block-ai-builds">
       <div className="grid gap-[var(--s4)] lg:grid-cols-[55fr_45fr] lg:gap-[var(--s5)]">
         <h2 className={HEADING}>What we have built.</h2>
         <p className={READ_MUTED}>
-          This door has no client case. The six below are things we have built. They are a portfolio, not case
-          studies: there is no client on any of them, and no metric, because these are ours.
+          {/* Counted rather than written: two rows are withheld while the
+              LinkedIn application is read, and "the six below" was the kind
+              of sentence that quietly stops being true. */}
+          This door has no client case. The {SHOWN_COUNT_WORD} below are things we have built. They are a portfolio,
+          not case studies: there is no client on any of them, and no metric, because these are ours.
         </p>
       </div>
 

@@ -16,7 +16,7 @@ import { timingSafeEqual } from "node:crypto";
 import { clearTimeout, setTimeout } from "node:timers";
 import { z } from "zod";
 import type { BridgeKind, RoomBridge } from "@shared/api";
-import { AGENT_BY_ID, AGENTS } from "@shared/roster";
+import { AGENT_BY_ID, AGENTS, VISIBLE_AGENTS } from "@shared/roster";
 import type { Member, MemberKind, Message, MessageMeta } from "@shared/schema";
 import { llmReady, streamAgentAnswer } from "../ai/agentRuntime";
 import { storage } from "../storage";
@@ -41,8 +41,11 @@ import { isWhatsAppGroup, parseWahaInbound, sendWahaText } from "./waha";
 
 const SEND_MS = 5_000;
 
+/* The bridge keeps its own copy of this map, so filtering the one in
+   routes.ts left @mentions arriving over WhatsApp or ChatWoot able to summon
+   a hidden agent into a room. */
 const AGENT_KEYS: Record<string, string> = {};
-for (const agent of AGENTS) {
+for (const agent of VISIBLE_AGENTS) {
   AGENT_KEYS[agent.handle.toLowerCase()] = agent.id;
   AGENT_KEYS[agent.id.toLowerCase()] = agent.id;
 }

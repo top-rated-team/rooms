@@ -16,7 +16,7 @@
  * the whole of the routing.
  */
 
-import { DOOR_BY_ID, DOORS, doorAgent, type DoorDef } from "@shared/doors";
+import { DOOR_BY_ID, DOORS, doorAgent, type DoorDef, VISIBLE_DOORS } from "@shared/doors";
 
 export type RoutePage = "pricing" | "contact";
 
@@ -243,7 +243,10 @@ export function scoreDoorsForTests(question: string): Scored[] {
 function scoreDoors(question: string): Scored[] {
   const q = normalize(question);
   const qTokens = tokensOf(question);
-  const docs = DOORS.map((door) => {
+  /* VISIBLE_DOORS: this scorer chooses a door FOR somebody, so a hidden row
+     must not be a candidate. Its id, headline, blurb, agentLine and starters
+     were all scoreable and all returned to an unauthenticated caller. */
+  const docs = VISIBLE_DOORS.map((door) => {
     const bag = new Set(tokensOf(doorDocument(door)));
     return { door, bag, phrases: phrasesOf(door) };
   });
@@ -511,7 +514,10 @@ function uniqueComingDoor(question: string): DoorDef | undefined {
 function pickedLiveDoor(doorId: string | undefined): DoorDef | undefined {
   if (!doorId) return undefined;
   const door = DOOR_BY_ID[doorId];
-  if (!door || door.status !== "live") return undefined;
+  /* Filtering the scorer is not enough on its own: this honours whatever
+     doorId the client posts, so a hidden row was reachable by name even once
+     it could no longer be reached by score. */
+  if (!door || door.hidden || door.status !== "live") return undefined;
   return door;
 }
 

@@ -20,7 +20,7 @@ import {
 } from "@shared/schema";
 import type { AskEvent, CreateWorkspaceResponse, WorkspaceState } from "@shared/api";
 import { signAnswer, verifyAnswer } from "./answer-receipt";
-import { AGENTS, AGENT_BY_ID, BOOK_A_CALL_URL, DEFAULT_AGENT_ID, EXPERTS, EXPERT_BY_KEY } from "@shared/roster";
+import { AGENTS, AGENT_BY_ID, BOOK_A_CALL_URL, DEFAULT_AGENT_ID, EXPERTS, EXPERT_BY_KEY, VISIBLE_AGENTS, answerableAgent } from "@shared/roster";
 import { storage } from "./storage";
 import { broadcast } from "./ws";
 import {
@@ -215,8 +215,11 @@ async function requireWorkspace(req: Request, res: Response): Promise<WorkspaceS
 /* -------------------------------- agents ---------------------------------- */
 
 /** Both `@tracking` (the handle) and `conversion-tracking` (the id) resolve. */
+/* VISIBLE_AGENTS and not AGENTS: an @mention is a way to make an agent
+   answer, so a hidden one must not resolve from one. Filtering the composer's
+   menu was not enough — the menu is a convenience and the text is the API. */
 const AGENT_KEYS: Record<string, string> = {};
-for (const agent of AGENTS) {
+for (const agent of VISIBLE_AGENTS) {
   AGENT_KEYS[agent.handle.toLowerCase()] = agent.id;
   AGENT_KEYS[agent.id.toLowerCase()] = agent.id;
 }
@@ -626,7 +629,9 @@ export function registerRoutes(app: Express): void {
       if (!parsed.success) return badRequest(res, describe(parsed.error));
 
       const input = parsed.data;
-      if (input.agentId && !AGENT_BY_ID[input.agentId]) return badRequest(res, `Unknown agent: ${input.agentId}`);
+      /* A room cannot be opened seeded on an agent nobody may reach. Same
+         reply as for an unknown one, for the same reason. */
+      if (input.agentId && !answerableAgent(input.agentId)) return badRequest(res, `Unknown agent: ${input.agentId}`);
       const agentId = input.agentId ?? DEFAULT_AGENT_ID;
 
       const created = await storage.createWorkspace({
@@ -803,11 +808,20 @@ export function registerRoutes(app: Express): void {
       const parsed = createChannelSchema.safeParse(req.body);
       if (!parsed.success) return badRequest(res, describe(parsed.error));
 
+      /* counterpartKey is free text from the client, and "agent:<id>" is how
+         a channel says whom it talks to — so it is another way to seat a
+         hidden agent in a room. Checked here rather than trusted. */
+      const counterpartKey = parsed.data.counterpartKey ?? null;
+      const mentionedAgent = counterpartKey?.startsWith("agent:") ? counterpartKey.slice("agent:".length) : null;
+      if (mentionedAgent && !answerableAgent(mentionedAgent)) {
+        return badRequest(res, `Unknown agent: ${mentionedAgent}`);
+      }
+
       const channel = await storage.addChannel(state.workspace.id, {
         name: parsed.data.name,
         purpose: parsed.data.purpose ?? null,
         kind: parsed.data.kind,
-        counterpartKey: parsed.data.counterpartKey ?? null,
+        counterpartKey,
         orderIndex: state.channels.length,
       });
 
@@ -1001,7 +1015,12 @@ export function registerRoutes(app: Express): void {
       if (!parsed.success) return badRequest(res, describe(parsed.error));
 
       const agentId = parsed.data.agentId ?? DEFAULT_AGENT_ID;
-      const agent = AGENT_BY_ID[agentId];
+      /* answerableAgent, not AGENT_BY_ID: existence was the whole gate here,
+         so an unauthenticated POST naming a hidden agent streamed a grounded
+         answer with citations to that agent's own corpus. The reply for a
+         hidden agent is the same as for one that never existed, because
+         telling a stranger which agents we are hiding is itself the leak. */
+      const agent = answerableAgent(agentId);
       if (!agent) return badRequest(res, `Unknown agent: ${agentId}`);
 
       res.status(200);
