@@ -21,6 +21,41 @@ gesture without either becoming a surprise.
 
 ---
 
+## adgrant-in-a-room — blocked on wave 16, and on one answer from Google
+
+The owner's second half of the templates request, in his words: log into a
+room, and there the agent hands over the setup files and offers to upload them
+for you through the Top-Rated Team MCC — you give the CID of your Google Ads
+account and accept the invitation. And the same agent should do all of that
+from chat, not from a form.
+
+What is already true: the AdGrant.AI agent exists and answers in a room
+(`ad-grants` in `shared/roster.ts`), the generator produces a structure and a
+Google Ads Editor CSV, and `/api/workspaces/:token/adgrant/generate` is how a
+room asks for one. What is missing is the handover and the link.
+
+- **The files come from the agent, in the conversation.** A message that
+  carries attachments rather than a page that carries a button. That is a real
+  change to what a room message can hold, and it is the part to design first
+  because everything else hangs off it.
+- **The MCC invitation is a Google Ads API operation**, not a link we can
+  fabricate: a customer client link is created against the manager account and
+  the customer accepts it in their own account. It needs the Google Ads API
+  with a developer token at a level that permits it, and the account must be
+  ours to invite from. **Confirm that access exists before this parcel is
+  written** — if it does not, the honest version is that the agent produces the
+  files and tells the person exactly what to click in their own account, and
+  says so plainly rather than offering a link it cannot make.
+- **A CID is not a credential and must not be treated as one.** It identifies
+  an account; accepting the invitation is what grants anything, and that
+  happens on Google's side, under the customer's own login.
+- **Nothing is written into anybody's account without that acceptance**, and
+  the room says so at the moment it asks for the CID, not in a policy page.
+- Ad Grant accounts are suspended for policy breaches, so anything uploaded
+  arrives Paused, exactly as the generator's CSV already does.
+
+---
+
 ## booking-return — blocked on wave 14 releasing `BookingDialog.tsx`
 
 The owner booked through the QR code and it worked. What is missing is

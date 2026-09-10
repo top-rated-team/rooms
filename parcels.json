@@ -25,83 +25,58 @@
   "//alone": "Parcels marked runAlone touch the room, the panel or the shell - everything reads those, and two agents in them at once produce a merge nobody can check. One agent, let it finish, then start the others.",
   "//order": "The waves are in scripts/build-prompts.mjs and check-parcels.mjs reads them back. Programme three's ordering is a dependency chain, not a preference, and it has three links. (1) unipile-core is wave one ALONE because four parcels import its client; a parcel that writes its own Unipile client because the shared one did not exist yet is four incompatible error mappers. (2) booking-server and booking-dialog are the same wave and build to the request and response shapes fixed in the brief's section 3 - that is what fixing them in writing was for. (3) room-identity precedes login-create-room, because the claim dialog the site's new menu opens is the one room-identity builds. Beyond the chain, one standing rule: AT MOST ONE PARCEL PER WAVE MAY TOUCH server/routes.ts. Three parcels here need a route, and they are in three different waves for that reason alone.",
   "parcels": {
-    "adgrant-site": {
+    "adgrant-setup-files": {
       "owns": [
-        "client/src/pages/adgrant/*",
-        "client/src/components/adgrant/*"
-      ],
-      "seams": {},
-      "runAlone": false,
-      "why": "The AdGrant.AI front page and shell exist from an earlier wave, built from what the repository already knew. Now there is the real material - 23 written pages, 12 starter templates and a measured statistic over 4,539 accounts - and the owner wants the four sections rebuilt in this design system, with AdGrant.AI's own mark, menu and footer, and the front page turned from a form into a conversation.",
-      "done": "A four-section site in the top-rated.team design system wearing AdGrant.AI's own chrome. THE SECTIONS, named as the live site names them: Ad Grant Glossary (Terminology explained), Case Studies, Tips & Tricks (Custom workarounds), Starter Templates. Each gets an index and a leaf page, rendered from shared/adgrant.ts, which the previous wave generated. KEEP THE URL SHAPES - /glossary/<slug>, /tricks/<slug> and their siblings - because every page carries relatedLinks into the others and the internal link graph is worth more than a tidier path. SET TITLE AND DESCRIPTION PER ROUTE from each page's own metaTitle and metaDescription, the way client/src/pages/landing.tsx does it. The live site serves one title and one canonical for all 74 URLs and injects the rest client-side, so this metadata exists and is currently wasted; this is the cheapest real improvement on the whole site. THE FRONT PAGE: the measured statistic goes on it. 4,539 Ad Grant accounts processed, 16,575 campaigns, 3,142,469 keywords, with the medians beside them - that is the most valuable thing this product owns and the current site does almost nothing with it. State what each number is a number OF, and do not round it into a marketing figure. Then the conversation: the front page's action is an agent that asks what the nonprofit needs, not a form. Identity is required before it generates, and generating is the previous wave's endpoint - call it, do not reimplement it, and print the remaining count of three where a person can see it before they spend one. Say plainly what happens: a structure is produced and shown, and a person sets up the account link afterwards. Do NOT write any sentence implying the structure was uploaded into their Google Ads account. THE CHROME: its own mark, its own top menu, its own footer, both linking back to top-rated.team. Extend the accent and wordmark in client/src/components/site/doors/adgrant-style.ts rather than starting a second palette; the type scale, the spacing scale and the class vocabulary in client/src/components/site/doors/quiet.ts stay exactly as they are. No import of the site's Header or Footer. Build it so it can move to its own host later: nothing that assumes the apex. Two faces of type, not the twenty-eight the live site loads; no pinch-zoom lock; and no machine-translation gadget - English only is an honest state. Where a section's material is thin, say less rather than padding it."
-    },
-    "room-login": {
-      "owns": [
-        "server/room-access.ts",
-        "server/room-access.test.ts",
-        "server/room-login.ts",
-        "server/room-login.test.ts",
-        "server/identity-store.ts",
-        "server/identity-store.test.ts",
-        "shared/schema-rooms.ts",
-        "client/src/components/site/RoomMenu.tsx"
+        "client/src/components/adgrant/TemplatePage.tsx",
+        "client/src/components/adgrant/TemplatesIndex.tsx",
+        "client/src/components/adgrant/Structure.tsx",
+        "server/adgrant/templates.ts",
+        "server/adgrant/templates.test.ts",
+        "server/adgrant/generate.ts",
+        "server/adgrant/generate.test.ts",
+        "scripts/build-adgrant.ts",
+        "shared/adgrant.ts"
       ],
       "seams": {
         "server/routes.ts": [
-          "the room-login routes, replacing the sealed room-access block"
+          "the route that hands a template's setup files over"
         ],
         "shared/api.ts": [
-          "what the login control learns about each way in"
+          "what a template's setup files look like to the page"
+        ]
+      },
+      "runAlone": true,
+      "why": "A starter template page today prints seven counts and hands over nothing. The owner's point is that a template IS the setup: the person reading it wants the files, not the arithmetic. The live product already has them — /api/templates/<slug> returns the whole structure, 14KB of campaigns, ad groups, keywords, sitelinks, callouts and snippets — and our build fetches only the list endpoint, which omits it. So the data exists, the CSV writer exists, and nothing joins them.",
+      "done": "A TEMPLATE PAGE HANDS OVER ITS SETUP FILES, including the single one Google Ads Editor imports. Four things are known and each one is a trap if you find it late. (1) THE STRUCTURE IS ALREADY PUBLISHED but not at the endpoint we use: `/api/templates` omits it and `/api/templates/<slug>` returns it. Fetch per template in scripts/build-adgrant.ts. (2) IT IS NOT OUR SHAPE. The live template structure is {callouts, campaigns[{name, status, dailyBudget, adGroups}], languageCodes, languageIds, locationIds, locationList, sitelinks, structuredSnippets, totalDailyBudget}. structureToEditorCsv in server/adgrant/generate.ts takes AdGrantAccountStructure, which has authorisedDomain, per-campaign bidStrategy and per-campaign sitelinks. Map one to the other deliberately and test the mapping; do not widen the CSV writer until it accepts anything, because it is the file somebody imports into a live Google Ads account. (3) DO NOT PUT TWELVE STRUCTURES IN THE CLIENT BUNDLE. shared/adgrant.ts is imported by the landing page; twelve 14KB structures is about 170KB of JavaScript for a page that shows seven numbers. The structures belong behind a route, fetched when the visitor asks for the files, which is also what makes it \"the result of a submit\" rather than a page weight. (4) THE FILE IS THE PRODUCT AND IT MUST BE HONEST: a CSV that imports cleanly and does nothing is worse than none. Every campaign it writes is Paused, as the generator's already are, and the page says so before the download rather than after. WHAT MUST NOT CHANGE: nothing is written into anybody's Google Ads account by this parcel — that is the next one — and the page keeps saying so."
+    },
+    "booking-return": {
+      "owns": [
+        "client/src/components/site/BookingDialog.tsx",
+        "client/src/lib/booking.ts",
+        "server/booking/hold.ts",
+        "server/booking/confirm.ts",
+        "server/booking/calendar.ts",
+        "server/booking/code.ts",
+        "server/booking/hold.test.ts",
+        "server/booking/confirm.test.ts",
+        "server/booking/calendar.test.ts",
+        "server/booking/code.test.ts",
+        "server/booking/README.md"
+      ],
+      "seams": {
+        "server/routes.ts": [
+          "the routes that show, change and cancel a booking"
+        ],
+        "shared/api.ts": [
+          "what the popup learns about a booking already made"
         ],
         "shared/schema.ts": [
-          "one re-export line for the new tables"
+          "one re-export line if a booking becomes a row"
         ]
       },
       "runAlone": true,
-      "why": "The owner has asked three times for one control and it is still not on the site: with nothing remembered a visitor sees 'Open a room' and no way back into a room they already have. The previous attempt shipped an email form labelled 'Send a link' beside it, which is neither the label nor the position he asked for, and it was sealed before it ever answered a request because it could be made to mail a stranger a working link into a room somebody else controls. So this parcel is both the feature and the repair, and they are one parcel because they are the same code.",
-      "done": "LOGIN | OPEN A ROOM, and it works three ways. START BY READING the sealed block at the top of the room-access routes in server/routes.ts — it names the three defects that put it there — and then `git show waves-11-12-wip:server/room-access.ts` and `:client/src/components/site/RoomMenu.tsx`, which are the previous attempt. Most of the email half is written and correct; take it, do not start again. THE CONTROL IS ONE PAIR IN EVERY STATE: LOGIN | Open a room, in that order, always — LOGIN first, because a returning visitor is the one who needs it and 'Open a room' is what a new one presses anyway. THE 'Your rooms' STATE IS GONE, on the owner's instruction: hovering LOGIN shows the remembered-room list when this browser has one, so a third label for the same gesture was only teaching the reader that the control changes shape under them. One pair, one hover, and what the hover holds depends on what is there — the remembered rooms if any, and the ways in either way. LOGIN opens one panel offering the ways that actually work on THIS deployment and never a way that does not: LinkedIn, WhatsApp, or a link to an address. THE THREE WAYS. (1) An address, which is the sealed code, repaired — see below. (2) LinkedIn, and (3) WhatsApp, both of which need something that does not exist yet: identity-store.ts can only answer getBinding(workspaceId), a FORWARD lookup, and login is the reverse question — given this person, which rooms are theirs. Build that index in server/room-login.ts over the same hashed identifiers the bindings already store, so no new personal data is written: a LinkedIn subject and the peppered WhatsApp chat hash are already what identity keeps. WHATSAPP IS HOUSE-ONLY, the same rule as the booking gate, for the same reason — shared/roster.ts WHATSAPP_URL is the owner's personal mobile and this repository is public. Use HOUSE_HOSTS from shared/operator.ts, decided where a fork cannot reach around it. A FORK SEES LinkedIn and the address link, and the panel simply does not draw the third. THE REPAIRS, each of which is a reason the current code is sealed. (a) AUTHORISATION. sendRoomAccessLink finds rooms through workspaces.visitorEmail, which is self-asserted: an anonymous caller opens a room, sets visitorEmail to a stranger's address, and asks us to mail that stranger a link into the attacker's room, from our domain and our sender. Stop reading that field for this purpose. An address earns a room only through bindRoomAddress, and bindRoomAddress must acquire real callers — the LinkedIn userinfo email, and an address a person typed INTO a room they were already inside — because today it has none, which is also why the feature cannot find anything. (b) DURABILITY. Issued links and address bindings are process-local Maps, so a restart inside the hour turns a live link into 'already been used', while the mail and ROOM_ACCESS_SPENT_LINE both promise an hour. Rows in shared/schema-rooms.ts, hashed as they are now. Without a database the feature reports itself unavailable rather than promising an hour it cannot keep. (c) THE MAILED URL must not be built from the Host header. publicBaseUrl(req) falls back to it when PUBLIC_BASE_URL is unset, and a link mailed to a victim can then point at an attacker's server. No PUBLIC_BASE_URL, no mail. (d) THE IDENTICAL REPLY the brief requires is currently defeated by latency — the no-room path returns at once and the room-found path waits on the mail provider. Make the timing say nothing either. (e) THE PROVIDER-REJECTS branch is untested and tells the visitor a link was sent when none was; test it. UNSEAL by deleting the guard block in the same commit, and only once every item above is true. THE REPLY ON SCREEN STAYS IDENTICAL whether or not a room was found — a form that says 'no room for that address' tells anybody whether a given person is a customer here."
-    },
-    "booking-signin-fix": {
-      "owns": [
-        "server/booking/signin.ts",
-        "server/booking/signin.test.ts",
-        "server/identity.ts",
-        "server/identity.test.ts",
-        "client/src/components/site/BookingDialog.tsx"
-      ],
-      "seams": {
-        "server/routes.ts": [
-          "the booking sign-in routes, replacing the sealed block"
-        ],
-        "shared/api.ts": [
-          "what the popup learns about a signed-in booker"
-        ]
-      },
-      "runAlone": true,
-      "why": "The LinkedIn half of the booking popup was written, reviewed and sealed. The button on screen is still hardcoded disabled and no client code calls the route, so every branch of it is unreachable; and the branch that matters most — LinkedIn declining to give us an address — writes a calendar event nobody can be reached about, including on forks where the identical booking is refused outright. This finishes it and connects it.",
-      "done": "THE BUTTON WORKS, AND THE BRANCH BEHIND IT IS RIGHT. Read the sealed block in server/routes.ts first; it names why this is off. Then section 3.1 of docs/specs/unipile-rooms-and-booking.md. (1) NO ADDRESS FROM LINKEDIN IS THE NORMAL CASE, not an error: LinkedIn documents email and email_verified as optional and the claim is absent until the product is provisioned. That booking must land EXACTLY where a booking with the field left blank lands — the hold from server/booking/hold.ts, a wa.me code, and no calendar write until the message proves it. Today it calls createBookingEvent immediately with attendees: [] and notify: false, which is a call in the owner's calendar with no way to reach the other person and nothing that can ever confirm or remind it. BookingLinkedInResult has no member that can carry a hold; give it one. The test that asserts the current shape asserts the defect. (2) THE HOST DECIDES, as it does for the typed path: writeSignedInBooking never sees a host, so on a fork it creates precisely the address-less booking POST /api/booking refuses there with ADDRESS_REQUIRED_LINE. Thread the host through and use whatsappGateAllowed. (3) THE RETURN PATH IS AN OPEN REDIRECT: sanitizeBookingReturnPath rejects a leading // but not a path that normalises into one, so the Location can be made protocol-relative and the visitor's email handed to whoever owns that host. (4) THE SESSION IS AN UNAUTHENTICATED BEARER TOKEN for a name, an address and a LinkedIn profile, delivered in a URL query and readable for fifteen minutes by anyone who sees it — a referrer header, a shared link, a browser history. Spend it on first read. (5) THE ROOM-BINDING GUARD IS VACUOUS: the four assertions that prove a booking sign-in never becomes a room claim look the binding up under a workspace id no code path can produce, so they pass whatever signin.ts writes. Make them look where the write would actually land. (6) THE MISSING TESTS, each a branch that exists and has no case: an expired or replayed state, a token exchange LinkedIn refuses, and a slot taken by a hold rather than by a calendar event while the visitor was away at LinkedIn. (7) CONNECT IT. The button in BookingDialog.tsx is hardcoded disabled with its own sentence; it must ask the server whether sign-in is available, carry the visitor's pick into the round trip, restore that pick on the way back, and re-check the slot is still free before writing. Inert without LINKEDIN_CLIENT_ID: one sentence on the disabled button, read from the server, and the other two ways stay on screen. (8) FIX THE PROSE that these defects made false — the header of signin.ts and the contract in shared/api.ts both say the no-address sign-in performs 'the same write as no address at all', and no address at all performs no write. NEVER SEND A LINKEDIN MESSAGE: signing in is a way to hand over an address, not a channel to write on, and a reminder there is the unsolicited automation the pending API application says this product does not do. UNSEAL by deleting the guard in the same commit, once the above is true."
-    },
-    "linkedin-quiet": {
-      "owns": [
-        "client/public/sitemap.xml",
-        "server/connector/handlers.ts",
-        "server/connector/mcp.ts",
-        "server/connector/openapi.ts",
-        "client/src/components/workspace/Composer.tsx",
-        "client/src/components/workspace/WorkspaceSidebar.tsx",
-        "client/src/components/workspace/MemberRail.tsx"
-      ],
-      "seams": {
-        "shared/doors.ts": [
-          "nothing new — the hidden flags are already set"
-        ],
-        "shared/roster.ts": [
-          "nothing new — the hidden flags are already set"
-        ]
-      },
-      "runAlone": true,
-      "why": "The owner's LinkedIn API application is open and he asked for every LinkedIn service and agent except Ads to disappear while it is read. The flags are set — hidden: true on the linkedin-automation door and on the linkedin-automation and linkedin-dev agents — and a sweep then found seventy-five places where that changes nothing, because the flag is only honoured where somebody remembered it. The worst of them publishes in full the partner door that was supposedly hidden weeks ago. A flag that is set and ignored is worse than no flag: it makes everyone believe the thing is done.",
-      "done": "EVERY SURFACE IN docs/review/2026-09-09-interrupted-reviews.md SECTION 2 IS CLOSED, and the section 3 leads are each either closed or written off with a reason. That file is the specification for this parcel — read it first, it names seventy-five confirmed surfaces with the file, the line and what a visitor does to reach each one. Do not re-derive the list. WHAT MUST BECOME TRUE: nothing a visitor, a crawler or a machine client can reach names the linkedin-automation door, the linkedin-growth door, the LinkedIn Automation Agent or the LinkedIn Dev Agent. LINKEDIN ADS IS EXCEPTED EVERYWHERE — the linkedin-ads door and the LinkedIn Ads Agent stay exactly as they are, and so does the legal and privacy language about the official LinkedIn API, which is about how we behave rather than what we sell. THE TWO THAT DECIDE THE SHAPE. (1) client/public/sitemap.xml is hand-written and its own header admits it: it says the URLs were copied out of the PUBLIC_DOORS rule and that it should be generated. Generate it. A hand-copied index of a computed list is a promise to forget, and it has already been forgotten once — linkedin-growth is absent only because a person remembered. (2) server/connector/handlers.ts listServices() is DOORS.map(...) with no filter, so the connector, the MCP tool and the OpenAPI document all publish every door including both hidden ones, in full prose with starters and contract. Filter at the source so one edit covers all three, and check no other consumer of DOORS or AGENTS maps the whole array. AN AGENT HIDDEN FROM A LIST BUT STILL ANSWERABLE BY ID IS NOT HIDDEN. Whatever you do to the panel and the mention list, do to the server's answer path too: asking for a hidden agent by id must be refused, not served. THE ORPHANED CORPUS: the LinkedIn Automation Agent has its own corpus that is still built, embedded and shipped. Decide whether it should still be, and make sure no other agent can retrieve from it. TEMPORARY, AND SAY SO: every hiding edit carries the same one-line reason and the condition for undoing it, so that answering the LinkedIn application is a search for one phrase and not an archaeology exercise."
+      "why": "The owner booked through the QR code and it worked, and then everything after it was missing. Pressing Book a call again offers an empty picker as though nothing happened; there is no way to change the time and no way to cancel; and somebody who booked from a phone and closed the tab has no way back to the booking at all. A booking a person cannot get out of is a booking they will simply not attend, and the calendar keeps the slot.",
+      "done": "A BOOKING YOU CAN COME BACK TO, CHANGE, AND CANCEL. Read docs/review/next-waves.md, section booking-return — it is the owner's own words and it is the specification. (1) THE BROWSER REMEMBERS. A successful booking is recorded in the site's own session, and pressing Book a call again opens the confirmation rather than the picker. THAT FLAG IS A POINTER, NOT A CREDENTIAL: on its own it must never be enough to read or change a booking, because a cookie is copyable and a booking carries somebody's name, time and address. The server decides what may be shown, every time. (2) TWO LINKS IN THE CONFIRMATION: change, and cancel. (3) A WAY BACK FROM ANYWHERE for a WhatsApp booking — a short address the owner writes as https://top-rated.team/<code> that opens the site with that booking's popup already open. The code IS the credential there, so treat it as one: it expires with the booking, it is single-purpose, and it is never logged. Decide deliberately whether a bare /<code> at the site root can collide with any existing route, and say what you decided. (4) CLEARING IT. Cancelling clears the flag; so does the call time passing. Neither can be relied on — the flag is per browser and a person may cancel from another device — so the SERVER's answer decides what the popup shows and the flag is only a hint about what to ask for. (5) CANCELLING DELETES THE EVENT. Where there is an address, let Google tell them. Where the booking was proved by WhatsApp, the message goes to the chat that proved it and nowhere else, and never to a chat that did not. (6) CHANGING IS A CANCEL AND A BOOK, in that order, and the new slot is re-checked as free before the old one is released — losing somebody's slot while moving it is worse than refusing the move."
     }
   }
 }

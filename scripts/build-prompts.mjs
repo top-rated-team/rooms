@@ -38,36 +38,32 @@ const WAVES = [
   /* Waves 4 to 8 are landed and their parcels are retired to
      docs/parcels-programme-3-landed.json, so they no longer appear here — a
      re-run of a landed parcel is an agent rewriting a finished file. */
-  { n: 9, keys: ["adgrant-site"], alone: true, landed: true },
   /* Waves 10 to 12 have run and their parcels are retired to
      docs/parcels-programme-3-landed.json. booking-gate landed clean. The other
      two came back with defects and their code is on main but sealed; the two
      waves below are what repairs and finishes them, so re-running the retired
      parcels would undo that. */
-  /*
-   * Waves 11 and 12 came back reviewed: five dimensions, thirty-four claims,
-   * eighteen surviving an adversarial pass told to refute them. Their code is
-   * on main and SEALED — the guard block at the room-access routes in
-   * server/routes.ts names the three defects that put it there. These two
-   * waves fix it in place and unseal it, and each of them also finishes the
-   * feature the sealed half was only part of.
-   *
-   * room-login first, and not only because its defect is the worse of the two:
-   * it carries the one thing the owner has now asked for three times and still
-   * cannot see on the site. booking-linkedin's button is blocked on LinkedIn
-   * approving the app anyway.
-   *
-   * Still one parcel per wave on server/routes.ts, shared/api.ts and
-   * shared/schema.ts — both of these want the first two.
-   */
-  { n: 13, keys: ["room-login"], alone: true },
-  { n: 14, keys: ["booking-signin-fix"], alone: true },
   /* The flags are set and mostly ignored. A sweep found seventy-five surfaces
      where a LinkedIn service or agent still reaches a visitor despite
      hidden: true, and the list is docs/review/2026-09-09-interrupted-reviews.md
      rather than something this parcel has to rediscover. It runs alone because
      it touches the room panel and the connector, which everything reads. */
-  { n: 15, keys: ["linkedin-quiet"], alone: true },
+  /* Waves 13 to 15 have run and their parcels are retired to the landed
+     manifest. The adgrant.ai move that followed them was done by hand rather
+     than as a parcel, on the owner's instruction. */
+  /*
+   * A template page prints seven numbers and hands over nothing, and the
+   * owner's point is that a template IS the setup. The structures are already
+   * published — /api/templates/<slug> carries them and our build asks the
+   * endpoint that omits them — so this parcel joins data that exists to a CSV
+   * writer that exists. It does NOT touch anybody's Google Ads account.
+   */
+  { n: 16, keys: ["adgrant-setup-files"], alone: true },
+  /*
+   * Everything after a booking: remember it, come back to it, change it,
+   * cancel it. It waited for wave 14 to release BookingDialog.tsx.
+   */
+  { n: 17, keys: ["booking-return"], alone: true },
 ];
 
 function prompt(key) {
