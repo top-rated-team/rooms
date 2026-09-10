@@ -55,6 +55,28 @@ LinkedIn.
 The planted WhatsApp code uses the alphabet at `server/identity.ts:98-102`.
 `BOOKING_CODE_RE` is the one pattern the matcher and the test share.
 
+A booking that has been written can be shown, changed and cancelled. GET
+`/api/booking?code=` is what the popup asks; the code is the credential.
+The browser stores only a pointer to that code in its own session. A cookie
+or a copied flag is not enough on its own: if the booking was cancelled
+elsewhere, or the call time has passed, the server answers `{ found: false }`
+and the popup shows the picker.
+
+Change re-checks the new slot is free, writes the new event, then deletes the
+old one. Releasing the old slot before the new one exists would lose the
+booking if the write failed.
+
+Cancel deletes the calendar event. Where they were invited, `notify` is true
+so Google tells them. Where they proved by WhatsApp, a message goes to the
+chat that proved it and nowhere else.
+
+`https://top-rated.team/<code>` is the way back for a WhatsApp booking. The
+code is six characters from the dictatable alphabet. None of the site's
+first-level routes is six characters (`/team` is four, `/blog` four,
+`/setup` and `/terms` five, `/pricing` and `/privacy` seven), so a bare
+`/<code>` cannot collide with an existing page. The hop sets a short-lived
+cookie and redirects to `/`, where the landing page mounts the popup.
+
 The WhatsApp path is offered only on a house host, and only when Unipile is
 configured. `WHATSAPP_URL` in `shared/roster.ts` is the owner's own mobile;
 a fork inherits that constant, so a visitor on somebody else's deployment

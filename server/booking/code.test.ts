@@ -24,7 +24,9 @@ import {
   BOOKING_CODE_RE,
   bookingConfirmMessage,
   extractBookingCode,
+  isBookingReturnCode,
   mintBookingCode,
+  normalizeBookingCode,
 } from "./code";
 import {
   BOOKING_CODE_TTL_MS,
@@ -200,5 +202,28 @@ describe("planted code and /confirmed", () => {
 
   it("returns confirmed false for a code that was never planted", () => {
     assert.deepEqual(getBookingConfirmed("K7QMX2"), { confirmed: false });
+  });
+});
+
+describe("return address", () => {
+  it("is six dictatable characters and does not collide with first-level routes", () => {
+    const reserved = [
+      "team",
+      "blog",
+      "terms",
+      "setup",
+      "partner",
+      "privacy",
+      "pricing",
+      "services",
+      "adgrant",
+      "contact",
+      "w",
+    ];
+    for (const route of reserved) {
+      assert.equal(isBookingReturnCode(route), false, route);
+    }
+    assert.equal(isBookingReturnCode("K7QMX2"), true);
+    assert.equal(normalizeBookingCode("k7qmx2"), "K7QMX2");
   });
 });

@@ -38,11 +38,13 @@ import {
   linkedinCredentials,
 } from "../identity";
 import { createBookingEvent, SLOT_TAKEN_LINE } from "./calendar";
+import { mintBookingCode } from "./code";
 import {
   ADDRESS_REQUIRED_LINE,
   holdToResponse,
   placeHold,
   slotIsHeld,
+  recordBooking,
   whatsappGateAllowed,
 } from "./hold";
 import {
@@ -301,11 +303,36 @@ async function writeSignedInBooking(
   );
   if (!created.ok) return { ok: false, status: 503, error: created.error };
 
+  /* RECORDED, like every other booking. This path wrote the calendar event
+     and stopped, so a booking made by signing in with LinkedIn had no row,
+     no code, and therefore no way to be seen, moved or cancelled — the exact
+     gap the rest of this parcel exists to close, left open on the one route
+     that does not ask the visitor to type anything. */
+  const code = mintBookingCode();
+  recordBooking({
+    code,
+    eventId: created.eventId,
+    calendarId: primary.calendar.id,
+    date: draft.date,
+    time: draft.time,
+    startsAt: starts.toISOString(),
+    timezone: primary.calendar.timezone,
+    meetUrl: created.meetUrl,
+    invited: created.invited,
+    email: email ?? null,
+    chatId: null,
+    name: booker.name || draft.name,
+    topic: draft.topic,
+    createdAt: Date.now(),
+    cancelledAt: null,
+  });
+
   invalidateSlotsCache();
   return {
     ok: true,
     body: {
       booked: true,
+      code,
       startsAt: starts.toISOString(),
       timezone: primary.calendar.timezone,
       meetUrl: created.meetUrl,
@@ -392,6 +419,7 @@ export async function completeBookingLinkedIn(input: {
       booker,
       result: {
         booked: true,
+        code: written.body.code,
         startsAt: written.body.startsAt,
         timezone: written.body.timezone,
         meetUrl: written.body.meetUrl,

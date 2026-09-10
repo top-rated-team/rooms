@@ -354,6 +354,16 @@ export interface CreateBookingRequest {
 
 export interface CreateBookingResponse {
   booked: true;
+  /**
+   * The code this booking is come back to, changed and cancelled with.
+   *
+   * NOT the hold's code. A hold's code is printed on the popup and drawn
+   * into a QR anybody may scan, so reusing it would make every screen that
+   * ever showed it a standing grant to read the Meet link and delete the
+   * call. This one is minted when the booking is recorded and reaches the
+   * visitor only in the confirmation.
+   */
+  code: string;
   startsAt: string;
   timezone: string;
   meetUrl: string | null;
@@ -401,6 +411,41 @@ export type BookingConfirmedResponse =
   | { confirmed: false; expired?: boolean };
 
 /**
+ * GET /api/booking — what the popup may show about a booking already made.
+ * The browser's flag is only a pointer: this answer, not that flag, decides
+ * whether the confirmation is shown. Name and address are omitted; a copied
+ * cookie must not be enough to read them.
+ */
+export type ExistingBookingResponse =
+  | {
+      found: true;
+      startsAt: string;
+      timezone: string;
+      meetUrl: string | null;
+      invited: boolean;
+      viaWhatsApp: boolean;
+    }
+  | { found: false };
+
+/** POST /api/booking/change */
+export interface ChangeBookingRequest {
+  code: string;
+  date: string;
+  time: string;
+}
+
+export type ChangeBookingResponse =
+  | ExistingBookingResponse
+  | BookingConflictResponse;
+
+/** POST /api/booking/cancel */
+export interface CancelBookingRequest {
+  code: string;
+}
+
+export type CancelBookingResponse = { cancelled: true } | { cancelled: false };
+
+/**
  * GET /api/booking/linkedin — whether the button can work, and after the
  * callback, what the popup learns about the signed-in booker.
  *
@@ -431,6 +476,8 @@ export type BookingLinkedInHeld = HoldBookingResponse;
 export type BookingLinkedInResult =
   | {
       booked: true;
+      /** The code this booking is changed and cancelled with. */
+      code: string;
       startsAt: string;
       timezone: string;
       meetUrl: string | null;
@@ -601,7 +648,10 @@ export const ROOM_ACCESS_TTL_MS = 60 * 60 * 1000;
 export const ROOM_ACCESS_TTL_PHRASE = "one hour";
 
 /** Printed after submit, found or not, known address or not. */
-export const ROOM_ACCESS_SENT_LINE = "If that address has a room, the link is on its way.";
+/* "address" meant an email here and a room's own URL three sentences away,
+   which is the one word this product cannot afford to overload. Email, in
+   every visitor-facing string. */
+export const ROOM_ACCESS_SENT_LINE = "If that email has a room, the link is on its way.";
 
 /** Printed when RESEND_API_KEY or LEAD_EMAIL_FROM is missing. */
 export const ROOM_ACCESS_UNAVAILABLE_LINE =

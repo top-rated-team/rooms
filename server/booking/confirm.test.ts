@@ -22,6 +22,7 @@ import {
   resetBookingCodesForTests,
   setBookingEventFetchForTests,
 } from "./confirm";
+import { cancelBooking, getExistingBooking } from "./calendar";
 import { HOST_LINKEDIN_LINE, holdToResponse, placeHold, resetHoldsForTests } from "./hold";
 import { resetSlotsCacheForTests } from "./slots";
 
@@ -47,6 +48,10 @@ function setConfigured(): void {
   process.env.UNIPILE_DSN = DSN;
   process.env.UNIPILE_API_KEY = KEY;
   process.env.UNIPILE_CALENDAR_ACCOUNT_ID = ACCOUNT;
+  /* bookingReturnUrl is built from this, and without it the confirmation
+     message carries no way back at all — which is itself worth pinning: the
+     test below fails loudly rather than quietly checking nothing. */
+  process.env.PUBLIC_BASE_URL = "https://top-rated.team";
 }
 
 function liveMessage(text: string, overrides: Record<string, unknown> = {}): Record<string, unknown> {
@@ -76,9 +81,14 @@ function accepted(text: string, overrides: Record<string, unknown> = {}): Accept
   return inbound.message;
 }
 
-function mockUnipile(): { fetchImpl: typeof fetch; posts: Record<string, unknown>[]; chatPosts: string[] } {
+function mockUnipile(): { fetchImpl: typeof fetch; posts: Record<string, unknown>[]; chatPosts: string[]; chatTexts: string[]; deletes: string[] } {
   const posts: Record<string, unknown>[] = [];
   const chatPosts: string[] = [];
+  /* The BODY, not only the address. The return code now reaches the visitor
+     in the message and nowhere else, so a test that never reads the message
+     cannot see what they were given. */
+  const chatTexts: string[] = [];
+  const deletes: string[] = [];
   const fetchImpl: typeof fetch = async (input, init) => {
     const url = String(input);
     const method = (init?.method ?? "GET").toUpperCase();
@@ -105,13 +115,21 @@ function mockUnipile(): { fetchImpl: typeof fetch; posts: Record<string, unknown
       posts.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
       return jsonResponse(201, { object: "CalendarEventCreated", event_id: "evt_1" });
     }
+    if (method === "DELETE" && url.includes("/events/")) {
+      deletes.push(url);
+      return jsonResponse(200, {});
+    }
     if (method === "POST" && /\/chats\/[^/]+\/messages/.test(url)) {
       chatPosts.push(url);
+      const body = init?.body;
+      chatTexts.push(
+        typeof body === "string" ? body : body instanceof FormData ? String(body.get("text") ?? "") : "",
+      );
       return jsonResponse(200, { object: "MessageSent", message_id: "msg_out_1" });
     }
     return jsonResponse(404, {});
   };
-  return { fetchImpl, posts, chatPosts };
+  return { fetchImpl, posts, chatPosts, chatTexts, deletes };
 }
 
 beforeEach(() => {
@@ -229,5 +247,50 @@ describe("holdToResponse", () => {
     });
     if ("taken" in held) return;
     assert.equal(holdToResponse(held).booked, false);
+  });
+});
+
+describe("cancel after WhatsApp proof", () => {
+  it("messages only the chat that proved the hold, never another chat", async () => {
+    setConfigured();
+    const { fetchImpl, chatPosts, chatTexts, deletes } = mockUnipile();
+    setBookingEventFetchForTests(fetchImpl);
+    const held = placeHold({
+      date: "2026-09-10",
+      time: "14:00",
+      name: "Ada",
+      topic: "google-ads",
+      timezone: TZ,
+      startsAt: "2026-09-10T12:00:00.000Z",
+    });
+    if ("taken" in held) return;
+    await proveHeldBooking(accepted(bookingConfirmMessage(held.code)), { fetchImpl });
+
+    /* THE HOLD'S CODE MUST NOT WORK. It was printed on the popup, drawn into
+       a QR anybody may scan and sent through WhatsApp; if it still opened the
+       booking, every screen that showed it would be a standing grant to read
+       the Meet link and delete the call. */
+    assert.equal(getExistingBooking(held.code, Date.parse("2026-09-09T08:00:00.000Z")).found, false);
+
+    /* The return code reaches the visitor in the message and nowhere else. */
+    const sent = chatTexts.join(" ");
+    const returned = /\/([A-HJ-NP-Z2-9]{6})(?:\s|$)/.exec(sent)?.[1];
+    assert.ok(returned, `no return link in the message: ${sent.slice(0, 160)}`);
+    assert.notEqual(returned, held.code, "the return code is the hold's own code");
+
+    const shown = getExistingBooking(returned, Date.parse("2026-09-09T08:00:00.000Z"));
+    assert.equal(shown.found, true);
+    if (shown.found) assert.equal(shown.viaWhatsApp, true);
+
+    const cancelled = await cancelBooking(
+      { code: returned },
+      { fetchImpl, now: new Date("2026-09-09T08:00:00.000Z") },
+    );
+    assert.equal(cancelled.ok, true);
+    assert.equal(deletes.length, 1);
+    assert.doesNotMatch(deletes[0] ?? "", /notify=/);
+    assert.equal(chatPosts.length, 2);
+    assert.equal(chatPosts.every((url) => url.includes(CHAT)), true);
+    assert.equal(chatPosts.some((url) => url.includes(OTHER_CHAT)), false);
   });
 });

@@ -55,8 +55,9 @@ import { operatorGate, readOperator, writeOperator } from "./operator";
 import { acceptUnipileInbound, dispatchInbound } from "./unipile/inbound";
 import { ensureUnipileWebhooks, INBOUND_PATH, RETIRED_INBOUND_PATHS, UNIPILE_WEBHOOK_AUTH_HEADER } from "./unipile/webhooks";
 import { getBookingSlots, parseSlotsQuery } from "./booking/slots";
-import { postBooking } from "./booking/calendar";
+import { postBooking, changeBooking, cancelBooking, getExistingBooking } from "./booking/calendar";
 import { getBookingConfirmed, installBookingInbound } from "./booking/confirm";
+import { isBookingReturnCode, normalizeBookingCode } from "./booking/code";
 import {
   bookingLinkedInAvailability,
   completeBookingLinkedIn,
@@ -66,6 +67,7 @@ import {
 import { generateAdGrantStructure, getAdGrantGenerationQuota } from "./adgrant/generate";
 import { templateSetupFiles } from "./adgrant/templates";
 import { adGrantStats } from "./adgrant/stats";
+import { hydrateBookings } from "./booking/hold";
 import { adgrantRobotsTxt, adgrantSitemapXml } from "./adgrant/site";
 import { rewriteHead } from "./adgrant/head";
 import { ADGRANT_ORIGIN } from "@shared/adgrant-site";
@@ -1252,6 +1254,10 @@ export function registerRoutes(app: Express): void {
   installIdentityInbound();
   installRoomLoginInbound();
   void hydrateIdentityStore();
+  /* Bookings survive a deploy only if they are read back. Fire and forget,
+     beside the identity store, for the same reason: a database briefly away
+     must not stop the site answering. */
+  void hydrateBookings();
 
   app.get(
     "/api/workspaces/:token/identity",
@@ -1599,6 +1605,91 @@ export function registerRoutes(app: Express): void {
       res.json(getBookingConfirmed(code));
     }),
   );
+
+  app.get(
+    "/api/booking",
+    bookingLimit,
+    route(async (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      const code = typeof req.query.code === "string" ? req.query.code : "";
+      res.json(getExistingBooking(code));
+    }),
+  );
+
+  app.post(
+    "/api/booking/change",
+    bookingLimit,
+    route(async (req, res) => {
+      const result = await changeBooking(req.body);
+      if (!result.ok) {
+        if (result.status === 409) {
+          res.status(409).json(result.body);
+          return;
+        }
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.json(result.body);
+    }),
+  );
+
+  app.post(
+    "/api/booking/cancel",
+    bookingLimit,
+    route(async (req, res) => {
+      const result = await cancelBooking(req.body);
+      if (!result.ok) {
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.json(result.body);
+    }),
+  );
+
+  /*
+   * https://top-rated.team/<code> — a WhatsApp booking's way back. The code is
+   * the credential. A six-character path from the dictatable alphabet cannot
+   * collide with any first-level route that exists today (none of them is six
+   * characters). We hop to / with a short-lived cookie so the landing page
+   * — which mounts the popup — can ask the server; the cookie is a pointer
+   * for that hop and is not enough on its own after it expires.
+   */
+  app.get(/^\/([A-HJ-NP-Z2-9]{6})$/i, (req, res, next) => {
+    if (isAdGrantHost(req.hostname)) {
+      next();
+      return;
+    }
+    const match = /^\/([A-HJ-NP-Z2-9]{6})$/i.exec(req.path);
+    const raw = match?.[1] ?? "";
+    if (!isBookingReturnCode(raw)) {
+      next();
+      return;
+    }
+    const code = normalizeBookingCode(raw);
+    if (!code) {
+      next();
+      return;
+    }
+    res.setHeader("Cache-Control", "no-store");
+    /* secure in production. The value is the whole credential for reading,
+       moving and cancelling this booking, and without the flag it travelled
+       in the clear on any http:// request to the origin during its two
+       minutes. Not set in development, where there is no https to serve it
+       over and the cookie would simply never arrive.
+
+       httpOnly stays FALSE on purpose and is the one exception to the rule
+       above: the popup is the reader, it runs in the page, and a cookie the
+       page cannot see is a cookie that cannot hand the code over. It is read
+       once and cleared in the same breath — see takeBookingCredential. */
+    res.cookie("booking_return", code, {
+      maxAge: 120_000,
+      sameSite: "lax",
+      path: "/",
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+    });
+    res.redirect(302, "/");
+  });
 
   app.get(
     "/api/booking/linkedin",

@@ -81,7 +81,7 @@ const INNER =
 
 const FORM_COPY = "type-note [text-transform:none] text-foreground";
 
-const EXPLAIN_LINE = `A link sent here opens that room once, and only for ${ROOM_ACCESS_TTL_PHRASE}. It is not the room's own address.`;
+const EXPLAIN_LINE = `A link sent to your email opens that room once, and only for ${ROOM_ACCESS_TTL_PHRASE}.`;
 
 export interface RoomMenuProps {
   /** The classes the old Open-a-room control carried — loud, quiet, or a nav link. */
@@ -429,11 +429,11 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
             ) : null}
 
             <li>
-            {emailUnavailable ? <p className="text-muted-foreground">A link to an address</p> : null}
+            {emailUnavailable ? <p className="text-muted-foreground">A link to your email</p> : null}
             {emailUnavailable ? <p className="mt-[var(--s1)]">{emailUnavailable}</p> : null}
             {emailAvailable ? (
               <>
-                <p>A link to an address</p>
+                <p>A link to your email</p>
                 {emailForm.phase === "sent" ? (
                   <p data-testid={`${testId}-send-line`}>{emailForm.line}</p>
                 ) : (
@@ -445,8 +445,13 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
                       </p>
                     ) : null}
                     <form className="flex flex-col gap-[var(--s2)]" onSubmit={(event) => void onSendEmail(event)}>
+                      {/* The label and its field are one thing, so they sit
+                          closer to each other than either sits to the button.
+                          They used to share the form's gap, which put a whole
+                          step of nothing between the word and the line under it. */}
+                      <div className="flex flex-col gap-[var(--s1)]">
                       <label htmlFor={emailId} className="text-muted-foreground">
-                        Address
+                        Email
                       </label>
                       <input
                         id={emailId}
@@ -458,8 +463,9 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
                         value={email}
                         disabled={emailForm.phase === "sending"}
                         onChange={(event) => setEmail(event.target.value)}
-                        className="w-full border-b border-border bg-transparent py-[var(--s1)] text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none disabled:opacity-50"
+                        className="w-full border-b border-border bg-transparent pb-[var(--s1)] pt-0 text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none disabled:opacity-50"
                       />
+                      </div>
                       <button
                         type="submit"
                         data-testid={`${testId}-send-submit`}

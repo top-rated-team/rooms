@@ -22,13 +22,19 @@ import type {
   BookingSlotsResponse,
   CreateBookingRequest,
   CreateBookingResponse,
+  ExistingBookingResponse,
 } from "@shared/api";
+import { BOOKING_LINKEDIN_SESSION_QUERY } from "@shared/api";
 import { DOORS } from "@shared/doors";
 
 export const SLOT_DAYS = 14;
 export const CONFIRMED_POLL_MS = 2_500;
 export const CONFIRMED_TIMEOUT_MS = 5 * 60 * 1_000;
 const CACHE_MS = 30_000;
+/** Same alphabet as server/booking/code.ts — no dash, underscore, I, O, 0 or 1. */
+const RETURN_CODE_RE = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/i;
+const POINTER_KEY = "booking-pointer";
+const RETURN_COOKIE = "booking_return";
 
 export type SlotDay = BookingDay;
 export type SlotsPayload = BookingSlotsResponse;
@@ -60,10 +66,22 @@ export function resetBookingForTests(): void {
   listeners.clear();
   cached = null;
   inflight = null;
+  if (typeof window !== "undefined") {
+    try {
+      window.sessionStorage.removeItem(POINTER_KEY);
+    } catch {
+      /* private mode */
+    }
+  }
 }
 
 export function registerBookingHost(fn: HostFn): void {
   hostFn = fn;
+  if (shouldAutoOpenBooking()) {
+    requestedOpen = true;
+    fn();
+    for (const listener of listeners) listener(true);
+  }
 }
 
 export function isBookingOpen(): boolean {
@@ -104,6 +122,113 @@ export function slotsUrl(from: string, days: number = SLOT_DAYS): string {
 export function confirmedUrl(code: string): string {
   const params = new URLSearchParams({ code });
   return `/api/booking/confirmed?${params.toString()}`;
+}
+
+export function existingBookingUrl(code: string): string {
+  const params = new URLSearchParams({ code });
+  return `/api/booking?${params.toString()}`;
+}
+
+export function isBookingReturnCode(value: string): boolean {
+  return RETURN_CODE_RE.test(value.trim());
+}
+
+export function normalizeBookingCode(value: string): string | null {
+  const trimmed = value.trim().toUpperCase();
+  return isBookingReturnCode(trimmed) ? trimmed : null;
+}
+
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const parts = document.cookie.split(";");
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!trimmed.startsWith(`${name}=`)) continue;
+    return decodeURIComponent(trimmed.slice(name.length + 1));
+  }
+  return null;
+}
+
+function clearCookie(name: string): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=; Max-Age=0; path=/`;
+}
+
+/**
+ * The flag in this browser's session. A pointer, not a credential: the
+ * popup always asks the server with the code, and the server's answer
+ * decides what is shown.
+ */
+export function rememberBookingPointer(codeRaw: string): void {
+  const code = normalizeBookingCode(codeRaw);
+  if (!code || typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(POINTER_KEY, code);
+  } catch {
+    /* private mode */
+  }
+}
+
+export function bookingPointer(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = window.sessionStorage.getItem(POINTER_KEY);
+    return stored ? normalizeBookingCode(stored) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearBookingPointer(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(POINTER_KEY);
+  } catch {
+    /* private mode */
+  }
+  clearCookie(RETURN_COOKIE);
+}
+
+/**
+ * Credential for this visit: the return cookie from /<code>, or a six-character
+ * path, or the session pointer. The cookie is consumed so a copied later
+ * request does not keep using it.
+ */
+export function takeBookingCredential(): string | null {
+  /* NOTHING IS REMEMBERED HERE. This only reads what arrived; the caller
+     stores it once the SERVER has said it names a booking. Writing first
+     meant a mistyped six-character address overwrote the pointer to a real
+     booking made in this browser, and the dialog then cleared that pointer
+     when the server said the typo was unknown — the only way back to an
+     email booking, gone to a typo. */
+  const fromCookie = normalizeBookingCode(readCookie(RETURN_COOKIE) ?? "");
+  if (fromCookie) {
+    clearCookie(RETURN_COOKIE);
+    return fromCookie;
+  }
+  if (typeof window !== "undefined") {
+    const segment = window.location.pathname.replace(/^\/+|\/+$/g, "");
+    const fromPath = normalizeBookingCode(segment);
+    if (fromPath && !window.location.pathname.slice(1).includes("/")) {
+      return fromPath;
+    }
+  }
+  return bookingPointer();
+}
+
+function shouldAutoOpenBooking(): boolean {
+  if (typeof window === "undefined") return false;
+  if (new URLSearchParams(window.location.search).get(BOOKING_LINKEDIN_SESSION_QUERY)?.trim()) {
+    return true;
+  }
+  return hasBookingReturnHop();
+}
+
+export function hasBookingReturnHop(): boolean {
+  if (typeof window === "undefined") return false;
+  if (readCookie(RETURN_COOKIE)) return true;
+  const segment = window.location.pathname.replace(/^\/+|\/+$/g, "");
+  return Boolean(normalizeBookingCode(segment) && !window.location.pathname.slice(1).includes("/"));
 }
 
 /** YYYY-MM-DD in the given IANA zone, or in the browser's local zone. */
@@ -212,6 +337,7 @@ export function parseBookedPayload(value: unknown): BookedPayload {
   }
   return {
     booked: true,
+    code: typeof record.code === "string" ? record.code : "",
     startsAt: record.startsAt,
     timezone: record.timezone,
     meetUrl,
@@ -383,7 +509,9 @@ export async function bookSlot(input: { date: string; time: string; email?: stri
   }
 
   try {
-    return { ok: true, booked: parseBookedPayload(body) };
+    const booked = parseBookedPayload(body);
+    if (booked.whatsapp.code) rememberBookingPointer(booked.whatsapp.code);
+    return { ok: true, booked };
   } catch (error) {
     return {
       ok: false,
@@ -392,6 +520,116 @@ export async function bookSlot(input: { date: string; time: string; email?: stri
       status: res.status,
     };
   }
+}
+
+export function parseExistingBooking(value: unknown): ExistingBookingResponse | null {
+  if (typeof value !== "object" || value === null) return null;
+  const record = value as Record<string, unknown>;
+  if (record.found === false) return { found: false };
+  if (record.found !== true) return null;
+  if (typeof record.startsAt !== "string" || typeof record.timezone !== "string") return null;
+  const meetUrl = record.meetUrl === null || record.meetUrl === undefined ? null : record.meetUrl;
+  if (meetUrl !== null && typeof meetUrl !== "string") return null;
+  if (typeof record.invited !== "boolean" || typeof record.viaWhatsApp !== "boolean") return null;
+  return {
+    found: true,
+    startsAt: record.startsAt,
+    timezone: record.timezone,
+    meetUrl,
+    invited: record.invited,
+    viaWhatsApp: record.viaWhatsApp,
+  };
+}
+
+export async function fetchExistingBooking(
+  code: string,
+  signal?: AbortSignal,
+): Promise<ExistingBookingResponse> {
+  const res = await fetch(existingBookingUrl(code), {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    credentials: "same-origin",
+    signal,
+  });
+  const body = await readJson(res);
+  if (!res.ok) {
+    throw new Error(errorFromBody(body, "That booking could not be loaded."));
+  }
+  const parsed = parseExistingBooking(body);
+  if (!parsed) throw new Error("The server returned a booking we cannot read.");
+  return parsed;
+}
+
+export type ChangeResult =
+  | { ok: true; booking: Extract<ExistingBookingResponse, { found: true }> }
+  | { ok: false; conflict: true; error: string; days: SlotDay[] }
+  | { ok: false; conflict: false; error: string };
+
+export async function changeBookingSlot(input: {
+  code: string;
+  date: string;
+  time: string;
+}): Promise<ChangeResult> {
+  let res: Response;
+  try {
+    res = await fetch("/api/booking/change", {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ code: input.code, date: input.date, time: input.time }),
+    });
+  } catch {
+    return {
+      ok: false,
+      conflict: false,
+      error: "Could not reach the server. Check your connection and try again.",
+    };
+  }
+  const body = await readJson(res).catch(() => null);
+  if (res.status === 409) {
+    const days = parseDays(body && typeof body === "object" ? (body as { days?: unknown }).days : undefined);
+    if (days) replaceCachedDays(days);
+    return {
+      ok: false,
+      conflict: true,
+      error: errorFromBody(body, "That time has just been taken. Here is what is still free."),
+      days: days ?? cached?.payload.days ?? [],
+    };
+  }
+  if (!res.ok) {
+    return { ok: false, conflict: false, error: errorFromBody(body, "That booking could not be moved.") };
+  }
+  const parsed = parseExistingBooking(body);
+  if (!parsed || !parsed.found) {
+    return { ok: false, conflict: false, error: "That booking is not here." };
+  }
+  rememberBookingPointer(input.code);
+  return { ok: true, booking: parsed };
+}
+
+export async function cancelExistingBooking(
+  code: string,
+): Promise<{ ok: true } | { ok: false; error: string; gone: boolean }> {
+  let res: Response;
+  try {
+    res = await fetch("/api/booking/cancel", {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ code }),
+    });
+  } catch {
+    return { ok: false, gone: false, error: "Could not reach the server. Check your connection and try again." };
+  }
+  const body = await readJson(res).catch(() => null);
+  if (!res.ok) {
+    /* 404 is the server saying the booking is not there, which is a
+       different thing from a cancel that failed — the caller must stop
+       showing the booking rather than show an error over it. */
+    return { ok: false, gone: res.status === 404, error: errorFromBody(body, "That booking could not be cancelled.") };
+  }
+  clearBookingPointer();
+  return { ok: true };
 }
 
 export async function fetchConfirmed(code: string, signal?: AbortSignal): Promise<ConfirmedPayload> {

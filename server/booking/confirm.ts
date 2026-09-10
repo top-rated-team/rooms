@@ -17,14 +17,17 @@ import { getPrimaryCalendar } from "../unipile/calendar";
 import { registerInboundMatcher, type AcceptedInboundMessage } from "../unipile/inbound";
 import { sendInChat } from "../unipile/messaging";
 import { createBookingEvent } from "./calendar";
-import { BOOKING_CODE_RE, extractBookingCode } from "./code";
+import { BOOKING_CODE_RE, extractBookingCode, mintBookingCode } from "./code";
 import {
   HOLD_TTL_MS,
   bindHoldChat,
+  bookingReturnUrl,
   getHold,
   holdToResponse,
   markHoldBooked,
   placeHold,
+  recordBooking,
+  liveBookingsHaveEvent,
   resetHoldsForTests,
 } from "./hold";
 import { SLOT_MINUTES, invalidateSlotsCache, wallClockToUtc } from "./slots";
@@ -70,10 +73,31 @@ export function plantBookingCode(now = Date.now()): { code: string; url: string 
   return { code: "", url: "" };
 }
 
+/**
+ * The stored booking a proved hold turned into, if it is still live.
+ *
+ * A hold and its booking no longer share a code — the booking's is minted
+ * fresh so the broadcast hold code cannot cancel anything — so they are
+ * matched on the event they both point at.
+ */
+function bookingForHold(hold: { eventId: string | null }, now: number): boolean {
+  if (!hold.eventId) return false;
+  return liveBookingsHaveEvent(hold.eventId, now);
+}
+
 export function getBookingConfirmed(codeRaw: string, now = Date.now()): BookingConfirmedResponse {
   const code = codeRaw.trim().toUpperCase();
   const row = getHold(code);
   if (!row) return { confirmed: false };
+  /* THE HOLD OUTLIVES THE BOOKING IT PROVED. It stays in the sweep window for
+     three TTLs, so a booking cancelled a minute after it was made kept
+     answering "confirmed", with its start time and its Meet link, for the
+     next fifteen minutes — to the popup that was still polling, and to
+     anybody who had the hold code. The booking store is what knows whether
+     the call still stands, so ask it. */
+  if (row.confirmedAt && row.eventId && !bookingForHold(row, now)) {
+    return { confirmed: false };
+  }
   if (row.confirmedAt && row.eventId) {
     return {
       confirmed: true,
@@ -88,7 +112,11 @@ export function getBookingConfirmed(codeRaw: string, now = Date.now()): BookingC
   return { confirmed: false };
 }
 
-function reminderText(hold: { startsAt: string; timezone: string; meetUrl: string | null }): string {
+function reminderText(hold: {
+  startsAt: string;
+  timezone: string;
+  meetUrl: string | null;
+}, returnCode: string): string {
   const when = new Intl.DateTimeFormat("en-GB", {
     weekday: "long",
     day: "numeric",
@@ -99,8 +127,12 @@ function reminderText(hold: { startsAt: string; timezone: string; meetUrl: strin
     timeZone: hold.timezone,
     timeZoneName: "short",
   }).format(new Date(hold.startsAt));
-  if (hold.meetUrl) return `The call is booked for ${when}. Google Meet: ${hold.meetUrl}`;
-  return `The call is booked for ${when}.`;
+  const parts = [`The call is booked for ${when}.`];
+  if (hold.meetUrl) parts.push(`Google Meet: ${hold.meetUrl}`);
+  /* The RETURN code, which is not the hold's. */
+  const back = bookingReturnUrl(returnCode);
+  if (back) parts.push(`To change or cancel: ${back}`);
+  return parts.join(" ");
 }
 
 export async function proveHeldBooking(
@@ -139,11 +171,42 @@ export async function proveHeldBooking(
     meetUrl: created.meetUrl,
     at: message.timestamp,
   });
-  invalidateSlotsCache();
 
   const proved = getHold(code);
-  if (!proved?.chatId) return;
-  await sendInChat({ chatId: proved.chatId, text: reminderText(proved) }, fetchImpl);
+  if (!proved) return;
+  /*
+   * A FRESH CODE, not the hold's own. The hold's code was printed in a box on
+   * the popup, drawn into a QR the copy invites anyone to scan, and sent
+   * through WhatsApp — it is a one-shot inbound matcher token and it has been
+   * broadcast. Reusing it here made every screen that ever showed it a
+   * standing grant to read this booking's Meet link, move it, or delete it,
+   * for the life of the call. The address path already mints its own and
+   * never renders it; this now does the same, and the new one reaches the
+   * visitor only in the message below, which goes to the chat that proved it
+   * and to no other.
+   */
+  const returnCode = mintBookingCode();
+  recordBooking({
+    code: returnCode,
+    eventId: created.eventId,
+    calendarId: primary.calendar.id,
+    date: proved.date,
+    time: proved.time,
+    startsAt: proved.startsAt,
+    timezone: proved.timezone,
+    meetUrl: created.meetUrl,
+    invited: false,
+    email: null,
+    chatId: proved.chatId,
+    name: proved.name,
+    topic: proved.topic,
+    createdAt: Date.parse(message.timestamp) || Date.now(),
+    cancelledAt: null,
+  });
+  invalidateSlotsCache();
+
+  if (!proved.chatId) return;
+  await sendInChat({ chatId: proved.chatId, text: reminderText(proved, returnCode) }, fetchImpl);
 }
 
 function onBookingMessage(message: AcceptedInboundMessage): void {

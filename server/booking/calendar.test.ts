@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import { resetUnipileCalendarForTests } from "../unipile/calendar";
-import { SLOT_TAKEN_LINE, bookingEventTitle, parseCreateBooking, postBooking } from "./calendar";
+import { SLOT_TAKEN_LINE, bookingEventTitle, cancelBooking, changeBooking, getExistingBooking, parseCreateBooking, postBooking } from "./calendar";
 import { resetBookingCodesForTests } from "./confirm";
 import { ADDRESS_REQUIRED_LINE, HOST_LINKEDIN_LINE, resetHoldsForTests } from "./hold";
 import { resetSlotsCacheForTests } from "./slots";
@@ -61,8 +61,10 @@ afterEach(() => {
 function mockUnipile(opts: { busy?: boolean; meetUrl?: string | null } = {}): {
   fetchImpl: typeof fetch;
   posts: Record<string, unknown>[];
+  deletes: string[];
 } {
   const posts: Record<string, unknown>[] = [];
+  const deletes: string[] = [];
   const fetchImpl: typeof fetch = async (input, init) => {
     const url = String(input);
     const method = (init?.method ?? "GET").toUpperCase();
@@ -104,11 +106,18 @@ function mockUnipile(opts: { busy?: boolean; meetUrl?: string | null } = {}): {
     }
     if (method === "POST" && url.includes("/events")) {
       posts.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
-      return jsonResponse(201, { object: "CalendarEventCreated", event_id: "evt_1" });
+      return jsonResponse(201, { object: "CalendarEventCreated", event_id: `evt_${posts.length}` });
+    }
+    if (method === "DELETE" && url.includes("/events/")) {
+      deletes.push(url);
+      return jsonResponse(200, {});
+    }
+    if (method === "POST" && /\/chats\/[^/]+\/messages/.test(url)) {
+      return jsonResponse(200, { object: "MessageSent", message_id: "msg_out_1" });
     }
     return jsonResponse(404, {});
   };
-  return { fetchImpl, posts };
+  return { fetchImpl, posts, deletes };
 }
 
 describe("bookingEventTitle", () => {
@@ -160,7 +169,7 @@ describe("postBooking", () => {
     assert.equal(result.body.invited, true);
     assert.equal(result.body.meetUrl, "https://meet.google.com/aaa-bbbb-ccc");
     assert.equal(result.body.whatsapp.url, "");
-    assert.equal(result.body.whatsapp.code, "");
+    assert.match(result.body.whatsapp.code, /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/);
 
     assert.equal(posts.length, 1);
     const body = posts[0];
@@ -260,5 +269,110 @@ describe("postBooking", () => {
     if (second.ok) return;
     assert.equal(second.status, 409);
     assert.equal(posts.length, 0);
+  });
+});
+
+describe("coming back to a booking", () => {
+  it("does not treat an empty pointer as enough to read a booking", () => {
+    assert.deepEqual(getExistingBooking(""), { found: false });
+    assert.deepEqual(getExistingBooking("K7QMX2"), { found: false });
+  });
+
+  it("returns the time and Meet link, not the name or address", async () => {
+    setConfigured();
+    const { fetchImpl } = mockUnipile();
+    const created = await postBooking(
+      { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
+      { fetchImpl, now: NOW },
+    );
+    assert.equal(created.ok, true);
+    if (!created.ok || !created.body.booked) return;
+    const shown = getExistingBooking(created.body.whatsapp.code, NOW.getTime());
+    assert.equal(shown.found, true);
+    if (!shown.found) return;
+    assert.equal(shown.startsAt, "2026-09-10T12:00:00.000Z");
+    assert.equal(shown.invited, true);
+    assert.equal(shown.viaWhatsApp, false);
+    assert.equal("email" in shown, false);
+    assert.equal("name" in shown, false);
+  });
+
+  it("hides the booking once the call has ended, not when it starts", async () => {
+    setConfigured();
+    const { fetchImpl } = mockUnipile();
+    const created = await postBooking(
+      { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
+      { fetchImpl, now: NOW },
+    );
+    if (!created.ok || !created.body.booked) return;
+    /* body.code, not body.whatsapp.code: the return credential has a field
+       of its own now, and on this path there is no WhatsApp at all. */
+    assert.equal(getExistingBooking(created.body.code, Date.parse("2026-09-10T12:00:01.000Z")).found, true);
+    assert.deepEqual(getExistingBooking(created.body.code, Date.parse("2026-09-10T12:31:00.000Z")), { found: false });
+  });
+
+  it("checks the new slot is free before releasing the old one, and writes the new event first", async () => {
+    setConfigured();
+    const { fetchImpl, posts, deletes } = mockUnipile();
+    const created = await postBooking(
+      { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
+      { fetchImpl, now: NOW },
+    );
+    if (!created.ok || !created.body.booked) return;
+    const code = created.body.whatsapp.code;
+    const moved = await changeBooking(
+      { code, date: "2026-09-10", time: "15:00" },
+      { fetchImpl, now: NOW },
+    );
+    assert.equal(moved.ok, true);
+    if (!moved.ok) return;
+    assert.equal(posts.length, 2);
+    assert.equal(deletes.length, 1);
+    assert.equal(deletes[0]?.includes("/events/"), true);
+    const shown = getExistingBooking(code, NOW.getTime());
+    assert.equal(shown.found, true);
+    if (!shown.found) return;
+    assert.equal(shown.startsAt, "2026-09-10T13:00:00.000Z");
+  });
+
+  it("refuses a move onto a taken slot and keeps the original", async () => {
+    setConfigured();
+    const { fetchImpl, posts, deletes } = mockUnipile({ busy: true });
+    const created = await postBooking(
+      { date: "2026-09-11", time: "10:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
+      { fetchImpl, now: NOW },
+    );
+    if (!created.ok || !created.body.booked) return;
+    const before = posts.length;
+    const moved = await changeBooking(
+      { code: created.body.whatsapp.code, date: "2026-09-10", time: "14:00" },
+      { fetchImpl, now: NOW },
+    );
+    assert.equal(moved.ok, false);
+    if (moved.ok) return;
+    assert.equal(moved.status, 409);
+    assert.equal(posts.length, before);
+    assert.equal(deletes.length, 0);
+    const shown = getExistingBooking(created.body.whatsapp.code, NOW.getTime());
+    assert.equal(shown.found, true);
+  });
+
+  it("cancels by deleting the event with notify true when they were invited", async () => {
+    setConfigured();
+    const { fetchImpl, deletes } = mockUnipile();
+    const created = await postBooking(
+      { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
+      { fetchImpl, now: NOW },
+    );
+    if (!created.ok || !created.body.booked) return;
+    const cancelled = await cancelBooking({ code: created.body.whatsapp.code }, { fetchImpl, now: NOW });
+    assert.equal(cancelled.ok, true);
+    assert.equal(deletes.length, 1);
+    /* The delete carries account_id and nothing else. notify was a guess:
+       the connector documents it on the create call's body and documents no
+       parameter but account_id here, so what this used to assert was that we
+       sent something the far side ignores. */
+    assert.doesNotMatch(deletes[0] ?? "", /notify=/);
+    assert.deepEqual(getExistingBooking(created.body.whatsapp.code, NOW.getTime()), { found: false });
   });
 });

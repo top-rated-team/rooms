@@ -76,6 +76,12 @@ const WAVES = [
      parcel is written to be completely inert without them, so running it early
      costs nothing but produces nothing either. */
   { n: 19, keys: ["visitor-calendar"], alone: true },
+  /* Neither of these touches the room, the panel, the shell or any seam, so
+     they are two prompts in one wave rather than two waves. The owner asked
+     for both as separate pieces of work and they are — they simply cannot
+     collide. The case-studies one is the lower priority of the two, in his
+     own words. */
+  { n: 20, keys: ["upwork-promo-video", "case-studies-doc"] },
 ];
 
 function prompt(key) {

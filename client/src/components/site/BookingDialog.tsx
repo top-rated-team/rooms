@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { ACTION, ACTION_QUIET } from "@/components/site/doors/quiet";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Check, ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
 
@@ -9,22 +10,29 @@ import {
   CONFIRMED_POLL_MS,
   CONFIRMED_TIMEOUT_MS,
   buildBookBody,
+  cancelExistingBooking,
+  changeBookingSlot,
+  clearBookingPointer,
   errorFromBody,
+  fetchExistingBooking,
   formatBookedWhen,
   formatSlotDay,
+  hasBookingReturnHop,
   isPhoneBooking,
   loadSlots,
   parseDays,
   parseSlotsPayload,
+  rememberBookingPointer,
   slotsUrl,
+  takeBookingCredential,
   type BookedPayload,
   type SlotDay,
-  type SlotsPayload,
-} from "@/lib/booking";
+  type SlotsPayload, bookingPointer } from "@/lib/booking";
 import type {
   BookingConfirmedResponse,
   BookingLinkedInAvailability,
   BookingLinkedInSession,
+  ExistingBookingResponse,
   HoldBookingResponse,
 } from "@shared/api";
 import { BOOKING_LINKEDIN_SESSION_QUERY } from "@shared/api";
@@ -32,19 +40,33 @@ import { isHouseHost } from "@shared/operator";
 
 import { BookingQr } from "./BookingQr";
 
-const BTN_BASE =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2";
-const BTN_PRIMARY = `${BTN_BASE} bg-primary text-primary-foreground border border-primary-border min-h-9 px-4 py-2`;
+/*
+ * THE SITE'S OWN ACTIONS, imported rather than reproduced — the same change
+ * the Contact popup got, for the same reason: filled rounded buttons over a
+ * page whose every action is a word with a rule under it read as a different,
+ * older product. The slot grid below keeps its boxes, because a calendar of
+ * forty tappable times is the one place in this dialog where a box is the
+ * affordance and an underline is not.
+ */
+const BTN_PRIMARY = ACTION;
 /** The second way to hand over an address, beside the field rather than under it. */
-const BTN_SECONDARY = `${BTN_BASE} border border-border bg-transparent text-foreground min-h-9 px-4 py-2`;
+const BTN_SECONDARY = ACTION_QUIET;
 const BTN_SLOT =
   "inline-flex min-h-8 items-center justify-center rounded-md border border-input bg-background px-2.5 py-1.5 text-sm text-foreground hover-elevate active-elevate-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
 const BTN_SLOT_SELECTED = `${BTN_SLOT} border-primary bg-primary text-primary-foreground`;
+/* The month arrows and the close cross. Not an ACTION — they carry a glyph
+   and no word, so there is nothing for a rule to sit under. */
 const BTN_ICON =
-  `${BTN_BASE} min-h-8 min-w-8 border border-transparent p-1 text-muted-foreground`;
+  "inline-flex min-h-8 min-w-8 items-center justify-center rounded-md border border-transparent p-1 text-muted-foreground hover-elevate active-elevate-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0";
 
+/* An underline, not a box. The boxed field was the heaviest thing in this
+   popup and it is the one control the login panel two clicks away draws as a
+   rule under the text — the owner read the difference as this dialog being
+   older than the rest of the site, which it was. Same treatment now: no
+   border on three sides, no background of its own, the line moving to the
+   focus colour instead of a ring around a box. */
 const FIELD =
-  "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50";
+  "w-full border-b border-border bg-transparent pb-[var(--s1)] pt-0 text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none disabled:opacity-50";
 
 /** Deliberately permissive: a rejected typo costs a booking, not a lead. */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -62,11 +84,17 @@ export function bookingLinkedInReturnPending(): boolean {
   return Boolean(new URLSearchParams(window.location.search).get(BOOKING_LINKEDIN_SESSION_QUERY)?.trim());
 }
 
+type ExistingBooking = Extract<ExistingBookingResponse, { found: true }>;
+
 type Phase =
-  | { kind: "pick" }
+  | { kind: "pick"; rescheduleCode?: string }
   | { kind: "waiting"; hold: HoldBookingResponse; openedWhatsApp: boolean }
-  | { kind: "done"; booked: BookedPayload; viaWhatsApp: boolean }
-  | { kind: "expired"; code: string };
+  | { kind: "done"; booked: BookedPayload; viaWhatsApp: boolean; code: string }
+  | { kind: "manage"; booking: ExistingBooking; code: string }
+  | { kind: "confirm-cancel"; booking: ExistingBooking; code: string }
+  | { kind: "cancelled" }
+  | { kind: "expired"; code: string }
+  | { kind: "gone"; reason: "unknown" | "unreachable" };
 
 function offerWhatsAppGate(): boolean {
   if (typeof window === "undefined") return false;
@@ -136,6 +164,45 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
 
     void (async () => {
       const returning = await takeLinkedInSessionFromUrl();
+      if (cancelled) return;
+
+      if (!returning) {
+        const hop = hasBookingReturnHop();
+        const code = takeBookingCredential();
+        if (code) {
+          try {
+            const existing = await fetchExistingBooking(code);
+            if (cancelled) return;
+            if (existing.found) {
+              rememberBookingPointer(code);
+              setPhase({ kind: "manage", booking: existing, code });
+              setLoading(false);
+              return;
+            }
+            /* Only a code THIS browser was remembering may clear the
+               pointer. A stranger's mistyped /ABC123 must not delete the way
+               back to a booking made here. */
+            if (code === bookingPointer()) clearBookingPointer();
+            if (hop) {
+              setPhase({ kind: "gone", reason: "unknown" });
+              setLoading(false);
+              return;
+            }
+          } catch {
+            if (cancelled) return;
+            /* A 429, a 502 or a dropped connection is not "no such booking".
+               Clearing the pointer here threw away the only way back to an
+               email booking because the server was busy for a second. Keep
+               it, say what happened, and let them try again. */
+            if (hop) {
+              setPhase({ kind: "gone", reason: "unreachable" });
+              setLoading(false);
+              return;
+            }
+          }
+        }
+      }
+
       try {
         const payload = await loadSlots();
         if (cancelled) return;
@@ -182,9 +249,11 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
             timezone: result.timezone,
             meetUrl: result.meetUrl,
             invited: result.invited,
+            code: result.code,
             whatsapp: { url: "", code: "" },
           },
           viaWhatsApp: false,
+          code: result.code,
         });
         return;
       }
@@ -195,10 +264,12 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
         void pollHoldConfirmed(result.whatsapp.code, controller.signal).then((confirmed) => {
           if (controller.signal.aborted) return;
           if (confirmed.confirmed) {
+            rememberBookingPointer(result.whatsapp.code);
             setPhase({
               kind: "done",
               booked: bookedFromHold(result, confirmed),
               viaWhatsApp: true,
+              code: result.whatsapp.code,
             });
           } else {
             setPhase({ kind: "expired", code: result.whatsapp.code });
@@ -310,6 +381,31 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!date || !time) return;
+    const rescheduleCode = phase.kind === "pick" ? phase.rescheduleCode : undefined;
+    if (rescheduleCode) {
+      setEmailError(null);
+      setFormError(null);
+      setSending(true);
+      try {
+        const result = await changeBookingSlot({ code: rescheduleCode, date, time });
+        if (!result.ok && result.conflict) {
+          applyDays(result.days);
+          setFormError(result.error);
+          return;
+        }
+        if (!result.ok) {
+          setFormError(result.error);
+          return;
+        }
+        setPhase({ kind: "manage", booking: result.booking, code: rescheduleCode });
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setFormError("Could not reach the server. Check your connection and try again.");
+      } finally {
+        setSending(false);
+      }
+      return;
+    }
     const trimmed = email.trim();
     const whatsappGate = offerWhatsAppGate();
     if (trimmed && !EMAIL_RE.test(trimmed)) {
@@ -340,7 +436,8 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
           setFormError(result.error);
           return;
         }
-        setPhase({ kind: "done", booked: result.booked, viaWhatsApp: false });
+        setPhase({ kind: "done", booked: result.booked, viaWhatsApp: false, code: result.booked.whatsapp.code });
+        if (result.booked.whatsapp.code) rememberBookingPointer(result.booked.whatsapp.code);
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") return;
         setFormError("Could not reach the server. Check your connection and try again.");
@@ -385,16 +482,83 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
       const confirmed = await pollHoldConfirmed(hold.body.whatsapp.code, controller.signal);
       if (controller.signal.aborted) return;
       if (confirmed.confirmed) {
+        rememberBookingPointer(hold.body.whatsapp.code);
         setPhase({
           kind: "done",
           booked: bookedFromHold(hold.body, confirmed),
           viaWhatsApp: true,
+          code: hold.body.whatsapp.code,
         });
       } else {
         setPhase({ kind: "expired", code: hold.body.whatsapp.code });
       }
     } catch (error) {
       tab?.close();
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setFormError("Could not reach the server. Check your connection and try again.");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function loadPickerDays(): Promise<void> {
+    setFormError(null);
+    setTime(null);
+    setMonthError(null);
+    setLoading(true);
+    try {
+      const payload = await loadSlots({ force: true });
+      const floor = payload.days[0]?.date ?? null;
+      const picked = firstDayWithASlot(payload.days);
+      setSlots(payload);
+      setFloorDate(floor);
+      setDate(picked);
+      setFocusedDate(picked);
+      const origin = parseStamp(picked ?? floor);
+      if (origin) {
+        setViewYear(origin.year);
+        setViewMonth(origin.month);
+      }
+      setLoadError(null);
+    } catch (error: unknown) {
+      setLoadError(error instanceof Error ? error.message : "Times could not be loaded just now.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function startChange(code: string): Promise<void> {
+    if (!code) return;
+    setPhase({ kind: "pick", rescheduleCode: code });
+    await loadPickerDays();
+  }
+
+  async function retryPicker(): Promise<void> {
+    setPhase({ kind: "pick" });
+    await loadPickerDays();
+  }
+
+  async function confirmCancel(code: string): Promise<void> {
+    if (!code) return;
+    setSending(true);
+    setFormError(null);
+    try {
+      const result = await cancelExistingBooking(code);
+      if (!result.ok) {
+        /* A 404 means the server has just said this booking is not there.
+           Showing that as an error over the confirmation left "Keep it"
+           returning to a panel asserting a booking that no longer exists. */
+        if (result.gone) {
+          clearBookingPointer();
+          setPhase({ kind: "gone", reason: "unknown" });
+          return;
+        }
+        setFormError(result.error);
+        return;
+      }
+      clearBookingPointer();
+      setPhase({ kind: "cancelled" });
+    } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       setFormError("Could not reach the server. Check your connection and try again.");
     } finally {
@@ -431,39 +595,53 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
           </Dialog.Close>
 
           {phase.kind === "done" ? (
-            <DoneView booked={phase.booked} email={email.trim() || bookerEmail} viaWhatsApp={phase.viaWhatsApp} />
+            <DoneView
+              booked={phase.booked}
+              email={email.trim() || bookerEmail}
+              viaWhatsApp={phase.viaWhatsApp}
+              code={phase.code}
+              onChange={() => void startChange(phase.code)}
+              onCancel={() =>
+                setPhase({
+                  kind: "confirm-cancel",
+                  booking: bookingFromDone(phase.booked, phase.viaWhatsApp),
+                  code: phase.code,
+                })
+              }
+            />
+          ) : phase.kind === "manage" ? (
+            <DoneView
+              booked={bookedFromExisting(phase.booking, phase.code)}
+              email={null}
+              viaWhatsApp={phase.booking.viaWhatsApp}
+              code={phase.code}
+              onChange={() => void startChange(phase.code)}
+              onCancel={() => setPhase({ kind: "confirm-cancel", booking: phase.booking, code: phase.code })}
+            />
+          ) : phase.kind === "confirm-cancel" ? (
+            <CancelConfirmView
+              booking={phase.booking}
+              sending={sending}
+              error={formError}
+              onKeep={() => setPhase({ kind: "manage", booking: phase.booking, code: phase.code })}
+              onConfirm={() => void confirmCancel(phase.code)}
+            />
+          ) : phase.kind === "cancelled" ? (
+            <CancelledView />
+          ) : phase.kind === "gone" ? (
+            <GoneView reason={phase.reason} onRetry={() => void retryPicker()} />
           ) : phase.kind === "waiting" ? (
             <WaitingView hold={phase.hold} openedWhatsApp={phase.openedWhatsApp} />
           ) : phase.kind === "expired" ? (
             <ExpiredView
               code={phase.code}
-              onRetry={() => {
-                setPhase({ kind: "pick" });
-                setFormError(null);
-                setTime(null);
-                setMonthError(null);
-                void loadSlots({ force: true })
-                  .then((payload) => {
-                    const floor = payload.days[0]?.date ?? null;
-                    const picked = firstDayWithASlot(payload.days);
-                    setSlots(payload);
-                    setFloorDate(floor);
-                    setDate(picked);
-                    setFocusedDate(picked);
-                    const origin = parseStamp(picked ?? floor);
-                    if (origin) {
-                      setViewYear(origin.year);
-                      setViewMonth(origin.month);
-                    }
-                  })
-                  .catch((error: unknown) => {
-                    setLoadError(error instanceof Error ? error.message : "Times could not be loaded just now.");
-                  });
-              }}
+              onRetry={() => void retryPicker()}
             />
           ) : (
             <form onSubmit={submit} noValidate>
-              <Dialog.Title className="pr-8 text-xl font-semibold tracking-tight">{title}</Dialog.Title>
+              <Dialog.Title className="pr-8 text-xl font-semibold tracking-tight">
+                {phase.rescheduleCode ? "Change the call" : title}
+              </Dialog.Title>
               <Dialog.Description className="mt-2 text-sm text-muted-foreground">
                 {descriptionFor(slots, timezone, loading, loadError)}
               </Dialog.Description>
@@ -513,6 +691,20 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                     {liveText}
                   </div>
 
+                  {phase.rescheduleCode ? (
+                    <div className="mt-6">
+                      <button
+                        type="submit"
+                        data-testid="button-booking-submit"
+                        className={`${BTN_PRIMARY} shrink-0`}
+                        disabled={sending || !date || !time}
+                      >
+                        {sending ? <Loader2 className="animate-spin" /> : null}
+                        Change
+                      </button>
+                    </div>
+                  ) : (
+                    <>
                   {/*
                     ONE LINE: the address, the button that books, and the way
                     to hand over an address without typing it. They belong
@@ -521,7 +713,10 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                   */}
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div className="min-w-0 flex-1">
-                      <label htmlFor="booking-email" className="mb-1.5 block text-sm font-medium">
+                      {/* Quiet, and close to its field: the same pairing the
+                          login panel uses, so a person meeting both in one
+                          session meets one idea rather than two. */}
+                      <label htmlFor="booking-email" className={`mb-[var(--s1)] block ${DIALOG_COPY} text-muted-foreground`}>
                         Email
                       </label>
                       <input
@@ -577,6 +772,8 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                       {emailError}
                     </p>
                   ) : null}
+                    </>
+                  )}
 
                   {formError ? (
                     <p role="alert" className="mt-4 text-sm text-destructive">
@@ -858,17 +1055,22 @@ function dayClassName({ selected, past, empty }: { selected: boolean; past: bool
 }
 
 function emailHint(whatsappGate: boolean, linkedin: BookingLinkedInAvailability | null): string {
+  /* "An address" meant an email here and a room's own URL elsewhere on the
+     same site, so every one of these says email now. The WhatsApp sentence is
+     the owner's own wording: the message is written for you and you send it,
+     which is what "auto send" means on the button that opens WhatsApp with
+     the code already in the box. */
   const signInOn = linkedin?.available === true;
   if (whatsappGate) {
     if (signInOn) {
-      return "An address gets you a calendar invite and any reminder. Sign in with LinkedIn does the same without typing it. With neither, the slot is held for five minutes while you send a WhatsApp message. The call is booked only after that message arrives.";
+      return "An email gets you a calendar invite and any reminder. Sign in with LinkedIn does the same without typing it. With neither, the slot is held for five minutes while you auto send a WhatsApp message with the booking code to us. The call is booked only after that message arrives.";
     }
-    return "An address gets you a calendar invite and any reminder. With neither, the slot is held for five minutes while you send a WhatsApp message. The call is booked only after that message arrives.";
+    return "An email gets you a calendar invite and any reminder. With neither, the slot is held for five minutes while you auto send a WhatsApp message with the booking code to us. The call is booked only after that message arrives.";
   }
   if (signInOn) {
-    return "An address is required — type it, or sign in with LinkedIn. This page does not take a booking without one.";
+    return "An email is required — type it, or sign in with LinkedIn. This page does not take a booking without one.";
   }
-  return "An address is required. This page does not take a booking without one.";
+  return "An email is required. This page does not take a booking without one.";
 }
 
 function linkedinButtonTitle(
@@ -1173,12 +1375,19 @@ function DoneView({
   booked,
   email,
   viaWhatsApp,
+  code,
+  onChange,
+  onCancel,
 }: {
   booked: BookedPayload;
   email: string | null;
   viaWhatsApp: boolean;
+  code: string;
+  onChange: () => void;
+  onCancel: () => void;
 }) {
   const when = formatBookedWhen(booked.startsAt, booked.timezone);
+  const canManage = Boolean(code);
   return (
     <div className="text-center">
       <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent">
@@ -1204,6 +1413,26 @@ function DoneView({
           </a>
         </p>
       ) : null}
+      {canManage ? (
+        <p className="mt-6 flex items-center justify-center gap-6 text-sm">
+          <button
+            type="button"
+            data-testid="link-booking-change"
+            className="underline underline-offset-2"
+            onClick={onChange}
+          >
+            Change
+          </button>
+          <button
+            type="button"
+            data-testid="link-booking-cancel"
+            className="underline underline-offset-2"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -1216,10 +1445,125 @@ function inviteLine(booked: BookedPayload, email: string | null) {
       </p>
     );
   }
+  if (booked.invited) {
+    return <p className="mt-3 text-sm text-muted-foreground">A calendar invite was sent.</p>;
+  }
   if (email && !booked.invited) {
     return <p className="mt-3 text-sm text-muted-foreground">The time is booked. No calendar invite was sent.</p>;
   }
   return null;
+}
+
+function bookedFromExisting(booking: ExistingBooking, code: string): BookedPayload {
+  return {
+    booked: true,
+    code,
+    startsAt: booking.startsAt,
+    timezone: booking.timezone,
+    meetUrl: booking.meetUrl,
+    invited: booking.invited,
+    whatsapp: { url: "", code },
+  };
+}
+
+function bookingFromDone(booked: BookedPayload, viaWhatsApp: boolean): ExistingBooking {
+  return {
+    found: true,
+    startsAt: booked.startsAt,
+    timezone: booked.timezone,
+    meetUrl: booked.meetUrl,
+    invited: booked.invited,
+    viaWhatsApp,
+  };
+}
+
+function CancelConfirmView({
+  booking,
+  sending,
+  error,
+  onKeep,
+  onConfirm,
+}: {
+  booking: ExistingBooking;
+  sending: boolean;
+  error: string | null;
+  onKeep: () => void;
+  onConfirm: () => void;
+}) {
+  const when = formatBookedWhen(booking.startsAt, booking.timezone);
+  return (
+    <div className="text-center">
+      <Dialog.Title className="px-8 text-xl font-semibold tracking-tight">Cancel this call</Dialog.Title>
+      <Dialog.Description className="mx-auto mt-2 max-w-[42ch] text-sm text-muted-foreground">
+        {when}. This deletes it from the calendar.
+        {/* It used to say Google would send the cancellation. The connector
+            documents no way to ask for that on a delete, and the parameter
+            the code sent was a guess an unknown API ignores — so the sentence
+            promised something nothing in the chain performs. What IS true is
+            that the event disappears from the invited calendar, which is what
+            a guest actually notices. */}
+        {booking.invited ? " The event disappears from the calendar it was invited to." : ""}
+        {booking.viaWhatsApp ? " A message will go to the WhatsApp chat that booked it." : ""}
+      </Dialog.Description>
+      {error ? (
+        <p role="alert" className="mt-4 text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+      <div className="mt-6 flex justify-center gap-3">
+        <button type="button" className={BTN_SECONDARY} onClick={onKeep} data-testid="button-booking-keep">
+          Keep it
+        </button>
+        <button
+          type="button"
+          className={BTN_PRIMARY}
+          onClick={onConfirm}
+          disabled={sending}
+          data-testid="button-booking-cancel-confirm"
+        >
+          {sending ? <Loader2 className="animate-spin" /> : null}
+          Yes, cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CancelledView() {
+  return (
+    <div className="text-center">
+      <Dialog.Title className="px-8 text-xl font-semibold tracking-tight">Cancelled</Dialog.Title>
+      <Dialog.Description className="mx-auto mt-2 max-w-[42ch] text-sm text-muted-foreground">
+        The call has been cancelled.
+      </Dialog.Description>
+    </div>
+  );
+}
+
+function GoneView({ reason, onRetry }: { reason: "unknown" | "unreachable"; onRetry: () => void }) {
+  /* Two different things wearing one sentence. The server never says WHY a
+     booking is not there, so guessing "cancelled, or the time has passed" in
+     front of somebody whose link simply has a typo — or whose request timed
+     out — told them something we do not know, and in the timeout case told
+     them their booking was gone when it was not. */
+  const unreachable = reason === "unreachable";
+  return (
+    <div className="text-center">
+      <Dialog.Title className="px-8 text-xl font-semibold tracking-tight">
+        {unreachable ? "That could not be checked" : "That link does not open a booking"}
+      </Dialog.Title>
+      <Dialog.Description className="mx-auto mt-2 max-w-[42ch] text-sm text-muted-foreground">
+        {unreachable
+          ? "The page could not reach the server, so nothing about the booking is known either way. Nothing has been changed. Try again in a moment."
+          : "Either the link is not the one that was sent, or the booking it pointed at is no longer there."}
+      </Dialog.Description>
+      <div className="mt-6 flex justify-center">
+        <button type="button" className={BTN_PRIMARY} onClick={onRetry} data-testid="button-booking-retry">
+          {unreachable ? "Try again" : "Pick a time"}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 /* Borrowed verbatim from the login panel in RoomMenu.tsx, so the two look
@@ -1440,6 +1784,10 @@ function bookedFromHold(
 ): BookedPayload {
   return {
     booked: true,
+    /* The hold's code is the WhatsApp matcher token, not the way back. The
+       real one arrives in the confirmation message; until the popup has it,
+       this booking has no return credential to offer and says nothing. */
+    code: "",
     startsAt: confirmed.startsAt ?? hold.startsAt,
     timezone: confirmed.timezone ?? hold.timezone,
     meetUrl: confirmed.meetUrl ?? null,

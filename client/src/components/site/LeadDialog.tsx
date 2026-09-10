@@ -6,15 +6,24 @@ import { DEFAULT_DOOR_ID, DOOR_BY_ID, DOORS, type DoorDef } from "@shared/doors"
 import { BOOK_A_CALL_URL, EXPERTS, SERVICES, SERVICE_GROUPS, type ExpertDef } from "@shared/roster";
 import { useBooking } from "@/hooks/use-booking";
 import type { CreateWorkspaceResponse } from "@shared/api";
+import { ACTION, ACTION_QUIET } from "@/components/site/doors/quiet";
 
-const BTN_BASE =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2";
-const BTN_PRIMARY = `${BTN_BASE} bg-primary text-primary-foreground border border-primary-border min-h-9 px-4 py-2`;
-const BTN_SECONDARY = `${BTN_BASE} bg-secondary text-secondary-foreground border border-secondary-border min-h-9 px-4 py-2`;
-const BTN_GHOST = `${BTN_BASE} border border-transparent min-h-8 rounded-md px-3 text-xs`;
+/*
+ * THE SAME LANGUAGE AS THE PAGE BEHIND IT. This dialog was built out of
+ * filled, rounded buttons and boxed inputs, and the site it opens over draws
+ * every action as a word with a rule under it and every field as a line. The
+ * owner read the difference as the popup belonging to a different, older
+ * product — which it did. ACTION and ACTION_QUIET are the site's own, imported
+ * rather than reproduced, so the two cannot drift apart again.
+ */
+const BTN_PRIMARY = ACTION;
+const BTN_SECONDARY = ACTION_QUIET;
+const BTN_GHOST = `${ACTION_QUIET} [font-size:0.72rem!important]`;
 
+/* A line, not a box, and no ground of its own — the same field the login
+   panel and the booking popup draw. */
 const FIELD =
-  "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50";
+  "w-full border-b border-border bg-transparent pb-[var(--s1)] pt-0 text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none disabled:opacity-50";
 
 /** Deliberately permissive: the server validates, and a rejected typo costs a lead. */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;

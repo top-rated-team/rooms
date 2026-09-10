@@ -51,7 +51,7 @@ export const SEND_COOLDOWN_MS = 15 * 60_000;
 /** Both the found and the not-found path wait at least this long. */
 export const TIMING_FLOOR_MS = 800;
 
-export const ROOM_ACCESS_INVALID_EMAIL_LINE = "That does not look like an address.";
+export const ROOM_ACCESS_INVALID_EMAIL_LINE = "That does not look like an email.";
 export const ROOM_ACCESS_SPENT_LINE = `This link has already been used, or ${ROOM_ACCESS_TTL_PHRASE} has passed, so it no longer opens a room.`;
 export const ROOM_ACCESS_SEND_FAILED_LINE = "The link could not be sent. Try again.";
 export const ROOM_ACCESS_NO_PUBLIC_URL_LINE =

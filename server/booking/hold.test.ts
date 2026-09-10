@@ -16,8 +16,10 @@ import {
   HOST_LINKEDIN_LINE,
   activeHeldSlots,
   bookingEventDescription,
+  existingBookingResponse,
   holdToResponse,
   placeHold,
+  recordBooking,
   resetHoldsForTests,
   slotIsHeld,
   whatsappGateAllowed,
@@ -109,5 +111,42 @@ describe("bookingEventDescription", () => {
       visitorProfile: { name: "Ada Lovelace", url: "https://www.linkedin.com/in/ada/" },
     });
     assert.equal(body.includes("Ada Lovelace: https://www.linkedin.com/in/ada/"), true);
+  });
+});
+
+describe("stored booking", () => {
+  const ROW = {
+    code: "K7QMX2",
+    eventId: "evt_1",
+    calendarId: "cal_1",
+    date: "2026-09-10",
+    time: "14:00",
+    startsAt: "2026-09-10T12:00:00.000Z",
+    timezone: "Europe/Bratislava",
+    meetUrl: "https://meet.google.com/aaa-bbbb-ccc" as string | null,
+    invited: true,
+    email: "ada@example.com",
+    chatId: null as string | null,
+    name: "Ada",
+    topic: "google-ads",
+    createdAt: Date.parse("2026-09-09T08:00:00.000Z"),
+    cancelledAt: null as number | null,
+  };
+
+  it("shows time and Meet, never name or address, and only until the call has ended", () => {
+    recordBooking(ROW);
+    const shown = existingBookingResponse("k7qmx2", Date.parse("2026-09-09T08:00:00.000Z"));
+    assert.equal(shown.found, true);
+    if (!shown.found) return;
+    assert.equal(shown.startsAt, ROW.startsAt);
+    assert.equal(shown.viaWhatsApp, false);
+    assert.equal("email" in shown, false);
+    assert.equal("name" in shown, false);
+    /* Still there DURING the call: taking the Meet link away from somebody
+       a second after the start is taking it from the person sitting in it. */
+    assert.equal(existingBookingResponse("K7QMX2", Date.parse("2026-09-10T12:00:01.000Z")).found, true);
+    assert.equal(existingBookingResponse("K7QMX2", Date.parse("2026-09-10T12:29:00.000Z")).found, true);
+    /* Gone once it has ended. */
+    assert.deepEqual(existingBookingResponse("K7QMX2", Date.parse("2026-09-10T12:31:00.000Z")), { found: false });
   });
 });

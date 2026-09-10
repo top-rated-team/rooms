@@ -73,7 +73,30 @@ function Hover({
           side="bottom"
           align="start"
           collisionPadding={12}
-          className="w-fit max-w-[min(38ch,calc(100vw-1.5rem))]"
+          /* A panel that grows when you point at something inside it must not
+             also be allowed to flip. With collision avoidance on, opening the
+             room list made the panel taller than the space below, Radix moved
+             it above the line, the pointer was suddenly outside it, it closed,
+             the pointer was back on the trigger, it opened — the blinking the
+             owner saw. Downward always; if the bottom of the screen cuts it
+             off, the page scrolls, which is a thing a person already knows
+             how to do. */
+          /* Collision handling stays ON, and the panel is capped at the
+             height Radix measures as actually available below the trigger.
+             That is what stops the flip: with the content bounded to the
+             space below it, there is never a reason to move above the line,
+             so the blinking the owner saw — grow, flip, pointer outside,
+             close, reopen — cannot start. Turning collisions off instead
+             just moved the problem: the panel is in a position:fixed
+             wrapper, so the part past the bottom of the screen was
+             unreachable, measured at 218px cut off with no way to scroll to
+             it. The panel scrolls itself; overscroll-contain keeps the page
+             behind it still. */
+          className={`w-fit max-w-[min(38ch,calc(100vw-1.5rem))] ${
+            below
+              ? "max-h-[var(--radix-tooltip-content-available-height)] overflow-y-auto overscroll-contain"
+              : ""
+          }`}
         >
           {text}
           {below ? (
@@ -83,9 +106,13 @@ function Hover({
                two things to keep track of. layout="inline" is the mode the
                phone burger already uses — the rooms sit under the control and
                this panel simply grows downward. */
-            /* No rule of its own: the inline room list draws one already, and
-               two hairlines a few pixels apart read as a rendering fault. */
-            <div className="mt-[var(--s1)]">{below}</div>
+            /* ONE rule, drawn here, and the inline list's own suppressed —
+               both were drawing and the pair sat between two hairlines a few
+               pixels apart, which reads as a rendering fault. Suppressing the
+               child's is the whole reason this wrapper exists. */
+            <div className="mt-[var(--s2)] border-t border-popover-border/60 pt-[var(--s2)] [&_ul]:mt-0 [&_ul]:border-t-0 [&_ul]:pt-0">
+              {below}
+            </div>
           ) : null}
         </TooltipContent>
       </TooltipPortal>
@@ -205,8 +232,20 @@ export function FirstScreen() {
           sideways and clipped the standfirst with it. An inline image in normal
           text flow wraps the way text does, which is what a paragraph should do.
 
-          THE MARK'S TOP EDGE IS LEVEL WITH THE TOP OF THE D, not above it, on
-          the owner's instruction. Same arithmetic the header carries: the image
+          THE MARK IS GONE, on the owner's instruction, after four rounds of
+          measuring it into place. Removed rather than hidden: a decorative
+          image nobody sees is still a request and still a thing the next
+          person has to reason about. The file stays — the footer, the social
+          card and the brand lockups use it. To bring it back: an inline-block
+          sized in em, 1.105em square with translate-y 0.09em, which put its
+          ink top level with the D's at 1622 against 1622. That arithmetic is
+          not obvious and it took four goes, so it is written down here.
+
+          What the removed comment recorded, kept because it explains the
+          paragraph's shape: the mark used to be an inline image in normal
+          text flow rather than a flex item, because a flex item has
+          min-width:auto and refused to shrink, pushing the whole page
+          sideways on a phone. The image
           sits on the baseline, so its top is its own height above it, and
           translate-y = height − cap-height brings that top to the cap line.
           MEASURED, NOT DERIVED. The formula I kept applying —
@@ -248,12 +287,6 @@ export function FirstScreen() {
           className="type-body mt-[var(--s2)] ps-[0.25rem] font-display font-medium [font-size:clamp(0.82rem,3.5vw,var(--type-body))!important]"
           data-testid="text-home-mechanism"
         >
-          <img
-            src="/assets/top-rated-logo.png"
-            alt=""
-            aria-hidden="true"
-            className="me-[0.18em] inline-block h-[1.105em] w-[1.105em] translate-y-[0.09em]"
-          />
           {/* Not the native title any more. That one waits about a second
               before it appears, in a delay the page cannot set, and the owner
               wants both of these to answer the moment the pointer arrives — so

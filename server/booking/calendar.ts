@@ -15,23 +15,36 @@
 import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
 import type {
   BookingConflictResponse,
+  CancelBookingResponse,
+  ChangeBookingRequest,
   CreateBookingRequest,
   CreateBookingResponse,
+  ExistingBookingResponse,
   HoldBookingResponse,
 } from "@shared/api";
+import { calendarAccountId } from "../unipile/accounts";
 import {
   createCalendarEvent,
   getCalendarEvent,
   getPrimaryCalendar,
 } from "../unipile/calendar";
-import { available, unavailableLine } from "../unipile/client";
+import { available, unipileRequest, unavailableLine } from "../unipile/client";
+import { sendInChat } from "../unipile/messaging";
+import { mintBookingCode, normalizeBookingCode } from "./code";
 import {
   ADDRESS_REQUIRED_LINE,
+  BOOKING_GONE_LINE,
   bookingEventDescription,
+  existingBookingResponse,
+  getStoredBooking,
   holdToResponse,
+  markBookingCancelled,
   placeHold,
+  recordBooking,
   slotIsHeld,
+  updateStoredBooking,
   whatsappGateAllowed,
+  type StoredBooking,
 } from "./hold";
 import {
   SLOT_MINUTES,
@@ -56,6 +69,17 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export type PostBookingResult =
   | { ok: true; status: 201; body: CreateBookingResponse | HoldBookingResponse }
   | { ok: false; status: 409; body: BookingConflictResponse }
+  | { ok: false; status: 503; error: string };
+
+export type ChangeBookingResult =
+  | { ok: true; status: 200; body: ExistingBookingResponse }
+  | { ok: false; status: 404; error: string }
+  | { ok: false; status: 409; body: BookingConflictResponse }
+  | { ok: false; status: 503; error: string };
+
+export type CancelBookingResult =
+  | { ok: true; status: 200; body: CancelBookingResponse }
+  | { ok: false; status: 404; error: string }
   | { ok: false; status: 503; error: string };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -224,19 +248,238 @@ export async function postBooking(
   );
   if (!created.ok) return { ok: false, status: 503, error: created.error };
 
+  const code = mintBookingCode();
+  recordBooking({
+    code,
+    eventId: created.eventId,
+    calendarId: primary.calendar.id,
+    date: input.date,
+    time: input.time,
+    startsAt: starts.toISOString(),
+    timezone: primary.calendar.timezone,
+    meetUrl: created.meetUrl,
+    invited: created.invited,
+    email: input.email ?? null,
+    chatId: null,
+    name: input.name,
+    topic: input.topic,
+    createdAt: now.getTime(),
+    cancelledAt: null,
+  });
+
   invalidateSlotsCache();
   return {
     ok: true,
     status: 201,
     body: {
       booked: true,
+      code,
       startsAt: starts.toISOString(),
       timezone: primary.calendar.timezone,
       meetUrl: created.meetUrl,
       invited: created.invited,
-      /* Email is the confirmation channel. Do not hand the house WhatsApp
-         number to a fork, and do not plant a hold against a slot already booked. */
-      whatsapp: { url: "", code: "" },
+      /* Email is the confirmation channel. The code is the return credential
+         for this browser, not a WhatsApp path — url stays empty so a fork is
+         never handed the house number. */
+      whatsapp: { url: "", code },
     },
   };
+}
+
+export function getExistingBooking(codeRaw: string, now = Date.now()): ExistingBookingResponse {
+  return existingBookingResponse(codeRaw, now);
+}
+
+export async function deleteCalendarEvent(
+  input: { calendarId: string; eventId: string },
+  fetchImpl: typeof fetch,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const result = await unipileRequest<unknown>(
+    {
+      method: "DELETE",
+      path: `/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.eventId)}`,
+      /* notify is NOT sent. The connector documents it as a body field of
+         the CREATE call and documents no parameter but account_id on the
+         delete — and this client refuses a body on a DELETE, so a query
+         string was the only carrier available and it was a guess. An unknown
+         query parameter is ignored, which is the quiet kind of wrong: the
+         code looked as though it asked Google to tell the guest and it did
+         not. The popup no longer promises that either. */
+      query: { account_id: calendarAccountId() },
+    },
+    fetchImpl,
+  );
+  if (result.ok) return { ok: true };
+  if (result.error.status === 404) return { ok: true };
+  return { ok: false, error: result.line };
+}
+
+function formatWhen(startsAt: string, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone,
+    timeZoneName: "short",
+  }).format(new Date(startsAt));
+}
+
+async function messageProvingChat(
+  booking: StoredBooking,
+  text: string,
+  fetchImpl: typeof fetch,
+): Promise<void> {
+  if (!booking.chatId) return;
+  await sendInChat({ chatId: booking.chatId, text }, fetchImpl);
+}
+
+export function parseChangeBooking(body: unknown): ChangeBookingRequest | null {
+  const record = asRecord(body);
+  if (!record) return null;
+  const code = normalizeBookingCode(typeof record.code === "string" ? record.code : "");
+  const date = asString(record.date);
+  const time = asString(record.time);
+  if (!code || !date || !time) return null;
+  return { code, date, time };
+}
+
+export function parseCancelBooking(body: unknown): string | null {
+  const record = asRecord(body);
+  if (!record) return null;
+  return normalizeBookingCode(typeof record.code === "string" ? record.code : "");
+}
+
+/**
+ * Move a booking. The new slot is re-checked as free before the old event
+ * is released — losing the slot while moving it is worse than refusing.
+ * The new event is written first; the old one is deleted after. That is
+ * cancel-and-book in meaning, with the release last so a failed write
+ * does not leave them with nothing.
+ */
+export async function changeBooking(
+  raw: unknown,
+  opts: { fetchImpl?: typeof fetch; now?: Date } = {},
+): Promise<ChangeBookingResult> {
+  const fetchImpl = opts.fetchImpl ?? fetch;
+  const now = opts.now ?? new Date();
+  if (!available()) return { ok: false, status: 503, error: unavailableLine() };
+
+  const input = parseChangeBooking(raw);
+  if (!input || !isCalendarDate(input.date) || !isWallClockTime(input.time)) {
+    return { ok: false, status: 404, error: BOOKING_GONE_LINE };
+  }
+
+  const existing = getStoredBooking(input.code, now.getTime());
+  if (!existing) return { ok: false, status: 404, error: BOOKING_GONE_LINE };
+
+  if (existing.date === input.date && existing.time === input.time) {
+    return { ok: true, status: 200, body: existingBookingResponse(input.code, now.getTime()) };
+  }
+
+  const primary = await getPrimaryCalendar(fetchImpl);
+  if (!primary.ok) return { ok: false, status: 503, error: primary.line };
+
+  const starts = wallClockToUtc(input.date, input.time, primary.calendar.timezone);
+  if (!starts) return { ok: false, status: 503, error: "Need a date, a time, a name and a topic." };
+  const ends = new Date(starts.getTime() + SLOT_MINUTES * 60_000);
+
+  invalidateSlotsCache();
+  const slots = await getBookingSlots(input.date, 1, { fetchImpl, now });
+  if (!slots.ok) return { ok: false, status: 503, error: slots.error };
+  if (!slotIsFree(slots.body, input.date, input.time) || slotIsHeld(input.date, input.time, now.getTime())) {
+    const wider = await getBookingSlots(input.date, 14, { fetchImpl, now });
+    const days = wider.ok ? wider.body.days : slots.body.days;
+    return { ok: false, status: 409, body: { error: SLOT_TAKEN_LINE, days } };
+  }
+
+  const created = await createBookingEvent(
+    {
+      calendarId: primary.calendar.id,
+      timezone: primary.calendar.timezone,
+      starts,
+      ends,
+      name: existing.name,
+      topic: existing.topic,
+      email: existing.email ?? undefined,
+    },
+    fetchImpl,
+  );
+  if (!created.ok) return { ok: false, status: 503, error: created.error };
+
+  const previous = { eventId: existing.eventId, calendarId: existing.calendarId, invited: existing.invited };
+  const updated = updateStoredBooking(
+    input.code,
+    {
+      eventId: created.eventId,
+      calendarId: primary.calendar.id,
+      date: input.date,
+      time: input.time,
+      startsAt: starts.toISOString(),
+      timezone: primary.calendar.timezone,
+      meetUrl: created.meetUrl,
+      invited: created.invited,
+    },
+    now.getTime(),
+  );
+  if (!updated) return { ok: false, status: 404, error: BOOKING_GONE_LINE };
+
+  /* The result used to be discarded. A failed delete then left the OLD
+     event standing in the calendar while the endpoint answered 200 and the
+     store forgot the old event id forever — two calls, one of them
+     unreachable and unremovable. The new event is already written and the
+     new slot already taken, so this cannot fail the whole move; it reports
+     instead, and says which event was left behind so a person can remove it. */
+  const removedOld = await deleteCalendarEvent(
+    { calendarId: previous.calendarId, eventId: previous.eventId },
+    fetchImpl,
+  );
+  if (!removedOld.ok) {
+    console.error(
+      `[booking] moved a booking but could not delete its old event ${previous.eventId}: ${removedOld.error}`,
+    );
+  }
+  invalidateSlotsCache();
+
+  if (updated.chatId) {
+    const when = formatWhen(updated.startsAt, updated.timezone);
+    const meet = updated.meetUrl ? ` Google Meet: ${updated.meetUrl}` : "";
+    await messageProvingChat(updated, `The call has been moved to ${when}.${meet}`, fetchImpl);
+  }
+
+  return { ok: true, status: 200, body: existingBookingResponse(input.code, now.getTime()) };
+}
+
+export async function cancelBooking(
+  raw: unknown,
+  opts: { fetchImpl?: typeof fetch; now?: Date } = {},
+): Promise<CancelBookingResult> {
+  const fetchImpl = opts.fetchImpl ?? fetch;
+  const now = opts.now ?? new Date();
+  if (!available()) return { ok: false, status: 503, error: unavailableLine() };
+
+  const code = parseCancelBooking(raw);
+  if (!code) return { ok: false, status: 404, error: BOOKING_GONE_LINE };
+
+  const existing = getStoredBooking(code, now.getTime());
+  if (!existing) return { ok: false, status: 404, error: BOOKING_GONE_LINE };
+
+  const deleted = await deleteCalendarEvent(
+    { calendarId: existing.calendarId, eventId: existing.eventId },
+    fetchImpl,
+  );
+  if (!deleted.ok) return { ok: false, status: 503, error: deleted.error };
+
+  const removed = markBookingCancelled(code, now.getTime());
+  invalidateSlotsCache();
+  if (!removed) return { ok: false, status: 404, error: BOOKING_GONE_LINE };
+
+  if (removed.chatId) {
+    const when = formatWhen(removed.startsAt, removed.timezone);
+    await messageProvingChat(removed, `The call for ${when} has been cancelled.`, fetchImpl);
+  }
+
+  return { ok: true, status: 200, body: { cancelled: true } };
 }
