@@ -8,6 +8,16 @@ dist/
 migrations/meta/
 data/kb/*.embeddings.json
 
+# Generated deliverables. `npx tsx scripts/build-cases-pdf.ts` writes them and
+# `npx tsx scripts/build-promo-video.ts` writes the MP4s; both read their
+# content out of shared/ modules, so the repository holds the recipe and not
+# twenty megabytes of output per rebuild. docs/case-studies.pdf predates this
+# rule and is still tracked.
+docs/*.pdf
+!docs/case-studies.pdf
+docs/*.docx
+docs/promo/*.mp4
+
 # ---------------------------------------------------------------------------
 # NOT IN THE PUBLIC REPOSITORY.
 #

@@ -1,8 +1,36 @@
 /**
- * The case-study PDF.
+ * The case-study PDF and the editable snapshot beside it.
  *
- *   npx tsx scripts/build-cases-pdf.ts     # writes docs/case-studies.html
- *   npm run cases:pdf                      # that, then Chrome prints it
+ *   npx tsx scripts/build-cases-pdf.ts
+ *     writes docs/case-studies.html
+ *     writes docs/{year} Dan Burykin & his Top-Rated Team case studies.pdf
+ *     writes docs/{year} Dan Burykin & his Top-Rated Team case studies.docx
+ *   npm run cases:pdf
+ *     same, once package.json calls only this script (see the handoff)
+ *
+ * WHICH DIRECTION IS AUTHORITATIVE. (a) export only. The repository is the
+ * source. This file reads data/cases-detailed.json (the long form of the same
+ * 22 engagements that shared/cases.ts holds in short form), data/case-shots
+ * (the captures extracted from that document), and shared/builds.ts (the
+ * products we run ourselves). The HTML, the PDF and the .docx are three
+ * renderings of that one read, dated with the clock at build time. A Google
+ * Doc opened from the .docx is a fourth copy of the same snapshot. Edits in
+ * the Doc, the .docx or the PDF are discarded the next time this script runs.
+ * That is stated on the cover so nobody spends an afternoon on a file that
+ * will be replaced.
+ *
+ * WHY NOT (b). (b) would make the Doc the source and have the build read it
+ * back. That needs Drive access this deployment does not have, and it would
+ * put a hand-edited Doc in front of the account figures and the repository's
+ * own captures. Two-way sync is not built, because a sync that cannot read
+ * the Doc back is a one-way export that pretends otherwise.
+ *
+ * THE TITLE is the owner's words, verbatim. It names the work. It does not
+ * add a client result: the advertising pages carry figures from the accounts;
+ * LinkedIn, automation and custom AI have no client account in this file, so
+ * those pages show what we have built, with no metrics.
+ *
+ * THE YEAR in the filename is read from the clock. It is not typed here.
  *
  * WHAT IT IS BUILT FROM, and why not from shared/cases.ts alone. The site's 22
  * cases are the short form: a challenge, an objective, a work list and the
@@ -23,17 +51,39 @@
  * have built ourselves — shared/builds.ts, as a portfolio with no invented
  * metrics. Both are in here, under headings that say which is which.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { extname, resolve } from "node:path";
+import { deflateRawSync } from "node:zlib";
 
 import { BUILDS } from "../shared/builds";
 import { BOOK_A_CALL_URL, PROOF } from "../shared/roster";
 
-const OUT = "docs/case-studies.html";
+/** The owner's words, verbatim. The title names the work, not a result. */
+const TITLE =
+  "Case Studies: Google Ads and Paid Ads, Organic LinkedIn growth and any AI agents or custom development";
+
+const builtAt = new Date();
+const YEAR = builtAt.getFullYear();
+const SNAPSHOT = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+}).format(builtAt);
+const STEM = `${YEAR} Dan Burykin & his Top-Rated Team case studies`;
+
+const OUT_HTML = "docs/case-studies.html";
+const OUT_PDF = `docs/${STEM}.pdf`;
+const OUT_DOCX = `docs/${STEM}.docx`;
+const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+
 const PHONE = "+420774654822";
 const WHATSAPP = "https://wa.me/420774654822";
 const EMAIL = "contact@top-rated.team";
 const UPWORK = "https://www.upwork.com/agencies/google/";
 const SITE = "https://top-rated.team";
+/** Word drawing width, about 6 inches. */
+const MAX_EMU = 5486400;
 
 interface Section { heading: string; period?: string; lines: string[] }
 interface DetailedCase {
@@ -267,40 +317,66 @@ const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Top-Rated Team — Case studies</title>
+<title>${esc(TITLE)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Outfit:wght@400;500;600&display=swap">
 <style>
+  /*
+    The names and the HSL channels are the site's own tokens from
+    client/src/index.css. This file is printed by Chrome, not compiled by
+    Tailwind, so the utilities are not available — the tokens are.
+    @page cannot resolve var(), so the page-box fill is the same HSL as
+    --background, written out. That is not a second colour.
+  */
   :root{
-    --paper:#F0EBE1; --ink:#1A1611; --muted:#6D655B;
-    --line:#CFC3AE; --hair:#DCD3C4; --clay:#9C4318;
+    --background: 40 38% 92%;
+    --foreground: 33 19% 9%;
+    --muted-foreground: 33 11% 38%;
+    --border: 38 23% 77%;
+    --card-border: 38 26% 84%;
+    --primary: 16 70% 36%;
+    --paper: hsl(var(--background));
+    --ink: hsl(var(--foreground));
+    --muted: hsl(var(--muted-foreground));
+    --line: hsl(var(--border));
+    --hair: hsl(var(--card-border));
+    --clay: hsl(var(--primary));
     --sans:"Outfit","Avenir Next",system-ui,sans-serif;
     --read:"Newsreader",Georgia,"Times New Roman",serif;
   }
+  @media screen {
+    @media (prefers-color-scheme: dark) {
+      :root{
+        --background: 34 20% 7%;
+        --foreground: 38 37% 88%;
+        --muted-foreground: 34 11% 57%;
+        --border: 35 20% 17%;
+        --card-border: 34 22% 13%;
+        --primary: 19 63% 60%;
+      }
+    }
+  }
+  @media print {
+    :root{
+      --background: 40 38% 92%;
+      --foreground: 33 19% 9%;
+      --muted-foreground: 33 11% 38%;
+      --border: 38 23% 77%;
+      --card-border: 38 26% 84%;
+      --primary: 16 70% 36%;
+    }
+  }
 
   /*
-    THE MARGINS ARE THE PAGE'S OWN COLOUR, which is what the owner asked for
-    and took a specific trick. A background on body stops at the content box,
-    so the printed sheet had a white frame around a coloured block. Chrome
-    paints the ROOT element's background across the whole page box, margins
-    included — so the colour goes on html and the inset stays on @page.
+    THE MARGINS ARE THE PAGE'S OWN COLOUR. A background on body stops at the
+    content box, and one on html stops at the page box, so both printed a
+    white frame. Chrome honours @page background. var() does not resolve
+    inside @page, so the fill is the light --background token, written as HSL.
   */
-  /*
-    THE MARGINS ARE THE PAGE'S OWN COLOUR, and the one line that does it is a
-    background on @page itself. Two other attempts did not: a background on
-    body stops at the content box, and one on html stops at the page box, so
-    both printed a white frame around a coloured block. A position:fixed layer
-    stretched into the margins fails for the same reason — Chrome clips it to
-    the page box.
-
-    Chrome does honour @page background. Verified by printing a two-page probe
-    and reading the corner pixel out of it rather than looking at it: 225,235,240
-    where white would be 255,255,255. The literal hex is deliberate — var() does
-    not resolve inside @page.
-  */
-  @page { size:A4; margin:17mm 15mm; background:#F0EBE1; }
-  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  @page { size:A4; margin:17mm 15mm; background: hsl(40 38% 92%); }
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact;
+        background: var(--paper); }
 
   *{ box-sizing:border-box; }
   body{ margin:0; background:transparent; color:var(--ink);
@@ -312,8 +388,8 @@ const html = `<!doctype html>
 
   .eyebrow,.label{ font-family:var(--sans); font-size:7pt; font-weight:500;
     letter-spacing:.09em; text-transform:uppercase; color:var(--muted); margin:0; }
-  h1{ font-family:var(--sans); font-weight:500; font-size:36pt; line-height:.98;
-      letter-spacing:-.035em; margin:0; }
+  h1{ font-family:var(--sans); font-weight:500; font-size:22pt; line-height:1.12;
+      letter-spacing:-.03em; margin:0; max-width:22em; }
   h2{ font-family:var(--sans); font-weight:500; font-size:19pt; line-height:1.06;
       letter-spacing:-.03em; margin:1.5mm 0 0; }
   h3{ font-family:var(--sans); font-weight:500; font-size:11.5pt; margin:0; }
@@ -381,7 +457,9 @@ const html = `<!doctype html>
      is what a column of that height does the moment anything is added to it. */
   .cover{ padding-top:2mm; }
   .cover .head{ margin-bottom:14mm; }
-  .cover h1{ margin-top:12mm; }
+  .cover h1{ margin-top:8mm; }
+  .snapshot{ font-family:var(--sans); font-size:8pt; color:var(--muted);
+             margin:3mm 0 0; max-width:46em; }
   .cover .where{ margin-top:12mm; }
   .lockup{ display:flex; align-items:center; gap:4mm; }
   .lockup img{ width:17mm; height:17mm; }
@@ -441,14 +519,18 @@ const html = `<!doctype html>
   </div>
 
   <div>
-    <h1>Case studies</h1>
-    <p class="lede">${detailed.cases.length} advertising engagements in full: the category, the
-      country, the daily budget, the work as it was done, and ${detailed.cases.reduce(
+    <h1>${esc(TITLE)}</h1>
+    <p class="snapshot">Snapshot of ${esc(SNAPSHOT)}. This file is an export of the repository.
+      Changing the text or the pictures here does not change the site, and the next build
+      replaces this file.</p>
+    <p class="lede">The title names the work. The advertising pages are ${detailed.cases.length} engagements
+      with the category, the country, the daily budget, the work as it was done, and ${detailed.cases.reduce(
         (n, c) => n + c.shots.length,
         0,
       )} screenshots
-      out of the accounts themselves. Every figure is the account's own over the period its
-      page names.</p>
+      from the accounts themselves. Every figure is the account's own over the period its
+      page names. LinkedIn, automation and custom AI have no client account in this file, so
+      those pages show what we have built. They carry no metrics.</p>
 
     <div class="record">
       ${PROOF.map((p) => `<div><b>${esc(p.value)}</b><span>${esc(p.label)}</span></div>`).join("")}
@@ -481,6 +563,9 @@ ${buildPages}
     offer and its budget, and anybody who tells you otherwise before seeing it is guessing.</p>
   <p class="read">The hours and the job-success score on the cover are the public record on
     Upwork and can be checked there.</p>
+  <p class="read">This copy is a snapshot of ${esc(SNAPSHOT)}. It is not a Google Doc the next
+    build will read. Edits made after opening it in Google Docs are discarded when this
+    file is generated again.</p>
 
   ${contact("closing")}
 
@@ -491,11 +576,326 @@ ${buildPages}
 </html>
 `;
 
-writeFileSync(OUT, html);
+writeFileSync(OUT_HTML, html);
 const shots = detailed.cases.reduce((n, c) => n + c.shots.length, 0);
-console.log(`${OUT}: ${detailed.cases.length} cases, ${shots} screens, ${BUILDS.length} builds`);
+writeDocx();
+printPdf();
+console.log(`${OUT_HTML}: ${detailed.cases.length} cases, ${shots} screens, ${BUILDS.length} builds`);
+console.log(`${OUT_PDF}`);
+console.log(`${OUT_DOCX} — snapshot of ${SNAPSHOT}; the repository is the source`);
 console.log(
   "After printing, count the pages with no text on them — that is what the\n" +
     "screenshot sizing above is tuned against, and it is the one thing about\n" +
     "this layout that cannot be judged from the HTML.",
 );
+
+/**
+ * A ZIP of uncompressed or deflated members. No extra dependency: a .docx is
+ * a ZIP, and Google Docs opens a conventional one.
+ */
+function crc32(buf: Buffer): number {
+  let crc = ~0;
+  for (let i = 0; i < buf.length; i++) {
+    crc ^= buf[i]!;
+    for (let j = 0; j < 8; j++) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+  }
+  return ~crc >>> 0;
+}
+
+function zipMembers(files: { name: string; data: Buffer }[]): Buffer {
+  const locals: Buffer[] = [];
+  const centrals: Buffer[] = [];
+  let offset = 0;
+  for (const file of files) {
+    const name = Buffer.from(file.name, "utf8");
+    const crc = crc32(file.data);
+    const compressed = deflateRawSync(file.data);
+    const store = compressed.length >= file.data.length;
+    const payload = store ? file.data : compressed;
+    const method = store ? 0 : 8;
+    const local = Buffer.alloc(30 + name.length);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt16LE(0, 6);
+    local.writeUInt16LE(method, 8);
+    local.writeUInt16LE(0, 10);
+    local.writeUInt16LE(0, 12);
+    local.writeUInt32LE(crc, 14);
+    local.writeUInt32LE(payload.length, 18);
+    local.writeUInt32LE(file.data.length, 22);
+    local.writeUInt16LE(name.length, 26);
+    local.writeUInt16LE(0, 28);
+    name.copy(local, 30);
+    const piece = Buffer.concat([local, payload]);
+    locals.push(piece);
+    const central = Buffer.alloc(46 + name.length);
+    central.writeUInt32LE(0x02014b50, 0);
+    central.writeUInt16LE(20, 4);
+    central.writeUInt16LE(20, 6);
+    central.writeUInt16LE(0, 8);
+    central.writeUInt16LE(method, 10);
+    central.writeUInt16LE(0, 12);
+    central.writeUInt16LE(0, 14);
+    central.writeUInt32LE(crc, 16);
+    central.writeUInt32LE(payload.length, 20);
+    central.writeUInt32LE(file.data.length, 24);
+    central.writeUInt16LE(name.length, 28);
+    central.writeUInt16LE(0, 30);
+    central.writeUInt16LE(0, 32);
+    central.writeUInt16LE(0, 34);
+    central.writeUInt16LE(0, 36);
+    central.writeUInt32LE(0, 38);
+    central.writeUInt32LE(offset, 42);
+    name.copy(central, 46);
+    centrals.push(central);
+    offset += piece.length;
+  }
+  const localBuf = Buffer.concat(locals);
+  const centralBuf = Buffer.concat(centrals);
+  const eocd = Buffer.alloc(22);
+  eocd.writeUInt32LE(0x06054b50, 0);
+  eocd.writeUInt16LE(files.length, 8);
+  eocd.writeUInt16LE(files.length, 10);
+  eocd.writeUInt32LE(centralBuf.length, 12);
+  eocd.writeUInt32LE(localBuf.length, 16);
+  return Buffer.concat([localBuf, centralBuf, eocd]);
+}
+
+function xmlText(s: string): string {
+  return esc(s).replace(/\n/g, " ");
+}
+
+function wPara(text: string, style?: string): string {
+  const pr = style ? `<w:pPr><w:pStyle w:val="${style}"/></w:pPr>` : "";
+  return `<w:p>${pr}<w:r><w:t xml:space="preserve">${xmlText(text)}</w:t></w:r></w:p>`;
+}
+
+function wEmpty(): string {
+  return `<w:p/>`;
+}
+
+function imageExtent(pxW: number, pxH: number): { cx: number; cy: number } {
+  const cx = Math.round((pxW / 96) * 914400);
+  const cy = Math.round((pxH / 96) * 914400);
+  if (cx <= MAX_EMU) return { cx: Math.max(cx, 914400), cy: Math.max(cy, 457200) };
+  return { cx: MAX_EMU, cy: Math.round((cy * MAX_EMU) / cx) };
+}
+
+function wImage(relId: string, cx: number, cy: number, docPrId: number): string {
+  return `<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">
+    <wp:extent cx="${cx}" cy="${cy}"/>
+    <wp:effectExtent l="0" t="0" r="0" b="0"/>
+    <wp:docPr id="${docPrId}" name="Picture ${docPrId}"/>
+    <wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr>
+    <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+      <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+        <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+          <pic:nvPicPr><pic:cNvPr id="${docPrId}" name="Picture ${docPrId}"/><pic:cNvPicPr/></pic:nvPicPr>
+          <pic:blipFill><a:blip r:embed="${relId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>
+          <pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm>
+            <a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>
+        </pic:pic>
+      </a:graphicData>
+    </a:graphic>
+  </wp:inline></w:drawing></w:r></w:p>`;
+}
+
+/**
+ * A linear Word document of the same cases, figures and captures as the HTML.
+ * Headings, paragraphs, lists and inline images — no print floats — so Google
+ * Docs keeps the reading order when it imports the file.
+ */
+function writeDocx(): void {
+  const media: { name: string; data: Buffer; contentType: string; relId: string }[] = [];
+  const body: string[] = [];
+  let docPr = 1;
+
+  const addImage = (absPath: string, file: string): string => {
+    if (!existsSync(absPath)) return "";
+    const ext = extname(file).toLowerCase();
+    const contentType = ext === ".png" ? "image/png" : "image/jpeg";
+    const mediaName = `image${media.length + 1}${ext === ".png" ? ".png" : ".jpg"}`;
+    const relId = `rId${media.length + 2}`;
+    media.push({ name: mediaName, data: readFileSync(absPath), contentType, relId });
+    const size = shotSize.get(file) ?? { width: 1200, height: 800 };
+    const { cx, cy } = imageExtent(size.width, size.height);
+    const xml = wImage(relId, cx, cy, docPr);
+    docPr += 1;
+    return xml;
+  };
+
+  body.push(wPara(TITLE, "Title"));
+  body.push(
+    wPara(
+      `Snapshot of ${SNAPSHOT}. This file is an export of the repository. Changing the text or the pictures here does not change the site, and the next build replaces this file.`,
+    ),
+  );
+  body.push(
+    wPara(
+      `The title names the work. The advertising pages are ${detailed.cases.length} engagements with the category, the country, the daily budget, the work as it was done, and ${shots} screenshots from the accounts themselves. Every figure is the account's own over the period its page names. LinkedIn, automation and custom AI have no client account in this file, so those pages show what we have built. They carry no metrics.`,
+    ),
+  );
+  for (const p of PROOF) body.push(wPara(`${p.value} — ${p.label}`));
+  body.push(wEmpty());
+  body.push(wPara("Talk to a person", "Heading2"));
+  body.push(wPara(`Book a call: ${BOOK_A_CALL_URL}`));
+  body.push(wPara(`Open a room: ${SITE}/#panel`));
+  body.push(wPara(`Leave a message: ${SITE}`));
+  body.push(wPara(`WhatsApp: ${PHONE}`));
+  body.push(wPara(`Email: ${EMAIL}`));
+  body.push(wPara(`The record on Upwork: ${UPWORK}`));
+  body.push(wEmpty());
+  body.push(wPara("What is in here", "Heading2"));
+  for (const [i, c] of detailed.cases.entries()) {
+    body.push(wPara(`${String(i + 1).padStart(2, "0")}  ${c.title}`));
+  }
+
+  for (const [i, c] of detailed.cases.entries()) {
+    body.push(wPara(`Case ${String(i + 1).padStart(2, "0")}`, "Heading2"));
+    body.push(wPara(c.title, "Heading1"));
+    for (const k of META_ORDER) {
+      if (c.meta[k]) body.push(wPara(`${k}: ${c.meta[k]}`));
+    }
+    for (const s of c.sections) {
+      const head = s.period ? `${s.heading} ${s.period}` : s.heading;
+      if (head) body.push(wPara(head, "Heading2"));
+      for (const line of s.lines) {
+        body.push(wPara(line.startsWith("• ") ? line.slice(2) : line));
+      }
+    }
+    if (c.shots.length > 0) body.push(wPara("From the account", "Heading2"));
+    for (const f of c.shots) {
+      body.push(addImage(resolve("data/case-shots", f), f));
+    }
+  }
+
+  body.push(wPara("What we have built", "Heading1"));
+  body.push(
+    wPara(
+      "The cases above are advertising accounts. The work on the other side of this company — LinkedIn, automation, custom AI — has no client account to show, so the evidence is what we have built and run ourselves. There are no metrics on this page because there is no client whose numbers these would be.",
+    ),
+  );
+  for (const b of BUILDS) {
+    body.push(wPara(b.url ? `${b.name}  ${b.url.replace(/^https?:\/\//, "")}` : b.name, "Heading2"));
+    body.push(wPara(b.what));
+    for (const x of b.built) body.push(wPara(x));
+    const shot = BUILD_SHOTS[b.slug];
+    if (shot) {
+      const abs = resolve("data/build-shots", shot);
+      if (existsSync(abs)) {
+        const ext = extname(shot).toLowerCase();
+        const contentType = ext === ".png" ? "image/png" : "image/jpeg";
+        const mediaName = `image${media.length + 1}${ext === ".png" ? ".png" : ".jpg"}`;
+        const relId = `rId${media.length + 2}`;
+        media.push({ name: mediaName, data: readFileSync(abs), contentType, relId });
+        const { cx, cy } = imageExtent(1600, 1000);
+        body.push(wImage(relId, cx, cy, docPr));
+        docPr += 1;
+      }
+    }
+  }
+
+  body.push(wPara("How to read them", "Heading1"));
+  body.push(
+    wPara(
+      "Every figure comes from the advertising account it describes, over the period that page names, in the form the client saw it. Where a case gives no figure for something, the account did not measure it — a gap is left as a gap rather than filled with an estimate.",
+    ),
+  );
+  body.push(
+    wPara(
+      "These are advertising results. They are evidence of work done on comparable accounts and they are not a forecast: what an account does next depends on its market, its offer and its budget, and anybody who tells you otherwise before seeing it is guessing.",
+    ),
+  );
+  body.push(
+    wPara(
+      `This copy is a snapshot of ${SNAPSHOT}. It is not a Google Doc the next build will read. Edits made after opening it in Google Docs are discarded when this file is generated again.`,
+    ),
+  );
+  body.push(wPara("Top-Rated Team (Danylo Burykin SZČO) · top-rated.team"));
+
+  const defaults = media
+    .map((m) => {
+      const ext = m.name.endsWith(".png") ? "png" : "jpg";
+      return `<Default Extension="${ext}" ContentType="${m.contentType}"/>`;
+    })
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .join("");
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  ${defaults}
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+</Types>`;
+
+  const rootRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+
+  const docRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+  ${media
+    .map(
+      (m) =>
+        `<Relationship Id="${m.relId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${m.name}"/>`,
+    )
+    .join("\n  ")}
+</Relationships>`;
+
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:style w:type="paragraph" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>
+  <w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:basedOn w:val="Normal"/><w:qFormat/>
+    <w:pPr><w:spacing w:after="240"/></w:pPr>
+    <w:rPr><w:b/><w:sz w:val="36"/><w:szCs w:val="36"/></w:rPr></w:style>
+  <w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:qFormat/>
+    <w:pPr><w:outlineLvl w:val="0"/><w:spacing w:before="360" w:after="120"/></w:pPr>
+    <w:rPr><w:b/><w:sz w:val="32"/><w:szCs w:val="32"/></w:rPr></w:style>
+  <w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:qFormat/>
+    <w:pPr><w:outlineLvl w:val="1"/><w:spacing w:before="240" w:after="80"/></w:pPr>
+    <w:rPr><w:b/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr></w:style>
+</w:styles>`;
+
+  const document = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">
+  <w:body>
+    ${body.join("\n")}
+    <w:sectPr>
+      <w:pgSz w:w="11906" w:h="16838"/>
+      <w:pgMar w:top="1418" w:right="1134" w:bottom="1418" w:left="1134"/>
+    </w:sectPr>
+  </w:body>
+</w:document>`;
+
+  const files = [
+    { name: "[Content_Types].xml", data: Buffer.from(contentTypes, "utf8") },
+    { name: "_rels/.rels", data: Buffer.from(rootRels, "utf8") },
+    { name: "word/document.xml", data: Buffer.from(document, "utf8") },
+    { name: "word/_rels/document.xml.rels", data: Buffer.from(docRels, "utf8") },
+    { name: "word/styles.xml", data: Buffer.from(styles, "utf8") },
+    ...media.map((m) => ({ name: `word/media/${m.name}`, data: m.data })),
+  ];
+  writeFileSync(OUT_DOCX, zipMembers(files));
+}
+
+function printPdf(): void {
+  if (!existsSync(CHROME)) {
+    console.log(`Chrome is not at ${CHROME}, so the PDF was not printed. The HTML and the .docx were written.`);
+    return;
+  }
+  const printed = spawnSync(
+    CHROME,
+    ["--headless=new", "--disable-gpu", "--no-pdf-header-footer", `--print-to-pdf=${resolve(OUT_PDF)}`, resolve(OUT_HTML)],
+    { encoding: "utf8" },
+  );
+  if (printed.status !== 0) {
+    console.log(`Chrome did not print the PDF (exit ${printed.status}). The HTML and the .docx were written.`);
+    if (printed.stderr) console.log(printed.stderr);
+  }
+}

@@ -2,40 +2,66 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Top-Rated Team — Case studies</title>
+<title>Case Studies: Google Ads and Paid Ads, Organic LinkedIn growth and any AI agents or custom development</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Outfit:wght@400;500;600&display=swap">
 <style>
+  /*
+    The names and the HSL channels are the site's own tokens from
+    client/src/index.css. This file is printed by Chrome, not compiled by
+    Tailwind, so the utilities are not available — the tokens are.
+    @page cannot resolve var(), so the page-box fill is the same HSL as
+    --background, written out. That is not a second colour.
+  */
   :root{
-    --paper:#F0EBE1; --ink:#1A1611; --muted:#6D655B;
-    --line:#CFC3AE; --hair:#DCD3C4; --clay:#9C4318;
+    --background: 40 38% 92%;
+    --foreground: 33 19% 9%;
+    --muted-foreground: 33 11% 38%;
+    --border: 38 23% 77%;
+    --card-border: 38 26% 84%;
+    --primary: 16 70% 36%;
+    --paper: hsl(var(--background));
+    --ink: hsl(var(--foreground));
+    --muted: hsl(var(--muted-foreground));
+    --line: hsl(var(--border));
+    --hair: hsl(var(--card-border));
+    --clay: hsl(var(--primary));
     --sans:"Outfit","Avenir Next",system-ui,sans-serif;
     --read:"Newsreader",Georgia,"Times New Roman",serif;
   }
+  @media screen {
+    @media (prefers-color-scheme: dark) {
+      :root{
+        --background: 34 20% 7%;
+        --foreground: 38 37% 88%;
+        --muted-foreground: 34 11% 57%;
+        --border: 35 20% 17%;
+        --card-border: 34 22% 13%;
+        --primary: 19 63% 60%;
+      }
+    }
+  }
+  @media print {
+    :root{
+      --background: 40 38% 92%;
+      --foreground: 33 19% 9%;
+      --muted-foreground: 33 11% 38%;
+      --border: 38 23% 77%;
+      --card-border: 38 26% 84%;
+      --primary: 16 70% 36%;
+    }
+  }
 
   /*
-    THE MARGINS ARE THE PAGE'S OWN COLOUR, which is what the owner asked for
-    and took a specific trick. A background on body stops at the content box,
-    so the printed sheet had a white frame around a coloured block. Chrome
-    paints the ROOT element's background across the whole page box, margins
-    included — so the colour goes on html and the inset stays on @page.
+    THE MARGINS ARE THE PAGE'S OWN COLOUR. A background on body stops at the
+    content box, and one on html stops at the page box, so both printed a
+    white frame. Chrome honours @page background. var() does not resolve
+    inside @page, so the fill is the light --background token, written as HSL.
   */
-  /*
-    THE MARGINS ARE THE PAGE'S OWN COLOUR, and the one line that does it is a
-    background on @page itself. Two other attempts did not: a background on
-    body stops at the content box, and one on html stops at the page box, so
-    both printed a white frame around a coloured block. A position:fixed layer
-    stretched into the margins fails for the same reason — Chrome clips it to
-    the page box.
-
-    Chrome does honour @page background. Verified by printing a two-page probe
-    and reading the corner pixel out of it rather than looking at it: 225,235,240
-    where white would be 255,255,255. The literal hex is deliberate — var() does
-    not resolve inside @page.
-  */
-  @page { size:A4; margin:17mm 15mm; background:#F0EBE1; }
-  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  @page { size:A4; margin:17mm 15mm; background: hsl(40 38% 92%); }
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact;
+        background: var(--paper); }
 
   *{ box-sizing:border-box; }
   body{ margin:0; background:transparent; color:var(--ink);
@@ -47,8 +73,8 @@
 
   .eyebrow,.label{ font-family:var(--sans); font-size:7pt; font-weight:500;
     letter-spacing:.09em; text-transform:uppercase; color:var(--muted); margin:0; }
-  h1{ font-family:var(--sans); font-weight:500; font-size:36pt; line-height:.98;
-      letter-spacing:-.035em; margin:0; }
+  h1{ font-family:var(--sans); font-weight:500; font-size:22pt; line-height:1.12;
+      letter-spacing:-.03em; margin:0; max-width:22em; }
   h2{ font-family:var(--sans); font-weight:500; font-size:19pt; line-height:1.06;
       letter-spacing:-.03em; margin:1.5mm 0 0; }
   h3{ font-family:var(--sans); font-weight:500; font-size:11.5pt; margin:0; }
@@ -116,7 +142,9 @@
      is what a column of that height does the moment anything is added to it. */
   .cover{ padding-top:2mm; }
   .cover .head{ margin-bottom:14mm; }
-  .cover h1{ margin-top:12mm; }
+  .cover h1{ margin-top:8mm; }
+  .snapshot{ font-family:var(--sans); font-size:8pt; color:var(--muted);
+             margin:3mm 0 0; max-width:46em; }
   .cover .where{ margin-top:12mm; }
   .lockup{ display:flex; align-items:center; gap:4mm; }
   .lockup img{ width:17mm; height:17mm; }
@@ -190,11 +218,15 @@
   </div>
 
   <div>
-    <h1>Case studies</h1>
-    <p class="lede">22 advertising engagements in full: the category, the
-      country, the daily budget, the work as it was done, and 73 screenshots
-      out of the accounts themselves. Every figure is the account's own over the period its
-      page names.</p>
+    <h1>Case Studies: Google Ads and Paid Ads, Organic LinkedIn growth and any AI agents or custom development</h1>
+    <p class="snapshot">Snapshot of 13 September 2026. This file is an export of the repository.
+      Changing the text or the pictures here does not change the site, and the next build
+      replaces this file.</p>
+    <p class="lede">The title names the work. The advertising pages are 22 engagements
+      with the category, the country, the daily budget, the work as it was done, and 73 screenshots
+      from the accounts themselves. Every figure is the account's own over the period its
+      page names. LinkedIn, automation and custom AI have no client account in this file, so
+      those pages show what we have built. They carry no metrics.</p>
 
     <div class="record">
       <div><b>5,872</b><span>Hours on Upwork</span></div><div><b>100%</b><span>Job success score</span></div><div><b>$2M+</b><span>Budgets optimized</span></div><div><b>15+</b><span>Years in paid ads</span></div>
@@ -986,6 +1018,9 @@
     offer and its budget, and anybody who tells you otherwise before seeing it is guessing.</p>
   <p class="read">The hours and the job-success score on the cover are the public record on
     Upwork and can be checked there.</p>
+  <p class="read">This copy is a snapshot of 13 September 2026. It is not a Google Doc the next
+    build will read. Edits made after opening it in Google Docs are discarded when this
+    file is generated again.</p>
 
   
 <div class="contact closing">
