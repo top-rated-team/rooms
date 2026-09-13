@@ -365,6 +365,27 @@
       "runAlone": true,
       "why": "AdGrant.AI is a second product hand-built inside this repository, and the owner's point is that it should have been the first in-house FORK of it — the same doors, rooms, agents and sign-in, re-pointed at what each service means for a nonprofit. Doing it now is worth more than the tidiness: it is the only honest test of the fork path before a real partner uses it, and there is already a white-label request against adgrant.ai itself, which means a fork OF a fork has to work.",
       "done": "ADGRANT.AI IS A CATALOGUE, NOT A HAND-BUILT SECOND SITE. Read shared/catalogue.ts and shared/operator.ts first — the fork machinery already exists and has tests; this parcel makes our own second product use it instead of going around it. (1) EVERY SERVICE IS CLONED, including the ones hidden for the LinkedIn review, with its page, its room, its members and its agent — and every name, headline, blurb, starter and agent prompt re-pointed at what that service does FOR A NONPROFIT. A cloned row that still says what the Top-Rated Team row says is worse than no row: it tells a nonprofit we sell something we do not. (2) ALL THREE WAYS IN WORK THERE, and the design and the chrome stay AdGrant.AI's own — an in-house fork keeps its face. (3) A FORK OF A FORK MUST WORK. There is a live white-label request against adgrant.ai. Establish what happens when a partner forks a deployment that is itself a fork: whose legal name, whose terms, whose contact, whose agents, and what the room footer says. Write it into docs/specs/forking.md with the answer for each, and make the catalogue resolver do it rather than leaving it to be discovered. (4) NOTHING THE OWNER ALREADY HAS MAY REGRESS: the 27 library pages, the generator, the templates, the head rewrite per host, the sitemap, the redirects from /adgrant. There are tests for most of that — run them, do not re-derive them. (5) ITS OWN PRIVACY AND TERMS, at its own addresses, and the footer links move to them in the same commit that creates them — they point at Top-Rated Team's today, which is honest and wrong. A fork gets them part-filled from what it actually has: its login methods, its rooms, and any partner services added. (6) THE FRONT PAGE OPENS THE SAME WAY OURS DOES. The hero carries the Sign in | Open a room pair, and the door itself carries a chat with the Ad Grant agent — a nonprofit should be able to ask a question on the page it landed on, not after finding a room. Both already exist on top-rated.team (client/src/components/site/RoomMenu.tsx and the door bodies); reuse them through the catalogue rather than building a second pair with the same words on it. WHAT MUST NOT CHANGE: adgrant.ai keeps answering at the root with its own head, icon and card, and top-rated.team/adgrant keeps 301ing to it."
+    },
+    "adgrant-room-setup": {
+      "owns": [
+        "server/adgrant/templates.ts",
+        "server/adgrant/templates.test.ts",
+        "server/adgrant/generate.ts",
+        "server/adgrant/generate.test.ts",
+        "client/src/components/adgrant/TemplatePage.tsx",
+        "client/src/components/adgrant/Structure.tsx"
+      ],
+      "seams": {
+        "server/routes.ts": [
+          "the route that hands a template's files over, behind a sign-in"
+        ],
+        "shared/api.ts": [
+          "what the page learns about the files it may have"
+        ]
+      },
+      "runAlone": true,
+      "why": "A template page hands over exactly two files — one Editor CSV and one list of callouts and snippets — while the page above it counts seven kinds of thing. The owner wants each of those counts to be a file, wants the files behind a sign-in rather than free to anyone, and reports that 'Build the files again' does nothing when pressed.",
+      "done": "EVERY COUNT ON THE PAGE IS A FILE, AND THE FILES ARE WORTH SIGNING IN FOR. (1) ONE CSV PER ENTITY, beside the single Editor file that already exists: campaigns, ad groups, keywords, ads, sitelinks, callouts, structured snippets. The seven numbers listed on the page become seven links, and a number with no link beside it is a number that should not be listed. Each file must import on its own; say in the page which tool takes which. (2) BEHIND A SIGN-IN — the same three ways as top-rated.team, and Resend is already configured for this domain so the email way works. State plainly on the page, BEFORE the sign-in, what it is for: the files are free, the account is so the work can continue in a room. Do not invent a new sign-in; use the one this deployment has. (3) 'BUILD THE FILES AGAIN' DOES NOTHING and the owner pressed it. Either it rebuilds and says so, or it is not a button. Decide, and make the label true. (4) THE REAL PLACE FOR THIS IS A ROOM. Once somebody is signed in, downloading the files and uploading the setup through the official Google Ads API both belong in their room, with the agent, not on a public page — that is the owner's standing design and the page should lead there rather than being the destination. (5) NEW ENVIRONMENT VARIABLES, if any, go in .env.example with one line each saying what breaks without them; the owner asked what to add, so the answer must be readable there rather than in a commit message. NOTHING IS WRITTEN INTO ANYBODY'S GOOGLE ADS ACCOUNT by this parcel, and every campaign in every file is still Paused."
     }
   },
   "booking-gate": {

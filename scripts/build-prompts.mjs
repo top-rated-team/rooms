@@ -88,7 +88,7 @@ const WAVES = [
   /* Wave 21 has run and adgrant-as-fork is retired. Its repairs are on main —
      a hidden door had a page, and the new legal pages claimed a sign-in that
      address does not have. Re-running the parcel would undo them. */
-  { n: 22, keys: ["adgrant-room-setup"], alone: true },
+  /* Wave 22 has run and adgrant-room-setup is retired. */
   { n: 23, keys: ["people-admin"], alone: true },
   { n: 24, keys: ["testimonials"] },
 ];

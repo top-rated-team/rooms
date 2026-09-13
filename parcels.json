@@ -26,27 +26,6 @@
   "//alone": "Parcels marked runAlone touch the room, the panel or the shell - everything reads those, and two agents in them at once produce a merge nobody can check. One agent, let it finish, then start the others.",
   "//order": "The waves are in scripts/build-prompts.mjs and check-parcels.mjs reads them back. Programme three's ordering is a dependency chain, not a preference, and it has three links. (1) unipile-core is wave one ALONE because four parcels import its client; a parcel that writes its own Unipile client because the shared one did not exist yet is four incompatible error mappers. (2) booking-server and booking-dialog are the same wave and build to the request and response shapes fixed in the brief's section 3 - that is what fixing them in writing was for. (3) room-identity precedes login-create-room, because the claim dialog the site's new menu opens is the one room-identity builds. Beyond the chain, one standing rule: AT MOST ONE PARCEL PER WAVE MAY TOUCH server/routes.ts. Three parcels here need a route, and they are in three different waves for that reason alone.",
   "parcels": {
-    "adgrant-room-setup": {
-      "owns": [
-        "server/adgrant/templates.ts",
-        "server/adgrant/templates.test.ts",
-        "server/adgrant/generate.ts",
-        "server/adgrant/generate.test.ts",
-        "client/src/components/adgrant/TemplatePage.tsx",
-        "client/src/components/adgrant/Structure.tsx"
-      ],
-      "seams": {
-        "server/routes.ts": [
-          "the route that hands a template's files over, behind a sign-in"
-        ],
-        "shared/api.ts": [
-          "what the page learns about the files it may have"
-        ]
-      },
-      "runAlone": true,
-      "why": "A template page hands over exactly two files — one Editor CSV and one list of callouts and snippets — while the page above it counts seven kinds of thing. The owner wants each of those counts to be a file, wants the files behind a sign-in rather than free to anyone, and reports that 'Build the files again' does nothing when pressed.",
-      "done": "EVERY COUNT ON THE PAGE IS A FILE, AND THE FILES ARE WORTH SIGNING IN FOR. (1) ONE CSV PER ENTITY, beside the single Editor file that already exists: campaigns, ad groups, keywords, ads, sitelinks, callouts, structured snippets. The seven numbers listed on the page become seven links, and a number with no link beside it is a number that should not be listed. Each file must import on its own; say in the page which tool takes which. (2) BEHIND A SIGN-IN — the same three ways as top-rated.team, and Resend is already configured for this domain so the email way works. State plainly on the page, BEFORE the sign-in, what it is for: the files are free, the account is so the work can continue in a room. Do not invent a new sign-in; use the one this deployment has. (3) 'BUILD THE FILES AGAIN' DOES NOTHING and the owner pressed it. Either it rebuilds and says so, or it is not a button. Decide, and make the label true. (4) THE REAL PLACE FOR THIS IS A ROOM. Once somebody is signed in, downloading the files and uploading the setup through the official Google Ads API both belong in their room, with the agent, not on a public page — that is the owner's standing design and the page should lead there rather than being the destination. (5) NEW ENVIRONMENT VARIABLES, if any, go in .env.example with one line each saying what breaks without them; the owner asked what to add, so the answer must be readable there rather than in a commit message. NOTHING IS WRITTEN INTO ANYBODY'S GOOGLE ADS ACCOUNT by this parcel, and every campaign in every file is still Paused."
-    },
     "people-admin": {
       "owns": [
         "server/admin/*",
