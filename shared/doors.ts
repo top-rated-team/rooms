@@ -14,7 +14,7 @@
  * the overview page cannot drift.
  */
 
-import { resolveCatalogue, type OperatorConfig } from "./catalogue";
+import { resolveCatalogue, type HouseId, type OperatorConfig, type ResolveCatalogueOptions } from "./catalogue";
 import { type PriceTierId } from "./pricing";
 import { AGENT_BY_ID, MAIN_SITE_URL, type AgentDef } from "./roster";
 
@@ -642,7 +642,22 @@ export function doorAgent(door: DoorDef): AgentDef | undefined {
  * What a page should render instead of DOORS. With no operator this is DOORS,
  * the same array, so the reference deployment does not move. A fork passes
  * the operator config; shared/catalogue.ts is the resolver.
+ *
+ * The second argument is the in-house house. AdGrant.AI passes `adgrant-ai`
+ * (or `{ house: "adgrant-ai", mount }`) so it reads the nonprofit clone
+ * rather than building a second table by hand.
  */
-export function catalogue(operator?: OperatorConfig | null) {
-  return resolveCatalogue(DOORS, operator);
+export function catalogue(
+  operator?: OperatorConfig | null,
+  houseOrOptions?: HouseId | ResolveCatalogueOptions | null,
+) {
+  return resolveCatalogue(DOORS, operator, houseOrOptions);
+}
+
+/** The AdGrant.AI in-house catalogue: every door, rewritten for a nonprofit. */
+export function adgrantCatalogue(
+  operator?: OperatorConfig | null,
+  options?: Omit<ResolveCatalogueOptions, "house">,
+) {
+  return resolveCatalogue(DOORS, operator, { ...options, house: "adgrant-ai" });
 }

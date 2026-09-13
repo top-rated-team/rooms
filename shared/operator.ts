@@ -9,11 +9,20 @@
  * not a field here, and a body that sends them is ignored rather than stored.
  */
 
-import { resolveCatalogue, type OperatorConfig, type OperatorIdentity, type OperatorService, type ServiceMode } from "./catalogue";
+import {
+  ADGRANT_IDENTITY,
+  resolveCatalogue,
+  type HouseId,
+  type OperatorConfig,
+  type OperatorIdentity,
+  type OperatorService,
+  type ServiceMode,
+} from "./catalogue";
 import { DOORS, type DoorDef } from "./doors";
 import { PRICES, type PriceTierId } from "./pricing";
 
-export type { OperatorConfig, OperatorIdentity, OperatorService, ServiceMode };
+export type { HouseId, OperatorConfig, OperatorIdentity, OperatorService, ServiceMode };
+export { ADGRANT_IDENTITY };
 
 /** Hosts that are this company, not a fork. A white-label site on one of these is still ours. */
 export const HOUSE_HOSTS = [
@@ -25,10 +34,12 @@ export const HOUSE_HOSTS = [
   "ai.top-rated.team",
   "top-rated.team",
   "www.top-rated.team",
-  /* AdGrant.AI is our own second product on the same deployment, not a fork.
-     Without these two the booking gate reads that domain as somebody else's
-     and refuses a booking with no address on it, and the white-label check
-     would let our own site be dressed as a partner's. */
+  /* AdGrant.AI is the second in-house house, not a partner fork. Without
+     these two the booking gate reads that domain as somebody else's and
+     refuses a booking with no address on it, the white-label check would
+     let our own site be dressed as a partner's, and WhatsApp would be
+     hidden from the three ways in. The catalogue for this house is
+     `adgrantCatalogue` in shared/doors.ts. */
   "adgrant.ai",
   "www.adgrant.ai",
 ] as const;
@@ -74,6 +85,8 @@ export interface OperatorWrite {
   identity: OperatorIdentity;
   services?: Record<string, OperatorService>;
   origin: string;
+  /** When this deployment was forked from adgrant.ai, not from top-rated.team. */
+  base?: HouseId;
   model: {
     useOwnKey: boolean;
     /** Present only when the operator is pasting or replacing a key. Never read back. */
@@ -151,6 +164,7 @@ export function asOperatorConfig(write: OperatorWrite): OperatorConfig {
   return {
     identity: write.identity,
     services: write.services,
+    ...(write.base && write.base !== "top-rated-team" ? { base: write.base } : {}),
   };
 }
 
@@ -292,9 +306,18 @@ export function parseOperatorWrite(body: unknown, doors: readonly DoorDef[] = DO
     );
   }
 
-  const write: OperatorWrite = { identity, services, origin, model };
+  const base = parseBase(raw.base);
+  const write: OperatorWrite = { identity, services, origin, model, ...(base ? { base } : {}) };
   assertOperatorWillNotLie(write, doors);
   return write;
+}
+
+function parseBase(value: unknown): HouseId | undefined {
+  if (value == null || value === "" || value === "top-rated-team") return undefined;
+  if (value === "adgrant-ai") return value;
+  throw new OperatorInputError(
+    `The house this deployment was forked from has to be top-rated.team or adgrant.ai, not ${String(value)}.`,
+  );
 }
 
 /**
