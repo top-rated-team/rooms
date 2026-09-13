@@ -60,12 +60,12 @@ export const ROOM_LOGIN_LINKEDIN_UNCONFIGURED_LINE =
   "LinkedIn sign-in is not configured on this deployment.";
 
 /**
- * What the OTHER address says. It used to name the host LinkedIn returns to,
- * which is true and is the wrong sentence to put in front of a visitor: on
- * adgrant.ai it advertised the sibling product inside a sign-in panel, on the
- * one page the owner had just asked to stop linking to it. Which app the
- * redirect belongs to is the operator's business, and the operator reads
- * .env.example and the boot log, not this panel.
+ * KEPT, AND NOW ONLY FOR A DEPLOYMENT WITH NOWHERE TO RETURN TO. It was the
+ * line for "this address is not the one the app returns to", which both of our
+ * houses now are — one app, both callbacks registered. It survives because a
+ * deployment with no PUBLIC_BASE_URL and a host we do not own still has to say
+ * something true, and because naming the other product inside a sign-in panel,
+ * which the first version of this line did, is the mistake not to repeat.
  */
 export const ROOM_LOGIN_LINKEDIN_ELSEWHERE_LINE =
   "LinkedIn sign-in is not one of the ways in on this address.";
@@ -81,14 +81,33 @@ export const ROOM_LOGIN_LINKEDIN_ELSEWHERE_LINE =
  * A second deployment that wants LinkedIn wants its own app and its own
  * PUBLIC_BASE_URL, which is a fork's business, not a branch here.
  */
+function bareHost(value: string): string {
+  return value.trim().toLowerCase().replace(/^www\./, "");
+}
+
+/**
+ * Which address LinkedIn comes back to for the visitor who is leaving.
+ *
+ * ONE APP, SEVERAL HOUSE ADDRESSES. LinkedIn will only return to a URI
+ * registered on the app, and the owner has registered this callback for both
+ * of ours — so a visitor who starts on adgrant.ai finishes on adgrant.ai, with
+ * their session cookie on the site they were actually reading, instead of
+ * being handed to the other product half way through signing in.
+ *
+ * THE HOST IS NOT TAKEN ON TRUST. `isHouseHost` is an allow-list in
+ * shared/operator.ts; anything not on it falls back to PUBLIC_BASE_URL. A
+ * redirect_uri built from whatever Host header arrived is how an OAuth flow
+ * ends up pointing at somebody else's server — and LinkedIn would reject it
+ * anyway, which would be the second-best outcome rather than the first.
+ */
+export function linkedinRedirectBase(host: string, publicBaseUrl: string | null): string | null {
+  if (host && isHouseHost(host)) return `https://${bareHost(host)}`;
+  return publicBaseUrl;
+}
+
+/** True when a LinkedIn return can land back on the address being read. */
 export function linkedinReturnsHere(host: string, publicBaseUrl: string | null): boolean {
-  if (!publicBaseUrl) return false;
-  const bare = (value: string) => value.trim().toLowerCase().replace(/^www\./, "");
-  try {
-    return bare(new URL(publicBaseUrl).hostname) === bare(host);
-  } catch {
-    return false;
-  }
+  return linkedinRedirectBase(host, publicBaseUrl) !== null;
 }
 
 export const ROOM_LOGIN_WHATSAPP_WARNING =
@@ -267,15 +286,15 @@ export type RoomLoginLinkedInStart =
   | { ok: true; url: string; state: string }
   | { ok: false; line: string };
 
-export function startRoomLoginLinkedIn(): RoomLoginLinkedInStart {
+export function startRoomLoginLinkedIn(host = ""): RoomLoginLinkedInStart {
   const creds = linkedinCredentials();
-  const publicBaseUrl = configuredPublicBaseUrl();
+  const base = linkedinRedirectBase(host, configuredPublicBaseUrl());
   if (!creds) return { ok: false, line: ROOM_LOGIN_LINKEDIN_UNCONFIGURED_LINE };
-  if (!publicBaseUrl) return { ok: false, line: ROOM_ACCESS_NO_PUBLIC_URL_LINE };
+  if (!base) return { ok: false, line: ROOM_ACCESS_NO_PUBLIC_URL_LINE };
 
   sweep();
   const state = nanoid(24);
-  const redirectUri = roomLoginLinkedInRedirectUri(publicBaseUrl);
+  const redirectUri = roomLoginLinkedInRedirectUri(base);
   pendingLinkedIn.set(state, { redirectUri, createdAt: Date.now() });
   return {
     ok: true,

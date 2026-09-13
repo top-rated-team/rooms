@@ -1407,8 +1407,8 @@ export function registerRoutes(app: Express): void {
   app.get(
     "/api/room-login/linkedin",
     identityLimit,
-    route(async (_req, res) => {
-      const start = startRoomLoginLinkedIn();
+    route(async (req, res) => {
+      const start = startRoomLoginLinkedIn(req.hostname);
       if (!start.ok) {
         res.status(503).json({ error: start.line });
         return;
@@ -1521,7 +1521,10 @@ export function registerRoutes(app: Express): void {
       res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
       const gate = await requireDeploymentOperator(req);
       if (!gate.ok) {
-        res.status(gate.status).json({ error: gate.error });
+        res.status(gate.status).json({
+          error: gate.error,
+          ...(gate.youAre?.length ? { youAre: gate.youAre } : {}),
+        });
         return;
       }
       res.json(await listAdminPeople(req));

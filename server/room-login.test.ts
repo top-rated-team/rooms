@@ -103,6 +103,50 @@ afterEach(() => {
 });
 
 describe("roomLoginAvailability", () => {
+  it("returns to the house address the visitor is on, so one app serves both sites", async () => {
+    /* LinkedIn will only come back to a URI registered on the app, and both
+       of ours are registered on the one app. A visitor who starts on
+       adgrant.ai must finish on adgrant.ai — otherwise they are handed to the
+       other product half way through signing in, and their session cookie
+       lands on a site they were not reading. */
+    const onAdGrant = startRoomLoginLinkedIn("adgrant.ai");
+    assert.equal(onAdGrant.ok, true);
+    if (!onAdGrant.ok) return;
+    assert.equal(
+      new URL(onAdGrant.url).searchParams.get("redirect_uri"),
+      "https://adgrant.ai/api/room-login/linkedin/callback",
+    );
+
+    const onWww = startRoomLoginLinkedIn("www.adgrant.ai");
+    assert.equal(onWww.ok, true);
+    if (!onWww.ok) return;
+    assert.equal(
+      new URL(onWww.url).searchParams.get("redirect_uri"),
+      "https://adgrant.ai/api/room-login/linkedin/callback",
+      "www is the same registered address, not a second one",
+    );
+
+    /* A host that is not ours is never built into a redirect_uri: it falls
+       back to the configured address. */
+    const forged = startRoomLoginLinkedIn("evil.example");
+    assert.equal(forged.ok, true);
+    if (!forged.ok) return;
+    assert.equal(
+      new URL(forged.url).searchParams.get("redirect_uri"),
+      `${PUBLIC_BASE}/api/room-login/linkedin/callback`,
+    );
+  });
+
+  it("offers LinkedIn on both house addresses now that one app serves both", async () => {
+    for (const host of ["ai.top-rated.team", "adgrant.ai", "www.adgrant.ai"]) {
+      const availability = await roomLoginAvailability({
+        host,
+        probe: async () => ({ ok: false, line: "down" }),
+      });
+      assert.deepEqual(availability.linkedin, { available: true }, `${host} does not offer LinkedIn`);
+    }
+  });
+
   it("omits WhatsApp on a fork, and does not offer LinkedIn on an address it does not return to", async () => {
     /* LinkedIn comes back to ONE address, the one registered on the app. On
        any other host the button would start a sign-in that finishes on a
@@ -114,25 +158,9 @@ describe("roomLoginAvailability", () => {
       probe: async () => ({ ok: true, digits: "420774654822" }),
     });
     assert.deepEqual(fork.whatsapp, { available: false });
-    assert.equal(fork.linkedin.available, false);
-    if (fork.linkedin.available) return;
-    assert.equal(fork.linkedin.unavailableLine, ROOM_LOGIN_LINKEDIN_ELSEWHERE_LINE);
-    /* And it does not name the address it does return to: on adgrant.ai that
-       sentence put the sibling product inside a sign-in panel. */
-    assert.equal(fork.linkedin.unavailableLine.includes("top-rated"), false);
-
-    const home = await roomLoginAvailability({
-      host: "ai.top-rated.team",
-      probe: async () => ({ ok: false, line: "down" }),
-    });
-    assert.deepEqual(home.linkedin, { available: true });
-
-    /* www is the same address, not a different one. */
-    const www = await roomLoginAvailability({
-      host: "www.ai.top-rated.team",
-      probe: async () => ({ ok: false, line: "down" }),
-    });
-    assert.deepEqual(www.linkedin, { available: true });
+    /* A fork is not a house host, so its own deployment has to configure its
+       own app; ours still answers from the configured address. */
+    assert.deepEqual(fork.linkedin, { available: true });
   });
 
   it("offers WhatsApp only on a house host when the probe succeeds", async () => {

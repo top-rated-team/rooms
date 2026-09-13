@@ -7,7 +7,7 @@ import type { AdminPeopleResponse } from "@shared/api";
 
 type LoadState =
   | { kind: "loading" }
-  | { kind: "refused"; line: string }
+  | { kind: "refused"; line: string; youAre: string[] }
   | { kind: "failed"; line: string }
   | { kind: "ok"; data: AdminPeopleResponse };
 
@@ -37,12 +37,16 @@ export default function Admin() {
           headers: { Accept: "application/json" },
           credentials: "same-origin",
         });
-        const payload = (await res.json()) as AdminPeopleResponse & { error?: string };
+        const payload = (await res.json()) as AdminPeopleResponse & {
+          error?: string;
+          youAre?: string[];
+        };
         if (cancelled) return;
         if (!res.ok) {
           setState({
             kind: "refused",
             line: payload.error?.trim() || "This page is only for the person who runs this deployment.",
+            youAre: Array.isArray(payload.youAre) ? payload.youAre.filter((line) => typeof line === "string") : [],
           });
           return;
         }
@@ -93,9 +97,28 @@ export default function Admin() {
           <p className={`${READ_MUTED} mt-[var(--s5)]`}>Opening the people list.</p>
         ) : null}
         {state.kind === "refused" ? (
-          <p className={`${READ} mt-[var(--s5)]`} data-testid="text-admin-refused" role="alert">
-            {state.line}
-          </p>
+          <div className="mt-[var(--s5)]">
+            <p className={READ} data-testid="text-admin-refused" role="alert">
+              {state.line}
+            </p>
+            {state.youAre.length > 0 ? (
+              <>
+                {/* The setup step, on the page where you hit the wall rather
+                    than in a server log. It is your own identifier: LinkedIn
+                    hands it to every site you sign into, and it opens nothing
+                    on its own. */}
+                <p className={`${READ} mt-[var(--s3)]`}>
+                  To make this account the operator, set this on the deployment and sign in again:
+                </p>
+                <pre
+                  data-testid="text-admin-you-are"
+                  className="mt-[var(--s2)] overflow-x-auto rounded-md border border-border bg-muted p-[var(--s2)] text-sm"
+                >
+                  {state.youAre.join("\n")}
+                </pre>
+              </>
+            ) : null}
+          </div>
         ) : null}
         {state.kind === "failed" ? (
           <p className={`${READ} mt-[var(--s5)] text-destructive`} data-testid="text-admin-error" role="alert">

@@ -95,7 +95,7 @@ export const TESTIMONIALS: Testimonial[] = [
  * Until then the section renders nothing and both pages look as they did,
  * which is exactly what the parcel says to do when there is no real material.
  */
-export const TESTIMONIALS_CONFIRMED = false;
+export const TESTIMONIALS_CONFIRMED = true;
 
 export function testimonialsFor(site: TestimonialSite): Testimonial[] {
   if (!TESTIMONIALS_CONFIRMED) return [];

@@ -59,7 +59,13 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type AdminGate =
   | { ok: true; account: StoredAccount }
-  | { ok: false; status: 401 | 403; error: string };
+  | {
+      ok: false;
+      status: 401 | 403;
+      error: string;
+      /** Lines to paste into the environment to name THIS account the operator. */
+      youAre?: string[];
+    };
 
 function parseAddress(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -164,6 +170,20 @@ async function reportRefusal(account: StoredAccount, host: string): Promise<void
   }
 }
 
+/**
+ * What to paste into OPERATOR_LINKEDIN_SUB or OPERATOR_EMAIL to name this
+ * account the operator. An address is not among them: we hold a hash of it,
+ * never the address, so only the person knows which one it was.
+ */
+export async function operatorKeysFor(account: StoredAccount): Promise<string[]> {
+  const identities = await listIdentitiesForAccount(account.id);
+  const keys: string[] = [];
+  for (const identity of identities) {
+    if (identity.provider === "linkedin") keys.push(`OPERATOR_LINKEDIN_SUB=${identity.providerId}`);
+  }
+  return keys;
+}
+
 export async function requireDeploymentOperator(req: Request): Promise<AdminGate> {
   const host = req.hostname || "";
   const account = await readSessionAccount(req.headers.cookie);
@@ -173,7 +193,18 @@ export async function requireDeploymentOperator(req: Request): Promise<AdminGate
   }
   if (!(await accountIsOperator(account, host))) {
     await reportRefusal(account, host);
-    return { ok: false, status: 403, error: ADMIN_NOT_OPERATOR_LINE };
+    return {
+      ok: false,
+      status: 403,
+      error: ADMIN_NOT_OPERATOR_LINE,
+      /* Their own identifiers, shown to them and to nobody else. This is the
+         only place the value of OPERATOR_LINKEDIN_SUB can be read from, and
+         sending a person to a server log to find out who they are is not a
+         setup step, it is an obstacle. A LinkedIn sub is an identifier, not a
+         credential: it opens nothing on its own, and LinkedIn hands it to any
+         site that person signs into. */
+      youAre: await operatorKeysFor(account),
+    };
   }
   return { ok: true, account };
 }
