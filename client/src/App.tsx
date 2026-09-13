@@ -1,6 +1,6 @@
 import { Suspense, lazy } from "react";
 import { isAdGrantHost } from "@shared/adgrant-site";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useRoute } from "wouter";
 
 import Door from "@/pages/door";
 import Doors from "@/pages/doors";
@@ -27,6 +27,7 @@ import Terms from "@/pages/terms";
  * visitor choosing a door still never downloads the room. */
 const Workspace = lazy(() => import("@/pages/workspace"));
 const AdGrantApp = lazy(() => import("@/pages/adgrant"));
+const Admin = lazy(() => import("@/pages/admin"));
 
 function RouteFallback() {
   return (
@@ -54,6 +55,20 @@ function AdGrantSite() {
 }
 
 export default function App() {
+  const [onAdmin] = useRoute("/admin");
+  if (onAdmin) {
+    return (
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-background">
+            <p className="type-note text-muted-foreground">Opening the people page.</p>
+          </div>
+        }
+      >
+        <Admin />
+      </Suspense>
+    );
+  }
   if (isAdGrantHost(typeof window === "undefined" ? undefined : window.location.hostname)) {
     return <AdGrantSite />;
   }

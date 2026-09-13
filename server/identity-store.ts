@@ -402,6 +402,24 @@ export async function listIdentitiesForAccount(accountId: string): Promise<Store
   return rows;
 }
 
+/** Every account this deployment has. The people page is the only caller. */
+export async function listAccounts(): Promise<StoredAccount[]> {
+  await hydrateFromDb();
+  return [...accountRows.values()];
+}
+
+/** Every way-in this deployment has stored. */
+export async function listAccountIdentities(): Promise<StoredAccountIdentity[]> {
+  await hydrateFromDb();
+  return [...identityRows.values()];
+}
+
+/** Every room binding this deployment has stored. */
+export async function listBindings(): Promise<StoredBinding[]> {
+  await hydrateFromDb();
+  return [...bindings.values()];
+}
+
 /**
  * First write wins. If this identity already belongs to another account, refuse.
  * Silently joining two accounts would hand one person's rooms to another.

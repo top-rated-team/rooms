@@ -110,6 +110,7 @@ import {
   sessionCookieOptions,
   whoAmI,
 } from "./room-account";
+import { listAdminPeople, requireDeploymentOperator } from "./admin/people";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -1509,6 +1510,21 @@ export function registerRoutes(app: Express): void {
         res.cookie(ROOM_SESSION_COOKIE, claimed.token, sessionCookieOptions());
       }
       res.redirect(302, claimed.location);
+    }),
+  );
+
+  app.get(
+    "/api/admin/people",
+    roomAccessOpenLimit,
+    route(async (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+      const gate = await requireDeploymentOperator(req);
+      if (!gate.ok) {
+        res.status(gate.status).json({ error: gate.error });
+        return;
+      }
+      res.json(await listAdminPeople(req));
     }),
   );
 

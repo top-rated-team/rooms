@@ -324,6 +324,15 @@ export function getStoredBooking(codeRaw: string, now = Date.now()): StoredBooki
 }
 
 /**
+ * What this process currently holds, including cancelled and past rows that
+ * have not been swept. Does not sweep: the people page has to see a booking
+ * that no longer stands.
+ */
+export function listStoredBookings(): StoredBooking[] {
+  return [...bookings.values()];
+}
+
+/**
  * What the popup may be told. No name, no address: those stay on the server
  * because the pointer that asked is copyable.
  */

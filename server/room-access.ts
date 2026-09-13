@@ -220,10 +220,21 @@ export function issuedLinksForTests(): IssuedLink[] {
   return [...links.values()];
 }
 
-/** Test seam: the opaque id a session signs in under for this address. */
-export function emailHashForTests(email: string): string {
+/**
+ * The opaque id a session signs in under for this address, and the id every
+ * room binding is stored against.
+ *
+ * It was called emailHashForTests, and then the admin gate and the booking
+ * matcher started calling it — so the one comparison that decides who may
+ * read the list of everybody who has used this deployment sat behind a name
+ * that invites deletion. Same function, honest name.
+ */
+export function emailHashFor(email: string): string {
   return hashEmail(email);
 }
+
+/** @deprecated Use emailHashFor. Kept so a test that names it still reads. */
+export const emailHashForTests = emailHashFor;
 
 export function bindingsForTests(email: string): BoundRoomAddress[] {
   return [...(bindings.get(hashEmail(email)) ?? [])];

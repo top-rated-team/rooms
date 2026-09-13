@@ -805,3 +805,52 @@ export type RoomSession =
       attached: Record<RoomAccountProvider, boolean>;
       rooms: { token: string }[];
     };
+
+/* ------------------------- people (deployment operator) ------------------- */
+/* GET /api/admin/people. The room address is a bearer credential, so this
+ * shape never leaves the operator's own session. A later parcel may fill
+ * orders and tasks; both stay empty arrays here. */
+
+export type AdminSignInMethod = RoomAccountProvider;
+
+export interface AdminPersonSignIn {
+  method: AdminSignInMethod;
+  displayName: string | null;
+  /** What that method actually yielded, in one sentence. Never a guess. */
+  contactLine: string;
+}
+
+export interface AdminPersonRoom {
+  token: string;
+  name: string;
+  openedAt: string;
+  lastActiveAt: string | null;
+}
+
+export interface AdminPersonBooking {
+  startsAt: string;
+  timezone: string;
+  topic: string;
+  /** False when the booking was cancelled. A past call that was kept still stands. */
+  stands: boolean;
+}
+
+export interface AdminPerson {
+  id: string;
+  displayName: string | null;
+  signedInWith: AdminPersonSignIn[];
+  rooms: AdminPersonRoom[];
+  bookings: AdminPersonBooking[];
+  whiteLabelPartner: boolean;
+  whiteLabelLine: string;
+  /** Reserved. Empty until a later parcel fills them. */
+  orders: [];
+  tasks: [];
+}
+
+export interface AdminPeopleResponse {
+  people: AdminPerson[];
+  /** Which sign-in methods this deployment actually offers. */
+  offeredSignIn: Record<AdminSignInMethod, boolean>;
+  house: boolean;
+}
