@@ -58,18 +58,12 @@ const WAVES = [
    * endpoint that omits them — so this parcel joins data that exists to a CSV
    * writer that exists. It does NOT touch anybody's Google Ads account.
    */
-  /*
-   * Everything after a booking: remember it, come back to it, change it,
-   * cancel it. It waited for wave 14 to release BookingDialog.tsx.
-   */
-  { n: 17, keys: ["booking-return"], alone: true },
-  /* Logout, and one account with several ways in. It is last of the three
-     because it is the only one that introduces a session — a credential in a
-     cookie and a merge that can hand one person's rooms to another if it is
-     written carelessly — and the other two are additions to things that
-     already work. One after another, not together: all three want
-     server/routes.ts and shared/api.ts. */
-  { n: 18, keys: ["room-account"], alone: true },
+  /* Waves 17 and 18 have run and their parcels are retired to the landed
+     manifest. Both needed repair after the fact and the repairs are on main:
+     wave 17's booking code had been broadcast before it was made durable
+     (docs/review is the record), and wave 18's sign-in could be aimed at
+     anybody — docs/review/2026-09-13-wave-18.md. Re-running either parcel
+     would undo those repairs. */
   /* The thing the owner has asked for four times and that has never existed.
      It cannot be started until two values exist — the client id and secret of
      his separate Google app, the one with only calendar.freebusy on it. The
