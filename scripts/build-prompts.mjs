@@ -64,12 +64,10 @@ const WAVES = [
      (docs/review is the record), and wave 18's sign-in could be aimed at
      anybody — docs/review/2026-09-13-wave-18.md. Re-running either parcel
      would undo those repairs. */
-  /* The thing the owner has asked for four times and that has never existed.
-     It cannot be started until two values exist — the client id and secret of
-     his separate Google app, the one with only calendar.freebusy on it. The
-     parcel is written to be completely inert without them, so running it early
-     costs nothing but produces nothing either. */
-  { n: 19, keys: ["visitor-calendar"], alone: true },
+  /* Wave 19 has run and visitor-calendar is retired to the landed manifest.
+     It built the whole server side and no client entry point; the picker was
+     wired by hand afterwards, so re-running the parcel would hand an agent
+     files that are finished. docs/review/2026-09-13-wave-19.md is the record. */
   /* Neither of these touches the room, the panel, the shell or any seam, so
      they are two prompts in one wave rather than two waves. The owner asked
      for both as separate pieces of work and they are — they simply cannot
