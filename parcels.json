@@ -26,31 +26,6 @@
   "//alone": "Parcels marked runAlone touch the room, the panel or the shell - everything reads those, and two agents in them at once produce a merge nobody can check. One agent, let it finish, then start the others.",
   "//order": "The waves are in scripts/build-prompts.mjs and check-parcels.mjs reads them back. Programme three's ordering is a dependency chain, not a preference, and it has three links. (1) unipile-core is wave one ALONE because four parcels import its client; a parcel that writes its own Unipile client because the shared one did not exist yet is four incompatible error mappers. (2) booking-server and booking-dialog are the same wave and build to the request and response shapes fixed in the brief's section 3 - that is what fixing them in writing was for. (3) room-identity precedes login-create-room, because the claim dialog the site's new menu opens is the one room-identity builds. Beyond the chain, one standing rule: AT MOST ONE PARCEL PER WAVE MAY TOUCH server/routes.ts. Three parcels here need a route, and they are in three different waves for that reason alone.",
   "parcels": {
-    "adgrant-as-fork": {
-      "owns": [
-        "shared/catalogue.ts",
-        "shared/catalogue.test.ts",
-        "client/src/pages/adgrant/*",
-        "client/src/components/adgrant/Home.tsx",
-        "client/src/components/adgrant/Shell.tsx",
-        "client/src/components/adgrant/Conversation.tsx",
-        "client/src/components/adgrant/Identify.tsx",
-        "client/src/components/adgrant/sections.ts",
-        "client/src/components/adgrant/links.ts",
-        "docs/specs/forking.md"
-      ],
-      "seams": {
-        "shared/doors.ts": [
-          "whatever a second in-house catalogue needs, added"
-        ],
-        "shared/operator.ts": [
-          "the second house identity"
-        ]
-      },
-      "runAlone": true,
-      "why": "AdGrant.AI is a second product hand-built inside this repository, and the owner's point is that it should have been the first in-house FORK of it — the same doors, rooms, agents and sign-in, re-pointed at what each service means for a nonprofit. Doing it now is worth more than the tidiness: it is the only honest test of the fork path before a real partner uses it, and there is already a white-label request against adgrant.ai itself, which means a fork OF a fork has to work.",
-      "done": "ADGRANT.AI IS A CATALOGUE, NOT A HAND-BUILT SECOND SITE. Read shared/catalogue.ts and shared/operator.ts first — the fork machinery already exists and has tests; this parcel makes our own second product use it instead of going around it. (1) EVERY SERVICE IS CLONED, including the ones hidden for the LinkedIn review, with its page, its room, its members and its agent — and every name, headline, blurb, starter and agent prompt re-pointed at what that service does FOR A NONPROFIT. A cloned row that still says what the Top-Rated Team row says is worse than no row: it tells a nonprofit we sell something we do not. (2) ALL THREE WAYS IN WORK THERE, and the design and the chrome stay AdGrant.AI's own — an in-house fork keeps its face. (3) A FORK OF A FORK MUST WORK. There is a live white-label request against adgrant.ai. Establish what happens when a partner forks a deployment that is itself a fork: whose legal name, whose terms, whose contact, whose agents, and what the room footer says. Write it into docs/specs/forking.md with the answer for each, and make the catalogue resolver do it rather than leaving it to be discovered. (4) NOTHING THE OWNER ALREADY HAS MAY REGRESS: the 27 library pages, the generator, the templates, the head rewrite per host, the sitemap, the redirects from /adgrant. There are tests for most of that — run them, do not re-derive them. (5) ITS OWN PRIVACY AND TERMS, at its own addresses, and the footer links move to them in the same commit that creates them — they point at Top-Rated Team's today, which is honest and wrong. A fork gets them part-filled from what it actually has: its login methods, its rooms, and any partner services added. (6) THE FRONT PAGE OPENS THE SAME WAY OURS DOES. The hero carries the Sign in | Open a room pair, and the door itself carries a chat with the Ad Grant agent — a nonprofit should be able to ask a question on the page it landed on, not after finding a room. Both already exist on top-rated.team (client/src/components/site/RoomMenu.tsx and the door bodies); reuse them through the catalogue rather than building a second pair with the same words on it. WHAT MUST NOT CHANGE: adgrant.ai keeps answering at the root with its own head, icon and card, and top-rated.team/adgrant keeps 301ing to it."
-    },
     "adgrant-room-setup": {
       "owns": [
         "server/adgrant/templates.ts",

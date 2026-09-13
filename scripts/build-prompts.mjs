@@ -85,7 +85,9 @@ const WAVES = [
    *     share a wave, but every other parcel here writes into the room, the
    *     catalogue or the routes, so there is nothing for it to share with.
    */
-  { n: 21, keys: ["adgrant-as-fork"], alone: true },
+  /* Wave 21 has run and adgrant-as-fork is retired. Its repairs are on main —
+     a hidden door had a page, and the new legal pages claimed a sign-in that
+     address does not have. Re-running the parcel would undo them. */
   { n: 22, keys: ["adgrant-room-setup"], alone: true },
   { n: 23, keys: ["people-admin"], alone: true },
   { n: 24, keys: ["testimonials"] },
