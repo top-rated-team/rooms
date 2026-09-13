@@ -82,6 +82,24 @@ const WAVES = [
      collide. The case-studies one is the lower priority of the two, in his
      own words. */
   { n: 20, keys: ["upwork-promo-video", "case-studies-doc"] },
+  /*
+   * PROGRAMME FOUR. The second product stops being hand-built, the files behind
+   * the counts become real, the owner gets to see who has used any of it, and
+   * both sites finally say something a client said.
+   *
+   * The order is a dependency, not a preference:
+   *   - adgrant-as-fork before adgrant-room-setup. The fork decides what a service
+   *     IS on that deployment; the template files are handed over from inside one.
+   *   - room-account (18) before people-admin. The admin page is gated by the
+   *     session that parcel introduces, and there is no second way in.
+   *   - testimonials last and it is the only one that is not runAlone — it could
+   *     share a wave, but every other parcel here writes into the room, the
+   *     catalogue or the routes, so there is nothing for it to share with.
+   */
+  { n: 21, keys: ["adgrant-as-fork"], alone: true },
+  { n: 22, keys: ["adgrant-room-setup"], alone: true },
+  { n: 23, keys: ["people-admin"], alone: true },
+  { n: 24, keys: ["testimonials"] },
 ];
 
 function prompt(key) {
