@@ -26,27 +26,6 @@
   "//alone": "Parcels marked runAlone touch the room, the panel or the shell - everything reads those, and two agents in them at once produce a merge nobody can check. One agent, let it finish, then start the others.",
   "//order": "The waves are in scripts/build-prompts.mjs and check-parcels.mjs reads them back. Programme three's ordering is a dependency chain, not a preference, and it has three links. (1) unipile-core is wave one ALONE because four parcels import its client; a parcel that writes its own Unipile client because the shared one did not exist yet is four incompatible error mappers. (2) booking-server and booking-dialog are the same wave and build to the request and response shapes fixed in the brief's section 3 - that is what fixing them in writing was for. (3) room-identity precedes login-create-room, because the claim dialog the site's new menu opens is the one room-identity builds. Beyond the chain, one standing rule: AT MOST ONE PARCEL PER WAVE MAY TOUCH server/routes.ts. Three parcels here need a route, and they are in three different waves for that reason alone.",
   "parcels": {
-    "upwork-promo-video": {
-      "owns": [
-        "scripts/build-promo-video.ts",
-        "scripts/promo/*",
-        "docs/promo/*"
-      ],
-      "seams": {},
-      "runAlone": false,
-      "why": "The owner asked for a promo animation for the Top-Rated Team page on Upwork and it was never made. Nothing about it exists in this repository — no file, no reference — and I let that sit rather than saying so, which is the part worth not repeating.",
-      "done": "TWO SHORT PROMO ANIMATIONS, RENDERED BY A SCRIPT, NOT BY HAND. One in this site's own visual language, one in Upwork's; the owner asked for both so he can see which lands. THE METHOD IS THE POINT: `npx tsx scripts/build-promo-video.ts` drives headless Chrome over an HTML timeline, captures frames through CDP Page.startScreencast, and pipes them to ffmpeg — both are already on this machine, so this is a script that runs rather than a plan. A hand-edited video goes stale the day a price or a service name changes and nobody notices; one built from shared/doors.ts, shared/pricing.ts and shared/adgrant.ts cannot say a number the site does not. READ THE REAL SOURCES: the door headlines, the price rows and the measured figures come from those modules, and the promo must not state a claim that is not already true on the site — the same rule the rest of this repository is written to. WHAT UPWORK ACTUALLY ACCEPTS is the first thing to check and to write down in the script's header: the aspect ratio, the maximum length and the file size the profile page takes, from Upwork's own documentation, with the URL. Guessing that and rendering ninety seconds of 4K is a wasted wave. KEEP IT SHORT. Under sixty seconds, no voice-over, legible with the sound off, and readable as a thumbnail — a profile video is watched muted in a list. NO CLAIM THAT NEEDS A LAWYER: no result promised, no client named without permission, and no logo of a company we do not have the right to show. Output to docs/promo/, and print the duration, the dimensions and the byte size at the end so the owner can check it against Upwork's limits without opening it."
-    },
-    "case-studies-doc": {
-      "owns": [
-        "scripts/build-cases-pdf.ts",
-        "docs/case-studies.html"
-      ],
-      "seams": {},
-      "runAlone": false,
-      "why": "The PDF is the thing that gets sent to a buyer and its title says only 'Case Studies', which tells that buyer nothing about what this company does. The owner wants the niche in the title, the year and his name in the filename, and — the harder half — an editable copy he can correct text and photographs in, with the corrections not lost the next time the file is generated.",
-      "done": "THE TITLE, THE FILENAME, AND AN HONEST ANSWER ABOUT THE EDITABLE COPY. (1) THE TITLE becomes 'Case Studies: Google Ads and Paid Ads, Organic LinkedIn growth and any AI agents or custom development' — the owner's own words, verbatim. (2) THE FILENAME becomes '{current year} Dan Burykin & his Top-Rated Team case studies.pdf', with the year read from the clock at build time and not typed. Update the npm script so `npm run cases:pdf` writes that name. (3) THE EDITABLE COPY. The owner wants a Google Doc he can change text and images in, staying in step with the site and with edits made here. DO NOT PRETEND THAT IS A ONE-WAY EXPORT. Establish and WRITE DOWN in the script's header which direction is authoritative, because both cannot be: today shared/cases.ts is generated from the repository and the PDF is generated from it, so a Google Doc edited by hand is a third copy that the next build silently overwrites. The honest shapes are (a) export only — the Doc is a snapshot, clearly dated, and edits there are lost, or (b) the Doc becomes the source for the prose and the build reads it back, which needs Drive access this deployment does not have. PICK ONE, say which, and build it; do not build a two-way sync that quietly loses somebody's afternoon. A .docx that Google Docs imports without mangling the layout is a reasonable (a): produce it beside the PDF from the same HTML. (4) NOTHING IN THE PDF MAY BECOME UNTRUE: the cases, the figures and the screenshots come from shared/cases.ts and the repository's own captures, and the title change must not turn a portfolio into a claim about results."
-    },
     "adgrant-as-fork": {
       "owns": [
         "shared/catalogue.ts",

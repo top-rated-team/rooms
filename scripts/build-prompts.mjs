@@ -68,12 +68,9 @@ const WAVES = [
      It built the whole server side and no client entry point; the picker was
      wired by hand afterwards, so re-running the parcel would hand an agent
      files that are finished. docs/review/2026-09-13-wave-19.md is the record. */
-  /* Neither of these touches the room, the panel, the shell or any seam, so
-     they are two prompts in one wave rather than two waves. The owner asked
-     for both as separate pieces of work and they are — they simply cannot
-     collide. The case-studies one is the lower priority of the two, in his
-     own words. */
-  { n: 20, keys: ["upwork-promo-video", "case-studies-doc"] },
+  /* Wave 20 has run and both its parcels are retired. The promo one was
+     interrupted after it had finished; the build script reproduces both MP4s,
+     so there was nothing to re-run. */
   /*
    * PROGRAMME FOUR. The second product stops being hand-built, the files behind
    * the counts become real, the owner gets to see who has used any of it, and
