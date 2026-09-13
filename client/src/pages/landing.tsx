@@ -9,6 +9,7 @@ import Plate from "@/components/site/home/Plate";
 import Results from "@/components/site/home/Results";
 import Ladder from "@/components/site/Ladder";
 import TalkToUs from "@/components/site/TalkToUs";
+import Testimonials from "@/components/site/Testimonials";
 
 /* ---------------------------------------------------------------------------
  * THE HOME PAGE
@@ -109,6 +110,7 @@ export function Landing() {
         <HouseAsk />
         <TalkToUs className="pt-[var(--s5)]" />
         <Results />
+        <Testimonials />
         {/* Low, and after the work: a price means nothing until the reader
             knows what it buys. Every figure here is read off shared/pricing.ts,
             which is also what every agent's prompt is given — so the page and

@@ -90,7 +90,8 @@ const WAVES = [
      address does not have. Re-running the parcel would undo them. */
   /* Wave 22 has run and adgrant-room-setup is retired. */
   /* Wave 23 has run and people-admin is retired. */
-  { n: 24, keys: ["testimonials"] },
+  /* Wave 24 has run and testimonials is retired. The programme is finished;
+     the page below says so rather than offering nothing. */
 ];
 
 function prompt(key) {
@@ -301,7 +302,10 @@ function page(body) {
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">${runnable} still to run${landed > 0 ? `, ${landed} landed` : ""}. Copy one, paste
+  ${runnable === 0 ? `<p class="lede">Nothing left to run. Every parcel in this programme has landed and
+  been retired to <code>docs/parcels-programme-3-landed.json</code>; what each one turned out to be
+  wrong about is in <code>docs/review/</code>. Add a parcel to <code>parcels.json</code>, put it in a
+  wave in <code>scripts/build-prompts.mjs</code>, rebuild, and this page fills again.</p>` : `<p class="lede">${runnable} still to run${landed > 0 ? `, ${landed} landed` : ""}. Copy one, paste
   it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -314,7 +318,7 @@ function page(body) {
     <li>Start the agents in a wave — press <b>Copy this prompt</b>, paste into a new agent, one agent per prompt.</li>
     <li>Wait for every agent in that wave to report. <b>Do not run anything while they type.</b></li>
     <li>Run the same two commands again. If they pass, commit. Then the next wave.</li>
-  </ol>
+  </ol>`}
 
 ${body}
 

@@ -45,110 +45,12 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">1 still to run. Copy one, paste
-  it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
+  <p class="lede">Nothing left to run. Every parcel in this programme has landed and
+  been retired to <code>docs/parcels-programme-3-landed.json</code>; what each one turned out to be
+  wrong about is in <code>docs/review/</code>. Add a parcel to <code>parcels.json</code>, put it in a
+  wave in <code>scripts/build-prompts.mjs</code>, rebuild, and this page fills again.</p>
 
-  <ol class="steps">
-    <li>Open a terminal in the project.
-      <div class="cmd">cd ~/Documents/ChatGPT\ Ads</div>
-    </li>
-    <li>Check the tree is clean before anyone writes in it.
-      <div class="cmd">node scripts/check-parcels.mjs &amp;&amp; npm run verify</div>
-    </li>
-    <li>Start the agents in a wave — press <b>Copy this prompt</b>, paste into a new agent, one agent per prompt.</li>
-    <li>Wait for every agent in that wave to report. <b>Do not run anything while they type.</b></li>
-    <li>Run the same two commands again. If they pass, commit. Then the next wave.</li>
-  </ol>
 
-    <section class="wave">
-      <h2>Wave 24</h2>
-      <p class="waveNote">Start these 1 together. When all 1 have reported, run the two commands, then go to the next wave.</p>
-      <article class="parcel">
-        <header>
-          <h3>testimonials</h3>
-          <button class="copy" data-target="p-testimonials">Copy this prompt</button>
-        </header>
-        <p class="what">Neither site carries a word from anybody who has worked with this team, and the owner wants one on each — specific and numerate rather than warm and vague.</p>
-        <pre id="p-testimonials">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "testimonials".
-
-Read these first, before you write anything, in this order:
-  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
-    content API and what was captured through it; the six statements in that material
-    that are wrong against Google's current documentation, each with the page that
-    contradicts it; why "generate and upload" is two products with a Google approval
-    between them; and the answer to the owner's question about per-agent limits.
-  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
-    endpoint it touches, transcribed with the URL it came from. Four decisions already
-    made, with the reasoning, so you do not spend your wave relitigating them. The
-    request and response shapes two parcels build to in parallel. And the rule the
-    owner set: every message is checked for who it is from, who it is to and which
-    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
-    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
-    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
-    A paraphrase would not, and you would find out after building on all three.
-  README.md, private/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  shared/testimonials.ts
-  client/src/components/site/Testimonials.tsx
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  client/src/pages/landing.tsx
-      - one section
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  A TESTIMONIALS SECTION ON BOTH SITES, AND NOT ONE INVENTED WORD. THIS IS THE RULE THAT DECIDES
-  THE PARCEL: every quotation is either something a real person actually said, with their
-  permission, or it is not published. This repository has already had to grow a guard in
-  scripts/build-adgrant.ts because a vague claim was turned into a precise false one, and a
-  fabricated client quotation is the same failure with a name attached to it. SO: build the
-  SECTION — the component, the shape, the layout, the place on each page — and fill it from
-  shared/testimonials.ts, which starts with whatever real material exists. Look first: the
-  Upwork agency profile at upwork.com/agencies/google carries public reviews, and
-  docs/case-studies.html and shared/cases.ts carry measured outcomes. Where a quotation cannot
-  be sourced, leave the row out and render the section with what there is; if there is nothing,
-  the section does not appear at all and the page is unchanged. WHAT THE OWNER ASKED FOR IN THE
-  COPY AROUND IT, which is ours to write and can therefore be written now: that this is digital
-  expertise blended with subject-matter AI agents and any agents a client brings, working on
-  Google Ads, paid advertising, organic LinkedIn growth and custom development — with the
-  numbers this repository already measures rather than new ones. NOTE the LinkedIn services are
-  hidden for the API review, so the LinkedIn clause follows shared/linkedin-review.ts like every
-  other mention.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  Neither site carries a word from anybody who has worked with this team, and the owner wants
-  one on each — specific and numerate rather than warm and vague.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-    </section>
 
   <footer>Generated from <code>parcels.json</code> by <code>scripts/build-prompts.mjs</code>. Change a parcel
   and rebuild — never edit a prompt here by hand, or it will name files that have moved.</footer>

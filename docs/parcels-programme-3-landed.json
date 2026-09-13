@@ -407,6 +407,20 @@
       "runAlone": true,
       "why": "There is no way to see who has used this. The owner wants one plain page: the people who have signed in, by which method, with whatever contact detail that method legitimately gave us, their rooms, their activity, their bookings, and whether they are a white-label partner.",
       "done": "ONE PAGE, AND IT IS ONLY EVER READ BY THE PERSON WHO RUNS THE DEPLOYMENT. (1) AUTHORISATION FIRST AND IT IS THE WHOLE PARCEL. This page lists people, their contact details and links into their rooms — a room address is a bearer credential, so this is the most dangerous page in the repository. It is reachable only by the operator of THIS deployment, proved by the session from room-account, and there is no other way in: no shared password, no secret path, no 'unlisted' URL. Write that test before the page. (2) WHAT IT SHOWS: each person, which ways they signed in with, the contact detail each of those ways legitimately yielded and nothing beyond it, their rooms with links, when each was last active, their bookings and whether each still stands, and their white-label partner status. Later, orders and tasks per room — leave the shape room for it, build none of it. (3) IT SHOWS WHAT WE HAVE, NOT WHAT WOULD BE USEFUL. A WhatsApp sign-in gives a peppered chat hash and a display name, not a phone number, and the page must say the phone is not held rather than leave a blank that reads like missing data. (4) IT FORKS, EMPTY. A partner's deployment gets this page with their own people and no trace of ours — the same catalogue rules as everything else — and with only the contact fields their own sign-in methods produce. (5) READ-ONLY in this parcel. No deleting a person, no cancelling somebody's booking from here: every one of those is an action with consequences elsewhere and each deserves its own thinking."
+    },
+    "testimonials": {
+      "owns": [
+        "shared/testimonials.ts",
+        "client/src/components/site/Testimonials.tsx"
+      ],
+      "seams": {
+        "client/src/pages/landing.tsx": [
+          "one section"
+        ]
+      },
+      "runAlone": false,
+      "why": "Neither site carries a word from anybody who has worked with this team, and the owner wants one on each — specific and numerate rather than warm and vague.",
+      "done": "A TESTIMONIALS SECTION ON BOTH SITES, AND NOT ONE INVENTED WORD. THIS IS THE RULE THAT DECIDES THE PARCEL: every quotation is either something a real person actually said, with their permission, or it is not published. This repository has already had to grow a guard in scripts/build-adgrant.ts because a vague claim was turned into a precise false one, and a fabricated client quotation is the same failure with a name attached to it. SO: build the SECTION — the component, the shape, the layout, the place on each page — and fill it from shared/testimonials.ts, which starts with whatever real material exists. Look first: the Upwork agency profile at upwork.com/agencies/google carries public reviews, and docs/case-studies.html and shared/cases.ts carry measured outcomes. Where a quotation cannot be sourced, leave the row out and render the section with what there is; if there is nothing, the section does not appear at all and the page is unchanged. WHAT THE OWNER ASKED FOR IN THE COPY AROUND IT, which is ours to write and can therefore be written now: that this is digital expertise blended with subject-matter AI agents and any agents a client brings, working on Google Ads, paid advertising, organic LinkedIn growth and custom development — with the numbers this repository already measures rather than new ones. NOTE the LinkedIn services are hidden for the API review, so the LinkedIn clause follows shared/linkedin-review.ts like every other mention."
     }
   },
   "booking-gate": {

@@ -5,6 +5,7 @@ import { STATS, type AdGrantStats } from "@shared/adgrant";
 import { doorAgent } from "@shared/doors";
 import { DISPLAY, HEADING, LINK, META, NUMERAL, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
 import { RoomMenu } from "@/components/site/RoomMenu";
+import Testimonials from "@/components/site/Testimonials";
 import { Conversation } from "@/components/adgrant/Conversation";
 import { DoorChat } from "@/pages/adgrant/DoorChat";
 import { thisDoor } from "@/pages/adgrant/catalogue";
@@ -134,6 +135,12 @@ export function Home() {
           </div>
         </section>
       ) : null}
+
+      {/* The section was built for both sites — it carries its own framing for
+          this one, saying plainly that the people quoted hired us for Google
+          Ads work and are not Ad Grant clients. It was only ever placed on the
+          other home page. */}
+      <Testimonials site="adgrant" />
 
       <section className={`${PAGE} pt-[var(--s6)]`}>
         <Conversation />

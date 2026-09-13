@@ -25,20 +25,5 @@
   ],
   "//alone": "Parcels marked runAlone touch the room, the panel or the shell - everything reads those, and two agents in them at once produce a merge nobody can check. One agent, let it finish, then start the others.",
   "//order": "The waves are in scripts/build-prompts.mjs and check-parcels.mjs reads them back. Programme three's ordering is a dependency chain, not a preference, and it has three links. (1) unipile-core is wave one ALONE because four parcels import its client; a parcel that writes its own Unipile client because the shared one did not exist yet is four incompatible error mappers. (2) booking-server and booking-dialog are the same wave and build to the request and response shapes fixed in the brief's section 3 - that is what fixing them in writing was for. (3) room-identity precedes login-create-room, because the claim dialog the site's new menu opens is the one room-identity builds. Beyond the chain, one standing rule: AT MOST ONE PARCEL PER WAVE MAY TOUCH server/routes.ts. Three parcels here need a route, and they are in three different waves for that reason alone.",
-  "parcels": {
-    "testimonials": {
-      "owns": [
-        "shared/testimonials.ts",
-        "client/src/components/site/Testimonials.tsx"
-      ],
-      "seams": {
-        "client/src/pages/landing.tsx": [
-          "one section"
-        ]
-      },
-      "runAlone": false,
-      "why": "Neither site carries a word from anybody who has worked with this team, and the owner wants one on each — specific and numerate rather than warm and vague.",
-      "done": "A TESTIMONIALS SECTION ON BOTH SITES, AND NOT ONE INVENTED WORD. THIS IS THE RULE THAT DECIDES THE PARCEL: every quotation is either something a real person actually said, with their permission, or it is not published. This repository has already had to grow a guard in scripts/build-adgrant.ts because a vague claim was turned into a precise false one, and a fabricated client quotation is the same failure with a name attached to it. SO: build the SECTION — the component, the shape, the layout, the place on each page — and fill it from shared/testimonials.ts, which starts with whatever real material exists. Look first: the Upwork agency profile at upwork.com/agencies/google carries public reviews, and docs/case-studies.html and shared/cases.ts carry measured outcomes. Where a quotation cannot be sourced, leave the row out and render the section with what there is; if there is nothing, the section does not appear at all and the page is unchanged. WHAT THE OWNER ASKED FOR IN THE COPY AROUND IT, which is ours to write and can therefore be written now: that this is digital expertise blended with subject-matter AI agents and any agents a client brings, working on Google Ads, paid advertising, organic LinkedIn growth and custom development — with the numbers this repository already measures rather than new ones. NOTE the LinkedIn services are hidden for the API review, so the LinkedIn clause follows shared/linkedin-review.ts like every other mention."
-    }
-  }
+  "parcels": {}
 }
