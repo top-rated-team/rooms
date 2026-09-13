@@ -381,7 +381,14 @@ async function attachVisitorOverlay(
     fetchImpl,
   });
   if (!intervals) {
-    return withVisitorCalendar(ownerBody, visitorCalendarView(opts.visitorHandle, now.getTime()));
+    /* Re-read: a 401 or 403 has already dropped the connection, and then the
+       honest answer is "not connected". Anything else leaves it standing, and
+       then the honest answer is "connected, and we could not read it". */
+    const after = visitorCalendarView(opts.visitorHandle, now.getTime());
+    return withVisitorCalendar(
+      ownerBody,
+      after.offered && after.connected ? { ...after, unreadable: true } : after,
+    );
   }
   return withVisitorCalendar(ownerBody, view, overlayVisitorBusy(ownerBody.days, intervals, ownerBody.timezone));
 }

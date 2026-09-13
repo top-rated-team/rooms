@@ -354,7 +354,18 @@ export interface BookingDay {
 export type VisitorCalendarView =
   | { offered: false }
   | { offered: true; connected: false }
-  | { offered: true; connected: true; expiresAt: string };
+  | {
+      offered: true;
+      connected: true;
+      expiresAt: string;
+      /**
+       * The connection stands but the last read of it failed, so NOTHING is
+       * marked. Without this the picker says a calendar is marking your busy
+       * times over a grid with no marks on it, which is the one answer worse
+       * than not offering the feature.
+       */
+      unreadable?: true;
+    };
 
 export interface BookingSlotsResponse {
   timezone: string;

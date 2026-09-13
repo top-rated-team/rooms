@@ -396,4 +396,42 @@ describe("visitor busy is marked, not removed", () => {
     assert.equal(otherVisitor.body.days[0]?.visitorBusy, undefined);
     assert.deepEqual(otherVisitor.body.visitorCalendar, { offered: true, connected: false });
   });
+
+  it("says the calendar could not be read rather than showing a connected row over an unmarked grid", async () => {
+    /* freeBusy answers 200 with a per-calendar errors array for notFound and
+       for a calendar the grant does not cover. The overlay is then empty and
+       the connection is still live, so the picker used to say "your calendar
+       is marking the times you are busy" over a grid with nothing marked. */
+    setConfigured();
+    process.env.GOOGLE_FREEBUSY_CLIENT_ID = "freebusy-client-id-for-tests";
+    process.env.GOOGLE_FREEBUSY_CLIENT_SECRET = "freebusy-client-secret-for-tests";
+    putVisitorCalendarForTests({
+      handle: "visitor-c",
+      accessToken: "visitor-c-token",
+      now: NOW.getTime(),
+    });
+
+    const fetchImpl: typeof fetch = async (input) => {
+      const url = String(input);
+      if (url.includes("googleapis.com/calendar/v3/freeBusy")) {
+        return jsonResponse(200, { calendars: { primary: { errors: [{ reason: "notFound" }], busy: [] } } });
+      }
+      if (url.includes("/calendars?") || /\/api\/v1\/calendars$/.test(url.split("?")[0])) {
+        return jsonResponse(200, {
+          data: [{ id: CALENDAR_ID, is_primary: true, is_read_only: false, timezone: TZ }],
+        });
+      }
+      return jsonResponse(200, { data: [] });
+    };
+
+    const result = await getBookingSlots(FROM, 1, { fetchImpl, now: NOW, visitorHandle: "visitor-c" });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.body.days[0]?.visitorBusy, undefined, "nothing may be marked from a failed read");
+    assert.equal(result.body.visitorCalendar?.offered, true);
+    if (!result.body.visitorCalendar?.offered || !result.body.visitorCalendar.connected) {
+      assert.fail("the connection is still live, so the row must not say it is gone");
+    }
+    assert.equal(result.body.visitorCalendar.unreadable, true);
+  });
 });

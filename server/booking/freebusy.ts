@@ -71,6 +71,17 @@ const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
 const GOOGLE_REVOKE = "https://oauth2.googleapis.com/revoke";
 const GOOGLE_FREEBUSY = "https://www.googleapis.com/calendar/v3/freeBusy";
+/**
+ * Nothing Google does may hold /api/booking/slots open. That route is the
+ * booking popup's first paint for every visitor, connected or not, and one
+ * hung socket would stall all of them behind an optional overlay.
+ */
+const GOOGLE_MS = 8_000;
+
+function withTimeout(): { signal: AbortSignal } | Record<string, never> {
+  if (typeof AbortSignal?.timeout !== "function") return {};
+  return { signal: AbortSignal.timeout(GOOGLE_MS) };
+}
 const RETURN_ORIGIN = "https://booking.invalid";
 /** How long a started connection may take to come back. The state cookie's life. */
 export const PENDING_VISITOR_CALENDAR_MS = 15 * 60_000;
@@ -335,6 +346,7 @@ export async function completeVisitorCalendarConnect(
   let tokenBody: unknown = null;
   try {
     const res = await fetchImpl(GOOGLE_TOKEN, {
+      ...withTimeout(),
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
       body,
@@ -428,6 +440,7 @@ export async function queryVisitorFreeBusy(input: {
   let body: unknown = null;
   try {
     const res = await fetchImpl(GOOGLE_FREEBUSY, {
+      ...withTimeout(),
       method: "POST",
       headers: {
         Authorization: `Bearer ${row.accessToken}`,

@@ -380,7 +380,9 @@ export function parseVisitorCalendar(value: unknown): VisitorCalendarView | unde
   if (record.connected !== true) return { offered: true, connected: false };
   const expiresAt = typeof record.expiresAt === "string" ? record.expiresAt : "";
   if (!expiresAt) return { offered: true, connected: false };
-  return { offered: true, connected: true, expiresAt };
+  return record.unreadable === true
+    ? { offered: true, connected: true, expiresAt, unreadable: true }
+    : { offered: true, connected: true, expiresAt };
 }
 
 export function parseBookedPayload(value: unknown): BookedPayload {
@@ -485,6 +487,17 @@ export function cachedSlots(): SlotsPayload | null {
   if (!cached) return null;
   if (Date.now() - cached.at > CACHE_MS) return null;
   return cached.payload;
+}
+
+/**
+ * Throw the cached window away. Disconnecting a calendar changes what is on
+ * that payload — the marks and the state of the row above it — and the popup
+ * reads the cache when it opens, so without this, closing and reopening shows
+ * the marks again and offers to disconnect a calendar that is already gone.
+ */
+export function forgetCachedSlots(): void {
+  cached = null;
+  inflight = null;
 }
 
 export function replaceCachedDays(days: SlotDay[]): void {

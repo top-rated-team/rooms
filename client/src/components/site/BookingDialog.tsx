@@ -27,6 +27,7 @@ import {
   takeBookingCredential,
   takeVisitorCalendarHop,
   dropVisitorCalendar,
+  forgetCachedSlots,
   visitorCalendarConnectUrl,
   type BookedPayload,
   type SlotDay,
@@ -525,6 +526,10 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
     setDroppingCalendar(true);
     try {
       const view = await dropVisitorCalendar();
+      /* The module cache outlives this component. Leaving it holding marks
+         and a connected row means closing and reopening the popup undoes the
+         disconnect on screen while the token really is gone. */
+      forgetCachedSlots();
       setSlots((current) =>
         current
           ? {
@@ -1071,6 +1076,28 @@ function VisitorCalendarRow({
       </p>
     );
   }
+  if (view.unreadable) {
+    /* Connected, and the last read of it failed. Saying "your calendar is
+       marking the times you are busy" over a grid with nothing marked on it
+       is worse than never offering the connection. */
+    return (
+      <p className="mt-6 text-sm text-muted-foreground" data-testid="text-booking-visitor-calendar">
+        <span className="text-destructive">
+          Your calendar is connected, but we could not read it just now, so nothing here is marked.
+        </span>{" "}
+        <button
+          type="button"
+          onClick={onDrop}
+          disabled={dropping}
+          data-testid="button-booking-visitor-calendar-drop"
+          className="border-b border-primary pb-[var(--s1)] text-primary no-underline hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+        >
+          {dropping ? "Disconnecting…" : "Disconnect it"}
+        </button>
+        .
+      </p>
+    );
+  }
   return (
     <p className="mt-6 text-sm text-muted-foreground" data-testid="text-booking-visitor-calendar">
       Your calendar is marking the times you are busy.{" "}
@@ -1154,14 +1181,14 @@ function TimesPane({
             );
           })}
         </div>
-      ) : null}
+      ) : (
+        <p className="mt-1.5 text-sm text-muted-foreground">Looking up times that are free.</p>
+      )}
       {slots && slots.length > 0 && (busy?.length ?? 0) > 0 ? (
         <p className="mt-2 text-sm text-muted-foreground" data-testid="text-booking-visitor-busy-note">
           Dashed times are ones your own calendar says you are busy in. You can still pick one.
         </p>
-      ) : (
-        <p className="mt-1.5 text-sm text-muted-foreground">Looking up times that are free.</p>
-      )}
+      ) : null}
     </div>
   );
 }
