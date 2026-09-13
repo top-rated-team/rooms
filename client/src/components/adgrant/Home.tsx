@@ -2,10 +2,19 @@ import { useEffect, useState } from "react";
 import { Link } from "wouter";
 
 import { STATS, type AdGrantStats } from "@shared/adgrant";
+import { doorAgent } from "@shared/doors";
 import { DISPLAY, HEADING, LINK, META, NUMERAL, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
+import { RoomMenu } from "@/components/site/RoomMenu";
 import { Conversation } from "@/components/adgrant/Conversation";
+import { DoorChat } from "@/pages/adgrant/DoorChat";
+import { thisDoor } from "@/pages/adgrant/catalogue";
 import { formatCount, formatMeasuredOn } from "@/components/adgrant/format";
 import { ADGRANT_SECTIONS } from "@/components/adgrant/sections";
+
+const ACTION_LOUD =
+  "type-meta border-b border-primary pb-[var(--s1)] font-medium text-primary hover:border-foreground hover:text-foreground";
+
+const GRANT_DOOR = thisDoor("ad-grants");
 
 const POLICY_CTR = "https://support.google.com/nonprofits/answer/117827?hl=en";
 const POLICY_BUDGET = "https://support.google.com/nonprofits/answer/1332166?hl=en";
@@ -86,6 +95,14 @@ export function Home() {
           account. A person sets up the manager-account link afterwards if the structure should go into the grant
           account.
         </p>
+        <div className="mt-[var(--s4)] flex flex-wrap items-baseline gap-x-[var(--s2)] gap-y-[var(--s1)] whitespace-nowrap [font-size:clamp(0.66rem,3vw,0.76rem)!important] sm:flex-nowrap sm:gap-x-[var(--s3)]">
+          <RoomMenu
+            className={ACTION_LOUD}
+            doorId={GRANT_DOOR?.id}
+            agentId={GRANT_DOOR?.firstAgentId}
+            testId="button-adgrant-open-a-room"
+          />
+        </div>
       </section>
 
       <section className={`${PAGE} pt-[var(--s5)]`} data-testid="block-adgrant-stats">
@@ -105,6 +122,18 @@ export function Home() {
           ))}
         </ol>
       </section>
+
+      {GRANT_DOOR && doorAgent(GRANT_DOOR) ? (
+        <section className={`${PAGE} pt-[var(--s6)]`} data-testid="block-adgrant-door-panel">
+          <h2 className={HEADING}>Ask the Ad Grants agent</h2>
+          <p className={`mt-[var(--s2)] max-w-[46ch] ${READ_MUTED}`}>
+            {GRANT_DOOR.agentLine} A question asked here is answered on this page. Nothing is saved until you keep it.
+          </p>
+          <div className="mt-[var(--s4)]">
+            <DoorChat door={GRANT_DOOR} />
+          </div>
+        </section>
+      ) : null}
 
       <section className={`${PAGE} pt-[var(--s6)]`}>
         <Conversation />

@@ -209,9 +209,19 @@ describe("legal facts a fork's privacy and terms are filled from", () => {
     assert.equal(facts.legalName, HOUSE_LEGAL_NAME);
     assert.equal(facts.displayName, "AdGrant.AI");
     assert.equal(facts.termsUrl, "https://adgrant.ai/terms");
-    assert.equal(facts.login.linkedin, true);
-    assert.equal(facts.login.whatsapp, true);
-    assert.equal(facts.login.email, true);
+    /* THE DEFAULT IS NONE, and that is the point of the argument. Which ways
+       in a deployment has cannot be read off the catalogue — LinkedIn depends
+       on an app and on the address its redirect returns to, WhatsApp on the
+       host and a probe, email on mail being configured. Defaulting to all
+       three true put "we use Sign In with LinkedIn" on adgrant.ai's privacy
+       page, which is a data flow that address does not have. */
+    assert.deepEqual(facts.login, { linkedin: false, whatsapp: false, email: false });
+    const asked = catalogueLegalFacts(rows, ADGRANT_IDENTITY, {
+      linkedin: false,
+      whatsapp: true,
+      email: true,
+    });
+    assert.deepEqual(asked.login, { linkedin: false, whatsapp: true, email: true });
     assert.equal(facts.rooms, true);
     assert.equal(facts.generatesStructure, true);
     assert.ok(facts.partners.some((partnerRow) => partnerRow.legalName === "Maksymenko LinkedIn Growth"));

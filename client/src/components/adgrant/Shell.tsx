@@ -1,18 +1,17 @@
 import type { ReactNode } from "react";
 import { Link } from "wouter";
 
-import { DOOR_BY_ID } from "@shared/doors";
 import { MAIN_SITE_URL } from "@shared/roster";
 import { ADGRANT_ACCENT_WRAP, ADGRANT_MARK } from "@/components/site/doors/adgrant-style";
 import { LINK, META, META_PLAIN, PAGE } from "@/components/site/doors/quiet";
 import { useTheme } from "@/hooks/use-theme";
+import { ADGRANT_IDENTITY, thisDoor } from "@/pages/adgrant/catalogue";
 import { AdGrantLogo } from "@/components/adgrant/Logo";
-import { mountHome } from "@/components/adgrant/links";
-import { ADGRANT_MOUNT } from "@/components/adgrant/mount";
+import { mountHome, sectionPath } from "@/components/adgrant/links";
 import { ADGRANT_SECTIONS } from "@/components/adgrant/sections";
 
-const DOOR = DOOR_BY_ID["ad-grants"];
-const CONTRACT = DOOR.contract;
+const GRANT_DOOR = thisDoor("ad-grants");
+const CONTRACT = GRANT_DOOR?.contract ?? ADGRANT_IDENTITY;
 
 const NAV_LINK = "type-meta draw text-muted-foreground hover:text-foreground";
 const FOOTER_MARK = "h-[1.15em] w-[1.15em] translate-y-[0.19em] fill-current";
@@ -57,6 +56,9 @@ export function Shell({ children }: { children: ReactNode }) {
             {ADGRANT_MARK}
           </Link>
           <nav aria-label={ADGRANT_MARK} className="flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]">
+            <Link href={sectionPath("services")} data-testid="link-adgrant-nav-services" className={NAV_LINK}>
+              Services
+            </Link>
             {ADGRANT_SECTIONS.map((section) => (
               <Link
                 key={section.segment}
@@ -95,31 +97,12 @@ export function Shell({ children }: { children: ReactNode }) {
             aria-label={`${ADGRANT_MARK} footer`}
             className="type-meta flex flex-wrap items-center gap-x-[var(--s3)] gap-y-[var(--s1)]"
           >
-            {/* STILL TOP-RATED TEAM'S, and that is the honest state rather
-                than the intended one. This product needs its own — the owner
-                asked for it and a fork needs the same — but they do not exist
-                in this tree yet, and a footer link to a page that answers 404
-                is the exact defect this repository was caught with before.
-                They move to ${ADGRANT_MOUNT}/privacy and /terms in the wave
-                that writes them. */}
-            <a
-              href={`${MAIN_SITE_URL}/privacy`}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="link-adgrant-privacy"
-              className={LINK}
-            >
+            <Link href={sectionPath("privacy")} data-testid="link-adgrant-privacy" className={LINK}>
               Privacy
-            </a>
-            <a
-              href={`${MAIN_SITE_URL}/terms`}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="link-adgrant-terms"
-              className={LINK}
-            >
+            </Link>
+            <Link href={sectionPath("terms")} data-testid="link-adgrant-terms" className={LINK}>
               Terms
-            </a>
+            </Link>
             <a
               href="https://www.linkedin.com/company/ad-grant-ai"
               target="_blank"

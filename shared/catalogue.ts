@@ -527,7 +527,18 @@ export interface CatalogueLegalFacts {
 export function catalogueLegalFacts(
   doors: readonly (DoorDef & { offered?: boolean })[],
   identity: OperatorIdentity,
-  login: CatalogueLegalFacts["login"] = { linkedin: true, whatsapp: true, email: true },
+  /*
+   * WHICH WAYS IN THIS DEPLOYMENT ACTUALLY HAS. It cannot be known from the
+   * catalogue: LinkedIn depends on an app and on the address its redirect
+   * returns to, WhatsApp on the host and on a probe, email on mail being
+   * configured. So it is passed in, and the default is NONE.
+   *
+   * It defaulted to all three true, which put "we use Sign In with LinkedIn"
+   * on adgrant.ai's privacy page — a data flow that address does not have.
+   * A legal page that under-claims is wrong and harmless; one that
+   * over-claims describes a transfer of somebody's data that never happened.
+   */
+  login: CatalogueLegalFacts["login"] = { linkedin: false, whatsapp: false, email: false },
 ): CatalogueLegalFacts {
   const offered = doors.filter((door) => door.offered !== false);
   const partners = offered

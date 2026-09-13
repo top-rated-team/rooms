@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
 import type { AdGrantGenerateResponse, AdGrantQuotaView, CreateWorkspaceResponse } from "@shared/api";
-import { DOOR_BY_ID } from "@shared/doors";
 import { ApiError, apiRequest } from "@/lib/apiRequest";
 import { roomSource } from "@/components/site/home/doorText";
 import { ACTION, META, READ, READ_MUTED } from "@/components/site/doors/quiet";
+import { thisDoor } from "@/pages/adgrant/catalogue";
 import { Identify } from "@/components/adgrant/Identify";
 import { Structure } from "@/components/adgrant/Structure";
 
-const DOOR = DOOR_BY_ID["ad-grants"];
+const DOOR = thisDoor("ad-grants");
 const STORAGE_KEY = "adgrant.generate.v1";
 
 const OPENING =
@@ -158,8 +158,8 @@ export function Conversation() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            agentId: DOOR.firstAgentId ?? undefined,
-            source: { ...roomSource(DOOR.id), entered: "direct" },
+            agentId: DOOR?.firstAgentId ?? undefined,
+            source: { ...roomSource(DOOR?.id ?? "ad-grants"), entered: "direct" },
           }),
         });
         if (cancelled) return;

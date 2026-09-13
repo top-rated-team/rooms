@@ -31,6 +31,7 @@ import {
   resetRoomLoginForTests,
   resolveRoomLoginLinkedIn,
   roomLoginAvailability,
+  ROOM_LOGIN_LINKEDIN_ELSEWHERE_LINE,
   roomLoginLinkedInRedirectUri,
   startRoomLoginLinkedIn,
   startRoomLoginWhatsApp,
@@ -115,7 +116,10 @@ describe("roomLoginAvailability", () => {
     assert.deepEqual(fork.whatsapp, { available: false });
     assert.equal(fork.linkedin.available, false);
     if (fork.linkedin.available) return;
-    assert.match(fork.linkedin.unavailableLine, /ai\.top-rated\.team/);
+    assert.equal(fork.linkedin.unavailableLine, ROOM_LOGIN_LINKEDIN_ELSEWHERE_LINE);
+    /* And it does not name the address it does return to: on adgrant.ai that
+       sentence put the sibling product inside a sign-in panel. */
+    assert.equal(fork.linkedin.unavailableLine.includes("top-rated"), false);
 
     const home = await roomLoginAvailability({
       host: "ai.top-rated.team",

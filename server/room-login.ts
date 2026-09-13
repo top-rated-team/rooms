@@ -60,6 +60,17 @@ export const ROOM_LOGIN_LINKEDIN_UNCONFIGURED_LINE =
   "LinkedIn sign-in is not configured on this deployment.";
 
 /**
+ * What the OTHER address says. It used to name the host LinkedIn returns to,
+ * which is true and is the wrong sentence to put in front of a visitor: on
+ * adgrant.ai it advertised the sibling product inside a sign-in panel, on the
+ * one page the owner had just asked to stop linking to it. Which app the
+ * redirect belongs to is the operator's business, and the operator reads
+ * .env.example and the boot log, not this panel.
+ */
+export const ROOM_LOGIN_LINKEDIN_ELSEWHERE_LINE =
+  "LinkedIn sign-in is not one of the ways in on this address.";
+
+/**
  * LinkedIn returns to ONE address — the redirect registered on the app, built
  * from PUBLIC_BASE_URL — so it can only be offered on that address.
  *
@@ -191,7 +202,7 @@ export async function roomLoginAvailability(input: {
             ? ROOM_LOGIN_LINKEDIN_UNCONFIGURED_LINE
             : !publicUrl
               ? ROOM_ACCESS_NO_PUBLIC_URL_LINE
-              : `LinkedIn sign-in returns to ${new URL(publicUrl).hostname}, so it is not offered here.`,
+              : ROOM_LOGIN_LINKEDIN_ELSEWHERE_LINE,
         };
 
   const house = isHouseHost(input.host);

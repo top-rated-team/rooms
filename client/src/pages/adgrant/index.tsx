@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Route, Switch } from "wouter";
 
 import { Home } from "@/components/adgrant/Home";
@@ -10,8 +11,21 @@ import { TemplatePage } from "@/components/adgrant/TemplatePage";
 import { TemplatesIndex } from "@/components/adgrant/TemplatesIndex";
 import { formatCount } from "@/components/adgrant/format";
 import { mountHome, sectionPath, leafPath } from "@/components/adgrant/links";
-import { ADGRANT_MOUNT } from "@/components/adgrant/mount";
+import Door from "@/pages/adgrant/door";
+import Privacy from "@/pages/adgrant/privacy";
+import Services from "@/pages/adgrant/services";
+import Terms from "@/pages/adgrant/terms";
 import { STATS } from "@shared/adgrant";
+
+const Workspace = lazy(() => import("@/pages/workspace"));
+
+function WorkspaceFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <p className="type-note text-muted-foreground">Opening workspace…</p>
+    </div>
+  );
+}
 
 /* ---------------------------------------------------------------------------
  * ADGRANT.AI'S TREE, IN THIS APPLICATION.
@@ -38,11 +52,15 @@ function HomeRoute() {
   );
 }
 
-export function AdGrantApp() {
+function Pages() {
   return (
     <Shell>
       <Switch>
         <Route path={mountHome()} component={HomeRoute} />
+        <Route path={sectionPath("services")} component={Services} />
+        <Route path={leafPath("services", ":slug")} component={Door} />
+        <Route path={sectionPath("privacy")} component={Privacy} />
+        <Route path={sectionPath("terms")} component={Terms} />
         <Route path={sectionPath("glossary")}>
           <LibraryIndex segment="glossary" />
         </Route>
@@ -72,13 +90,34 @@ export function AdGrantApp() {
         </Route>
         <Route path={sectionPath("templates")} component={TemplatesIndex} />
         <Route path={leafPath("templates", ":slug")} component={TemplatePage} />
-        {ADGRANT_MOUNT ? (
-          <Route>
-            <Missing title="This page is not in the library" />
-          </Route>
-        ) : null}
+        <Route>
+          <Missing title="This page is not in the library" />
+        </Route>
       </Switch>
     </Shell>
+  );
+}
+
+export function AdGrantApp() {
+  return (
+    <Switch>
+      {/* Rooms live at /w on this host too. App.tsx does not mount them when
+          the process is answering as adgrant.ai, and this parcel cannot edit
+          that file, so the route has to live here. */}
+      <Route path="/w/:token">
+        <Suspense fallback={<WorkspaceFallback />}>
+          <Workspace />
+        </Suspense>
+      </Route>
+      <Route path="/w">
+        <Suspense fallback={<WorkspaceFallback />}>
+          <Workspace />
+        </Suspense>
+      </Route>
+      <Route>
+        <Pages />
+      </Route>
+    </Switch>
   );
 }
 
