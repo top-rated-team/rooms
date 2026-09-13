@@ -659,8 +659,13 @@ WHAT DONE MEANS FOR THIS PARCEL:
   (5) ITS OWN PRIVACY AND TERMS, at its own addresses, and the footer links move to them in the
   same commit that creates them — they point at Top-Rated Team's today, which is honest and
   wrong. A fork gets them part-filled from what it actually has: its login methods, its rooms,
-  and any partner services added. WHAT MUST NOT CHANGE: adgrant.ai keeps answering at the root
-  with its own head, icon and card, and top-rated.team/adgrant keeps 301ing to it.
+  and any partner services added. (6) THE FRONT PAGE OPENS THE SAME WAY OURS DOES. The hero
+  carries the Sign in | Open a room pair, and the door itself carries a chat with the Ad Grant
+  agent — a nonprofit should be able to ask a question on the page it landed on, not after
+  finding a room. Both already exist on top-rated.team (client/src/components/site/RoomMenu.tsx
+  and the door bodies); reuse them through the catalogue rather than building a second pair with
+  the same words on it. WHAT MUST NOT CHANGE: adgrant.ai keeps answering at the root with its
+  own head, icon and card, and top-rated.team/adgrant keeps 301ing to it.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
   AdGrant.AI is a second product hand-built inside this repository, and the owner's point is
