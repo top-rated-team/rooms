@@ -19,6 +19,7 @@ import type {
   AdGrantKeyword,
   AdGrantQuotaView,
   AdGrantSitelink,
+  AdGrantTemplateFile,
 } from "@shared/api";
 import { getBinding } from "../identity-store";
 import { hydrateIdentityStore } from "../identity";
@@ -38,6 +39,29 @@ export const EDITOR_LINE =
 
 export const PAUSED_LINE =
   "Every campaign in this file is Paused. Importing it does not start ads.";
+
+export const EDITOR_TOOL = "Google Ads Editor";
+
+export const CAMPAIGNS_FILE_LINE =
+  "Campaigns only. Google Ads Editor imports this file on its own. Every campaign is Paused.";
+
+export const AD_GROUPS_FILE_LINE =
+  "Ad groups only. Google Ads Editor imports this file on its own. Every ad group is Paused.";
+
+export const KEYWORDS_FILE_LINE =
+  "Keywords only. Google Ads Editor imports this file on its own.";
+
+export const ADS_FILE_LINE =
+  "Responsive search ads only. Google Ads Editor imports this file on its own.";
+
+export const SITELINKS_FILE_LINE =
+  "Sitelinks only. Google Ads Editor imports this file on its own as account-level assets.";
+
+export const CALLOUTS_FILE_LINE =
+  "Callouts only. Google Ads Editor imports this file on its own as account-level assets.";
+
+export const SNIPPETS_FILE_LINE =
+  "Structured snippets only. Google Ads Editor imports this file on its own as account-level assets.";
 
 export const UNBOUND_LINE =
   "A generation needs a room bound to you, through LinkedIn sign-in or a WhatsApp message to us. Those are the two identification routes that already exist; there is not a third.";
@@ -641,6 +665,218 @@ export function structureToEditorCsv(structure: AdGrantAccountStructure): string
   return [header, ...lines].join("\n") + "\n";
 }
 
+function writeCsv(columns: readonly string[], rows: Array<ReadonlyArray<string | number | undefined>>): string {
+  const header = columns.join(",");
+  const lines = rows.map((row) => columns.map((_, index) => csvCell(row[index])).join(","));
+  return [header, ...lines].join("\n") + "\n";
+}
+
+function entityFile(
+  kind: AdGrantTemplateFile["kind"],
+  filename: string,
+  body: string,
+  line: string,
+): AdGrantTemplateFile {
+  return { kind, filename, mime: "text/csv;charset=utf-8", body, line, tool: EDITOR_TOOL };
+}
+
+const CAMPAIGN_COLUMNS = [
+  "Campaign",
+  "Campaign type",
+  "Campaign state",
+  "Budget",
+  "Budget type",
+  "Bid strategy type",
+  "Location",
+  "Languages",
+] as const;
+
+const AD_GROUP_COLUMNS = ["Campaign", "Ad group", "Ad group state"] as const;
+
+const KEYWORD_COLUMNS = ["Campaign", "Ad group", "Keyword", "Match type"] as const;
+
+const AD_COLUMNS = [
+  "Campaign",
+  "Ad group",
+  "Ad type",
+  ...Array.from({ length: EDITOR_HEADLINES }, (_, i) => `Headline ${i + 1}`),
+  ...Array.from({ length: EDITOR_DESCRIPTIONS }, (_, i) => `Description ${i + 1}`),
+  "Path 1",
+  "Path 2",
+  "Final URL",
+] as const;
+
+const SITELINK_COLUMNS = [
+  "Campaign",
+  "Ad group",
+  "Link text",
+  "Description line 1",
+  "Description line 2",
+  "Final URL",
+] as const;
+
+const CALLOUT_COLUMNS = ["Campaign", "Ad group", "Callout text"] as const;
+
+const SNIPPET_COLUMNS = ["Campaign", "Ad group", "Header", "Values"] as const;
+
+export function structureToCampaignsCsv(structure: AdGrantAccountStructure): string {
+  return writeCsv(
+    CAMPAIGN_COLUMNS,
+    structure.campaigns.map((campaign) => [
+      campaign.name,
+      "Search",
+      "Paused",
+      campaign.dailyBudgetUsd,
+      "Daily",
+      bidLabel(campaign.bidStrategy),
+      campaign.locations.join("; "),
+      campaign.language,
+    ]),
+  );
+}
+
+export function structureToAdGroupsCsv(structure: AdGrantAccountStructure): string {
+  return writeCsv(
+    AD_GROUP_COLUMNS,
+    structure.campaigns.flatMap((campaign) =>
+      campaign.adGroups.map((group) => [campaign.name, group.name, "Paused"]),
+    ),
+  );
+}
+
+export function structureToKeywordsCsv(structure: AdGrantAccountStructure): string {
+  return writeCsv(
+    KEYWORD_COLUMNS,
+    structure.campaigns.flatMap((campaign) =>
+      campaign.adGroups.flatMap((group) =>
+        group.keywords.map((keyword) => [
+          campaign.name,
+          group.name,
+          keyword.text,
+          keyword.matchType === "EXACT" ? "Exact" : keyword.matchType === "BROAD" ? "Broad" : "Phrase",
+        ]),
+      ),
+    ),
+  );
+}
+
+export function structureToAdsCsv(structure: AdGrantAccountStructure): string {
+  return writeCsv(
+    AD_COLUMNS,
+    structure.campaigns.flatMap((campaign) =>
+      campaign.adGroups.flatMap((group) =>
+        group.ads.map((ad) => [
+          campaign.name,
+          group.name,
+          "Responsive search ad",
+          ...Array.from({ length: EDITOR_HEADLINES }, (_, i) => ad.headlines[i] ?? ""),
+          ...Array.from({ length: EDITOR_DESCRIPTIONS }, (_, i) => ad.descriptions[i] ?? ""),
+          ad.path1 ?? "",
+          ad.path2 ?? "",
+          ad.finalUrl,
+        ]),
+      ),
+    ),
+  );
+}
+
+export function sitelinksToCsv(sitelinks: AdGrantSitelink[]): string {
+  return writeCsv(
+    SITELINK_COLUMNS,
+    sitelinks.map((link) => ["", "", link.text, link.description1 ?? "", link.description2 ?? "", link.finalUrl]),
+  );
+}
+
+export function calloutsToCsv(callouts: { text: string }[]): string {
+  return writeCsv(
+    CALLOUT_COLUMNS,
+    callouts.map((callout) => ["", "", callout.text]),
+  );
+}
+
+export function snippetsToCsv(snippets: { header: string; values: string[] }[]): string {
+  return writeCsv(
+    SNIPPET_COLUMNS,
+    snippets.map((snippet) => ["", "", snippet.header, snippet.values.join("; ")]),
+  );
+}
+
+function uniqueSitelinks(structure: AdGrantAccountStructure): AdGrantSitelink[] {
+  const seen = new Set<string>();
+  const out: AdGrantSitelink[] = [];
+  for (const campaign of structure.campaigns) {
+    for (const link of campaign.sitelinks) {
+      const key = `${link.text.toLowerCase()}|${link.finalUrl}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(link);
+    }
+  }
+  return out;
+}
+
+export interface StructureFileExtras {
+  callouts?: { text: string }[];
+  snippets?: { header: string; values: string[] }[];
+  sitelinks?: AdGrantSitelink[];
+}
+
+/**
+ * One Editor file plus one CSV per entity that has rows. A kind with nothing
+ * in it is omitted, so a count on the page is always a file.
+ */
+export function structureFiles(
+  structure: AdGrantAccountStructure,
+  stem: string,
+  extras?: StructureFileExtras,
+): AdGrantTemplateFile[] {
+  const files: AdGrantTemplateFile[] = [
+    {
+      kind: "editor",
+      filename: `${stem}-google-ads-editor.csv`,
+      mime: "text/csv;charset=utf-8",
+      body: structureToEditorCsv(structure),
+      line: EDITOR_LINE,
+      tool: EDITOR_TOOL,
+    },
+  ];
+  const campaigns = structureToCampaignsCsv(structure);
+  if (structure.campaigns.length > 0) {
+    files.push(entityFile("campaigns", `${stem}-campaigns.csv`, campaigns, CAMPAIGNS_FILE_LINE));
+  }
+  const adGroupCount = structure.campaigns.reduce((total, campaign) => total + campaign.adGroups.length, 0);
+  if (adGroupCount > 0) {
+    files.push(entityFile("ad-groups", `${stem}-ad-groups.csv`, structureToAdGroupsCsv(structure), AD_GROUPS_FILE_LINE));
+  }
+  const keywordCount = structure.campaigns.reduce(
+    (total, campaign) => total + campaign.adGroups.reduce((sum, group) => sum + group.keywords.length, 0),
+    0,
+  );
+  if (keywordCount > 0) {
+    files.push(entityFile("keywords", `${stem}-keywords.csv`, structureToKeywordsCsv(structure), KEYWORDS_FILE_LINE));
+  }
+  const adCount = structure.campaigns.reduce(
+    (total, campaign) => total + campaign.adGroups.reduce((sum, group) => sum + group.ads.length, 0),
+    0,
+  );
+  if (adCount > 0) {
+    files.push(entityFile("ads", `${stem}-ads.csv`, structureToAdsCsv(structure), ADS_FILE_LINE));
+  }
+  const sitelinks = extras?.sitelinks ?? uniqueSitelinks(structure);
+  if (sitelinks.length > 0) {
+    files.push(entityFile("sitelinks", `${stem}-sitelinks.csv`, sitelinksToCsv(sitelinks), SITELINKS_FILE_LINE));
+  }
+  if (extras?.callouts && extras.callouts.length > 0) {
+    files.push(entityFile("callouts", `${stem}-callouts.csv`, calloutsToCsv(extras.callouts), CALLOUTS_FILE_LINE));
+  }
+  if (extras?.snippets && extras.snippets.length > 0) {
+    files.push(
+      entityFile("structured-snippets", `${stem}-structured-snippets.csv`, snippetsToCsv(extras.snippets), SNIPPETS_FILE_LINE),
+    );
+  }
+  return files;
+}
+
 function withQuota<T extends AdGrantGenerateError>(personKey: string | null, body: T): T {
   if (!personKey) return body;
   return { ...body, ...quotaViewFor(personKey) };
@@ -721,6 +957,7 @@ export async function generateAdGrantStructure(input: {
   }
 
   const view = quotaViewFor(personKey);
+  const stem = structure.authorisedDomain.replace(/[^a-z0-9.-]+/gi, "-");
   const body: AdGrantGenerateResponse = {
     ...view,
     remaining: recorded.remaining,
@@ -728,6 +965,7 @@ export async function generateAdGrantStructure(input: {
     csv: structureToEditorCsv(structure),
     editorLine: EDITOR_LINE,
     pausedLine: PAUSED_LINE,
+    files: structureFiles(structure, stem),
   };
   return { status: 200, body };
 }

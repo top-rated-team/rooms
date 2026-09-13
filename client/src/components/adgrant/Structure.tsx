@@ -1,7 +1,8 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "wouter";
 
-import type { AdGrantAccountStructure, AdGrantGenerateResponse } from "@shared/api";
-import { ACTION, HEADING, META, NUMERAL, READ, READ_MUTED } from "@/components/site/doors/quiet";
+import { ADGRANT_TEMPLATE_FILES_ROOM_LINE, type AdGrantAccountStructure, type AdGrantGenerateResponse } from "@shared/api";
+import { ACTION, HEADING, LINK, META, NUMERAL, READ, READ_MUTED } from "@/components/site/doors/quiet";
 
 function bidLabel(strategy: AdGrantAccountStructure["campaigns"][number]["bidStrategy"]): string {
   switch (strategy) {
@@ -26,15 +27,46 @@ function matchLabel(match: "EXACT" | "PHRASE" | "BROAD"): string {
   return "broad";
 }
 
-export function Structure({ result }: { result: AdGrantGenerateResponse }) {
-  const filename = `${result.structure.authorisedDomain.replace(/[^a-z0-9.-]+/gi, "-")}-google-ads-editor.csv`;
-  const href = useMemo(() => URL.createObjectURL(new Blob([result.csv], { type: "text/csv;charset=utf-8" })), [result.csv]);
+function downloadLabel(kind: string, filename: string): string {
+  if (kind === "editor") return "Download the combined Google Ads Editor file";
+  if (kind === "campaigns") return "Download campaigns";
+  if (kind === "ad-groups") return "Download ad groups";
+  if (kind === "keywords") return "Download keywords";
+  if (kind === "ads") return "Download ads";
+  if (kind === "sitelinks") return "Download sitelinks";
+  if (kind === "callouts") return "Download callouts";
+  if (kind === "structured-snippets") return "Download structured snippets";
+  return `Download ${filename}`;
+}
+
+export function Structure({ result, roomHref }: { result: AdGrantGenerateResponse; roomHref?: string }) {
+  const files = result.files?.length
+    ? result.files
+    : [
+        {
+          kind: "editor" as const,
+          filename: `${result.structure.authorisedDomain.replace(/[^a-z0-9.-]+/gi, "-")}-google-ads-editor.csv`,
+          mime: "text/csv;charset=utf-8",
+          body: result.csv,
+          line: result.editorLine,
+          tool: "Google Ads Editor",
+        },
+      ];
+  const [hrefs, setHrefs] = useState<{ file: (typeof files)[number]; href: string }[]>([]);
 
   useEffect(() => {
-    return () => URL.revokeObjectURL(href);
-  }, [href]);
+    const made = files.map((file) => ({
+      file,
+      href: URL.createObjectURL(new Blob([file.body], { type: file.mime })),
+    }));
+    setHrefs(made);
+    return () => {
+      for (const item of made) URL.revokeObjectURL(item.href);
+    };
+  }, [result]);
 
   const { structure } = result;
+  const dest = roomHref ?? "/w";
 
   return (
     <div data-testid="block-adgrant-structure">
@@ -43,6 +75,12 @@ export function Structure({ result }: { result: AdGrantGenerateResponse }) {
       <p className={`mt-[var(--s2)] ${READ_MUTED}`}>
         A person sets up the manager-account link afterwards if the structure should go into the grant account. This
         page did not write it there.
+      </p>
+      <p className={`mt-[var(--s2)] ${READ_MUTED}`}>{ADGRANT_TEMPLATE_FILES_ROOM_LINE}</p>
+      <p className={`mt-[var(--s2)] ${READ}`}>
+        <Link href={dest} className={LINK} data-testid="link-adgrant-structure-room">
+          Continue in a room
+        </Link>
       </p>
       <p className={`mt-[var(--s3)] ${HEADING}`}>
         {structure.organisationName} · {structure.authorisedDomain}
@@ -90,9 +128,23 @@ export function Structure({ result }: { result: AdGrantGenerateResponse }) {
         ))}
       </ol>
 
-      <a href={href} download={filename} className={`${ACTION} mt-[var(--s4)]`} data-testid="link-adgrant-csv">
-        Download the Google Ads Editor CSV
-      </a>
+      <ul className="mt-[var(--s4)] list-none p-0">
+        {hrefs.map(({ file, href }) => (
+          <li key={file.filename} className="border-t border-border py-[var(--s3)] last:border-b">
+            <a
+              href={href}
+              download={file.filename}
+              className={file.kind === "editor" ? ACTION : LINK}
+              data-testid={file.kind === "editor" ? "link-adgrant-csv" : `link-adgrant-csv-${file.kind}`}
+            >
+              {downloadLabel(file.kind, file.filename)}
+            </a>
+            <p className={`mt-[var(--s2)] ${READ_MUTED}`}>
+              {file.tool ?? "Google Ads Editor"}. {file.line}
+            </p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

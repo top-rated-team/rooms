@@ -116,9 +116,16 @@ export function Privacy() {
                 <Row term="Producing a structure">
                   The nonprofit website you give us, the country or region the ads should show in, and the structure
                   that comes back. The structure is shown on this page and stored on the room that belongs to you. It
-                  is not written into a Google Ads account. A generation needs the room bound to you first.
+                  is not written into a Google Ads account. The organisation&rsquo;s name, if you give it, goes on
+                  the structure. A generation needs the room bound to you first.
                 </Row>
               ) : null}
+              <Row term="Asking for a person">
+                A room can ask for one of us by name. What you type into that form — your name, your email address,
+                the organisation, its website, what you want and anything you add — is written down as the record of
+                that request, stored, and emailed to us with your address as the reply-to. It is a message to a
+                person, not a newsletter.
+              </Row>
               {facts.login.linkedin ? (
                 <Row term="Signing in with LinkedIn">
                   We use Sign In with LinkedIn using OpenID Connect. We receive your LinkedIn subject identifier and
@@ -136,8 +143,10 @@ export function Privacy() {
               ) : null}
               {facts.login.email ? (
                 <Row term="A link to your email">
-                  If you ask for a link to a room, we send it to the address you typed. The address is used to reach
-                  that room and is not added to a list.
+                  If you ask for a link to a room, we send it to the address you typed. We keep a salted one-way
+                  hash of it — the same treatment the WhatsApp row above describes — against the rooms that address
+                  may open, which is how a later link knows where to go. The address itself is not stored, it is
+                  never on a mailing list, and we do not write to it about anything else.
                 </Row>
               ) : null}
               <Row term="Your browser">
@@ -188,9 +197,10 @@ export function Privacy() {
                   message, and nothing about you beyond what is in it.
                 </Row>
               ) : null}
-              {facts.login.email ? (
-                <Row term="Resend">Sends the email that opens a room, when that way in is switched on.</Row>
-              ) : null}
+              <Row term="Resend">
+                Sends our email: the message that goes to us when you ask for a person, and the link that opens a
+                room where that way in is switched on.
+              </Row>
             </Rows>
           </Section>
 
@@ -198,7 +208,10 @@ export function Privacy() {
             <P>
               A room and its messages are kept while the work is live and for as long as you might want to come back
               to it. A generated structure is kept with that room. Ask us to delete a room and we will, and we will
-              say when it is done.
+              say when it is done. One thing outlives it, and it is fair that you know: each generation leaves a
+              counted record — an identifier for the person who asked, the room, and the date — because the limit of
+              three per person cannot be enforced by anything that a deletion resets. It holds no website, no
+              structure and no message. Ask and we will delete that too, and the limit goes with it.
             </P>
           </Section>
 

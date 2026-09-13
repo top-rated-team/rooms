@@ -19,6 +19,7 @@ import {
   type MessageMeta,
 } from "@shared/schema";
 import type { AskEvent, CreateWorkspaceResponse, WorkspaceState } from "@shared/api";
+import { ADGRANT_TEMPLATE_FILES_UNAUTHORIZED_LINE } from "@shared/api";
 import { signAnswer, verifyAnswer } from "./answer-receipt";
 import { AGENTS, AGENT_BY_ID, BOOK_A_CALL_URL, DEFAULT_AGENT_ID, EXPERTS, EXPERT_BY_KEY, VISIBLE_AGENTS, answerableAgent } from "@shared/roster";
 import { storage } from "./storage";
@@ -2024,13 +2025,16 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
-  /* Setup files for one starter template. Fetched when the visitor asks, not
-     shipped in the page: the structure is 14KB and twelve of them would sit
-     in every bundle that imports shared/adgrant.ts. Nothing here writes into
-     a Google Ads account. */
+  /* Setup files for one starter template. Behind the same three-way sign-in
+     as the rooms. Nothing here writes into a Google Ads account. */
   app.get(
     "/api/adgrant/templates/:slug/files",
     route(async (req, res) => {
+      const session = await whoAmI(req.headers.cookie);
+      if (!session.signedIn) {
+        res.status(401).json({ error: ADGRANT_TEMPLATE_FILES_UNAUTHORIZED_LINE });
+        return;
+      }
       const slug = typeof req.params.slug === "string" ? req.params.slug : "";
       const result = templateSetupFiles(slug);
       res.status(result.status).json(result.body);

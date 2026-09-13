@@ -1,21 +1,83 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useRoute } from "wouter";
 
-import type { AdGrantTemplateFilesResponse } from "@shared/api";
+import {
+  ADGRANT_TEMPLATE_FILES_PURPOSE_LINE,
+  ADGRANT_TEMPLATE_FILES_ROOM_LINE,
+  type AdGrantTemplateFileKind,
+  type AdGrantTemplateFilesResponse,
+  type RoomSession,
+} from "@shared/api";
 import { TEMPLATES, type AdGrantTemplate } from "@shared/adgrant";
-import { ACTION, DISPLAY, HEADING, LINK, META, NUMERAL, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
+import { ACTION, ACTION_QUIET, DISPLAY, HEADING, LINK, META, NUMERAL, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
+import { RoomMenu } from "@/components/site/RoomMenu";
 import { Meta } from "@/components/adgrant/Meta";
 import { Missing } from "@/components/adgrant/Missing";
-import { leafPath, mountHome, sectionPath } from "@/components/adgrant/links";
+import { leafPath, sectionPath } from "@/components/adgrant/links";
 import { SECTION_BY_SEGMENT } from "@/components/adgrant/sections";
+import { thisDoor } from "@/pages/adgrant/catalogue";
 import { ApiError, apiRequest } from "@/lib/apiRequest";
 
 const SECTION = SECTION_BY_SEGMENT.templates;
+const GRANT_DOOR = thisDoor("ad-grants");
 const BY_SLUG: Record<string, AdGrantTemplate> = Object.fromEntries(
   TEMPLATES.map((template) => [template.slug, template]),
 );
 
-function TemplateFiles({ result }: { result: AdGrantTemplateFilesResponse }) {
+const SESSION_EVENT = "room-session";
+
+const COUNT_KIND: { kind: AdGrantTemplateFileKind; label: string; stat: keyof AdGrantTemplate["stats"] }[] = [
+  { kind: "campaigns", label: "campaigns", stat: "campaigns" },
+  { kind: "ad-groups", label: "ad groups", stat: "adGroups" },
+  { kind: "keywords", label: "keywords", stat: "keywords" },
+  { kind: "ads", label: "ads", stat: "ads" },
+  { kind: "sitelinks", label: "sitelinks", stat: "sitelinks" },
+  { kind: "callouts", label: "callouts", stat: "callouts" },
+  { kind: "structured-snippets", label: "structured snippets", stat: "structuredSnippets" },
+];
+
+function useRoomSession(): RoomSession {
+  const [session, setSession] = useState<RoomSession>({ signedIn: false });
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch("/api/session", {
+          headers: { Accept: "application/json" },
+          credentials: "same-origin",
+        });
+        const next = res.ok ? ((await res.json()) as RoomSession) : { signedIn: false as const };
+        if (!cancelled) setSession(next);
+      } catch {
+        if (!cancelled) setSession({ signedIn: false });
+      }
+    };
+    void load();
+    const onSession = () => void load();
+    window.addEventListener(SESSION_EVENT, onSession);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(SESSION_EVENT, onSession);
+    };
+  }, []);
+
+  return session;
+}
+
+function fileTestId(kind: AdGrantTemplateFileKind): string {
+  if (kind === "editor") return "link-adgrant-template-editor";
+  if (kind === "assets") return "link-adgrant-template-assets";
+  return `link-adgrant-template-${kind}`;
+}
+
+function TemplateFiles({
+  result,
+  counts,
+}: {
+  result: AdGrantTemplateFilesResponse;
+  counts: { kind: AdGrantTemplateFileKind; label: string; value: number }[];
+}) {
   /*
    * Created IN the effect, not in a useMemo the effect then cleans up after.
    * StrictMode mounts an effect, runs its cleanup, and mounts it again, so
@@ -38,10 +100,11 @@ function TemplateFiles({ result }: { result: AdGrantTemplateFilesResponse }) {
     };
   }, [result]);
 
+  const byKind = new Map(hrefs.map((item) => [item.file.kind, item]));
+  const listed = counts.filter((row) => byKind.has(row.kind));
+  const editor = byKind.get("editor");
+
   return (
-    /* A live region: pressing the button replaces nothing on screen that a
-       screen reader would notice, so without this the only signal that the
-       files arrived is visual. */
     <div
       className="mt-[var(--s5)] max-w-[46ch]"
       role="status"
@@ -51,22 +114,58 @@ function TemplateFiles({ result }: { result: AdGrantTemplateFilesResponse }) {
       <p className={READ}>{result.pausedLine}</p>
       <p className={`mt-[var(--s2)] ${READ_MUTED}`}>{result.destinationLine}</p>
       <p className={`mt-[var(--s2)] ${READ_MUTED}`}>{result.uploadLine}</p>
-      <ul className="mt-[var(--s4)] list-none p-0">
-        {hrefs.map(({ file, href }) => (
-          <li key={file.filename} className="border-t border-border py-[var(--s3)] last:border-b">
-            <a
-              href={href}
-              download={file.filename}
-              className={ACTION}
-              data-testid={file.kind === "editor" ? "link-adgrant-template-editor" : "link-adgrant-template-assets"}
+      <p className={`mt-[var(--s2)] ${READ_MUTED}`}>
+        Each file is imported on its own in Google Ads Editor, under Account then Import. The combined file is the same
+        import with the row types together.
+      </p>
+
+      <ol className="mt-[var(--s4)] max-w-[46ch]">
+        {listed.map((row, index) => {
+          const item = byKind.get(row.kind);
+          if (!item) return null;
+          return (
+            <li
+              key={row.kind}
+              className="grid items-baseline gap-x-[var(--s3)] border-t border-border py-[var(--s2)] last:border-b lg:grid-cols-[3rem_minmax(0,1fr)_auto]"
             >
-              {file.kind === "editor" ? "Download the Google Ads Editor CSV" : "Download callouts and structured snippets"}
-            </a>
-            <p className={`mt-[var(--s2)] ${READ_MUTED}`}>{file.line}</p>
-          </li>
-        ))}
-      </ul>
-      <p className={`mt-[var(--s3)] ${META}`}>{result.editorLine}</p>
+              <span className={NUMERAL} aria-hidden="true">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span>
+                <a
+                  href={item.href}
+                  download={item.file.filename}
+                  className={LINK}
+                  data-testid={fileTestId(row.kind)}
+                >
+                  {row.label}
+                </a>
+                <span className={`mt-[var(--s1)] block ${READ_MUTED}`}>
+                  {item.file.tool ?? "Google Ads Editor"}. {item.file.line}
+                </span>
+              </span>
+              <span className={`${HEADING} tabular-nums`}>{row.value}</span>
+            </li>
+          );
+        })}
+      </ol>
+
+      {editor ? (
+        <p className={`mt-[var(--s4)] ${READ}`}>
+          <a
+            href={editor.href}
+            download={editor.file.filename}
+            className={ACTION}
+            data-testid={fileTestId("editor")}
+          >
+            Download the combined Google Ads Editor file
+          </a>
+          <span className={`mt-[var(--s2)] block ${READ_MUTED}`}>{editor.file.line}</span>
+        </p>
+      ) : null}
+
+      <p className={`mt-[var(--s4)] ${READ}`}>{result.roomLine}</p>
+      <p className={`mt-[var(--s2)] ${META}`}>{result.editorLine}</p>
     </div>
   );
 }
@@ -74,43 +173,59 @@ function TemplateFiles({ result }: { result: AdGrantTemplateFilesResponse }) {
 export function TemplatePage() {
   const [, params] = useRoute<{ slug: string }>(leafPath("templates", ":slug"));
   const template = params?.slug ? BY_SLUG[params.slug] : undefined;
+  const session = useRoomSession();
   const [files, setFiles] = useState<AdGrantTemplateFilesResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const slug = template?.slug ?? "";
+  const signedIn = session.signedIn;
+
+  const loadFiles = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!slug) return;
+      setBusy(true);
+      setError(null);
+      try {
+        const result = await apiRequest<AdGrantTemplateFilesResponse>(
+          "GET",
+          `/api/adgrant/templates/${encodeURIComponent(slug)}/files`,
+          undefined,
+          { signal },
+        );
+        setFiles(result);
+      } catch (cause) {
+        setFiles(null);
+        if (cause instanceof DOMException && cause.name === "AbortError") return;
+        setError(cause instanceof ApiError ? cause.message : "The setup files could not be read.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [slug],
+  );
+
+  useEffect(() => {
+    if (!signedIn || !slug) {
+      setFiles(null);
+      setError(null);
+      setBusy(false);
+      return;
+    }
+    const ac = new AbortController();
+    void loadFiles(ac.signal);
+    return () => ac.abort();
+  }, [loadFiles, retry, signedIn, slug]);
 
   if (!template) {
     return <Missing title="This template is not in the library" />;
   }
 
-  const slug = template.slug;
-
-  const counts: { label: string; value: number }[] = [
-    { label: "campaigns", value: template.stats.campaigns },
-    { label: "ad groups", value: template.stats.adGroups },
-    { label: "keywords", value: template.stats.keywords },
-    { label: "ads", value: template.stats.ads },
-    { label: "sitelinks", value: template.stats.sitelinks },
-    { label: "callouts", value: template.stats.callouts },
-    { label: "structured snippets", value: template.stats.structuredSnippets },
-  ];
-
-  async function onSubmit(event: FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      const result = await apiRequest<AdGrantTemplateFilesResponse>(
-        "GET",
-        `/api/adgrant/templates/${encodeURIComponent(slug)}/files`,
-      );
-      setFiles(result);
-    } catch (cause) {
-      setFiles(null);
-      setError(cause instanceof ApiError ? cause.message : "The setup files could not be read.");
-    } finally {
-      setBusy(false);
-    }
-  }
+  const counts = COUNT_KIND.map((row) => ({
+    kind: row.kind,
+    label: row.label,
+    value: template.stats[row.stat],
+  })).filter((row) => row.value > 0);
 
   return (
     <>
@@ -127,62 +242,64 @@ export function TemplatePage() {
         <p className={`mt-[var(--s3)] max-w-[46ch] ${READ_MUTED}`}>{template.summary}</p>
         <p className={`mt-[var(--s2)] ${META}`}>Niche: {template.niche.replace(/-/g, " ")}</p>
 
-        <ol className="mt-[var(--s5)] max-w-[46ch]">
-          {counts.map((row, index) => (
-            <li
-              key={row.label}
-              className="grid items-baseline gap-x-[var(--s3)] border-t border-border py-[var(--s2)] last:border-b lg:grid-cols-[3rem_minmax(0,1fr)_auto]"
-            >
-              <span className={NUMERAL} aria-hidden="true">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <span className={READ}>{row.label}</span>
-              <span className={`${HEADING} tabular-nums`}>{row.value}</span>
-            </li>
-          ))}
-        </ol>
+        <p className={`mt-[var(--s5)] max-w-[46ch] ${READ}`}>{ADGRANT_TEMPLATE_FILES_PURPOSE_LINE}</p>
+        <p className={`mt-[var(--s2)] max-w-[46ch] ${READ_MUTED}`}>
+          Each of the counts below is a file: one CSV for campaigns, one for ad groups, one for keywords, one for ads,
+          one for sitelinks, one for callouts and one for structured snippets, plus the combined Google Ads Editor
+          file. Every campaign in every file is Paused. Nothing is written into a Google Ads account.
+        </p>
+        <p className={`mt-[var(--s2)] max-w-[46ch] ${READ_MUTED}`}>{ADGRANT_TEMPLATE_FILES_ROOM_LINE}</p>
 
-        <form className="mt-[var(--s5)] max-w-[46ch]" onSubmit={onSubmit} data-testid="form-adgrant-template-files">
-          {/* "as published" was not true of the CSV. The published template
-              carries no bid strategy at all and its sitelinks are account
-              level; the file has to name a strategy per campaign and repeat
-              the sitelinks under each one, because that is the shape Editor
-              imports. Saying so is cheaper than a person discovering it in a
-              live grant account. */}
-          <p className={READ}>
-            This template is the setup: campaigns, ad groups, keywords, ads, sitelinks, callouts and structured
-            snippets. The files are built when you ask for them. Every campaign in the Google Ads Editor file is
-            Paused.
-          </p>
-          <p className={`mt-[var(--s2)] ${READ_MUTED}`}>
-            Two things the file adds that the published template does not carry: a bid strategy on each campaign, and
-            the account&rsquo;s sitelinks repeated under every campaign — both because that is the shape Google Ads
-            Editor imports. Check them before you unpause anything. Nothing is written into a Google Ads account.
-          </p>
-          <button type="submit" className={`${ACTION} mt-[var(--s3)]`} disabled={busy} data-testid="button-adgrant-template-files">
-            {busy ? "Building the files" : files ? "Build the files again" : "Get the setup files"}
-          </button>
-        </form>
+        <div className="mt-[var(--s4)]" data-testid="block-adgrant-template-signin">
+          <RoomMenu
+            className={ACTION}
+            doorId={GRANT_DOOR?.id}
+            agentId={GRANT_DOOR?.firstAgentId}
+            testId="button-adgrant-template-room"
+            layout="inline"
+          />
+        </div>
 
-        {error ? (
-          <p
-            role="alert"
-            className={`mt-[var(--s3)] max-w-[46ch] ${READ_MUTED}`}
-            data-testid="text-adgrant-template-files-error"
-          >
-            {error}
-          </p>
+        {!files ? (
+          <ol className="mt-[var(--s5)] max-w-[46ch]">
+            {counts.map((row, index) => (
+              <li
+                key={row.kind}
+                className="grid items-baseline gap-x-[var(--s3)] border-t border-border py-[var(--s2)] last:border-b lg:grid-cols-[3rem_minmax(0,1fr)_auto]"
+              >
+                <span className={NUMERAL} aria-hidden="true">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className={READ}>{row.label}</span>
+                <span className={`${HEADING} tabular-nums`}>{row.value}</span>
+              </li>
+            ))}
+          </ol>
         ) : null}
 
-        {files ? <TemplateFiles result={files} /> : null}
+        {signedIn && busy && !files ? (
+          <p className={`mt-[var(--s4)] ${READ_MUTED}`}>Reading the setup files.</p>
+        ) : null}
 
-        <p className={`mt-[var(--s5)] max-w-[46ch] ${READ_MUTED}`}>
-          A structure for a specific nonprofit is produced on the{" "}
-          <Link href={mountHome()} className={LINK}>
-            front page
-          </Link>
-          , from that organisation&rsquo;s own website, and shown there. That is a different product from this starter.
-        </p>
+        {error ? (
+          <div className="mt-[var(--s4)] max-w-[46ch]">
+            <p role="alert" className={READ_MUTED} data-testid="text-adgrant-template-files-error">
+              {error}
+            </p>
+            {signedIn ? (
+              <button
+                type="button"
+                className={`${ACTION_QUIET} mt-[var(--s3)]`}
+                onClick={() => setRetry((n) => n + 1)}
+                data-testid="button-adgrant-template-files-retry"
+              >
+                Try again
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
+        {files ? <TemplateFiles result={files} counts={counts} /> : null}
       </article>
     </>
   );

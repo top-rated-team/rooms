@@ -13,11 +13,20 @@ import path from "node:path";
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
+import { ADGRANT_TEMPLATE_FILES_ROOM_LINE, ADGRANT_TEMPLATE_FILES_UNAUTHORIZED_LINE } from "@shared/api";
 import { TEMPLATES } from "@shared/adgrant";
 import { policyHolds } from "./policy";
-import { EDITOR_COLUMNS, EDITOR_LINE, PAUSED_LINE, structureToEditorCsv } from "./generate";
 import {
-  ASSETS_LINE,
+  CALLOUTS_FILE_LINE,
+  CAMPAIGNS_FILE_LINE,
+  EDITOR_COLUMNS,
+  EDITOR_LINE,
+  EDITOR_TOOL,
+  PAUSED_LINE,
+  SNIPPETS_FILE_LINE,
+  structureToEditorCsv,
+} from "./generate";
+import {
   EDITOR_FILE_LINE,
   TEMPLATE_BID_STRATEGY,
   UPLOAD_LINE,
@@ -210,8 +219,18 @@ describe("liveTemplateToStructure", () => {
   });
 });
 
+const ENTITY_KINDS = [
+  "campaigns",
+  "ad-groups",
+  "keywords",
+  "ads",
+  "sitelinks",
+  "callouts",
+  "structured-snippets",
+] as const;
+
 describe("templateSetupFiles", () => {
-  it("hands over the Editor CSV and the assets list, and says paused before anyone would download", () => {
+  it("hands over the Editor CSV and one CSV per counted entity, and says paused before anyone would download", () => {
     const result = templateSetupFiles("youth-mentoring-ad-grant-template");
     assert.equal(result.status, 200);
     assert.ok("files" in result.body);
@@ -219,23 +238,39 @@ describe("templateSetupFiles", () => {
     assert.equal(body.pausedLine, PAUSED_LINE);
     assert.equal(body.editorLine, EDITOR_LINE);
     assert.equal(body.uploadLine, UPLOAD_LINE);
+    assert.equal(body.roomLine, ADGRANT_TEMPLATE_FILES_ROOM_LINE);
     assert.equal(body.destinationLine, destinationLineFor("example.org"));
-    assert.equal(body.files.length, 2);
     const editor = body.files.find((file) => file.kind === "editor");
-    const assets = body.files.find((file) => file.kind === "assets");
     assert.ok(editor);
-    assert.ok(assets);
     assert.equal(editor.line, EDITOR_FILE_LINE);
-    assert.equal(assets.line, ASSETS_LINE);
+    assert.equal(editor.tool, EDITOR_TOOL);
     assert.match(editor.filename, /google-ads-editor\.csv$/);
     assert.match(editor.body, /^Row Type,Campaign,/);
     assert.match(editor.body, /Paused/);
     assert.equal(editor.body.includes("\nCampaign,") && /Enabled/.test(editor.body.split("\n").find((line) => line.startsWith("Campaign,")) ?? ""), false);
-    assert.match(assets.body, /Trusted local program/);
-    assert.match(assets.body, /Mentor matching/);
+    assert.equal(body.files.some((file) => file.kind === "assets"), false);
+    for (const kind of ENTITY_KINDS) {
+      const file = body.files.find((item) => item.kind === kind);
+      assert.ok(file, kind);
+      assert.equal(file.tool, EDITOR_TOOL);
+      assert.match(file.filename, /\.csv$/);
+      assert.match(file.mime, /csv/);
+    }
+    const campaigns = body.files.find((file) => file.kind === "campaigns");
+    const callouts = body.files.find((file) => file.kind === "callouts");
+    const snippets = body.files.find((file) => file.kind === "structured-snippets");
+    assert.equal(campaigns?.line, CAMPAIGNS_FILE_LINE);
+    assert.match(campaigns?.body ?? "", /Paused/);
+    assert.equal(/Enabled/.test(campaigns?.body ?? ""), false);
+    assert.match(callouts?.body ?? "", /Trusted local program/);
+    assert.equal(callouts?.line, CALLOUTS_FILE_LINE);
+    assert.match(snippets?.body ?? "", /Mentor matching/);
+    assert.equal(snippets?.line, SNIPPETS_FILE_LINE);
     assert.match(PAUSED_LINE, /Paused/);
     assert.equal(/upload/i.test(PAUSED_LINE), false);
     assert.match(UPLOAD_LINE, /Nothing is written into a Google Ads account/);
+    assert.match(ADGRANT_TEMPLATE_FILES_UNAUTHORIZED_LINE, /free/);
+    assert.match(ADGRANT_TEMPLATE_FILES_ROOM_LINE, /room/);
   });
 
   it("404s an unknown slug rather than inventing a structure", () => {
@@ -244,7 +279,7 @@ describe("templateSetupFiles", () => {
     assert.ok("error" in result.body);
   });
 
-  it("serves every published template from disk", () => {
+  it("serves every published template from disk as one file per count", () => {
     assert.equal(TEMPLATES.length, 12);
     for (const template of TEMPLATES) {
       const result = templateSetupFiles(template.slug);
@@ -257,9 +292,37 @@ describe("templateSetupFiles", () => {
       for (const row of campaignRows) {
         assert.match(row, /Paused/, template.slug);
       }
+      const byKind = Object.fromEntries(result.body.files.map((file) => [file.kind, file]));
+      assert.equal(dataRows(byKind.campaigns.body).length, template.stats.campaigns, `${template.slug} campaigns`);
+      assert.equal(dataRows(byKind["ad-groups"].body).length, template.stats.adGroups, `${template.slug} ad groups`);
+      assert.equal(dataRows(byKind.keywords.body).length, template.stats.keywords, `${template.slug} keywords`);
+      assert.equal(dataRows(byKind.ads.body).length, template.stats.ads, `${template.slug} ads`);
+      assert.equal(dataRows(byKind.sitelinks.body).length, template.stats.sitelinks, `${template.slug} sitelinks`);
+      assert.equal(dataRows(byKind.callouts.body).length, template.stats.callouts, `${template.slug} callouts`);
+      assert.equal(
+        dataRows(byKind["structured-snippets"].body).length,
+        template.stats.structuredSnippets,
+        `${template.slug} snippets`,
+      );
+      for (const row of dataRows(byKind.campaigns.body)) {
+        assert.match(row, /Paused/, `${template.slug} campaigns file`);
+        assert.equal(row.includes("Enabled"), false, `${template.slug} campaigns file`);
+      }
+      for (const row of dataRows(byKind["ad-groups"].body)) {
+        assert.match(row, /Paused/, `${template.slug} ad groups file`);
+      }
+      for (const file of result.body.files) {
+        assert.equal(file.tool, EDITOR_TOOL, file.kind);
+        assert.match(file.line, /Google Ads Editor/, file.kind);
+        assert.equal(/upload/i.test(file.body), false, file.kind);
+      }
     }
   });
 });
+
+function dataRows(csv: string): string[] {
+  return csv.split("\n").filter((line, index) => index > 0 && line.length > 0);
+}
 
 describe("parseStoredTemplate", () => {
   it("reads a published file from data/adgrant/structures", () => {

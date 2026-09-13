@@ -17,12 +17,15 @@ import { remainingForPerson, resetAdgrantQuotaForTests, personKeyFor } from "./q
 import {
   CAP_REACHED_LINE,
   EDITOR_LINE,
+  EDITOR_TOOL,
   PAUSED_LINE,
   UNBOUND_LINE,
   buildStructureFromSite,
   generateAdGrantStructure,
   getAdGrantGenerationQuota,
   parseSiteHtml,
+  structureFiles,
+  structureToCampaignsCsv,
   structureToEditorCsv,
 } from "./generate";
 
@@ -109,6 +112,31 @@ describe("structureToEditorCsv", () => {
     assert.match(csv, /Description 4/);
   });
 
+  it("writes one CSV per entity that has rows, each importing on its own, with every campaign Paused", () => {
+    const site = parseSiteHtml(HTML, new URL(SITE_URL));
+    const structure = buildStructureFromSite(site, "Oregon");
+    const files = structureFiles(structure, "hopeshelter.org");
+    const kinds = files.map((file) => file.kind);
+    assert.deepEqual(kinds, ["editor", "campaigns", "ad-groups", "keywords", "ads", "sitelinks"]);
+    const campaigns = files.find((file) => file.kind === "campaigns");
+    assert.ok(campaigns);
+    assert.equal(campaigns.tool, EDITOR_TOOL);
+    assert.match(campaigns.body, /^Campaign,Campaign type,Campaign state,/);
+    assert.equal(campaigns.body.includes("Keyword"), false);
+    assert.equal(campaigns.body.includes("Headline 1"), false);
+    for (const row of campaigns.body.split("\n").filter((line, index) => index > 0 && line)) {
+      assert.match(row, /Paused/);
+      assert.equal(row.includes("Enabled"), false);
+    }
+    assert.equal(structureToCampaignsCsv(structure), campaigns.body);
+    assert.equal(files.some((file) => file.kind === "callouts"), false);
+    assert.equal(files.some((file) => file.kind === "structured-snippets"), false);
+    for (const file of files) {
+      assert.match(file.line, /Google Ads Editor/);
+      assert.equal(/upload/i.test(file.body), false);
+    }
+  });
+
   it("writes every headline and description the structure carries, up to the Editor RSA limits", () => {
     const site = parseSiteHtml(HTML, new URL(SITE_URL));
     const structure = buildStructureFromSite(site, "Oregon");
@@ -152,6 +180,8 @@ describe("generateAdGrantStructure", () => {
     assert.equal(first.body.pausedLine, PAUSED_LINE);
     assert.equal(policyHolds(first.body.structure), true);
     assert.match(first.body.csv, /Hope Shelter/);
+    assert.ok(first.body.files.length >= 6);
+    assert.ok(first.body.files.every((file) => file.tool === EDITOR_TOOL));
     assert.match(first.body.capReason, /15,000/);
 
     const failed = await generateAdGrantStructure({

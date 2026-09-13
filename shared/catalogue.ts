@@ -21,7 +21,7 @@
 
 import { ADGRANT_ORIGIN, adgrantMountFor } from "./adgrant-site";
 import type { DoorContract, DoorDef } from "./doors";
-import { MAIN_SITE_URL } from "./roster";
+import { CONTACT_EMAIL, MAIN_SITE_URL } from "./roster";
 
 /** How one of our services appears in the operator's catalogue. */
 export type ServiceMode = "named" | "white-label";
@@ -107,7 +107,12 @@ export const ADGRANT_IDENTITY: OperatorIdentity = {
   entity:
     "The company that runs adgrant.ai, with people in Prague, Madeira, Kyiv, Bratislava and Batumi. AdGrant.AI is its product for nonprofits.",
   termsUrl: `${ADGRANT_ORIGIN}/terms`,
-  contact: `${MAIN_SITE_URL}/contact`,
+  /* AN ADDRESS, NOT A PAGE. This was `${MAIN_SITE_URL}/contact`, and /contact
+     301s to the front of the house — so the one link a nonprofit's data
+     protection officer is given for an erasure request landed them on another
+     brand's home page. top-rated.team's own legal pages use the address; so
+     does this one now. */
+  contact: CONTACT_EMAIL,
   contactLabel: "Write to AdGrant.AI",
   invoiceLine: "Top-Rated Team (Danylo Burykin SZČO) signs the contract and sends the invoice.",
 };

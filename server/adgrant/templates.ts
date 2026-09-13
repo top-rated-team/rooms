@@ -3,7 +3,7 @@
  * GET /api/templates/<slug>; the list endpoint omits it. That payload is not
  * AdGrantAccountStructure: sitelinks sit on the account, campaigns have a
  * status and no bid strategy, match types are display strings. This module
- * maps one to the other and only then calls structureToEditorCsv. The CSV
+ * maps one to the other and only then calls structureFiles. The CSV
  * writer is not widened to accept the live shape, because it is the file
  * somebody imports into a live Google Ads account.
  *
@@ -14,16 +14,17 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-import type {
-  AdGrantAccountStructure,
-  AdGrantKeywordMatchType,
-  AdGrantSitelink,
-  AdGrantTemplateFile,
-  AdGrantTemplateFilesError,
-  AdGrantTemplateFilesResponse,
+import {
+  ADGRANT_TEMPLATE_FILES_ROOM_LINE,
+  type AdGrantAccountStructure,
+  type AdGrantKeywordMatchType,
+  type AdGrantSitelink,
+  type AdGrantTemplateFile,
+  type AdGrantTemplateFilesError,
+  type AdGrantTemplateFilesResponse,
 } from "@shared/api";
 import { TEMPLATES } from "@shared/adgrant";
-import { domainFromHost, EDITOR_LINE, PAUSED_LINE, structureToEditorCsv } from "./generate";
+import { domainFromHost, EDITOR_LINE, PAUSED_LINE, structureFiles } from "./generate";
 
 export const UPLOAD_LINE =
   "Nothing is written into a Google Ads account. A person sets up the manager-account link afterwards if the structure should go into the grant account.";
@@ -39,10 +40,10 @@ export const UPLOAD_LINE =
  * of the world.
  */
 export const ASSETS_LINE =
-  "Callouts and structured snippets from the published template, as a list. The Google Ads Editor file does not carry them yet — add them in Editor or in the web interface.";
+  "Callouts and structured snippets each have their own Google Ads Editor CSV. Those files import on their own as account-level assets.";
 
 export const EDITOR_FILE_LINE =
-  "The file Google Ads Editor imports. Campaigns, ad groups, keywords, ads and sitelinks. Every campaign row is Paused.";
+  "The file Google Ads Editor imports with campaigns, ad groups, keywords, ads and sitelinks together. Every campaign row is Paused. Callouts and structured snippets are in their own files.";
 
 /**
  * Live templates have no bid strategy. Accounts created on or after 22 April
@@ -397,18 +398,6 @@ export function liveTemplateToStructure(stored: StoredTemplate): MapLiveResult {
   };
 }
 
-function assetsText(extras: { callouts: LiveTemplateCallout[]; snippets: LiveTemplateSnippet[] }): string {
-  const lines: string[] = ["Callouts", ""];
-  for (const callout of extras.callouts) lines.push(callout.text);
-  lines.push("", "Structured snippets", "");
-  for (const snippet of extras.snippets) {
-    lines.push(snippet.header);
-    for (const value of snippet.values) lines.push(`  ${value}`);
-    lines.push("");
-  }
-  return `${lines.join("\n").trimEnd()}\n`;
-}
-
 export function destinationLineFor(domain: string): string {
   return `Final URLs land on ${domain}, which is a placeholder in the published template. Replace them with the nonprofit's own https pages before anything runs.`;
 }
@@ -438,22 +427,11 @@ export function templateSetupFiles(slug: string): TemplateFilesHttpResult {
     return { status: 500, body: { error: mapped.error } };
   }
   const stem = slug.replace(/-ad-grant-template$/, "") || slug;
-  const files: AdGrantTemplateFile[] = [
-    {
-      kind: "editor",
-      filename: `${stem}-google-ads-editor.csv`,
-      mime: "text/csv;charset=utf-8",
-      body: structureToEditorCsv(mapped.structure),
-      line: EDITOR_FILE_LINE,
-    },
-    {
-      kind: "assets",
-      filename: `${stem}-callouts-and-snippets.txt`,
-      mime: "text/plain;charset=utf-8",
-      body: assetsText(mapped.extras),
-      line: ASSETS_LINE,
-    },
-  ];
+  const files: AdGrantTemplateFile[] = structureFiles(mapped.structure, stem, {
+    callouts: mapped.extras.callouts,
+    snippets: mapped.extras.snippets,
+    sitelinks: mapSitelinks(stored.structure.sitelinks),
+  }).map((file) => (file.kind === "editor" ? { ...file, line: EDITOR_FILE_LINE } : file));
   return {
     status: 200,
     body: {
@@ -463,6 +441,7 @@ export function templateSetupFiles(slug: string): TemplateFilesHttpResult {
       editorLine: EDITOR_LINE,
       uploadLine: UPLOAD_LINE,
       destinationLine: destinationLineFor(mapped.structure.authorisedDomain),
+      roomLine: ADGRANT_TEMPLATE_FILES_ROOM_LINE,
     },
   };
 }

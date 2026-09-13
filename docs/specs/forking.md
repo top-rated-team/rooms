@@ -21,7 +21,7 @@ fork has to be a resolved case, not a surprise.
 | Legal name | Top-Rated Team (Danylo Burykin SZČO) | the same — AdGrant.AI is a product, not a second registered person |
 | Terms | `https://top-rated.team/terms` | `https://adgrant.ai/terms` |
 | Privacy | `https://top-rated.team/privacy` | `https://adgrant.ai/privacy` |
-| Contact | `https://top-rated.team/contact` | the same address, labelled for AdGrant.AI |
+| Contact | `contact@top-rated.team` | the same address, labelled for AdGrant.AI |
 | Face | the Top-Rated Team chrome | AdGrant.AI's own mark, menu and footer |
 | Catalogue | `DOORS` | `adgrantCatalogue()` — every row, including the ones hidden for the LinkedIn review, with copy rewritten for a nonprofit |
 

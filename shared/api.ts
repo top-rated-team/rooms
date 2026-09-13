@@ -632,6 +632,11 @@ export interface AdGrantGenerateResponse extends AdGrantQuotaView {
   editorLine: string;
   /** True of the CSV: every campaign row is Paused. */
   pausedLine: string;
+  /**
+   * The Editor file plus one CSV per entity the structure actually has.
+   * A kind with no rows is omitted. Nothing here is a write into an account.
+   */
+  files: AdGrantTemplateFile[];
 }
 
 export interface AdGrantGenerateError extends Partial<AdGrantQuotaView> {
@@ -642,9 +647,19 @@ export interface AdGrantGenerateError extends Partial<AdGrantQuotaView> {
  * Files a starter template page hands over when the visitor asks for them.
  * Fetched on submit, not shipped in the page bundle: twelve live structures
  * are about 170KB, and the landing page that imports shared/adgrant.ts only
- * needs seven numbers.
+ * needs seven numbers. The seven counts are seven CSVs; the Editor file sits
+ * beside them. The route is behind the same three-way sign-in as the rooms.
  */
-export type AdGrantTemplateFileKind = "editor" | "assets";
+export type AdGrantTemplateFileKind =
+  | "editor"
+  | "assets"
+  | "campaigns"
+  | "ad-groups"
+  | "keywords"
+  | "ads"
+  | "sitelinks"
+  | "callouts"
+  | "structured-snippets";
 
 export interface AdGrantTemplateFile {
   kind: AdGrantTemplateFileKind;
@@ -653,6 +668,8 @@ export interface AdGrantTemplateFile {
   body: string;
   /** What this file is, in one sentence the page can print. */
   line: string;
+  /** Which importer this file is for. Google Ads Editor for every file we emit. */
+  tool?: string;
 }
 
 export interface AdGrantTemplateFilesResponse {
@@ -662,11 +679,25 @@ export interface AdGrantTemplateFilesResponse {
   editorLine: string;
   uploadLine: string;
   destinationLine: string;
+  /** Where downloading and a later API write belong, once someone is signed in. */
+  roomLine: string;
 }
 
 export interface AdGrantTemplateFilesError {
   error: string;
 }
+
+/** Printed on the template page before the sign-in. */
+export const ADGRANT_TEMPLATE_FILES_PURPOSE_LINE =
+  "The files are free. An account is so the work can continue in a room.";
+
+/** The files route says this when there is no session. */
+export const ADGRANT_TEMPLATE_FILES_UNAUTHORIZED_LINE =
+  "Sign in to get the files. The files are free; the account is so the work can continue in a room.";
+
+/** Printed once the files are in hand. Product B is a later step in a room. */
+export const ADGRANT_TEMPLATE_FILES_ROOM_LINE =
+  "Downloading these files and writing the setup into a grant account through the official Google Ads API both belong in a room, with the agent. This page is not that place.";
 
 /* ------------------------- room access (email link) ------------------------ */
 /* A mailed way back into a room. The token in the link is not the room's own
