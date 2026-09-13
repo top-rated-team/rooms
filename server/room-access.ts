@@ -220,8 +220,23 @@ export function issuedLinksForTests(): IssuedLink[] {
   return [...links.values()];
 }
 
+/** Test seam: the opaque id a session signs in under for this address. */
+export function emailHashForTests(email: string): string {
+  return hashEmail(email);
+}
+
 export function bindingsForTests(email: string): BoundRoomAddress[] {
   return [...(bindings.get(hashEmail(email)) ?? [])];
+}
+
+/**
+ * The rooms bound to an address, by the hash of it. The address itself does
+ * not come back here and is not needed: a session holds the hash, which is
+ * what opening a mailed link proved.
+ */
+export async function roomsForEmailHash(emailHash: string): Promise<BoundRoomAddress[]> {
+  await hydrateFromDb();
+  return [...(bindings.get(emailHash) ?? [])];
 }
 
 /* --------------------------------- mail ----------------------------------- */
@@ -540,7 +555,12 @@ export async function sendRoomAccessLink(input: {
 /* ---------------------------------- open ---------------------------------- */
 
 export type OpenRoomAccessResult =
-  | { ok: true; workspaceToken: string }
+  | {
+      ok: true;
+      workspaceToken: string;
+      /** Opaque. The proof this visitor holds that address — never the address itself. */
+      emailHash: string;
+    }
   | { ok: false; line: string };
 
 async function markLinkSpent(row: IssuedLink, now: number): Promise<void> {
@@ -579,7 +599,7 @@ export async function openRoomAccess(token: string, now = Date.now()): Promise<O
   }
 
   await markLinkSpent(row, now);
-  return { ok: true, workspaceToken: row.workspaceToken };
+  return { ok: true, workspaceToken: row.workspaceToken, emailHash: row.emailHash };
 }
 
 export function spentPage(line: string): string {

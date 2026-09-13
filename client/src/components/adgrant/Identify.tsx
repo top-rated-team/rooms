@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { RoomBindingState } from "@shared/api";
 import { ApiError, apiRequest } from "@/lib/apiRequest";
 import { ACTION, ACTION_QUIET, META_PLAIN, READ, READ_MUTED } from "@/components/site/doors/quiet";
+import { WhatsAppQr } from "@/components/WhatsAppQr";
 
 interface WhatsAppOffer {
   url: string;
@@ -175,14 +176,13 @@ export function Identify({ token, onBound }: { token: string; onBound: () => voi
           >
             Open WhatsApp with the message written
           </a>
-          {whatsapp.qrSvg ? (
-            <div
-              className="mt-[var(--s3)] w-36 text-foreground"
-              role="img"
-              aria-label="QR code that opens WhatsApp with the room address already written"
-              dangerouslySetInnerHTML={{ __html: whatsapp.qrSvg }}
-            />
-          ) : null}
+          <WhatsAppQr
+            svg={whatsapp.qrSvg}
+            href={whatsapp.url}
+            label="QR code that opens WhatsApp with the room address already written"
+            className="mt-[var(--s3)]"
+            testId="img-adgrant-identify-whatsapp-qr"
+          />
         </div>
       ) : null}
       {showLinkedIn || showWhatsApp ? (

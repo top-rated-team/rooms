@@ -693,3 +693,49 @@ export interface RoomLoginWhatsAppOffer {
 export type RoomLoginWhatsAppConfirmed =
   | { confirmed: true; rooms: { token: string }[] }
   | { confirmed: false; expired?: boolean };
+
+/* ------------------------- room session (who am I) ------------------------ */
+/* The label on the pair is state. It is read from the server, never from a
+ * localStorage flag. The cookie that names the session is HttpOnly, so the
+ * page cannot read it; this is the only answer the control has. */
+
+export const ROOM_SESSION_QUERY = "signin";
+export const ROOM_SESSION_OUTCOME_QUERY = "signin_outcome";
+
+export type RoomSessionOutcome =
+  | "missing-state"
+  | "wrong-browser"
+  | "missing-pending"
+  | "linkedin-error"
+  | "token-failed"
+  | "no-room"
+  | "signed-in"
+  | "attached"
+  | "refused"
+  | "whatsapp-confirmed";
+
+export const ROOM_SESSION_OUTCOME_LINES: Record<RoomSessionOutcome, string> = {
+  "missing-state": "That sign-in did not finish: LinkedIn returned no state.",
+  "wrong-browser": "That sign-in did not start in this browser, so it was not completed.",
+  "missing-pending": "That sign-in did not finish: this return is not one we started, or it has expired.",
+  "linkedin-error": "LinkedIn returned an error, so you are not signed in.",
+  "token-failed": "LinkedIn did not complete the sign-in, so you are not signed in.",
+  "no-room": "No room is bound to this LinkedIn account.",
+  "signed-in": "You are signed in.",
+  attached: "That way in is now attached to this account.",
+  refused: "That identity already belongs to someone else. It was not joined to this account.",
+  "whatsapp-confirmed": "WhatsApp sign-in is confirmed.",
+};
+
+export const ROOM_SESSION_REFUSED_LINE = ROOM_SESSION_OUTCOME_LINES.refused;
+
+export type RoomAccountProvider = "linkedin" | "whatsapp" | "email";
+
+export type RoomSession =
+  | { signedIn: false }
+  | {
+      signedIn: true;
+      displayName: string | null;
+      attached: Record<RoomAccountProvider, boolean>;
+      rooms: { token: string }[];
+    };

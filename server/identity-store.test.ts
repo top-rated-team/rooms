@@ -13,6 +13,8 @@ import assert from "node:assert/strict";
 
 import { storage } from "./storage";
 import {
+  attachIdentity,
+  createAccount,
   getBinding,
   getWhatsappNote,
   listBindingsByPerson,
@@ -48,6 +50,28 @@ describe("putBinding", () => {
     const dumped = JSON.stringify(getBinding("ws_a"));
     assert.equal(dumped.includes("phone"), false);
     assert.equal(dumped.includes("token"), false);
+  });
+});
+
+describe("attachIdentity", () => {
+  it("refuses when the identity already belongs to another account", async () => {
+    const first = await createAccount({ id: "acct_one" });
+    const second = await createAccount({ id: "acct_two" });
+    const ok = await attachIdentity({
+      provider: "linkedin",
+      providerId: "linkedin:ada",
+      accountId: first.id,
+    });
+    assert.equal(ok.ok, true);
+    const refused = await attachIdentity({
+      provider: "linkedin",
+      providerId: "linkedin:ada",
+      accountId: second.id,
+    });
+    assert.equal(refused.ok, false);
+    if (refused.ok) return;
+    assert.equal(refused.reason, "belongs-to-other-account");
+    assert.equal(refused.accountId, first.id);
   });
 });
 

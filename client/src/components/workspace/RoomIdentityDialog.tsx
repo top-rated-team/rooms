@@ -4,6 +4,7 @@ import type { RoomBindingProvider, RoomBindingState, RoomClaimState } from "@sha
 import { ApiError, apiRequest } from "@/lib/apiRequest";
 import { cn } from "@/lib/utils";
 import { ACTION, ACTION_QUIET, CHROME, FOCUS, LABEL, META, READ } from "@/components/workspace/room-style";
+import { WhatsAppQr } from "@/components/WhatsAppQr";
 
 /**
  * The popup a newly created room shows to offer the claim. login-create-room
@@ -209,14 +210,13 @@ export function RoomIdentityDialog({ token, open, onOpenChange }: RoomIdentityDi
                     >
                       Open WhatsApp with the message written
                     </a>
-                    {whatsapp.qrSvg ? (
-                      <div
-                        className="mt-4 w-36 text-foreground"
-                        role="img"
-                        aria-label="QR code that opens WhatsApp with the room address already written"
-                        dangerouslySetInnerHTML={{ __html: whatsapp.qrSvg }}
-                      />
-                    ) : null}
+                    <WhatsAppQr
+                      svg={whatsapp.qrSvg}
+                      href={whatsapp.url}
+                      label="QR code that opens WhatsApp with the room address already written"
+                      className="mt-4"
+                      testId="img-claim-whatsapp-qr"
+                    />
                   </div>
                 ) : null}
               </>

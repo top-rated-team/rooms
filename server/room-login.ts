@@ -18,6 +18,7 @@ import {
   type RoomLoginAvailability,
   type RoomLoginWhatsAppConfirmed,
   type RoomLoginWhatsAppOffer,
+  type RoomSessionOutcome,
 } from "@shared/api";
 import { isHouseHost } from "@shared/operator";
 import { workspaces } from "@shared/schema";
@@ -35,6 +36,13 @@ import {
   ROOM_ACCESS_NO_PUBLIC_URL_LINE,
   roomAccessAvailability,
 } from "./room-access";
+import {
+  SESSION_TICKET_PREFIX,
+  isSessionTicketLine,
+  putLinkedInTicket,
+  sessionTicketFromLine,
+  type LinkedInTicketFinish,
+} from "./room-account";
 import { registerInboundMatcher, type AcceptedInboundMessage } from "./unipile/inbound";
 import { probeWaha, qrSvg, waMeUrl, type WahaProbe } from "./waha";
 
@@ -51,10 +59,50 @@ export const LOGIN_CODE_RE = new RegExp(
 export const ROOM_LOGIN_LINKEDIN_UNCONFIGURED_LINE =
   "LinkedIn sign-in is not configured on this deployment.";
 
+/**
+ * LinkedIn returns to ONE address — the redirect registered on the app, built
+ * from PUBLIC_BASE_URL — so it can only be offered on that address.
+ *
+ * Offered anywhere else it looks like a working button and is not one: the
+ * flow starts on the site the visitor is reading and finishes on the other
+ * one, planting the session cookie on a domain they never asked about, and
+ * since the state is now bound to the browser's cookie it fails outright.
+ * A second deployment that wants LinkedIn wants its own app and its own
+ * PUBLIC_BASE_URL, which is a fork's business, not a branch here.
+ */
+export function linkedinReturnsHere(host: string, publicBaseUrl: string | null): boolean {
+  if (!publicBaseUrl) return false;
+  const bare = (value: string) => value.trim().toLowerCase().replace(/^www\./, "");
+  try {
+    return bare(new URL(publicBaseUrl).hostname) === bare(host);
+  } catch {
+    return false;
+  }
+}
+
 export const ROOM_LOGIN_WHATSAPP_WARNING =
-  "Sending this puts a login code in a WhatsApp chat. We use it to find rooms already bound to this chat. It is not a room address.";
+  "Sending this puts a sign-in code in a WhatsApp chat. We use it to find rooms already bound to this chat. It is not a room address.";
 
 export const ROOM_LOGIN_NONE_LINE = "No room is bound to this account.";
+
+/**
+ * THE STATE IS ALSO A COOKIE, and the callback refuses a return whose cookie
+ * does not carry it.
+ *
+ * Without it the callback was a state-changing GET that anybody could aim at
+ * anybody: an attacker finishes LinkedIn themselves, keeps the ticket the
+ * callback hands back, and sends that address to somebody who is signed in.
+ * Their browser attaches the attacker's LinkedIn identity to the victim's
+ * account — SameSite=Lax sends the session cookie on a top-level navigation,
+ * which is exactly what clicking a link is — and the attacker then signs in
+ * with their own LinkedIn and lands in the victim's rooms, whose addresses
+ * are themselves the credential.
+ *
+ * The cookie is written when the flow starts and read when it returns, so a
+ * return can only be completed by the browser that began it.
+ */
+export const ROOM_LOGIN_STATE_COOKIE = "room_signin_state";
+export const ROOM_LOGIN_STATE_MAX_AGE_MS = PENDING_MS;
 
 export function roomLoginLinkedInRedirectUri(publicBaseUrl: string): string {
   return `${publicBaseUrl.replace(/\/+$/, "")}/api/room-login/linkedin/callback`;
@@ -94,13 +142,14 @@ interface PendingWhatsApp {
 interface WhatsAppLoginResult {
   createdAt: number;
   rooms: { token: string }[];
+  providerId: string;
+  displayName: string | null;
 }
 
 const pendingLinkedIn = new Map<string, PendingLinkedIn>();
 const pendingWhatsApp = new Map<string, PendingWhatsApp>();
 const whatsappResults = new Map<string, WhatsAppLoginResult>();
 const testTokens = new Map<string, string>();
-let matcherInstalled = false;
 
 function sweep(now = Date.now()): void {
   for (const [state, row] of pendingLinkedIn) {
@@ -119,6 +168,8 @@ export function resetRoomLoginForTests(): void {
   pendingWhatsApp.clear();
   whatsappResults.clear();
   testTokens.clear();
+  uninstallMatcher?.();
+  uninstallMatcher = null;
 }
 
 export function registerRoomTokenForTests(workspaceId: string, token: string): void {
@@ -130,14 +181,17 @@ export async function roomLoginAvailability(input: {
   probe?: () => Promise<WahaProbe>;
 }): Promise<RoomLoginAvailability> {
   const publicUrl = configuredPublicBaseUrl();
+  const here = linkedinReturnsHere(input.host, publicUrl);
   const linkedin =
-    linkedinConfigured() && publicUrl
+    linkedinConfigured() && publicUrl && here
       ? { available: true as const }
       : {
           available: false as const,
-          unavailableLine: linkedinConfigured()
-            ? ROOM_ACCESS_NO_PUBLIC_URL_LINE
-            : ROOM_LOGIN_LINKEDIN_UNCONFIGURED_LINE,
+          unavailableLine: !linkedinConfigured()
+            ? ROOM_LOGIN_LINKEDIN_UNCONFIGURED_LINE
+            : !publicUrl
+              ? ROOM_ACCESS_NO_PUBLIC_URL_LINE
+              : `LinkedIn sign-in returns to ${new URL(publicUrl).hostname}, so it is not offered here.`,
         };
 
   const house = isHouseHost(input.host);
@@ -152,6 +206,16 @@ export async function roomLoginAvailability(input: {
     whatsapp,
     email: roomAccessAvailability(),
   };
+}
+
+export async function tokensForAccountRooms(ids: string[]): Promise<{ token: string }[]> {
+  const tokens = await tokensFor(ids);
+  const rooms: { token: string }[] = [];
+  for (const id of ids) {
+    const token = tokens.get(id);
+    if (token) rooms.push({ token });
+  }
+  return rooms;
 }
 
 async function tokensFor(ids: string[]): Promise<Map<string, string>> {
@@ -188,7 +252,9 @@ async function roomsFromBindings(rows: StoredBinding[]): Promise<{ token: string
   return rooms;
 }
 
-export type RoomLoginLinkedInStart = { ok: true; url: string } | { ok: false; line: string };
+export type RoomLoginLinkedInStart =
+  | { ok: true; url: string; state: string }
+  | { ok: false; line: string };
 
 export function startRoomLoginLinkedIn(): RoomLoginLinkedInStart {
   const creds = linkedinCredentials();
@@ -202,36 +268,58 @@ export function startRoomLoginLinkedIn(): RoomLoginLinkedInStart {
   pendingLinkedIn.set(state, { redirectUri, createdAt: Date.now() });
   return {
     ok: true,
+    state,
     url: linkedinAuthorizationUrl({ clientId: creds.clientId, redirectUri, state }),
   };
 }
 
-export type RoomLoginLinkedInComplete =
-  | { ok: true; rooms: { token: string }[] }
-  | { ok: false; line: string };
+/* One shape. The callback no longer renders rooms itself — it hands back a
+   ticket and the site opens the panel — so an `ok: true` arm here would be a
+   branch nothing can reach and a page nobody would notice was wrong. */
+export type RoomLoginLinkedInComplete = { ok: false; line: string };
 
-export async function completeRoomLoginLinkedIn(input: {
+function failFinish(
+  outcome: Extract<
+    RoomSessionOutcome,
+    "missing-state" | "wrong-browser" | "missing-pending" | "linkedin-error" | "token-failed"
+  >,
+): LinkedInTicketFinish {
+  return { ok: false, outcome };
+}
+
+/**
+ * The real LinkedIn outcome, with a distinct reason for each of the five
+ * ways the callback used to say "No room is bound to this LinkedIn account".
+ */
+export async function resolveRoomLoginLinkedIn(input: {
   code?: string;
   state?: string;
   error?: string;
+  /** The value of ROOM_LOGIN_STATE_COOKIE on the browser that came back. */
+  cookieState?: string;
   fetchImpl?: typeof fetch;
-}): Promise<RoomLoginLinkedInComplete> {
+}): Promise<LinkedInTicketFinish> {
   sweep();
   const state = input.state?.trim();
-  if (!state) return { ok: false, line: ROOM_LOGIN_NONE_LINE };
+  if (!state) return failFinish("missing-state");
   const pending = pendingLinkedIn.get(state);
   pendingLinkedIn.delete(state);
-  if (!pending) return { ok: false, line: ROOM_LOGIN_NONE_LINE };
-  if (input.error || !input.code?.trim()) return { ok: false, line: ROOM_LOGIN_NONE_LINE };
+  if (!pending) return failFinish("missing-pending");
+  /* The pending row is already gone, so a return that fails this check cannot
+     be retried with a browser that would pass it. */
+  if (input.cookieState?.trim() !== state) return failFinish("wrong-browser");
+  if (input.error) return failFinish("linkedin-error");
+  if (!input.code?.trim()) return failFinish("linkedin-error");
 
   const exchanged = await exchangeLinkedInCode({
     code: input.code.trim(),
     redirectUri: pending.redirectUri,
     fetchImpl: input.fetchImpl,
   });
-  if (!exchanged.ok) return { ok: false, line: ROOM_LOGIN_NONE_LINE };
+  if (!exchanged.ok) return failFinish("token-failed");
 
-  const bindings = await listBindingsByPerson("linkedin", `linkedin:${exchanged.member.sub}`);
+  const providerId = `linkedin:${exchanged.member.sub}`;
+  const bindings = await listBindingsByPerson("linkedin", providerId);
   const tokens = await tokensFor(bindings.map((row) => row.workspaceId));
   const rooms: { token: string }[] = [];
   for (const row of bindings) {
@@ -247,43 +335,61 @@ export async function completeRoomLoginLinkedIn(input: {
     }
   }
 
-  return { ok: true, rooms };
+  return {
+    ok: true,
+    outcome: rooms.length === 0 ? "no-room" : "signed-in",
+    rooms,
+    identity: {
+      provider: "linkedin",
+      providerId,
+      displayName: exchanged.member.displayName,
+    },
+  };
 }
 
-export function loginNonePage(line: string): string {
+/**
+ * What the existing callback route calls. Every outcome becomes a one-time
+ * ticket so loginNonePage can send the visitor back to the site. Four of the
+ * five old "no room" pages were failures of the sign-in itself.
+ */
+export async function completeRoomLoginLinkedIn(input: {
+  code?: string;
+  state?: string;
+  error?: string;
+  cookieState?: string;
+  fetchImpl?: typeof fetch;
+}): Promise<RoomLoginLinkedInComplete> {
+  const finish = await resolveRoomLoginLinkedIn(input);
+  const ticket = putLinkedInTicket(finish);
+  return { ok: false, line: `${SESSION_TICKET_PREFIX}${ticket}` };
+}
+
+function redirectPage(href: string, line: string): string {
+  const escapedHref = href.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
   const escaped = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return `<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive">
-<title>No room</title>
+<meta http-equiv="refresh" content="0;url=${escapedHref}">
+<title>Coming back</title>
 </head>
 <body>
 <p>${escaped}</p>
-<p><a href="/">Back to the site</a></p>
+<p><a href="${escapedHref}">Back to the site</a></p>
 </body></html>`;
 }
 
-export function loginPickerPage(rooms: { token: string }[]): string {
-  const items = rooms
-    .map(
-      (room, index) =>
-        `<li><a href="/w/${encodeURIComponent(room.token)}">Open room ${index + 1}</a></li>`,
-    )
-    .join("");
-  return `<!doctype html>
-<html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex, nofollow, noarchive">
-<title>Your rooms</title>
-</head>
-<body>
-<p>These rooms are bound to this LinkedIn account.</p>
-<ul>${items}</ul>
-<p><a href="/">Back to the site</a></p>
-</body></html>`;
+export function loginNonePage(line: string): string {
+  const ticket = sessionTicketFromLine(line);
+  if (ticket) {
+    return redirectPage(`/api/session/linkedin?ticket=${encodeURIComponent(ticket)}`, "Coming back to the site.");
+  }
+  if (isSessionTicketLine(line)) {
+    return redirectPage("/", "Coming back to the site.");
+  }
+  return redirectPage(line.startsWith("/") ? line : "/", line);
 }
 
 export type RoomLoginWhatsAppStart =
@@ -336,17 +442,46 @@ export async function proveRoomLoginWhatsApp(message: AcceptedInboundMessage): P
   if (!pending) return;
   pendingWhatsApp.delete(code);
 
-  const bindings = await listBindingsByPerson("whatsapp", whatsappProviderId(message.chatId));
+  const providerId = whatsappProviderId(message.chatId);
+  const bindings = await listBindingsByPerson("whatsapp", providerId);
   const rooms = await roomsFromBindings(bindings);
-  whatsappResults.set(code, { createdAt: Date.now(), rooms });
+  whatsappResults.set(code, {
+    createdAt: Date.now(),
+    rooms,
+    providerId,
+    displayName: message.sender.attendeeName,
+  });
+}
+
+/**
+ * SPEND the confirmed code. It is spent, not read, because what it buys is a
+ * ten-year session: a code that survives being used is a code that can be
+ * used again by anybody who has seen it, and this one has been on the
+ * visitor's screen, inside a QR and inside a WhatsApp chat.
+ *
+ * The poll that watches for confirmation does not come through here, so it
+ * can keep being polled until the browser claims.
+ */
+export function takeWhatsAppLoginResult(
+  codeRaw: string,
+  now = Date.now(),
+): { providerId: string; displayName: string | null; rooms: { token: string }[] } | null {
+  sweep(now);
+  const code = codeRaw.trim().toUpperCase();
+  if (!code) return null;
+  const result = whatsappResults.get(code);
+  if (!result) return null;
+  whatsappResults.delete(code);
+  return { providerId: result.providerId, displayName: result.displayName, rooms: result.rooms };
 }
 
 function onLoginMessage(message: AcceptedInboundMessage): void {
   void proveRoomLoginWhatsApp(message);
 }
 
+let uninstallMatcher: (() => void) | null = null;
+
 export function installRoomLoginInbound(): void {
-  if (matcherInstalled) return;
-  matcherInstalled = true;
-  registerInboundMatcher(onLoginMessage);
+  if (uninstallMatcher) return;
+  uninstallMatcher = registerInboundMatcher(onLoginMessage);
 }

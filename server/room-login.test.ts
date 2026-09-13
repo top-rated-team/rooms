@@ -23,15 +23,21 @@ import {
   completeRoomLoginLinkedIn,
   extractLoginCode,
   getRoomLoginWhatsAppConfirmed,
+  installRoomLoginInbound,
+  loginNonePage,
+  takeWhatsAppLoginResult,
   proveRoomLoginWhatsApp,
   registerRoomTokenForTests,
   resetRoomLoginForTests,
+  resolveRoomLoginLinkedIn,
   roomLoginAvailability,
   roomLoginLinkedInRedirectUri,
   startRoomLoginLinkedIn,
   startRoomLoginWhatsApp,
   whatsappProviderId,
 } from "./room-login";
+import { claimWhatsAppSession, isSessionTicketLine, resetRoomAccountForTests, whoAmI, ROOM_SESSION_COOKIE } from "./room-account";
+import { dispatchInbound, resetInboundForTests } from "./unipile/inbound";
 import type { AcceptedInboundMessage } from "./unipile/inbound";
 
 const PUBLIC_BASE = "https://ai.top-rated.team";
@@ -69,6 +75,8 @@ function setLinkedIn(): void {
 
 beforeEach(() => {
   resetRoomLoginForTests();
+  resetRoomAccountForTests();
+  resetInboundForTests();
   resetIdentityForTests();
   resetIdentityStoreForTests();
   resetRoomAccessForTests();
@@ -82,6 +90,8 @@ beforeEach(() => {
 
 afterEach(() => {
   resetRoomLoginForTests();
+  resetRoomAccountForTests();
+  resetInboundForTests();
   resetIdentityForTests();
   resetIdentityStoreForTests();
   resetRoomAccessForTests();
@@ -92,13 +102,33 @@ afterEach(() => {
 });
 
 describe("roomLoginAvailability", () => {
-  it("omits WhatsApp on a fork, and offers LinkedIn when the app is configured", async () => {
+  it("omits WhatsApp on a fork, and does not offer LinkedIn on an address it does not return to", async () => {
+    /* LinkedIn comes back to ONE address, the one registered on the app. On
+       any other host the button would start a sign-in that finishes on a
+       domain the visitor never asked about — so it is named as belonging
+       there rather than drawn as if it worked here. A second deployment that
+       wants LinkedIn wants its own app. */
     const fork = await roomLoginAvailability({
       host: "partner.example",
       probe: async () => ({ ok: true, digits: "420774654822" }),
     });
     assert.deepEqual(fork.whatsapp, { available: false });
-    assert.deepEqual(fork.linkedin, { available: true });
+    assert.equal(fork.linkedin.available, false);
+    if (fork.linkedin.available) return;
+    assert.match(fork.linkedin.unavailableLine, /ai\.top-rated\.team/);
+
+    const home = await roomLoginAvailability({
+      host: "ai.top-rated.team",
+      probe: async () => ({ ok: false, line: "down" }),
+    });
+    assert.deepEqual(home.linkedin, { available: true });
+
+    /* www is the same address, not a different one. */
+    const www = await roomLoginAvailability({
+      host: "www.ai.top-rated.team",
+      probe: async () => ({ ok: false, line: "down" }),
+    });
+    assert.deepEqual(www.linkedin, { available: true });
   });
 
   it("offers WhatsApp only on a house host when the probe succeeds", async () => {
@@ -156,8 +186,9 @@ describe("LinkedIn login", () => {
     const state = new URL(start.url).searchParams.get("state");
     assert.ok(state);
 
-    const result = await completeRoomLoginLinkedIn({
+    const result = await resolveRoomLoginLinkedIn({
       state,
+      cookieState: state,
       code: "ok-code",
       fetchImpl: async (url, init) => {
         const href = String(url);
@@ -172,7 +203,10 @@ describe("LinkedIn login", () => {
         });
       },
     });
-    assert.deepEqual(result, { ok: true, rooms: [{ token: ROOM_TOKEN }] });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.deepEqual(result.rooms, [{ token: ROOM_TOKEN }]);
+    assert.equal(result.outcome, "signed-in");
     assert.equal(bindingsForTests("ada@example.test").length, 1);
     assert.equal(bindingsForTests("ada@example.test")[0]?.workspaceToken, ROOM_TOKEN);
   });
@@ -183,8 +217,9 @@ describe("LinkedIn login", () => {
     if (!start.ok) return;
     const state = new URL(start.url).searchParams.get("state");
     assert.ok(state);
-    const result = await completeRoomLoginLinkedIn({
+    const result = await resolveRoomLoginLinkedIn({
       state,
+      cookieState: state,
       code: "ok-code",
       fetchImpl: async (url) => {
         if (String(url).includes("accessToken")) {
@@ -193,7 +228,111 @@ describe("LinkedIn login", () => {
         return jsonResponse(200, { sub: "nobody", name: "Nobody" });
       },
     });
-    assert.deepEqual(result, { ok: true, rooms: [] });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.deepEqual(result.rooms, []);
+    assert.equal(result.outcome, "no-room");
+  });
+
+  it("names each failed return as that failure, not as a missing room", async () => {
+    const noState = await resolveRoomLoginLinkedIn({});
+    assert.deepEqual(noState, { ok: false, outcome: "missing-state" });
+
+    const stale = await resolveRoomLoginLinkedIn({ state: "not-a-pending-row" });
+    assert.deepEqual(stale, { ok: false, outcome: "missing-pending" });
+
+    const start = startRoomLoginLinkedIn();
+    assert.equal(start.ok, true);
+    if (!start.ok) return;
+    const state = new URL(start.url).searchParams.get("state");
+    assert.ok(state);
+
+    const denied = await resolveRoomLoginLinkedIn({
+      state,
+      cookieState: state,
+      error: "user_cancelled_login",
+    });
+    assert.deepEqual(denied, { ok: false, outcome: "linkedin-error" });
+
+    const startAgain = startRoomLoginLinkedIn();
+    assert.equal(startAgain.ok, true);
+    if (!startAgain.ok) return;
+    const stateAgain = new URL(startAgain.url).searchParams.get("state");
+    assert.ok(stateAgain);
+    const failed = await resolveRoomLoginLinkedIn({
+      state: stateAgain,
+      cookieState: stateAgain,
+      code: "bad-code",
+      fetchImpl: async () => jsonResponse(400, { error: "invalid_grant" }),
+    });
+    assert.deepEqual(failed, { ok: false, outcome: "token-failed" });
+  });
+
+  it("refuses a return that did not start in this browser, and does not exchange the code", async () => {
+    /* The attack this is here for: somebody finishes LinkedIn themselves, keeps
+       the callback address, and sends it to a person who is signed in. Their
+       browser carries their own session cookie — SameSite=Lax sends it on a
+       link click — and without this check the attacker's LinkedIn identity is
+       welded onto the victim's account, after which the attacker signs in as
+       themselves and is inside the victim's rooms. */
+    const start = startRoomLoginLinkedIn();
+    assert.equal(start.ok, true);
+    if (!start.ok) return;
+    const state = new URL(start.url).searchParams.get("state");
+    assert.ok(state);
+    assert.equal(start.state, state, "the state planted as a cookie is the state sent to LinkedIn");
+
+    let exchanged = false;
+    const noCookie = await resolveRoomLoginLinkedIn({
+      state,
+      code: "ok-code",
+      fetchImpl: async () => {
+        exchanged = true;
+        return jsonResponse(200, { access_token: "t", expires_in: 3600 });
+      },
+    });
+    assert.deepEqual(noCookie, { ok: false, outcome: "wrong-browser" });
+    assert.equal(exchanged, false, "a refused return must not spend the code either");
+
+    /* And the pending row is gone, so the real browser cannot rescue it. */
+    const retry = await resolveRoomLoginLinkedIn({ state, cookieState: state, code: "ok-code" });
+    assert.deepEqual(retry, { ok: false, outcome: "missing-pending" });
+
+    const other = startRoomLoginLinkedIn();
+    assert.equal(other.ok, true);
+    if (!other.ok) return;
+    const wrong = await resolveRoomLoginLinkedIn({
+      state: other.state,
+      cookieState: "somebody-elses-state",
+      code: "ok-code",
+      fetchImpl: async () => jsonResponse(200, { access_token: "t", expires_in: 3600 }),
+    });
+    assert.deepEqual(wrong, { ok: false, outcome: "wrong-browser" });
+  });
+
+  it("sends the callback back to the site with a ticket, not a white page", async () => {
+    const start = startRoomLoginLinkedIn();
+    assert.equal(start.ok, true);
+    if (!start.ok) return;
+    const state = new URL(start.url).searchParams.get("state");
+    assert.ok(state);
+    const result = await completeRoomLoginLinkedIn({
+      state,
+      cookieState: state,
+      code: "ok-code",
+      fetchImpl: async (url) => {
+        if (String(url).includes("accessToken")) {
+          return jsonResponse(200, { access_token: "t", expires_in: 3600 });
+        }
+        return jsonResponse(200, { sub: "nobody", name: "Nobody" });
+      },
+    });
+    assert.equal(result.ok, false);
+    if (result.ok) return;
+    assert.equal(isSessionTicketLine(result.line), true);
+    const page = loginNonePage(result.line);
+    assert.match(page, /\/api\/session\/linkedin\?ticket=/);
+    assert.equal(page.includes("No room is bound to this LinkedIn account"), false);
   });
 
   it("says so when LinkedIn is not configured", () => {
@@ -229,7 +368,7 @@ describe("WhatsApp login", () => {
     assert.equal(start.ok, true);
     if (!start.ok) return;
     assert.equal(start.offer.url.includes(ROOM_TOKEN), false);
-    assert.match(start.offer.warning, /login code/);
+    assert.match(start.offer.warning, /sign-in code/);
     const text = decodeURIComponent(new URL(start.offer.url).searchParams.get("text") ?? "");
     const code = LOGIN_CODE_RE.exec(text)?.[1];
     assert.equal(code, extractLoginCode(text));
@@ -265,6 +404,58 @@ describe("WhatsApp login", () => {
 
     await proveRoomLoginWhatsApp(inbound(`Room-login ${code}`, "chat_someone_else"));
     assert.deepEqual(getRoomLoginWhatsAppConfirmed(code), { confirmed: true, rooms: [] });
+  });
+
+  it("confirms through the inbound matcher, then the session claim, end to end", async () => {
+    await putBinding({
+      workspaceId: WORKSPACE,
+      provider: "whatsapp",
+      providerId: whatsappProviderId(CHAT),
+      displayName: "Ada",
+      boundAt: "2026-09-09T10:00:00.000Z",
+    });
+    registerRoomTokenForTests(WORKSPACE, ROOM_TOKEN);
+
+    const start = await startRoomLoginWhatsApp({
+      host: "top-rated.team",
+      probe: async () => ({ ok: true, digits: "420774654822" }),
+    });
+    assert.equal(start.ok, true);
+    if (!start.ok) return;
+    const text = decodeURIComponent(new URL(start.offer.url).searchParams.get("text") ?? "");
+    const code = extractLoginCode(text);
+    assert.ok(code);
+
+    installRoomLoginInbound();
+    dispatchInbound({
+      authorized: true,
+      kind: "message",
+      message: inbound(`Room-login ${code}`),
+    });
+    await new Promise((resolve) => setImmediate(resolve));
+
+    assert.deepEqual(getRoomLoginWhatsAppConfirmed(code), {
+      confirmed: true,
+      rooms: [{ token: ROOM_TOKEN }],
+    });
+    const claimed = await claimWhatsAppSession({ code });
+    assert.equal(claimed.ok, true);
+    if (!claimed.ok) return;
+    const me = await whoAmI(`${ROOM_SESSION_COOKIE}=${claimed.token}`);
+    assert.equal(me.signedIn, true);
+    if (!me.signedIn) return;
+    assert.equal(me.attached.whatsapp, true);
+    assert.deepEqual(me.rooms, [{ token: ROOM_TOKEN }]);
+
+    /* THE CODE IS SPENT. It has been on a screen, inside a QR and inside a
+       WhatsApp chat, and what it buys is a ten-year session — so it buys one
+       exactly once. */
+    const again = await claimWhatsAppSession({ code });
+    assert.equal(again.ok, false);
+    if (again.ok) return;
+    assert.equal(again.reason, "not-confirmed");
+    assert.deepEqual(again.rooms, []);
+    assert.equal(takeWhatsAppLoginResult(code), null);
   });
 });
 

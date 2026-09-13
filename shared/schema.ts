@@ -223,3 +223,4 @@ export type Lead = typeof leads.$inferSelect;
 export * from "./schema-rooms";
 export * from "./schema-bookings";
 export * from "./schema-adgrant";
+export * from "./schema-accounts";

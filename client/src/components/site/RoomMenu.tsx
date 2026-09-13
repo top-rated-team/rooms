@@ -6,12 +6,18 @@ import {
   ROOM_ACCESS_SENT_LINE,
   ROOM_ACCESS_TTL_PHRASE,
   ROOM_ACCESS_UNAVAILABLE_LINE,
+  ROOM_SESSION_OUTCOME_LINES,
+  ROOM_SESSION_OUTCOME_QUERY,
+  ROOM_SESSION_QUERY,
   type RoomLoginAvailability,
   type RoomLoginWhatsAppConfirmed,
   type RoomLoginWhatsAppOffer,
+  type RoomSession,
+  type RoomSessionOutcome,
   type SendRoomAccessResponse,
 } from "@shared/api";
 import { isHouseHost } from "@shared/operator";
+import { WhatsAppQr, isCoarsePointer } from "@/components/WhatsAppQr";
 import { useOpenRoom } from "@/hooks/use-open-room";
 
 /**
@@ -54,11 +60,6 @@ export function listRememberedRooms(): RememberedRoom[] {
   }
 }
 
-function isCoarsePointer(): boolean {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
-  return window.matchMedia("(hover: none) and (pointer: coarse)").matches;
-}
-
 function formatLastSeen(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
@@ -73,6 +74,97 @@ function formatLastSeen(iso: string): string {
 function roomLabel(name: string): string {
   const trimmed = name.trim();
   return trimmed.length > 0 ? trimmed : "A room";
+}
+
+/**
+ * Rooms the SESSION put in this browser, as opposed to rooms this browser
+ * opened. Sign-out takes back exactly these and leaves the rest.
+ *
+ * A room address is a bearer credential. Signing in deposits every room on
+ * the account into localStorage, so without this list signing in on somebody
+ * else's laptop and signing out again would leave every one of those
+ * addresses behind for the next person. The owner's rule stands — sign-out
+ * must not forget the rooms — and this keeps it: what the browser knew before
+ * the session is still there afterwards.
+ */
+const FROM_SESSION_KEY = `${ROOMS_STORAGE_KEY}:from-session`;
+
+function readFromSession(): string[] {
+  try {
+    const raw = window.localStorage.getItem(FROM_SESSION_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((t): t is string => typeof t === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function rememberBoundRooms(rooms: { token: string }[]): void {
+  if (rooms.length === 0) return;
+  try {
+    const existing = listRememberedRooms();
+    const byToken = new Map(existing.map((room) => [room.token, room]));
+    const deposited = new Set(readFromSession());
+    const now = new Date().toISOString();
+    for (const room of rooms) {
+      const prev = byToken.get(room.token);
+      if (!prev) deposited.add(room.token);
+      byToken.set(room.token, {
+        token: room.token,
+        name: prev?.name ?? "A room",
+        lastSeen: now,
+      });
+    }
+    const next = [...byToken.values()].sort((a, b) => b.lastSeen.localeCompare(a.lastSeen)).slice(0, 12);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    window.localStorage.setItem(FROM_SESSION_KEY, JSON.stringify([...deposited]));
+  } catch {
+    /* Private mode. The session still stands. */
+  }
+}
+
+function readSigninOutcome(): RoomSessionOutcome | null {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get(ROOM_SESSION_QUERY)) return null;
+    const raw = params.get(ROOM_SESSION_OUTCOME_QUERY);
+    if (!raw) return null;
+    return raw in ROOM_SESSION_OUTCOME_LINES ? (raw as RoomSessionOutcome) : null;
+  } catch {
+    return null;
+  }
+}
+
+function stripSigninQuery(): void {
+  try {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has(ROOM_SESSION_QUERY) && !url.searchParams.has(ROOM_SESSION_OUTCOME_QUERY)) return;
+    url.searchParams.delete(ROOM_SESSION_QUERY);
+    url.searchParams.delete(ROOM_SESSION_OUTCOME_QUERY);
+    const next = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState(window.history.state, "", next);
+  } catch {
+    /* The panel still opens. */
+  }
+}
+
+const WAY_LINK =
+  "self-start border-b border-primary pb-[var(--s1)] text-primary no-underline hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
+
+const SESSION_EVENT = "room-session";
+
+async function fetchSession(): Promise<RoomSession> {
+  try {
+    const res = await fetch("/api/session", {
+      headers: { Accept: "application/json" },
+      credentials: "same-origin",
+    });
+    if (!res.ok) return { signedIn: false };
+    return (await res.json()) as RoomSession;
+  } catch {
+    return { signedIn: false };
+  }
 }
 
 const INNER =
@@ -112,35 +204,72 @@ type EmailFormState =
 
 /**
  * Two actions fused into one: get back into a room, or start a new one.
- * With nothing remembered the pair is LOGIN | Open a room, LOGIN first.
- * With rooms remembered it stays Your rooms | Open a room.
+ * The pair is Sign in | Open a room, and Sign out | Open a room once there
+ * is a session. The label is read from the server. Sign out ends the session
+ * and leaves the rooms this browser remembers where they are.
  *
- * LOGIN opens the ways that work on this deployment: LinkedIn, WhatsApp on
- * a house host, or a link to an address. After create, the room itself
- * offers the claim. This control does not.
+ * The left half opens the ways that work on this deployment: LinkedIn,
+ * WhatsApp on a house host, or a link to an email. Hovering Sign out offers
+ * the other ways in, so they can be attached to this account.
  */
 export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdown" }: RoomMenuProps) {
   const { open: create, opening, error } = useOpenRoom({ doorId, agentId });
   const [rooms, setRooms] = useState<RememberedRoom[]>(listRememberedRooms);
   const [open, setOpen] = useState(false);
   const [login, setLogin] = useState<LoginPanelState>({ phase: "closed" });
+  const [session, setSession] = useState<RoomSession>({ signedIn: false });
+  const [outcome, setOutcome] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [emailForm, setEmailForm] = useState<EmailFormState>({ phase: "idle" });
   const [whatsapp, setWhatsapp] = useState<RoomLoginWhatsAppOffer | null>(null);
   const [whatsappLoading, setWhatsappLoading] = useState(false);
   const [whatsappError, setWhatsappError] = useState<string | null>(null);
   const [whatsappLine, setWhatsappLine] = useState<string | null>(null);
+  const [whatsappDone, setWhatsappDone] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const listId = useId();
   const emailId = useId();
   const loginOpen = login.phase !== "closed";
 
   const refresh = () => setRooms(listRememberedRooms());
+  const signedIn = session.signedIn;
+  const applySession = (next: RoomSession) => {
+    setSession(next);
+    if (next.signedIn) {
+      rememberBoundRooms(next.rooms);
+      setRooms(listRememberedRooms());
+    }
+  };
 
   useEffect(() => {
     const sync = () => setRooms(listRememberedRooms());
     window.addEventListener("storage", sync);
     return () => window.removeEventListener("storage", sync);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchSession().then((next) => {
+      if (!cancelled) applySession(next);
+    });
+    const onSession = () => {
+      void fetchSession().then((next) => {
+        if (!cancelled) applySession(next);
+      });
+    };
+    window.addEventListener(SESSION_EVENT, onSession);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(SESSION_EVENT, onSession);
+    };
+  }, []);
+
+  useEffect(() => {
+    const found = readSigninOutcome();
+    if (!found) return;
+    stripSigninQuery();
+    setOutcome(ROOM_SESSION_OUTCOME_LINES[found]);
+    void openLogin();
   }, []);
 
   useEffect(() => {
@@ -166,7 +295,7 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
   }, [open, loginOpen]);
 
   useEffect(() => {
-    if (!whatsapp?.code) return;
+    if (!whatsapp?.code || whatsappDone) return;
     const tick = async () => {
       try {
         const res = await fetch(
@@ -176,30 +305,50 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
         if (!res.ok) return;
         const body = (await res.json()) as RoomLoginWhatsAppConfirmed;
         if (!body.confirmed) {
-          if (body.expired) setWhatsappLine("That login code has expired. Open WhatsApp again.");
+          if (body.expired) setWhatsappLine("That sign-in code has expired. Open WhatsApp again.");
           return;
         }
-        if (body.rooms.length === 1) {
-          window.location.assign(`/w/${body.rooms[0].token}`);
+        const claim = await fetch("/api/session/whatsapp", {
+          method: "POST",
+          headers: { Accept: "application/json", "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ code: whatsapp.code }),
+        });
+        const claimed = (await claim.json().catch(() => null)) as
+          | { confirmed?: boolean; rooms?: { token: string }[]; error?: string; attached?: boolean }
+          | null;
+        setWhatsappDone(true);
+        if (!claim.ok) {
+          setWhatsappLine(claimed?.error?.trim() || ROOM_SESSION_OUTCOME_LINES.refused);
           return;
         }
-        if (body.rooms.length === 0) {
-          setWhatsappLine("No room is bound to this WhatsApp chat.");
+        rememberBoundRooms(claimed?.rooms ?? body.rooms);
+        setRooms(listRememberedRooms());
+        window.dispatchEvent(new Event(SESSION_EVENT));
+        if ((claimed?.rooms ?? body.rooms).length === 0) {
+          setWhatsappLine(`${ROOM_SESSION_OUTCOME_LINES["whatsapp-confirmed"]} No room is bound to this WhatsApp chat.`);
           return;
         }
-        window.location.assign(`/w/${body.rooms[0].token}`);
+        setWhatsappLine(ROOM_SESSION_OUTCOME_LINES["whatsapp-confirmed"]);
       } catch {
-        /* The panel stays. A missed poll is not a failed login. */
+        /* The panel stays. A missed poll is not a failed sign-in. */
       }
     };
     const id = window.setInterval(() => void tick(), 3_000);
     return () => window.clearInterval(id);
-  }, [whatsapp]);
+  }, [whatsapp, whatsappDone]);
 
   /* Inline is the phone burger, where there is no hover and nothing to open:
      the rooms are simply there, under the control, the moment the sheet is.
-     Everywhere else the list belongs to the "Open a room" half's hover. */
+     Everywhere else the list belongs to the "Open a room" half's hover.
+     When someone is signed in, the ways in stay in the sheet so a second
+     way can be attached without a hover. */
   const showList = rooms.length > 0 && (layout === "inline" || open);
+
+  useEffect(() => {
+    if (layout !== "inline" || !signedIn) return;
+    if (login.phase === "closed") void openLogin();
+  }, [layout, signedIn]);
 
   const openLogin = async () => {
     /* setOpen(false), not true. It used to force the remembered-room list open
@@ -212,6 +361,7 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
     setWhatsapp(null);
     setWhatsappError(null);
     setWhatsappLine(null);
+    setWhatsappDone(false);
     try {
       const res = await fetch("/api/room-login", {
         headers: { Accept: "application/json" },
@@ -271,10 +421,40 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
     }
   };
 
+  const onSignOut = async () => {
+    /* Everything this browser knew before the session, and nothing the
+       session itself deposited. See FROM_SESSION_KEY. */
+    const deposited = new Set(readFromSession());
+    const remembered = listRememberedRooms().filter((room) => !deposited.has(room.token));
+    try {
+      await fetch("/api/session/sign-out", {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        credentials: "same-origin",
+      });
+    } catch {
+      /* The cookie may still be there. The next who-am-I will say so. */
+    }
+    setSession({ signedIn: false });
+    setOutcome(null);
+    setLogin({ phase: "closed" });
+    setWhatsapp(null);
+    setWhatsappLine(null);
+    window.dispatchEvent(new Event(SESSION_EVENT));
+    setRooms(remembered);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(remembered));
+      window.localStorage.removeItem(FROM_SESSION_KEY);
+    } catch {
+      /* Sign-out must not depend on being able to write storage. */
+    }
+  };
+
   const onWhatsApp = async () => {
     setWhatsappLoading(true);
     setWhatsappError(null);
     setWhatsappLine(null);
+    setWhatsappDone(false);
     try {
       const res = await fetch("/api/room-login/whatsapp", {
         headers: { Accept: "application/json" },
@@ -355,6 +535,11 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
             : `w-[min(22rem,calc(100vw-3.5rem))] px-[var(--s2)] py-[var(--s2)] ${FORM_COPY} ${showList ? "border-t border-border" : ""}`
         }
       >
+        {outcome && login.phase !== "ready" ? (
+          <p data-testid={`${testId}-signin-outcome`} className="mb-[var(--s2)]">
+            {outcome}
+          </p>
+        ) : null}
         {login.phase === "loading" ? <p>Checking the ways in.</p> : null}
         {login.phase === "error" ? (
           <p role="alert" className="text-destructive">
@@ -370,12 +555,31 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
             data-testid={`${testId}-login-ways`}
             className="m-0 flex list-none flex-col gap-[var(--s2)] p-0 [&>li+li]:border-t [&>li+li]:border-border [&>li+li]:pt-[var(--s2)]"
           >
+            {outcome ? (
+              <li>
+                <p data-testid={`${testId}-signin-outcome`}>{outcome}</p>
+                {outcome === ROOM_SESSION_OUTCOME_LINES["no-room"] ||
+                (whatsappLine && whatsappLine.includes("No room is bound")) ? (
+                  <button
+                    type="button"
+                    data-testid={`${testId}-signin-open-room`}
+                    onClick={() => void create()}
+                    disabled={opening}
+                    className={`${WAY_LINK} mt-[var(--s2)]`}
+                  >
+                    {opening ? "Opening a room…" : "Open a room"}
+                  </button>
+                ) : null}
+              </li>
+            ) : null}
             <li>
-              {showLinkedIn ? (
+              {signedIn && session.signedIn && session.attached.linkedin ? (
+                <p className="text-muted-foreground">LinkedIn is already on this account.</p>
+              ) : showLinkedIn ? (
                 <a
                   href="/api/room-login/linkedin"
                   data-testid={`${testId}-login-linkedin`}
-                  className="self-start border-b border-primary pb-[var(--s1)] text-primary no-underline hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className={WAY_LINK}
                 >
                   Sign in with LinkedIn
                 </a>
@@ -388,21 +592,36 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
             </li>
             {showWhatsApp ? (
               <li>
+              {signedIn && session.signedIn && session.attached.whatsapp ? (
+                <p className="text-muted-foreground">WhatsApp is already on this account.</p>
+              ) : (
               <button
                 type="button"
                 data-testid={`${testId}-login-whatsapp`}
                 onClick={() => void onWhatsApp()}
                 disabled={whatsappLoading}
-                className={`${INNER} self-start disabled:opacity-50`}
+                className={`${WAY_LINK} disabled:opacity-50`}
               >
-                {whatsappLoading ? "Opening WhatsApp" : "WhatsApp"}
+                {whatsappLoading ? "Opening WhatsApp" : "Sign in with WhatsApp"}
               </button>
+              )}
             {whatsappError ? (
               <p role="alert" className="text-destructive">
                 {whatsappError}
               </p>
             ) : null}
             {whatsappLine ? <p data-testid={`${testId}-login-whatsapp-line`}>{whatsappLine}</p> : null}
+            {whatsappLine && whatsappLine.includes("No room is bound") ? (
+              <button
+                type="button"
+                data-testid={`${testId}-whatsapp-open-room`}
+                onClick={() => void create()}
+                disabled={opening}
+                className={`${WAY_LINK} mt-[var(--s2)]`}
+              >
+                {opening ? "Opening a room…" : "Open a room"}
+              </button>
+            ) : null}
             {whatsapp ? (
               <div data-testid={`${testId}-login-whatsapp-offer`}>
                 <p>{whatsapp.warning}</p>
@@ -410,19 +629,17 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
                   href={whatsapp.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-[var(--s2)] inline-block border-b border-primary pb-[var(--s1)] text-primary no-underline hover:border-foreground hover:text-foreground"
+                  className={`mt-[var(--s2)] inline-block ${WAY_LINK}`}
                 >
                   Open WhatsApp with the message written
                 </a>
-                {whatsapp.qrSvg ? (
-                  <div
-                    className="mt-[var(--s2)] w-36 text-foreground"
-                    role="img"
-                    aria-label="QR code that opens WhatsApp with the login code already written"
-                    data-testid={`${testId}-login-whatsapp-qr`}
-                    dangerouslySetInnerHTML={{ __html: whatsapp.qrSvg }}
-                  />
-                ) : null}
+                <WhatsAppQr
+                  svg={whatsapp.qrSvg}
+                  href={whatsapp.url}
+                  label="QR code that opens WhatsApp with the sign-in code already written"
+                  className="mt-[var(--s2)]"
+                  testId={`${testId}-login-whatsapp-qr`}
+                />
               </div>
             ) : null}
               </li>
@@ -483,6 +700,18 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
             {!showLinkedIn && !showWhatsApp && !emailAvailable && !emailUnavailable ? (
               <li>No way in is configured on this deployment.</li>
             ) : null}
+            {signedIn && isCoarsePointer() ? (
+              <li>
+                <button
+                  type="button"
+                  data-testid={`${testId}-signin-end`}
+                  onClick={() => void onSignOut()}
+                  className={WAY_LINK}
+                >
+                  Sign out
+                </button>
+              </li>
+            ) : null}
           </ul>
         ) : null}
       </div>
@@ -527,14 +756,14 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
     >
       {/* ONE PAIR IN EVERY STATE, and each half owns its own hover.
           Hovering "Open a room" drops the rooms this browser remembers;
-          hovering "Login" shows the ways in. The old "Your rooms" label is
-          gone: it was a third name for a gesture the reader already had, and
-          the list it opened is now under the half that is about rooms.
+          hovering Sign in or Sign out shows the ways in. The label is read
+          from the server. Sign out ends the session and leaves the rooms
+          this browser remembers where they are.
 
-          A coarse pointer has no hover, so there a tap on Login opens the
-          ways and a tap on Open a room creates. The remembered list is not
-          lost on a phone — the burger renders this control with
-          layout="inline", which shows it without needing to hover at all. */}
+          A coarse pointer has no hover, so there a tap on Sign in opens the
+          ways and a tap on Open a room creates. When signed in on a phone
+          burger the ways stay in the sheet so a second way can be attached
+          without a hover. */}
       <span className={`relative inline-flex items-baseline gap-[var(--s2)] ${className}`}>
         <button
           type="button"
@@ -546,12 +775,20 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
             if (!loginOpen) void openLogin();
           }}
           onClick={() => {
+            if (signedIn && layout === "dropdown" && !isCoarsePointer()) {
+              void onSignOut();
+              return;
+            }
+            if (signedIn && layout === "inline") {
+              void onSignOut();
+              return;
+            }
             if (loginOpen) setLogin({ phase: "closed" });
             else void openLogin();
           }}
           className={`${INNER} disabled:opacity-50`}
         >
-          Login
+          {signedIn ? "Sign out" : "Sign in"}
         </button>
         <span aria-hidden="true" className="text-muted-foreground">
           |

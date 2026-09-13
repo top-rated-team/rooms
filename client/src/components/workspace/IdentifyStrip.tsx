@@ -3,6 +3,7 @@ import type { RoomBindingState, RoomClaimState } from "@shared/api";
 import { ApiError, apiRequest } from "@/lib/apiRequest";
 import { cn } from "@/lib/utils";
 import { ACTION, ACTION_QUIET, CHROME, FOCUS, LABEL, META, READ } from "@/components/workspace/room-style";
+import { WhatsAppQr } from "@/components/WhatsAppQr";
 
 /**
  * The strip that asks a visitor to bind the room once the room holds something
@@ -169,16 +170,13 @@ export function IdentifyStrip({ token }: IdentifyStripProps) {
               >
                 Open WhatsApp with the message written
               </a>
-              {whatsapp.qrSvg ? (
-                <div
-                  className="mt-4 w-36 text-foreground"
-                  role="img"
-                  aria-label="QR code that opens WhatsApp with the room address already written"
-                  data-testid="img-identify-whatsapp-qr"
-                  // Our own SVG: modules only, no visitor text in the markup.
-                  dangerouslySetInnerHTML={{ __html: whatsapp.qrSvg }}
-                />
-              ) : null}
+              <WhatsAppQr
+                svg={whatsapp.qrSvg}
+                href={whatsapp.url}
+                label="QR code that opens WhatsApp with the room address already written"
+                className="mt-4"
+                testId="img-identify-whatsapp-qr"
+              />
             </div>
           ) : null}
         </>

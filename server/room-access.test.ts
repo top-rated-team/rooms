@@ -277,7 +277,12 @@ describe("openRoomAccess", () => {
     assert.notEqual(token, ROOM_TOKEN);
 
     const first = await openRoomAccess(token);
-    assert.deepEqual(first, { ok: true, workspaceToken: ROOM_TOKEN });
+    assert.equal(first.ok, true);
+    if (!first.ok) return;
+    assert.equal(first.workspaceToken, ROOM_TOKEN);
+    /* The hash the session signs in under, and never the address itself. */
+    assert.match(first.emailHash, /^[0-9a-f]{64}$/);
+    assert.equal(first.emailHash.includes(ADDRESS), false);
 
     const second = await openRoomAccess(token);
     assert.deepEqual(second, { ok: false, line: ROOM_ACCESS_SPENT_LINE });

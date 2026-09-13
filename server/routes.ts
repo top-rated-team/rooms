@@ -81,11 +81,24 @@ import {
   getRoomLoginWhatsAppConfirmed,
   installRoomLoginInbound,
   loginNonePage,
-  loginPickerPage,
   roomLoginAvailability,
   startRoomLoginLinkedIn,
   startRoomLoginWhatsApp,
+  ROOM_LOGIN_STATE_COOKIE,
+  ROOM_LOGIN_STATE_MAX_AGE_MS,
 } from "./room-login";
+import {
+  ROOM_SESSION_COOKIE,
+  claimLinkedInSession,
+  cookieValue,
+  emailProviderId,
+  sessionTicketFromLine,
+  signInOrAttach,
+  claimWhatsAppSession,
+  endSession,
+  sessionCookieOptions,
+  whoAmI,
+} from "./room-account";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -1388,6 +1401,16 @@ export function registerRoutes(app: Express): void {
         res.status(503).json({ error: start.line });
         return;
       }
+      /* The same value that goes to LinkedIn goes into a cookie, so the
+         return can be completed only by this browser. See
+         ROOM_LOGIN_STATE_COOKIE for what it prevents. */
+      res.cookie(ROOM_LOGIN_STATE_COOKIE, start.state, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: ROOM_LOGIN_STATE_MAX_AGE_MS,
+      });
       res.redirect(302, start.url);
     }),
   );
@@ -1399,22 +1422,20 @@ export function registerRoutes(app: Express): void {
         code: typeof req.query.code === "string" ? req.query.code : undefined,
         state: typeof req.query.state === "string" ? req.query.state : undefined,
         error: typeof req.query.error === "string" ? req.query.error : undefined,
+        cookieState: cookieValue(req.headers.cookie, ROOM_LOGIN_STATE_COOKIE) ?? undefined,
       });
       res.setHeader("Cache-Control", "no-store");
       res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
-      if (!result.ok) {
-        res.status(404).type("html").send(loginNonePage(result.line));
+      res.clearCookie(ROOM_LOGIN_STATE_COOKIE, { path: "/", sameSite: "lax" });
+      /* A sign-in that worked is not a 404, and a meta refresh is not a
+         redirect. Both were how this read before: every outcome, success
+         included, came back as a not-found page carrying an HTML hop. */
+      const ticket = sessionTicketFromLine(result.line);
+      if (ticket) {
+        res.redirect(302, `/api/session/linkedin?ticket=${encodeURIComponent(ticket)}`);
         return;
       }
-      if (result.rooms.length === 1) {
-        res.redirect(302, `/w/${result.rooms[0].token}`);
-        return;
-      }
-      if (result.rooms.length === 0) {
-        res.status(200).type("html").send(loginNonePage("No room is bound to this LinkedIn account."));
-        return;
-      }
-      res.status(200).type("html").send(loginPickerPage(result.rooms));
+      res.status(404).type("html").send(loginNonePage(result.line));
     }),
   );
 
@@ -1437,6 +1458,72 @@ export function registerRoutes(app: Express): void {
     route(async (req, res) => {
       const code = typeof req.query.code === "string" ? req.query.code : "";
       res.json(getRoomLoginWhatsAppConfirmed(code));
+    }),
+  );
+
+  /* ---------------------- session (who am I, and sign out) ---------------------- */
+
+  app.get(
+    "/api/session",
+    roomAccessOpenLimit,
+    route(async (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      res.json(await whoAmI(req.headers.cookie));
+    }),
+  );
+
+  app.post(
+    "/api/session/sign-out",
+    roomAccessOpenLimit,
+    route(async (req, res) => {
+      await endSession(req.headers.cookie);
+      res.clearCookie(ROOM_SESSION_COOKIE, { path: "/", sameSite: "lax" });
+      res.setHeader("Cache-Control", "no-store");
+      res.json({ signedIn: false });
+    }),
+  );
+
+  app.get(
+    "/api/session/linkedin",
+    identityLimit,
+    route(async (req, res) => {
+      const ticket = typeof req.query.ticket === "string" ? req.query.ticket : "";
+      const claimed = await claimLinkedInSession({
+        ticket,
+        cookieHeader: req.headers.cookie,
+      });
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+      if (claimed.token) {
+        res.cookie(ROOM_SESSION_COOKIE, claimed.token, sessionCookieOptions());
+      }
+      res.redirect(302, claimed.location);
+    }),
+  );
+
+  app.post(
+    "/api/session/whatsapp",
+    identityLimit,
+    route(async (req, res) => {
+      const code = typeof req.body?.code === "string" ? req.body.code : "";
+      const claimed = await claimWhatsAppSession({
+        code,
+        cookieHeader: req.headers.cookie,
+      });
+      res.setHeader("Cache-Control", "no-store");
+      if (!claimed.ok) {
+        res.status(claimed.reason === "not-confirmed" ? 409 : 409).json({
+          error: claimed.line,
+          rooms: claimed.rooms,
+        });
+        return;
+      }
+      res.cookie(ROOM_SESSION_COOKIE, claimed.token, sessionCookieOptions());
+      res.json({
+        confirmed: true,
+        rooms: claimed.rooms,
+        attached: claimed.kind === "attached",
+      });
     }),
   );
 
@@ -1477,6 +1564,17 @@ export function registerRoutes(app: Express): void {
         return;
       }
       res.setHeader("Cache-Control", "no-store");
+      /* THE THIRD WAY IN. Opening this link proved possession of the address,
+         which is the whole point of mailing it, so it signs the visitor in the
+         way LinkedIn and WhatsApp do. A refusal — that address already belongs
+         to another account, and this browser is signed into a third — must
+         never hold up the room: the link is valid and it was addressed to
+         them. It simply is not joined. */
+      const signed = await signInOrAttach({
+        identity: { provider: "email", providerId: emailProviderId(opened.emailHash) },
+        cookieHeader: req.headers.cookie,
+      });
+      if (signed.ok) res.cookie(ROOM_SESSION_COOKIE, signed.token, sessionCookieOptions());
       res.redirect(302, `/w/${opened.workspaceToken}`);
     }),
   );
