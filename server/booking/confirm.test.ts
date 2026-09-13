@@ -184,7 +184,11 @@ describe("proveHeldBooking", () => {
     assert.equal(chatPosts.length, 1);
     assert.equal(chatPosts[0]?.includes(CHAT), true);
 
-    const confirmed = getBookingConfirmed(held.code);
+    /* An explicit clock. getBookingConfirmed now asks whether the booking is
+       still live, and every date in this file is written out — so with the
+       real clock these assertions started failing on 13 September for a
+       reason that had nothing to do with what they test. */
+    const confirmed = getBookingConfirmed(held.code, Date.parse("2026-09-09T08:00:00.000Z"));
     assert.equal(confirmed.confirmed, true);
     if (!confirmed.confirmed) return;
     assert.equal(confirmed.meetUrl, "https://meet.google.com/aaa-bbbb-ccc");
@@ -214,7 +218,7 @@ describe("proveHeldBooking", () => {
       { fetchImpl },
     );
     assert.equal(posts.length, 1);
-    assert.equal(getBookingConfirmed(held.code).confirmed, true);
+    assert.equal(getBookingConfirmed(held.code, Date.parse("2026-09-09T08:00:00.000Z")).confirmed, true);
   });
 
   it("leaves confirmed false, with expired, when the hold ran out unproven", async () => {
@@ -230,6 +234,9 @@ describe("proveHeldBooking", () => {
       Date.now() - 5 * 60_000 - 1,
     );
     if ("taken" in held) return;
+    /* The real clock here on purpose: the hold above was placed five minutes
+       and a millisecond ago RELATIVE TO NOW, so asking with a pinned past
+       clock makes its age negative and it is not expired at all. */
     const confirmed = getBookingConfirmed(held.code);
     assert.deepEqual(confirmed, { confirmed: false, expired: true });
   });

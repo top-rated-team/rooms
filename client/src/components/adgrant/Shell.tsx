@@ -8,12 +8,14 @@ import { LINK, META, META_PLAIN, PAGE } from "@/components/site/doors/quiet";
 import { useTheme } from "@/hooks/use-theme";
 import { AdGrantLogo } from "@/components/adgrant/Logo";
 import { mountHome } from "@/components/adgrant/links";
+import { ADGRANT_MOUNT } from "@/components/adgrant/mount";
 import { ADGRANT_SECTIONS } from "@/components/adgrant/sections";
 
 const DOOR = DOOR_BY_ID["ad-grants"];
 const CONTRACT = DOOR.contract;
 
 const NAV_LINK = "type-meta draw text-muted-foreground hover:text-foreground";
+const FOOTER_MARK = "h-[1.15em] w-[1.15em] translate-y-[0.19em] fill-current";
 
 
 /**
@@ -38,7 +40,11 @@ export function Shell({ children }: { children: ReactNode }) {
         data-testid="adgrant-header"
         className="sticky top-0 z-40 border-b border-transparent bg-background/85 backdrop-blur-sm"
       >
-        <div className={`${PAGE} flex flex-wrap items-baseline justify-between gap-x-[var(--s3)] gap-y-[var(--s1)] py-[var(--s2)]`}>
+        <div /* items-baseline. The wordmark carries an image that hangs below the
+       line, so centring the boxes moved the words relative to the menu; the
+       baseline is what a reader actually compares. The mark's own offset is
+       set on the image. */
+          className={`${PAGE} flex flex-wrap items-baseline justify-between gap-x-[var(--s3)] gap-y-[var(--s1)] py-[var(--s2)]`}>
           <Link
             href={mountHome()}
             data-testid="link-adgrant-mark"
@@ -61,17 +67,10 @@ export function Shell({ children }: { children: ReactNode }) {
                 {section.name}
               </Link>
             ))}
-            {/* A different site, so a new tab: somebody reading a glossary
-                entry has not finished with it. */}
-            <a
-              href={MAIN_SITE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="link-adgrant-top-rated"
-              className={NAV_LINK}
-            >
-              Top-Rated Team
-            </a>
+            {/* The link to Top-Rated Team used to sit here. It is in the
+                footer and nowhere else now, on the owner's instruction: the
+                top menu is this product's own sections, and a way out of it
+                does not belong beside them. */}
             <button
               type="button"
               data-testid="button-adgrant-theme"
@@ -89,25 +88,20 @@ export function Shell({ children }: { children: ReactNode }) {
 
       <footer data-testid="adgrant-footer" className="mt-[var(--s6)] border-t border-border">
         <div className={`${PAGE} pb-[var(--s5)] pt-[var(--s3)]`}>
-          <p className={`${META} text-foreground`} data-testid="text-adgrant-legal-name">
-            &copy; {years} {CONTRACT.legalName}
-          </p>
-          <p className={`mt-[var(--s2)] max-w-[46ch] ${META_PLAIN}`}>{CONTRACT.entity}</p>
-          <p className={`mt-[var(--s2)] max-w-[46ch] ${META_PLAIN}`}>
-            Google and related marks and logos are trademarks of Google LLC. {ADGRANT_MARK} is not affiliated with
-            Google and Google does not endorse or sponsor this app.
-          </p>
-          <p className={`mt-[var(--s2)] ${META_PLAIN}`}>This page is in English.</p>
-
+          {/* The row first, then who is answerable. A footer is read for its
+              links; putting three paragraphs of disclaimer above them made
+              the reader scroll past the answer to reach it. */}
           <nav
             aria-label={`${ADGRANT_MARK} footer`}
-            className="type-meta mt-[var(--s3)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]"
+            className="type-meta flex flex-wrap items-center gap-x-[var(--s3)] gap-y-[var(--s1)]"
           >
-            {/* The five sections used to be repeated here from the header.
-                A footer that restates the menu is a menu the reader has
-                already dismissed once, and it pushed the legal links — the
-                only things a footer is actually read for — off the end of the
-                row. */}
+            {/* STILL TOP-RATED TEAM'S, and that is the honest state rather
+                than the intended one. This product needs its own — the owner
+                asked for it and a fork needs the same — but they do not exist
+                in this tree yet, and a footer link to a page that answers 404
+                is the exact defect this repository was caught with before.
+                They move to ${ADGRANT_MOUNT}/privacy and /terms in the wave
+                that writes them. */}
             <a
               href={`${MAIN_SITE_URL}/privacy`}
               target="_blank"
@@ -117,31 +111,57 @@ export function Shell({ children }: { children: ReactNode }) {
             >
               Privacy
             </a>
-            {CONTRACT.termsUrl ? (
-              <a
-                href={CONTRACT.termsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="link-adgrant-terms"
-                className={LINK}
-              >
-                Terms
-              </a>
-            ) : null}
-            {/* "Write to Top-Rated Team" used to sit here, one link away from
-                "Top-Rated Team" itself, which is two ways to say the same thing
-                in a row of six words. The site link stays; the contact address
-                is on the page it leads to. */}
+            <a
+              href={`${MAIN_SITE_URL}/terms`}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="link-adgrant-terms"
+              className={LINK}
+            >
+              Terms
+            </a>
+            <a
+              href="https://www.linkedin.com/company/ad-grant-ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="link-adgrant-linkedin"
+              className={LINK}
+              aria-label={`${ADGRANT_MARK} on LinkedIn`}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" className={FOOTER_MARK}>
+                <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm7 0h3.8v1.64h.05c.53-.95 1.82-1.95 3.75-1.95C21.4 8.69 22 11.1 22 14.24V21h-4v-6c0-1.43-.03-3.27-2-3.27-2 0-2.3 1.56-2.3 3.17V21h-4V9Z" />
+              </svg>
+            </a>
             <a
               href={MAIN_SITE_URL}
               target="_blank"
               rel="noopener noreferrer"
               data-testid="link-adgrant-footer-top-rated"
-              className={LINK}
+              className={`${LINK} inline-flex items-center gap-[0.4em]`}
             >
+              <img
+                src="/assets/top-rated-logo.png"
+                alt=""
+                aria-hidden="true"
+                className="h-[1.15em] w-[1.15em] translate-y-[0.06em] object-contain"
+              />
               Top-Rated Team
             </a>
           </nav>
+
+          <p className={`mt-[var(--s3)] ${META} text-foreground`} data-testid="text-adgrant-legal-name">
+            &copy; {years} {CONTRACT.legalName}
+          </p>
+          {/* Full width, not a measure: this is an identification line, not
+              prose, and wrapping it at 46 characters made three short ragged
+              lines where one sentence belongs. "This page is in English" is
+              gone with them — it told a reader something the page itself had
+              already told them in the first word they read. */}
+          <p className={`mt-[var(--s2)] ${META_PLAIN}`}>{CONTRACT.entity}</p>
+          <p className={`mt-[var(--s2)] ${META_PLAIN}`}>
+            Google and related marks and logos are trademarks of Google LLC. {ADGRANT_MARK} is not affiliated with
+            Google and Google does not endorse or sponsor this app.
+          </p>
         </div>
       </footer>
     </div>

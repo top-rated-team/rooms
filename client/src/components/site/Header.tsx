@@ -78,7 +78,11 @@ export function Header() {
       data-testid="site-header"
       className="sticky top-0 z-40 border-b border-transparent bg-background/85 backdrop-blur-sm"
     >
-      <div className="mx-auto flex max-w-[var(--page)] items-center justify-between gap-[var(--s3)] px-[var(--s3)] py-[var(--s2)] pb-[calc(var(--s2)+0.5rem)]">
+      {/* items-baseline, not items-center. The wordmark's box is taller than
+          the menu's because the mark hangs below the line, so centring the
+          BOXES lifted the words above the menu they sit beside. Baselines are
+          what a reader compares. */}
+      <div className="mx-auto flex max-w-[var(--page)] items-baseline justify-between gap-[var(--s3)] px-[var(--s3)] py-[var(--s2)] pb-[calc(var(--s2)+0.5rem)]">
         <Link
           href="/"
           data-testid="link-logo"

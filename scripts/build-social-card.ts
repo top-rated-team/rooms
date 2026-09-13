@@ -42,7 +42,12 @@ const html = `<!doctype html><meta charset="utf-8">
     padding: 78px 88px;
   }
   .mark { display: flex; align-items: baseline; gap: 14px; }
-  .mark img { width: 46px; height: 46px; transform: translateY(11px); }
+  /* translate = height minus cap height, the same rule the site header
+     carries: with align-items:baseline the image's BOTTOM sits on the
+     baseline, so its top is one full height above it, and pushing it back
+     down by (height - cap) leaves the top exactly level with the top of the
+     T. 46 - 21 = 25. It was 11, which left the mark riding 14px high. */
+  .mark img { width: 46px; height: 46px; transform: translateY(25px); }
   .mark span { font-size: 30px; font-weight: 500; letter-spacing: .01em; }
   h1 {
     font-family: Outfit, system-ui, sans-serif;

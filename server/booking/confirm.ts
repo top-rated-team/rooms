@@ -52,16 +52,26 @@ export function setBookingEventFetchForTests(impl: typeof fetch): void {
  * Production holds come from POST /api/booking with no address.
  */
 export function plantBookingCode(now = Date.now()): { code: string; url: string } {
+  /*
+   * TOMORROW, not a date typed into the source. It was pinned to 2026-09-10,
+   * and on 13 September the fixture was three days in the past — which nothing
+   * noticed until getBookingConfirmed started asking whether the booking is
+   * still live, and then two tests failed for a reason that had nothing to do
+   * with what they were testing. A fixture with a calendar date in it rots on
+   * a schedule nobody is watching.
+   */
+  const day = new Date(now + 24 * 60 * 60_000);
+  const date = day.toISOString().slice(0, 10);
   const times = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"];
   for (const time of times) {
     const held = placeHold(
       {
-        date: "2026-09-10",
+        date,
         time,
         name: "Visitor",
         topic: "call",
         timezone: "Europe/Bratislava",
-        startsAt: "2026-09-10T12:00:00.000Z",
+        startsAt: `${date}T${time}:00.000Z`,
       },
       now,
     );

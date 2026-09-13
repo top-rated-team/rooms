@@ -79,6 +79,10 @@ const MARK_LINK =
 
 /** Same row as Terms, without the always-on underline — filenames, not labels. */
 const LINK_QUIET = "draw text-muted-foreground hover:text-foreground [text-transform:none]";
+/* One constant for all four marks, so "a little lower" is one number and not
+   four. The GitHub one was already nudged to sit on the row's centre line;
+   the others line up to it. */
+const MARK = "h-[1.15em] w-[1.15em] translate-y-[0.19em] fill-current";
 
 export function Footer() {
   const theirs = useSomebodyElsesDoor();
@@ -138,13 +142,26 @@ export function Footer() {
           </div>
         ) : null}
 
+        {/* ONE ROW, above the identification line, on the owner's order. It
+            was two navs a paragraph apart — products in the first, legal and
+            files in the second — so a reader looking for terms had to find
+            the one further down. Marks sit where a word would, and each is a
+            real destination rather than a badge. Inline SVG: they inherit the
+            theme and cost no request, which is why the GitHub one already
+            was one. */}
         <nav
-          aria-label="Products"
-          className="type-note mb-[var(--s2)] flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]"
+          aria-label="Top-Rated Team"
+          className="type-note mb-[var(--s2)] flex flex-wrap items-center gap-x-[var(--s3)] gap-y-[var(--s1)]"
         >
-          <Link href="/services/google-ads" data-testid="link-footer-google-ads" className={LINK}>
-            Google Ads
-          </Link>
+          <a
+            href="https://partnersdirectory.withgoogle.com/partners/6664496343"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="link-footer-google-partner"
+            className={LINK}
+          >
+            Google Partner
+          </a>
           <a
             href="https://adgrant.ai"
             target="_blank"
@@ -154,18 +171,20 @@ export function Footer() {
           >
             AdGrant.AI
           </a>
-          <a
-            href="https://being.marketing"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="link-footer-being"
+          <Link href="/terms" data-testid="link-footer-terms" className={LINK}>
+            Terms
+          </Link>
+          <Link href="/privacy" data-testid="link-footer-privacy" className={LINK}>
+            Privacy
+          </Link>
+          <button
+            type="button"
+            onClick={() => setMessageOpen(true)}
+            data-testid="link-footer-contact"
             className={LINK}
           >
-            Being.<s className="line-through">Marketing</s>
-          </a>
-          {/* The source, as the mark rather than as a word — the white-label
-              offer is "run this yourself" and this is where you go and do it.
-              Inline SVG so it inherits the theme and costs no request. */}
+            Contact
+          </button>
           <a
             href={GITHUB_URL}
             target="_blank"
@@ -174,63 +193,59 @@ export function Footer() {
             className={`${MARK_LINK} inline-flex items-center`}
             aria-label="This site's source on GitHub"
           >
-            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-[1.15em] w-[1.15em] translate-y-[0.19em] fill-current">
+            <svg viewBox="0 0 16 16" aria-hidden="true" className={MARK}>
               <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
             </svg>
           </a>
+          <a
+            href="https://www.upwork.com/ag/google"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="link-footer-upwork"
+            className={`${MARK_LINK} inline-flex items-center`}
+            aria-label="Top-Rated Team on Upwork"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" className={MARK}>
+              <path d="M18.56 5.1c-2.2 0-3.93 1.43-4.63 3.78-1.07-1.6-1.87-3.53-2.34-5.15H9.13v6.22a2.23 2.23 0 1 1-4.46 0V3.73H2.21v6.22a4.69 4.69 0 0 0 9.38 0V8.9c.46.96 1.03 1.96 1.71 2.84l-1.46 6.86h2.51l1.05-4.97c.93.6 1.99.96 3.16.96 2.57 0 4.66-2.1 4.66-4.74 0-2.64-2.09-4.75-4.66-4.75Zm0 7.02c-.89 0-1.77-.38-2.49-1l.24-.96v-.02c.17-1 .71-2.68 2.25-2.68 1.16 0 2.1.94 2.1 2.33 0 1.28-.94 2.33-2.1 2.33Z" />
+            </svg>
+          </a>
+          <a
+            href="https://www.linkedin.com/company/googler"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="link-footer-linkedin"
+            className={`${MARK_LINK} inline-flex items-center`}
+            aria-label="Top-Rated Team on LinkedIn"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" className={MARK}>
+              <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm7 0h3.8v1.64h.05c.53-.95 1.82-1.95 3.75-1.95C21.4 8.69 22 11.1 22 14.24V21h-4v-6c0-1.43-.03-3.27-2-3.27-2 0-2.3 1.56-2.3 3.17V21h-4V9Z" />
+            </svg>
+          </a>
+          <a
+            href="https://www.youtube.com/@TopRatedTeam"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="link-footer-youtube"
+            className={`${MARK_LINK} inline-flex items-center`}
+            aria-label="Top-Rated Team on YouTube"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" className={MARK}>
+              <path d="M23.5 6.2a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.51A3.02 3.02 0 0 0 .5 6.2C0 8.09 0 12 0 12s0 3.91.5 5.8a3.02 3.02 0 0 0 2.12 2.14c1.88.51 9.38.51 9.38.51s7.5 0 9.38-.51a3.02 3.02 0 0 0 2.12-2.14C24 15.91 24 12 24 12s0-3.91-.5-5.8ZM9.6 15.57V8.43L15.82 12 9.6 15.57Z" />
+            </svg>
+          </a>
+          {/* Real anchors, not wouter Links: these are files in client/public
+              and a client-side route would 404 them. */}
+          <a href="/llms.txt" data-testid="link-footer-llms" className={LINK_QUIET}>
+            llms.txt
+          </a>
+          <a href="/llms-full.txt" data-testid="link-footer-llms-full" className={LINK_QUIET}>
+            llms-full.txt
+          </a>
         </nav>
 
-        <div className="flex flex-wrap items-baseline justify-between gap-x-[var(--s4)] gap-y-[var(--s2)]">
-          <p className="type-meta text-muted-foreground" data-testid="text-footer-operator">
-            &copy; 2017&ndash;{year} {OURS.legalName} &mdash; Prague, Madeira, Kyiv, Bratislava, Batumi
-          </p>
-          <nav className="type-meta flex flex-wrap items-baseline gap-x-[var(--s3)] gap-y-[var(--s1)]">
-            {/* The way back to a room you already kept. One place, in words, at
-                the end of the scroll — the site's only standing link to /w. The
-                page itself explains, in one sentence, why there are none when a
-                browser remembers none. */}
-            {/* The same control the masthead and the hero carry, so the way
-                back into a room is one thing with one name everywhere rather
-                than a link here and a menu there. */}
-            <RoomMenu className={LINK} testId="button-footer-open-a-room" />
-            {/* Our own two pages, so they are Links rather than anchors with a
-                target: they were external URLs back when this application did
-                not serve them, and both answered with a 404 page under a 200
-                status until they were written. A door whose contract belongs to
-                somebody else still points at THEIR terms, elsewhere in this
-                file, and that one stays an anchor. */}
-            <Link href="/terms" data-testid="link-footer-terms" className={LINK}>
-              Terms
-            </Link>
-            <Link href="/privacy" data-testid="link-footer-privacy" className={LINK}>
-              Privacy
-            </Link>
-            {/* Contact is the popup now, not an address. It is the same
-                LeadDialog every "Message us" in the action rows used to open,
-                and those are gone — one way to write to us, in the place a
-                person looks for one, instead of the same button repeated in
-                every row on every page. A door whose contract is somebody
-                else's still shows THEIR address, elsewhere in this file, and
-                that one stays a real link. */}
-            <button
-              type="button"
-              onClick={() => setMessageOpen(true)}
-              data-testid="link-footer-contact"
-              className={LINK}
-            >
-              Contact
-            </button>
-            {/* Real <a>, not a wouter Link: these are files in client/public, and
-                a client-side route would 404 them. Filenames as written, so they
-                sit in this row without looking like a fourth legal page. */}
-            <a href="/llms.txt" data-testid="link-footer-llms" className={LINK_QUIET}>
-              llms.txt
-            </a>
-            <a href="/llms-full.txt" data-testid="link-footer-llms-full" className={LINK_QUIET}>
-              llms-full.txt
-            </a>
-          </nav>
-        </div>
+        <p className="type-meta text-muted-foreground" data-testid="text-footer-operator">
+          &copy; 2017&ndash;{year} {OURS.legalName} &mdash; Prague, Madeira, Kyiv, Bratislava, Batumi
+        </p>
       </div>
       {/* Lazy, like every other caller: the footer is on every page and this
           dialog is opened on almost none of them. */}

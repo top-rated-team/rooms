@@ -92,11 +92,14 @@ function Hover({
              unreachable, measured at 218px cut off with no way to scroll to
              it. The panel scrolls itself; overscroll-contain keeps the page
              behind it still. */
-          className={`w-fit max-w-[min(38ch,calc(100vw-1.5rem))] ${
-            below
-              ? "max-h-[var(--radix-tooltip-content-available-height)] overflow-y-auto overscroll-contain"
-              : ""
-          }`}
+          /* No cap and no scrollbar of its own. It grew to the space below
+             the trigger and scrolled inside itself, and the owner wants the
+             whole thing open with the rest of it simply on the next screen.
+             That works because Radix keeps the panel pinned to the trigger as
+             the page scrolls: scrolling moves the line up and the panel with
+             it, so what was below the fold comes into view. Collisions stay
+             off so it can never decide to flip above the line instead. */
+          className="w-fit max-w-[min(38ch,calc(100vw-1.5rem))]"
         >
           {text}
           {below ? (
@@ -308,6 +311,7 @@ export function FirstScreen() {
           <Hover
             text="Every room here has its own AI agent, grounded in its service's own documentation. You can admit your own agents to a room too, and they can work alongside ours as well as collaborate between each other."
             testId="text-home-any-agents"
+            below={<RoomMenu className={ACTION_QUIET} testId="button-agents-open-a-room" layout="inline" />}
           >
             any AI agents
           </Hover>{" "}
