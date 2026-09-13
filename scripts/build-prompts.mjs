@@ -89,7 +89,7 @@ const WAVES = [
      a hidden door had a page, and the new legal pages claimed a sign-in that
      address does not have. Re-running the parcel would undo them. */
   /* Wave 22 has run and adgrant-room-setup is retired. */
-  { n: 23, keys: ["people-admin"], alone: true },
+  /* Wave 23 has run and people-admin is retired. */
   { n: 24, keys: ["testimonials"] },
 ];
 

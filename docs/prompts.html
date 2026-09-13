@@ -45,7 +45,7 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">2 still to run. Copy one, paste
+  <p class="lede">1 still to run. Copy one, paste
   it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
 
   <ol class="steps">
@@ -60,101 +60,6 @@
     <li>Run the same two commands again. If they pass, commit. Then the next wave.</li>
   </ol>
 
-    <section class="wave">
-      <h2>Wave 23 — this one runs alone</h2>
-      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
-      <article class="parcel">
-        <header>
-          <h3>people-admin</h3>
-          <button class="copy" data-target="p-people-admin">Copy this prompt</button>
-        </header>
-        <p class="what">There is no way to see who has used this. The owner wants one plain page: the people who have signed in, by which method, with whatever contact detail that method legitimately gave us, their rooms, their activity, their bookings, and whether they are a white-label partner.</p>
-        <pre id="p-people-admin">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "people-admin".
-
-Read these first, before you write anything, in this order:
-  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
-    content API and what was captured through it; the six statements in that material
-    that are wrong against Google's current documentation, each with the page that
-    contradicts it; why "generate and upload" is two products with a Google approval
-    between them; and the answer to the owner's question about per-agent limits.
-  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
-    endpoint it touches, transcribed with the URL it came from. Four decisions already
-    made, with the reasoning, so you do not spend your wave relitigating them. The
-    request and response shapes two parcels build to in parallel. And the rule the
-    owner set: every message is checked for who it is from, who it is to and which
-    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
-    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
-    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
-    A paraphrase would not, and you would find out after building on all three.
-  README.md, private/doors.md, shared/doors.ts.
-Then read three files next to the ones you are about to change.
-
-WHAT YOU OWN. These files, and nothing else in the repository:
-  server/admin/*
-  client/src/pages/admin.tsx
-  client/src/components/admin/*
-
-SHARED FILES YOU MAY TOUCH, and only in the way described:
-  server/routes.ts
-      - the admin routes, behind the owner's own sign-in
-  shared/api.ts
-      - what a row in the admin list looks like
-  client/src/App.tsx
-      - one route
-
-Add to those, never delete from them. Other agents are editing the same files right now.
-
-NEVER EDIT THESE, whatever the reason:
-  client/index.html
-  server/index.ts
-  render.yaml
-  client/src/index.css
-
-WHAT DONE MEANS FOR THIS PARCEL:
-  ONE PAGE, AND IT IS ONLY EVER READ BY THE PERSON WHO RUNS THE DEPLOYMENT. (1) AUTHORISATION
-  FIRST AND IT IS THE WHOLE PARCEL. This page lists people, their contact details and links into
-  their rooms — a room address is a bearer credential, so this is the most dangerous page in the
-  repository. It is reachable only by the operator of THIS deployment, proved by the session
-  from room-account, and there is no other way in: no shared password, no secret path, no
-  'unlisted' URL. Write that test before the page. (2) WHAT IT SHOWS: each person, which ways
-  they signed in with, the contact detail each of those ways legitimately yielded and nothing
-  beyond it, their rooms with links, when each was last active, their bookings and whether each
-  still stands, and their white-label partner status. Later, orders and tasks per room — leave
-  the shape room for it, build none of it. (3) IT SHOWS WHAT WE HAVE, NOT WHAT WOULD BE USEFUL.
-  A WhatsApp sign-in gives a peppered chat hash and a display name, not a phone number, and the
-  page must say the phone is not held rather than leave a blank that reads like missing data.
-  (4) IT FORKS, EMPTY. A partner's deployment gets this page with their own people and no trace
-  of ours — the same catalogue rules as everything else — and with only the contact fields their
-  own sign-in methods produce. (5) READ-ONLY in this parcel. No deleting a person, no cancelling
-  somebody's booking from here: every one of those is an action with consequences elsewhere and
-  each deserves its own thinking.
-
-WHY IT EXISTS, so you can judge the edge cases yourself:
-  There is no way to see who has used this. The owner wants one plain page: the people who have
-  signed in, by which method, with whatever contact detail that method legitimately gave us,
-  their rooms, their activity, their bookings, and whether they are a white-label partner.
-
-RULES
-  - `npm run verify` must pass when you finish. Run it yourself.
-  - No new dependency. No change to package.json unless it is listed as yours above.
-  - No git command that changes anything: no commit, no checkout, no branch, no stash.
-  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
-    your report as a handoff: the file, the exact change, and why.
-  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
-    dark themes. Tailwind tokens only, never a hex colour.
-  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
-    change the code or change the sentence — never ship the sentence.
-  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
-    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
-    try to work around it and do not report it as a fault.
-
-WHEN YOU FINISH, report exactly this:
-  1. What you built, in plain sentences.
-  2. What you could not do, and why.
-  3. Every handoff.
-  4. The output of `npm run verify`.</pre>
-      </article>
-    </section>
     <section class="wave">
       <h2>Wave 24</h2>
       <p class="waveNote">Start these 1 together. When all 1 have reported, run the two commands, then go to the next wave.</p>
