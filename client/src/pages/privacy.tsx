@@ -15,18 +15,20 @@ import { CONTACT_EMAIL } from "@shared/roster";
  * true of the code as it stands. It was broken here once, and the break is
  * worth remembering: the visitor-calendar row was written in the present
  * tense for a feature no parcel had built, so a legal page — the one Google's
- * reviewer reads — described a permission this site has never asked anybody
- * for. A future tense is the only honest way to describe a plan on this page. So it names the actual stores, the actual
- * processors and the actual fields, and where a thing is not built yet it
- * says "when", not "we may". A policy that reserves rights the software does
- * not exercise is the kind that gets read as boilerplate, by a reviewer and by
- * a customer both.
+ * reviewer reads — described a permission this site had never asked anybody
+ * for. That connection is built now, in the same commit as this page moving
+ * back to the present tense. A future tense is still the only honest way to
+ * describe a plan. So it names the actual stores, the actual processors and
+ * the actual fields, and where a thing is not built yet it says "when", not
+ * "we may". A policy that reserves rights the software does not exercise is
+ * the kind that gets read as boilerplate, by a reviewer and by a customer
+ * both.
  * ------------------------------------------------------------------------- */
 
 /** The house contract, the way Footer.tsx reads it: the default door's. */
 const OURS = DOOR_BY_ID[DEFAULT_DOOR_ID].contract;
 
-const UPDATED = "9 September 2026";
+const UPDATED = "13 September 2026";
 
 function Out({ href, children }: { href: string; children: string }) {
   return (
@@ -94,16 +96,18 @@ export default function Privacy() {
             invitation is sent. The event is created in our own Google Calendar.
           </Row>
           <Row term="Your own calendar, if you connect it">
-            Optional, and it exists so we do not offer you a time you are already busy. If you authorise it, we read
-            your free/busy information through Google's{" "}
+            Optional, and it exists so a time you are already busy is marked on the picker — you can still choose it.
+            If you authorise it, we read your free/busy information through Google's{" "}
             <Out href="https://developers.google.com/workspace/calendar/api/v3/reference/freebusy/query">
               Free/Busy API
             </Out>{" "}
             under the scope <code>calendar.freebusy</code>. That returns time ranges and nothing else — no event
-            titles, no guests, no locations, no descriptions. We hold it in memory for the length of the booking, we
-            never write it down, and the connection ends when you confirm or after five minutes, whichever comes
-            first. You can also revoke it yourself at any time at{" "}
-            <Out href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</Out>.
+            titles, no guests, no locations, no descriptions. We hold the token in memory for the length of the pick,
+            we never write it down, and we hand it back to Google — a revoke, not just a forget — when you confirm
+            or after five minutes, whichever comes first. You can also revoke it yourself at any time at{" "}
+            <Out href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</Out>. Disconnecting
+            here removes that Google account of yours and nothing else — not ours, and not a LinkedIn or WhatsApp
+            account.
           </Row>
           <Row term="Signing in with LinkedIn">
             We use{" "}
@@ -188,9 +192,10 @@ export default function Privacy() {
       <Section title="How long we keep it">
         <P>
           A room and its messages are kept while the work is live and for as long as you might want to come back to
-          it. A request to leave a message is kept as the record of an enquiry. Nothing has ever been read from a
-          calendar of yours, because connecting one is not built. Ask us to delete a room or an enquiry and we will,
-          and we will say when it is done.
+          it. A request to leave a message is kept as the record of an enquiry. Free/busy ranges from a calendar you
+          connected are not kept at all: they mark the times on the picker and go with the page. What lasts up to
+          five minutes is the token that reads them, in memory, and it is revoked at the end. Ask us to delete a
+          room or an enquiry and we will, and we will say when it is done.
         </P>
       </Section>
 

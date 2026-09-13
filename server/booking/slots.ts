@@ -13,15 +13,21 @@
  *
  * The computed window is cached for 45 seconds. One Unipile call covers every
  * cell the widget renders.
+ *
+ * A visitor who connected their own Google Calendar adds a second overlay:
+ * slots they are busy in stay in `slots` and are also listed in `visitorBusy`.
+ * That overlay is never cached with the owner's window — visitor A must not
+ * mark visitor B's picker. Our own calendar is still read through Unipile.
  */
 
-import type { BookingDay, BookingSlotsResponse } from "@shared/api";
+import type { BookingDay, BookingSlotsResponse, VisitorCalendarView } from "@shared/api";
 import { available, unavailableLine } from "../unipile/client";
 import {
   getPrimaryCalendar,
   listCalendarEvents,
   type UnipileCalendarEvent,
 } from "../unipile/calendar";
+import { queryVisitorFreeBusy, visitorCalendarView } from "./freebusy";
 import { activeHeldSlots } from "./hold";
 
 export const SLOT_MINUTES = 30;
@@ -264,6 +270,35 @@ export function daysFromEvents(input: {
   return days;
 }
 
+/**
+ * Mark slots the visitor is busy in. Does not remove them: a person may
+ * still choose a time they are busy, and silently shrinking the list makes
+ * the picker look broken.
+ */
+export function overlayVisitorBusy(
+  days: BookingDay[],
+  intervals: { start: number; end: number }[],
+  timezone: string,
+): BookingDay[] {
+  return days.map((day) => {
+    const visitorBusy = day.slots.filter((time) => {
+      const start = wallClockToUtc(day.date, time, timezone);
+      if (!start) return false;
+      const end = start.getTime() + SLOT_MINUTES * 60_000;
+      return intervals.some((interval) => overlaps(start.getTime(), end, interval.start, interval.end));
+    });
+    return { date: day.date, slots: day.slots, visitorBusy };
+  });
+}
+
+function withVisitorCalendar(
+  body: BookingSlotsResponse,
+  view: VisitorCalendarView,
+  days: BookingDay[] = body.days,
+): BookingSlotsResponse {
+  return { timezone: body.timezone, slotMinutes: body.slotMinutes, days, visitorCalendar: view };
+}
+
 export type GetBookingSlotsResult =
   | { ok: true; body: BookingSlotsResponse }
   | { ok: false; status: 503; error: string };
@@ -271,7 +306,7 @@ export type GetBookingSlotsResult =
 export async function getBookingSlots(
   fromRaw: string,
   daysRaw: number,
-  opts: { fetchImpl?: typeof fetch; now?: Date } = {},
+  opts: { fetchImpl?: typeof fetch; now?: Date; visitorHandle?: string } = {},
 ): Promise<GetBookingSlotsResult> {
   const fetchImpl = opts.fetchImpl ?? fetch;
   const now = opts.now ?? new Date();
@@ -287,7 +322,7 @@ export async function getBookingSlots(
   const days = Number.isFinite(daysRaw) ? Math.min(MAX_SLOT_DAYS, Math.max(1, Math.trunc(daysRaw))) : DEFAULT_SLOT_DAYS;
   const cacheKey = `${primary.calendar.id}:${from}:${days}:${primary.calendar.timezone}`;
   if (slotsCache && slotsCache.key === cacheKey && slotsCache.expiresAt > now.getTime()) {
-    return { ok: true, body: slotsCache.body };
+    return { ok: true, body: await attachVisitorOverlay(slotsCache.body, opts, from, days, now, fetchImpl) };
   }
 
   const window = paddedWindow(from, days, primary.calendar.timezone);
@@ -321,7 +356,34 @@ export async function getBookingSlots(
     days: dayRows,
   };
   slotsCache = { key: cacheKey, body, expiresAt: now.getTime() + SLOTS_CACHE_MS };
-  return { ok: true, body };
+  return { ok: true, body: await attachVisitorOverlay(body, opts, from, days, now, fetchImpl) };
+}
+
+async function attachVisitorOverlay(
+  ownerBody: BookingSlotsResponse,
+  opts: { visitorHandle?: string },
+  from: string,
+  days: number,
+  now: Date,
+  fetchImpl: typeof fetch,
+): Promise<BookingSlotsResponse> {
+  const view = visitorCalendarView(opts.visitorHandle, now.getTime());
+  if (!view.offered || !view.connected) return withVisitorCalendar(ownerBody, view);
+
+  const window = paddedWindow(from, days, ownerBody.timezone);
+  if (!window) return withVisitorCalendar(ownerBody, view);
+
+  const intervals = await queryVisitorFreeBusy({
+    handle: opts.visitorHandle,
+    start: window.start,
+    end: window.end,
+    now,
+    fetchImpl,
+  });
+  if (!intervals) {
+    return withVisitorCalendar(ownerBody, visitorCalendarView(opts.visitorHandle, now.getTime()));
+  }
+  return withVisitorCalendar(ownerBody, view, overlayVisitorBusy(ownerBody.days, intervals, ownerBody.timezone));
 }
 
 function wallDateInZone(now: Date, timeZone: string): string {

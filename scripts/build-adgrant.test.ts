@@ -5,9 +5,8 @@
  *
  *   npx tsx --test scripts/build-adgrant.test.ts
  *
- * `npm test` globs server test files. This file lives next to the script
- * that writes the library, which this parcel owns; adding it to that glob is
- * a one-line change in package.json and is a handoff, not this parcel's.
+ * `npm test` now globs this file too. It did not for three waves, which is
+ * how the page count below came to be stale by four.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -22,7 +21,13 @@ import {
 
 test("the generated module parses, and every page has a slug and a body", () => {
   assert.ok(Array.isArray(PAGES), "PAGES is missing");
-  assert.equal(PAGES.length, 23);
+  /* A FLOOR, NOT A FIXTURE. This was pinned at 23 and the library has since
+     grown to 27 — which nobody saw, because this file was not in the test
+     glob until the day it was added and the count was three waves stale by
+     then. A floor catches the failure that matters (a refetch that loses
+     pages) without going red every time the library legitimately grows. */
+  assert.ok(PAGES.length >= 23, `the library shrank to ${PAGES.length} pages`);
+  assert.equal(new Set(PAGES.map((page) => page.slug)).size, PAGES.length, "two pages share a slug");
   for (const page of PAGES) {
     assert.ok(page.slug, "a page is missing its slug");
     assert.ok(page.bodyMarkdown.trim(), `${page.slug} has no body`);

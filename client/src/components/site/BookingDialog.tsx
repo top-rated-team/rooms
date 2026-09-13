@@ -25,6 +25,9 @@ import {
   rememberBookingPointer,
   slotsUrl,
   takeBookingCredential,
+  takeVisitorCalendarHop,
+  dropVisitorCalendar,
+  visitorCalendarConnectUrl,
   type BookedPayload,
   type SlotDay,
   type SlotsPayload, bookingPointer } from "@/lib/booking";
@@ -34,6 +37,7 @@ import type {
   BookingLinkedInSession,
   ExistingBookingResponse,
   HoldBookingResponse,
+  VisitorCalendarView,
 } from "@shared/api";
 import { BOOKING_LINKEDIN_SESSION_QUERY } from "@shared/api";
 import { isHouseHost } from "@shared/operator";
@@ -54,6 +58,11 @@ const BTN_SECONDARY = ACTION_QUIET;
 const BTN_SLOT =
   "inline-flex min-h-8 items-center justify-center rounded-md border border-input bg-background px-2.5 py-1.5 text-sm text-foreground hover-elevate active-elevate-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
 const BTN_SLOT_SELECTED = `${BTN_SLOT} border-primary bg-primary text-primary-foreground`;
+/* A time the visitor's own calendar says they are busy in. MARKED, NOT
+   REMOVED: a person may still choose to take a call over something else, and
+   a picker that silently drops half its times looks broken rather than
+   helpful. Dashed and muted, so it reads as a caution and not as disabled. */
+const BTN_SLOT_BUSY = `${BTN_SLOT} border-dashed text-muted-foreground`;
 /* The month arrows and the close cross. Not an ACTION — they carry a glyph
    and no word, so there is nothing for a rule to sit under. */
 const BTN_ICON =
@@ -120,6 +129,8 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
   const [monthError, setMonthError] = useState<string | null>(null);
   const [linkedin, setLinkedin] = useState<BookingLinkedInAvailability | null>(null);
   const [bookerEmail, setBookerEmail] = useState<string | null>(null);
+  const [droppingCalendar, setDroppingCalendar] = useState(false);
+  const [calendarFailed, setCalendarFailed] = useState(false);
   const pollAbort = useRef<AbortController | null>(null);
   const slotsRef = useRef<SlotsPayload | null>(slots);
   slotsRef.current = slots;
@@ -137,6 +148,9 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
       pollAbort.current = null;
       return;
     }
+    /* The popup opened because of this query; a reload should not open it a
+       second time, and the address bar should not keep a hop in it. */
+    setCalendarFailed(takeVisitorCalendarHop() === "failed");
     setSlots(cachedSlots());
     setLoadError(null);
     setDate(null);
@@ -501,6 +515,33 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
     }
   }
 
+  /**
+   * Drop the visitor's own Google token and take the marks off the grid.
+   *
+   * It does not refetch: dropping can only remove marks, and a refetch would
+   * throw away the day and time they had already chosen.
+   */
+  async function dropCalendar(): Promise<void> {
+    setDroppingCalendar(true);
+    try {
+      const view = await dropVisitorCalendar();
+      setSlots((current) =>
+        current
+          ? {
+              ...current,
+              visitorCalendar: view,
+              days: current.days.map((day) => ({ date: day.date, slots: day.slots })),
+            }
+          : current,
+      );
+    } catch {
+      /* The token is five minutes from expiring anyway. Saying nothing beats
+         an error over a control that is only a convenience. */
+    } finally {
+      setDroppingCalendar(false);
+    }
+  }
+
   async function loadPickerDays(): Promise<void> {
     setFormError(null);
     setTime(null);
@@ -656,6 +697,7 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                   {loadError}
                 </p>
               ) : slots && viewYear != null && viewMonth != null && floorDate ? (
+                <>
                 <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(11rem,13rem)] md:items-start md:gap-8">
                   <DayGrid
                     year={viewYear}
@@ -675,6 +717,7 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                     date={date}
                     timezone={timezone}
                     slots={selectedDay?.slots}
+                    busy={selectedDay?.visitorBusy}
                     known={selectedDay != null}
                     loading={monthLoading && selectedDay == null}
                     loadError={monthError && selectedDay == null ? monthError : null}
@@ -683,6 +726,13 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                     onPick={pickSlot}
                   />
                 </div>
+                <VisitorCalendarRow
+                  view={slots.visitorCalendar}
+                  failed={calendarFailed}
+                  dropping={droppingCalendar}
+                  onDrop={dropCalendar}
+                />
+                </>
               ) : null}
 
               {slots && !loading && !loadError ? (
@@ -976,10 +1026,73 @@ function DayGrid({
   );
 }
 
+/**
+ * The one thing the owner has asked for four times: filter the times on offer
+ * by the calendar he is already in.
+ *
+ * It is a row of words rather than a panel because it is optional and it is
+ * not what this popup is for. On a deployment with no Google app of its own
+ * `offered` is false and nothing here renders — a fork must not offer a
+ * permission it cannot ask for.
+ *
+ * Connecting leaves the site. The return comes back with ?visitor_cal=1,
+ * which reopens this popup.
+ */
+function VisitorCalendarRow({
+  view,
+  failed,
+  dropping,
+  onDrop,
+}: {
+  view: VisitorCalendarView | undefined;
+  /** The visitor came back from Google without a connection. */
+  failed: boolean;
+  dropping: boolean;
+  onDrop: () => void;
+}) {
+  if (!view || !view.offered) return null;
+  if (!view.connected) {
+    return (
+      <p className="mt-6 text-sm text-muted-foreground" data-testid="text-booking-visitor-calendar">
+        {failed ? (
+          <span className="text-destructive" data-testid="text-booking-visitor-calendar-failed">
+            That calendar was not connected, so nothing here is marked.{" "}
+          </span>
+        ) : null}
+        <a
+          href={visitorCalendarConnectUrl()}
+          data-testid="link-booking-visitor-calendar-connect"
+          className="border-b border-primary pb-[var(--s1)] text-primary no-underline hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          Mark the times I am busy
+        </a>{" "}
+        from your own Google Calendar. We read free/busy ranges and nothing else — no titles, no
+        guests — for the length of this pick.
+      </p>
+    );
+  }
+  return (
+    <p className="mt-6 text-sm text-muted-foreground" data-testid="text-booking-visitor-calendar">
+      Your calendar is marking the times you are busy.{" "}
+      <button
+        type="button"
+        onClick={onDrop}
+        disabled={dropping}
+        data-testid="button-booking-visitor-calendar-drop"
+        className="border-b border-primary pb-[var(--s1)] text-primary no-underline hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+      >
+        {dropping ? "Disconnecting…" : "Disconnect it"}
+      </button>
+      {" "}— that removes your own Google account here and nothing else.
+    </p>
+  );
+}
+
 function TimesPane({
   date,
   timezone,
   slots,
+  busy,
   known,
   loading,
   loadError,
@@ -990,6 +1103,8 @@ function TimesPane({
   date: string | null;
   timezone: string | undefined;
   slots: string[] | undefined;
+  /** Times this visitor's own calendar says they are busy in. */
+  busy: string[] | undefined;
   known: boolean;
   loading: boolean;
   loadError: string | null;
@@ -997,6 +1112,7 @@ function TimesPane({
   selectedTime: string | null;
   onPick: (date: string, time: string) => void;
 }) {
+  const busySet = new Set(busy ?? []);
   return (
     <div>
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -1020,20 +1136,29 @@ function TimesPane({
         <div className="mt-1.5 flex flex-wrap gap-2">
           {slots.map((slot) => {
             const selected = selectedTime === slot;
+            const alreadyBusy = busySet.has(slot);
             return (
               <button
                 key={slot}
                 type="button"
                 data-testid={`button-booking-slot-${date}-${slot}`}
+                data-busy={alreadyBusy ? "true" : undefined}
                 aria-pressed={selected}
-                className={selected ? BTN_SLOT_SELECTED : BTN_SLOT}
+                title={alreadyBusy ? "Your own calendar says you are busy then." : undefined}
+                className={selected ? BTN_SLOT_SELECTED : alreadyBusy ? BTN_SLOT_BUSY : BTN_SLOT}
                 onClick={() => onPick(date, slot)}
               >
                 {slot}
+                {alreadyBusy ? <span className="sr-only"> — you are busy then</span> : null}
               </button>
             );
           })}
         </div>
+      ) : null}
+      {slots && slots.length > 0 && (busy?.length ?? 0) > 0 ? (
+        <p className="mt-2 text-sm text-muted-foreground" data-testid="text-booking-visitor-busy-note">
+          Dashed times are ones your own calendar says you are busy in. You can still pick one.
+        </p>
       ) : (
         <p className="mt-1.5 text-sm text-muted-foreground">Looking up times that are free.</p>
       )}
@@ -1221,6 +1346,9 @@ function mergePayload(current: SlotsPayload | null, incoming: SlotsPayload): Slo
     timezone: incoming.timezone,
     slotMinutes: incoming.slotMinutes,
     days: mergeSlotDays(current.days, incoming.days),
+    /* Without this line a second month's arrival forgets that a calendar is
+       connected, and the row under the grid offers to connect one again. */
+    visitorCalendar: incoming.visitorCalendar ?? current.visitorCalendar,
   };
 }
 

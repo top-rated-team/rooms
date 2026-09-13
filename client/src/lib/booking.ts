@@ -24,7 +24,8 @@ import type {
   CreateBookingResponse,
   ExistingBookingResponse,
 } from "@shared/api";
-import { BOOKING_LINKEDIN_SESSION_QUERY } from "@shared/api";
+import { BOOKING_LINKEDIN_SESSION_QUERY, BOOKING_VISITOR_CALENDAR_QUERY } from "@shared/api";
+import type { VisitorCalendarView } from "@shared/api";
 import { DOORS } from "@shared/doors";
 
 export const SLOT_DAYS = 14;
@@ -117,6 +118,50 @@ export function openBooking(): boolean {
 export function slotsUrl(from: string, days: number = SLOT_DAYS): string {
   const params = new URLSearchParams({ from, days: String(days) });
   return `/api/booking/slots?${params.toString()}`;
+}
+
+/**
+ * Where "mark the times I am busy" goes. The path we are on rides along so
+ * the return lands back here rather than on the front page.
+ */
+export function visitorCalendarConnectUrl(): string {
+  const here =
+    typeof window === "undefined"
+      ? "/"
+      : `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  return `/api/booking/calendar/connect?return=${encodeURIComponent(here)}`;
+}
+
+/** Drop the visitor's own Google token. Never touches ours. */
+export async function dropVisitorCalendar(): Promise<VisitorCalendarView> {
+  const res = await fetch("/api/booking/calendar/drop", {
+    method: "POST",
+    headers: { Accept: "application/json" },
+    credentials: "same-origin",
+  });
+  const body: unknown = await res.json().catch(() => null);
+  return parseVisitorCalendar(body) ?? { offered: true, connected: false };
+}
+
+/**
+ * Read the ?visitor_cal the callback added and take it off the address, so a
+ * reload is not a second return. "failed" is every way the connection did not
+ * happen — denied consent, a stale return, a refusal from Google — because
+ * from the picker's side they are one outcome: no calendar.
+ */
+export function takeVisitorCalendarHop(): "ok" | "failed" | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const url = new URL(window.location.href);
+    const raw = url.searchParams.get(BOOKING_VISITOR_CALENDAR_QUERY);
+    if (raw === null) return null;
+    url.searchParams.delete(BOOKING_VISITOR_CALENDAR_QUERY);
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    return raw.trim() === "1" ? "ok" : "failed";
+  } catch {
+    /* The popup still opens. */
+    return null;
+  }
 }
 
 export function confirmedUrl(code: string): string {
@@ -218,9 +263,13 @@ export function takeBookingCredential(): string | null {
 
 function shouldAutoOpenBooking(): boolean {
   if (typeof window === "undefined") return false;
-  if (new URLSearchParams(window.location.search).get(BOOKING_LINKEDIN_SESSION_QUERY)?.trim()) {
-    return true;
-  }
+  const query = new URLSearchParams(window.location.search);
+  if (query.get(BOOKING_LINKEDIN_SESSION_QUERY)?.trim()) return true;
+  /* Connecting a calendar leaves the site and comes back. Without this the
+     visitor returns to a page with no popup on it and has to find the button
+     again, having just been asked for a Google permission — which reads as
+     the permission having failed. */
+  if (query.get(BOOKING_VISITOR_CALENDAR_QUERY)?.trim()) return true;
   return hasBookingReturnHop();
 }
 
@@ -288,7 +337,12 @@ export function parseSlotsPayload(value: unknown): SlotsPayload {
   }
   const days = parseDays(record.days);
   if (!days) throw new Error("The server returned times in a shape we cannot read.");
-  return { timezone: record.timezone, slotMinutes: record.slotMinutes, days };
+  return {
+    timezone: record.timezone,
+    slotMinutes: record.slotMinutes,
+    days,
+    visitorCalendar: parseVisitorCalendar(record.visitorCalendar),
+  };
 }
 
 export function parseDays(value: unknown): SlotDay[] | null {
@@ -304,9 +358,29 @@ export function parseDays(value: unknown): SlotDay[] | null {
       if (typeof slot !== "string") return null;
       slots.push(slot);
     }
-    days.push({ date: record.date, slots });
+    const day: SlotDay = { date: record.date, slots };
+    /* The times this visitor is busy in, if they connected their own calendar.
+       A malformed list is dropped rather than failing the whole payload: the
+       grid is still correct without the overlay, and it is not correct at all
+       without the days. */
+    if (Array.isArray(record.visitorBusy)) {
+      const busy = record.visitorBusy.filter((time): time is string => typeof time === "string");
+      if (busy.length > 0) day.visitorBusy = busy;
+    }
+    days.push(day);
   }
   return days;
+}
+
+/** The shape the picker needs; anything else is treated as not offered. */
+export function parseVisitorCalendar(value: unknown): VisitorCalendarView | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  const record = value as Record<string, unknown>;
+  if (record.offered !== true) return { offered: false };
+  if (record.connected !== true) return { offered: true, connected: false };
+  const expiresAt = typeof record.expiresAt === "string" ? record.expiresAt : "";
+  if (!expiresAt) return { offered: true, connected: false };
+  return { offered: true, connected: true, expiresAt };
 }
 
 export function parseBookedPayload(value: unknown): BookedPayload {

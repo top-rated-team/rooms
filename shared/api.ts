@@ -335,13 +335,37 @@ export interface RoomBridge {
 export interface BookingDay {
   date: string;
   slots: string[];
+  /**
+   * Times from `slots` this visitor is busy in. Present only when they
+   * connected their own Google Calendar. Marked, not removed: they may still
+   * pick one. Silently shrinking the list makes the picker look broken.
+   */
+  visitorBusy?: string[];
 }
+
+/**
+ * What the picker learns about a visitor connecting their own Google Calendar.
+ *
+ * `offered` is false on a fork: there is no Google Cloud app there, so the
+ * picker must not mention the option and must not invent a sentence about one.
+ * When it is offered and connected, `expiresAt` is when this process will drop
+ * the token — confirm, or five minutes, whichever comes first.
+ */
+export type VisitorCalendarView =
+  | { offered: false }
+  | { offered: true; connected: false }
+  | { offered: true; connected: true; expiresAt: string };
 
 export interface BookingSlotsResponse {
   timezone: string;
   slotMinutes: number;
   days: BookingDay[];
+  /** Absent only on older responses. A fork sends `{ offered: false }`. */
+  visitorCalendar?: VisitorCalendarView;
 }
+
+/** Query the callback puts on the return URL so the popup can restore the pick. */
+export const BOOKING_VISITOR_CALENDAR_QUERY = "visitor_cal";
 
 export interface CreateBookingRequest {
   date: string;

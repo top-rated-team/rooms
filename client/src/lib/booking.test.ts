@@ -24,6 +24,7 @@ import {
   parseConfirmedPayload,
   parseDays,
   parseSlotsPayload,
+  parseVisitorCalendar,
   registerBookingHost,
   resetBookingForTests,
   slotsUrl,
@@ -128,6 +129,46 @@ describe("parseDays", () => {
   it("returns null rather than guessing when a slot is not a string", () => {
     assert.equal(parseDays([{ date: "2026-09-10", slots: [14] }]), null);
     assert.equal(parseDays("nope"), null);
+  });
+
+  it("carries the visitor's busy times, and drops a malformed list rather than the day", () => {
+    /* The server computed this overlay and the picker exists to show it. The
+       parser used to build a new object from date and slots alone, so the
+       whole feature stopped at this line without anything failing. */
+    const good = parseDays([
+      { date: "2026-09-10", slots: ["09:00", "09:30"], visitorBusy: ["09:30"] },
+    ]);
+    assert.deepEqual(good, [{ date: "2026-09-10", slots: ["09:00", "09:30"], visitorBusy: ["09:30"] }]);
+
+    const bad = parseDays([{ date: "2026-09-10", slots: ["09:00"], visitorBusy: [7, null] }]);
+    assert.deepEqual(bad, [{ date: "2026-09-10", slots: ["09:00"] }]);
+  });
+});
+
+describe("parseVisitorCalendar", () => {
+  it("reads the three states, and treats anything else as not offered", () => {
+    assert.deepEqual(parseVisitorCalendar({ offered: false }), { offered: false });
+    assert.deepEqual(parseVisitorCalendar({ offered: true, connected: false }), {
+      offered: true,
+      connected: false,
+    });
+    assert.deepEqual(
+      parseVisitorCalendar({ offered: true, connected: true, expiresAt: "2026-09-13T10:05:00.000Z" }),
+      { offered: true, connected: true, expiresAt: "2026-09-13T10:05:00.000Z" },
+    );
+    /* Connected with no expiry is not connected: the row would then promise
+       a filter with no end to it. */
+    assert.deepEqual(parseVisitorCalendar({ offered: true, connected: true }), {
+      offered: true,
+      connected: false,
+    });
+    assert.equal(parseVisitorCalendar(null), undefined);
+    assert.deepEqual(parseVisitorCalendar({}), { offered: false });
+  });
+
+  it("is on the parsed payload, so the picker can offer the connection", () => {
+    const parsed = parseSlotsPayload({ ...SLOTS, visitorCalendar: { offered: true, connected: false } });
+    assert.deepEqual(parsed.visitorCalendar, { offered: true, connected: false });
   });
 });
 

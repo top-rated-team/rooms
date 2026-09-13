@@ -55,6 +55,16 @@ import { operatorGate, readOperator, writeOperator } from "./operator";
 import { acceptUnipileInbound, dispatchInbound } from "./unipile/inbound";
 import { ensureUnipileWebhooks, INBOUND_PATH, RETIRED_INBOUND_PATHS, UNIPILE_WEBHOOK_AUTH_HEADER } from "./unipile/webhooks";
 import { getBookingSlots, parseSlotsQuery } from "./booking/slots";
+import {
+  VISITOR_CALENDAR_COOKIE,
+  VISITOR_CALENDAR_STATE_COOKIE,
+  PENDING_VISITOR_CALENDAR_MS,
+  dropVisitorCalendar,
+  startVisitorCalendarConnect,
+  completeVisitorCalendarConnect,
+  visitorCalendarCookieOptions,
+  visitorCalendarView,
+} from "./booking/freebusy";
 import { postBooking, changeBooking, cancelBooking, getExistingBooking } from "./booking/calendar";
 import { getBookingConfirmed, installBookingInbound } from "./booking/confirm";
 import { isBookingReturnCode, normalizeBookingCode } from "./booking/code";
@@ -1667,7 +1677,13 @@ export function registerRoutes(app: Express): void {
     bookingLimit,
     route(async (req, res) => {
       const { from, days } = parseSlotsQuery(req.query);
-      const result = await getBookingSlots(from, days);
+      const result = await getBookingSlots(from, days, {
+        visitorHandle: cookieValue(req.headers.cookie, VISITOR_CALENDAR_COOKIE) ?? undefined,
+      });
+      /* This answer now carries one visitor's busy times and varies by their
+         cookie. It is the one booking route that did not say so. */
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("Vary", "Cookie");
       if (!result.ok) {
         res.status(result.status).json({ error: result.error });
         return;
@@ -1688,6 +1704,11 @@ export function registerRoutes(app: Express): void {
         }
         res.status(result.status).json({ error: result.error });
         return;
+      }
+      const handle = cookieValue(req.headers.cookie, VISITOR_CALENDAR_COOKIE);
+      if (handle) {
+        await dropVisitorCalendar(handle);
+        res.clearCookie(VISITOR_CALENDAR_COOKIE, { path: "/", sameSite: "lax" });
       }
       res.status(201).json(result.body);
     }),
@@ -1839,6 +1860,82 @@ export function registerRoutes(app: Express): void {
         host: publicBaseUrl(req),
       });
       res.redirect(302, result.redirectTo);
+    }),
+  );
+
+  /*
+   * The visitor's own Google Calendar, for the length of a pick. Two routes
+   * a picker uses: connect, and drop. The callback is the return from Google
+   * and is not a picker action. GET without connecting is what the picker
+   * learns — offered or not, connected or not. A fork has no app, so offered
+   * is false and the picker must not mention the option.
+   *
+   * Drop removes that visitor's own Google account and nothing else. Never
+   * dan@top-rated.team, never a LinkedIn or WhatsApp account.
+   */
+  app.get(
+    "/api/booking/calendar",
+    bookingLimit,
+    route(async (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      res.json(visitorCalendarView(cookieValue(req.headers.cookie, VISITOR_CALENDAR_COOKIE) ?? undefined));
+    }),
+  );
+
+  app.get(
+    "/api/booking/calendar/connect",
+    bookingLimit,
+    route(async (req, res) => {
+      const start = startVisitorCalendarConnect({
+        returnPath: typeof req.query.return === "string" ? req.query.return : "/",
+        publicBaseUrl: publicBaseUrl(req),
+      });
+      if (!start.ok) {
+        res.status(404).json({ error: "Not found" });
+        return;
+      }
+      /* The same value that goes to Google goes into a cookie, so only this
+         browser can complete the return. See VISITOR_CALENDAR_STATE_COOKIE. */
+      res.cookie(VISITOR_CALENDAR_STATE_COOKIE, start.state, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: PENDING_VISITOR_CALENDAR_MS,
+      });
+      res.redirect(302, start.url);
+    }),
+  );
+
+  app.get(
+    "/api/booking/calendar/callback",
+    route(async (req, res) => {
+      const result = await completeVisitorCalendarConnect({
+        code: typeof req.query.code === "string" ? req.query.code : undefined,
+        state: typeof req.query.state === "string" ? req.query.state : undefined,
+        error: typeof req.query.error === "string" ? req.query.error : undefined,
+        cookieState: cookieValue(req.headers.cookie, VISITOR_CALENDAR_STATE_COOKIE) ?? undefined,
+      });
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+      res.clearCookie(VISITOR_CALENDAR_STATE_COOKIE, { path: "/", sameSite: "lax" });
+      if (result.handle) {
+        res.cookie(VISITOR_CALENDAR_COOKIE, result.handle, visitorCalendarCookieOptions());
+      }
+      res.redirect(302, result.redirectTo);
+    }),
+  );
+
+  app.post(
+    "/api/booking/calendar/drop",
+    bookingLimit,
+    route(async (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      const view = await dropVisitorCalendar(
+        cookieValue(req.headers.cookie, VISITOR_CALENDAR_COOKIE) ?? undefined,
+      );
+      res.clearCookie(VISITOR_CALENDAR_COOKIE, { path: "/", sameSite: "lax" });
+      res.json(view);
     }),
   );
 
