@@ -82,7 +82,22 @@ const LINK_QUIET = "draw text-muted-foreground hover:text-foreground [text-trans
 /* One constant for all four marks, so "a little lower" is one number and not
    four. The GitHub one was already nudged to sit on the row's centre line;
    the others line up to it. */
-const MARK = "h-[1.15em] w-[1.15em] translate-y-[0.19em] fill-current";
+/*
+ * THE NUDGE IS GONE AND THE MARKS ARE BIGGER.
+ *
+ * translate-y-[0.19em] was measured when this row was laid out on the
+ * baseline; the row is items-center now, so the flexbox was already centring
+ * them and the nudge only pushed all four down by a fifth of an em. That is
+ * what "not in one line" looked like.
+ *
+ * 1.45em rather than 1.15: a glyph in a face this size reads at about its
+ * cap-height, an icon reads at its full box, so an icon set to the same em as
+ * the text looks smaller than the words beside it.
+ */
+const MARK = "h-[1.45em] w-[1.45em] fill-current";
+/* The four marks are one thing in the row, so they sit closer to each other
+   than to the words on either side. */
+const MARKS = "inline-flex items-center gap-x-[var(--s2)]";
 
 export function Footer() {
   const theirs = useSomebodyElsesDoor();
@@ -185,6 +200,7 @@ export function Footer() {
           >
             Contact
           </button>
+          <span className={MARKS}>
           <a
             href={GITHUB_URL}
             target="_blank"
@@ -233,6 +249,7 @@ export function Footer() {
               <path d="M23.5 6.2a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.51A3.02 3.02 0 0 0 .5 6.2C0 8.09 0 12 0 12s0 3.91.5 5.8a3.02 3.02 0 0 0 2.12 2.14c1.88.51 9.38.51 9.38.51s7.5 0 9.38-.51a3.02 3.02 0 0 0 2.12-2.14C24 15.91 24 12 24 12s0-3.91-.5-5.8ZM9.6 15.57V8.43L15.82 12 9.6 15.57Z" />
             </svg>
           </a>
+          </span>
           {/* Real anchors, not wouter Links: these are files in client/public
               and a client-side route would 404 them. */}
           <a href="/llms.txt" data-testid="link-footer-llms" className={LINK_QUIET}>

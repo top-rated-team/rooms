@@ -14,7 +14,10 @@ const GRANT_DOOR = thisDoor("ad-grants");
 const CONTRACT = GRANT_DOOR?.contract ?? ADGRANT_IDENTITY;
 
 const NAV_LINK = "type-meta draw text-muted-foreground hover:text-foreground";
-const FOOTER_MARK = "h-[1.15em] w-[1.15em] translate-y-[0.19em] fill-current";
+/* Same reasoning as client/src/components/site/Footer.tsx: the row is
+   items-center, so the old translate only pushed the mark down, and an icon
+   needs more em than a letter to read at the same size. */
+const FOOTER_MARK = "h-[1.45em] w-[1.45em] fill-current";
 
 
 /**
@@ -108,7 +111,9 @@ export function Shell({ children }: { children: ReactNode }) {
               target="_blank"
               rel="noopener noreferrer"
               data-testid="link-adgrant-linkedin"
-              className={LINK}
+              /* No LINK: `draw` puts a rule under the whole anchor, and a rule
+                 under a picture is not an underline, it is a line. */
+              className="inline-flex items-center text-muted-foreground hover:text-foreground"
               aria-label={`${ADGRANT_MARK} on LinkedIn`}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true" className={FOOTER_MARK}>
@@ -120,15 +125,17 @@ export function Shell({ children }: { children: ReactNode }) {
               target="_blank"
               rel="noopener noreferrer"
               data-testid="link-adgrant-footer-top-rated"
-              className={`${LINK} inline-flex items-center gap-[0.4em]`}
+              className="inline-flex items-center gap-[0.4em] hover:text-foreground"
             >
+              {/* The rule belongs under the words. It used to run under the
+                  mark as well, which drew a line beneath a shield. */}
               <img
                 src="/assets/top-rated-logo.png"
                 alt=""
                 aria-hidden="true"
-                className="h-[1.15em] w-[1.15em] translate-y-[0.06em] object-contain"
+                className="h-[1.45em] w-[1.45em] object-contain"
               />
-              Top-Rated Team
+              <span className={LINK}>Top-Rated Team</span>
             </a>
           </nav>
 

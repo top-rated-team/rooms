@@ -85,25 +85,49 @@ export function Home() {
   const FIGURES = figuresFrom(stats);
   return (
     <>
-      <section className={`${PAGE} pt-[var(--s5)] lg:pt-[var(--s6)]`}>
-        <p className={META}>Measured {formatMeasuredOn(stats.generatedAt)}</p>
-        <h1 className={`mt-[var(--s2)] ${DISPLAY}`} data-testid="text-adgrant-headline">
-          {formatCount(stats.accountsProcessed)} Ad Grant accounts processed
-        </h1>
-        <p className={`mt-[var(--s3)] max-w-[46ch] ${READ_MUTED}`} data-testid="text-adgrant-pitch">
-          Those are the accounts, campaigns and keywords this product has actually processed. A structure for a
-          nonprofit is produced from its own website and shown on this page. Nothing here is written into a Google Ads
-          account. A person sets up the manager-account link afterwards if the structure should go into the grant
-          account.
-        </p>
-        <div className="mt-[var(--s4)] flex flex-wrap items-baseline gap-x-[var(--s2)] gap-y-[var(--s1)] whitespace-nowrap [font-size:clamp(0.66rem,3vw,0.76rem)!important] sm:flex-nowrap sm:gap-x-[var(--s3)]">
-          <RoomMenu
-            className={ACTION_LOUD}
-            doorId={GRANT_DOOR?.id}
-            agentId={GRANT_DOOR?.firstAgentId}
-            testId="button-adgrant-open-a-room"
-          />
+      {/* THE AGENT IS ON THE DOOR, NOT THREE SCREENS BELOW IT.
+          It sat in its own section under the figures, which is a page about
+          the agent rather than a door you can speak to. Two columns from lg
+          up: the claim and the pair on the left, the conversation on the
+          right. Below lg it falls under the pair, in the same order a person
+          reads. */}
+      <section
+        className={`${PAGE} pt-[var(--s5)] lg:pt-[var(--s6)] lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-start lg:gap-x-[var(--s5)]`}
+      >
+        <div>
+          <p className={META}>Measured {formatMeasuredOn(stats.generatedAt)}</p>
+          <h1 className={`mt-[var(--s2)] ${DISPLAY}`} data-testid="text-adgrant-headline">
+            {formatCount(stats.accountsProcessed)} Ad Grant accounts processed
+          </h1>
+          <p className={`mt-[var(--s3)] max-w-[46ch] ${READ_MUTED}`} data-testid="text-adgrant-pitch">
+            Those are the accounts, campaigns and keywords this product has actually processed. A structure for a
+            nonprofit is produced from its own website and shown on this page. Nothing here is written into a Google
+            Ads account. A person sets up the manager-account link afterwards if the structure should go into the
+            grant account.
+          </p>
+          <div className="mt-[var(--s4)] flex flex-wrap items-baseline gap-x-[var(--s2)] gap-y-[var(--s1)] whitespace-nowrap [font-size:clamp(0.66rem,3vw,0.76rem)!important] sm:flex-nowrap sm:gap-x-[var(--s3)]">
+            <RoomMenu
+              className={ACTION_LOUD}
+              doorId={GRANT_DOOR?.id}
+              agentId={GRANT_DOOR?.firstAgentId}
+              testId="button-adgrant-open-a-room"
+            />
+          </div>
         </div>
+
+        {GRANT_DOOR && doorAgent(GRANT_DOOR) ? (
+          <div className="mt-[var(--s5)] lg:mt-0" data-testid="block-adgrant-door-panel">
+            {/* THE HEADING AND THE PANEL, AND NOTHING BETWEEN THEM. There was
+                a paragraph here that printed GRANT_DOOR.agentLine — the same
+                sixty words the panel opens with, one line above itself — and
+                then promised nothing is saved, which the panel's own last line
+                also says. Two sentences twice is not an introduction. */}
+            <h2 className={HEADING}>Ask the Ad Grants agent</h2>
+            <div className="mt-[var(--s3)]">
+              <DoorChat door={GRANT_DOOR} />
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className={`${PAGE} pt-[var(--s5)]`} data-testid="block-adgrant-stats">
@@ -123,18 +147,6 @@ export function Home() {
           ))}
         </ol>
       </section>
-
-      {GRANT_DOOR && doorAgent(GRANT_DOOR) ? (
-        <section className={`${PAGE} pt-[var(--s6)]`} data-testid="block-adgrant-door-panel">
-          <h2 className={HEADING}>Ask the Ad Grants agent</h2>
-          <p className={`mt-[var(--s2)] max-w-[46ch] ${READ_MUTED}`}>
-            {GRANT_DOOR.agentLine} A question asked here is answered on this page. Nothing is saved until you keep it.
-          </p>
-          <div className="mt-[var(--s4)]">
-            <DoorChat door={GRANT_DOOR} />
-          </div>
-        </section>
-      ) : null}
 
       {/* The section was built for both sites — it carries its own framing for
           this one, saying plainly that the people quoted hired us for Google
