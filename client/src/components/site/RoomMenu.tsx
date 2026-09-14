@@ -646,11 +646,13 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
             ) : null}
 
             <li>
-            {emailUnavailable ? <p className="text-muted-foreground">A link to your email</p> : null}
+            {/* NO HEADING. It read "A link to your email" and then a sentence
+                beginning "A link sent to your email…", which is the same words
+                twice, one line apart. The sentence says everything the heading
+                said and says it in a sentence. */}
             {emailUnavailable ? <p className="mt-[var(--s1)]">{emailUnavailable}</p> : null}
             {emailAvailable ? (
               <>
-                <p>A link to your email</p>
                 {emailForm.phase === "sent" ? (
                   <p data-testid={`${testId}-send-line`}>{emailForm.line}</p>
                 ) : (

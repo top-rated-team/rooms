@@ -64,6 +64,12 @@ const BTN_SLOT_SELECTED = `${BTN_SLOT} border-primary bg-primary text-primary-fo
    a picker that silently drops half its times looks broken rather than
    helpful. Dashed and muted, so it reads as a caution and not as disabled. */
 const BTN_SLOT_BUSY = `${BTN_SLOT} border-dashed text-muted-foreground`;
+/* INLINE-BLOCK, AND ON ITS OWN LINE. This action used to sit inside a running
+   sentence with a bottom border on it — so when the sentence wrapped, the rule
+   under the words landed across the line beneath, which is what the owner saw.
+   A rule belongs under a line of its own. */
+const CAL_ACTION =
+  "inline-block border-b border-primary pb-[2px] text-sm text-primary no-underline hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 /* The month arrows and the close cross. Not an ACTION — they carry a glyph
    and no word, so there is nothing for a rule to sit under. */
 const BTN_ICON =
@@ -1058,22 +1064,24 @@ function VisitorCalendarRow({
   if (!view || !view.offered) return null;
   if (!view.connected) {
     return (
-      <p className="mt-6 text-sm text-muted-foreground" data-testid="text-booking-visitor-calendar">
+      <div className="mt-6" data-testid="text-booking-visitor-calendar">
         {failed ? (
-          <span className="text-destructive" data-testid="text-booking-visitor-calendar-failed">
-            That calendar was not connected, so nothing here is marked.{" "}
-          </span>
+          <p className="text-sm text-destructive" data-testid="text-booking-visitor-calendar-failed">
+            That calendar was not connected, so nothing here is marked.
+          </p>
         ) : null}
         <a
           href={visitorCalendarConnectUrl()}
           data-testid="link-booking-visitor-calendar-connect"
-          className="border-b border-primary pb-[var(--s1)] text-primary no-underline hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className={`${CAL_ACTION} ${failed ? "mt-2" : ""}`}
         >
-          Mark the times I am busy
-        </a>{" "}
-        from your own Google Calendar. We read free/busy ranges and nothing else — no titles, no
-        guests — for the length of this pick.
-      </p>
+          Use my Google Calendar
+        </a>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Times you are already busy in get marked, and you can still pick one. We read free/busy
+          ranges only — never titles or guests — and only while you are picking.
+        </p>
+      </div>
     );
   }
   if (view.unreadable) {
@@ -1081,37 +1089,41 @@ function VisitorCalendarRow({
        marking the times you are busy" over a grid with nothing marked on it
        is worse than never offering the connection. */
     return (
-      <p className="mt-6 text-sm text-muted-foreground" data-testid="text-booking-visitor-calendar">
-        <span className="text-destructive">
+      <div className="mt-6" data-testid="text-booking-visitor-calendar">
+        <p className="text-sm text-destructive">
           Your calendar is connected, but we could not read it just now, so nothing here is marked.
-        </span>{" "}
+        </p>
         <button
           type="button"
           onClick={onDrop}
           disabled={dropping}
           data-testid="button-booking-visitor-calendar-drop"
-          className="border-b border-primary pb-[var(--s1)] text-primary no-underline hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+          className={`${CAL_ACTION} mt-2 disabled:opacity-50`}
         >
           {dropping ? "Disconnecting…" : "Disconnect it"}
         </button>
-        .
-      </p>
+      </div>
     );
   }
   return (
-    <p className="mt-6 text-sm text-muted-foreground" data-testid="text-booking-visitor-calendar">
-      Your calendar is marking the times you are busy.{" "}
+    <div className="mt-6" data-testid="text-booking-visitor-calendar">
+      <p className="text-sm text-muted-foreground">
+        Your calendar is marking the times you are busy. Dashed times are those; you can still pick
+        one.
+      </p>
       <button
         type="button"
         onClick={onDrop}
         disabled={dropping}
         data-testid="button-booking-visitor-calendar-drop"
-        className="border-b border-primary pb-[var(--s1)] text-primary no-underline hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+        className={`${CAL_ACTION} mt-2 disabled:opacity-50`}
       >
         {dropping ? "Disconnecting…" : "Disconnect it"}
       </button>
-      {" "}— that removes your own Google account here and nothing else.
-    </p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        That removes your own Google account here and nothing else.
+      </p>
+    </div>
   );
 }
 
