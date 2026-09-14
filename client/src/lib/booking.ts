@@ -380,9 +380,14 @@ export function parseVisitorCalendar(value: unknown): VisitorCalendarView | unde
   if (record.connected !== true) return { offered: true, connected: false };
   const expiresAt = typeof record.expiresAt === "string" ? record.expiresAt : "";
   if (!expiresAt) return { offered: true, connected: false };
-  return record.unreadable === true
-    ? { offered: true, connected: true, expiresAt, unreadable: true }
-    : { offered: true, connected: true, expiresAt };
+  const email = typeof record.email === "string" && record.email.includes("@") ? record.email : undefined;
+  return {
+    offered: true,
+    connected: true,
+    expiresAt,
+    ...(email ? { email } : {}),
+    ...(record.unreadable === true ? { unreadable: true as const } : {}),
+  };
 }
 
 export function parseBookedPayload(value: unknown): BookedPayload {

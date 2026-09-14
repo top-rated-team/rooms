@@ -67,6 +67,22 @@ export const VISITOR_CALENDAR_STATE_COOKIE = "booking_visitor_cal_state";
  */
 export const VISITOR_CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.freebusy";
 
+/**
+ * The whole request: free/busy, and who the calendar belongs to.
+ *
+ * `openid email` is there so the booking form can fill in the address of the
+ * calendar that was just connected, instead of asking a person to type the
+ * address of the account they authorised thirty seconds ago. Both are
+ * non-sensitive — they are the two scopes almost every "sign in with Google"
+ * asks for — so the consent screen stays a light one and no review is opened.
+ *
+ * IT CHANGES WHAT THE CONSENT SCREEN SAYS, and so it changes what /privacy has
+ * to say: we now receive the address as well as the busy ranges. Still no
+ * titles, no guests, no locations; still held in memory for the length of the
+ * pick and never written down.
+ */
+export const VISITOR_CALENDAR_SCOPES = ["openid", "email", VISITOR_CALENDAR_SCOPE];
+
 const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
 const GOOGLE_REVOKE = "https://oauth2.googleapis.com/revoke";
@@ -100,6 +116,8 @@ interface PendingConnect {
 
 interface StoredVisitorCalendar {
   accessToken: string;
+  /** The address of the account that authorised, when Google told us. Memory only. */
+  email: string | null;
   createdAt: number;
   expiresAt: number;
 }
@@ -162,12 +180,14 @@ export function resetVisitorCalendarForTests(): void {
 export function putVisitorCalendarForTests(input: {
   handle: string;
   accessToken: string;
+  email?: string | null;
   now?: number;
   ttlMs?: number;
 }): void {
   const now = input.now ?? Date.now();
   connections.set(input.handle, {
     accessToken: input.accessToken,
+    email: input.email ?? null,
     createdAt: now,
     expiresAt: now + (input.ttlMs ?? VISITOR_CALENDAR_TTL_MS),
   });
@@ -244,7 +264,12 @@ export function visitorCalendarView(handle: string | undefined, now = Date.now()
     }
     return { offered: true, connected: false };
   }
-  return { offered: true, connected: true, expiresAt: new Date(row.expiresAt).toISOString() };
+  return {
+    offered: true,
+    connected: true,
+    expiresAt: new Date(row.expiresAt).toISOString(),
+    ...(row.email ? { email: row.email } : {}),
+  };
 }
 
 export type VisitorCalendarStart = { ok: true; url: string; state: string } | { ok: false };
@@ -276,7 +301,7 @@ export function startVisitorCalendarConnect(input: {
   url.searchParams.set("client_id", id);
   url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("state", state);
-  url.searchParams.set("scope", VISITOR_CALENDAR_SCOPE);
+  url.searchParams.set("scope", VISITOR_CALENDAR_SCOPES.join(" "));
   url.searchParams.set("access_type", "online");
   url.searchParams.set("include_granted_scopes", "false");
   url.searchParams.set("prompt", "consent");
@@ -360,11 +385,13 @@ export async function completeVisitorCalendarConnect(
   const record = asRecord(tokenBody);
   const accessToken = typeof record?.access_token === "string" ? record.access_token.trim() : "";
   if (!accessToken) return { handle: null, redirectTo, ok: false };
+  const email = emailFromIdToken(record?.id_token);
 
   const now = input.now?.getTime() ?? Date.now();
   const handle = nanoid(24);
   connections.set(handle, {
     accessToken,
+    email,
     createdAt: now,
     expiresAt: now + VISITOR_CALENDAR_TTL_MS,
   });
@@ -477,6 +504,32 @@ export async function queryVisitorFreeBusy(input: {
  * calendar is connected. An unreadable calendar is no overlay, not an empty
  * one.
  */
+/**
+ * The address out of the id_token Google returns beside the access token.
+ *
+ * NOT VERIFIED, AND IT DOES NOT NEED TO BE: this token came back over TLS from
+ * Google's own token endpoint in a request we made, not from the browser, so
+ * there is nothing for a signature to add. It is never a credential here —
+ * only a default in a form the person can overwrite.
+ */
+export function emailFromIdToken(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const payload = value.split(".")[1];
+  if (!payload) return null;
+  try {
+    const json = Buffer.from(payload.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
+    const claims = asRecord(JSON.parse(json) as unknown);
+    const email = typeof claims?.email === "string" ? claims.email.trim() : "";
+    if (!email || !email.includes("@")) return null;
+    /* An address Google has not confirmed is a default we do not want to put
+       in a field a person will press Book on without reading. */
+    if (claims?.email_verified === false) return null;
+    return email;
+  } catch {
+    return null;
+  }
+}
+
 export function parseFreeBusy(body: unknown): BusyInterval[] | null {
   const record = asRecord(body);
   const calendars = asRecord(record?.calendars);

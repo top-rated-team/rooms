@@ -97,12 +97,15 @@ export default function Privacy() {
           </Row>
           <Row term="Your own calendar, if you connect it">
             Optional, and it exists so a time you are already busy is marked on the picker — you can still choose it.
-            If you authorise it, we read your free/busy information through Google's{" "}
+            Authorising it also tells us the address of that Google account, and we put it in the email field so you
+            do not type the address you just authorised; it stays editable and nothing is sent until you press the
+            button. We read your free/busy information through Google's{" "}
             <Out href="https://developers.google.com/workspace/calendar/api/v3/reference/freebusy/query">
               Free/Busy API
             </Out>{" "}
-            under the scope <code>calendar.freebusy</code>. That returns time ranges and nothing else — no event
-            titles, no guests, no locations, no descriptions. We hold the token in memory for the length of the pick,
+            under the scopes <code>calendar.freebusy</code>, <code>openid</code> and <code>email</code>. Free/busy
+            returns time ranges and nothing else — no event titles, no guests, no locations, no descriptions — and
+            the other two are the address and nothing more. We hold the token in memory for the length of the pick,
             we never write it down, and we hand it back to Google — a revoke, not just a forget — when you confirm
             or after five minutes, whichever comes first. You can also revoke it yourself at any time at{" "}
             <Out href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</Out>. Disconnecting

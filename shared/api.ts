@@ -359,6 +359,13 @@ export type VisitorCalendarView =
       connected: true;
       expiresAt: string;
       /**
+       * The address of the Google account that authorised, when Google told us
+       * and had verified it. The picker fills the email field with it so
+       * somebody who has just authorised an account is not asked to type its
+       * address. It is a default, not an answer: the field stays editable.
+       */
+      email?: string;
+      /**
        * The connection stands but the last read of it failed, so NOTHING is
        * marked. Without this the picker says a calendar is marking your busy
        * times over a grid with no marks on it, which is the one answer worse

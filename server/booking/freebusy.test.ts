@@ -15,6 +15,7 @@ import {
   VISITOR_CALENDAR_SCOPE,
   VISITOR_CALENDAR_TTL_MS,
   completeVisitorCalendarConnect,
+  emailFromIdToken,
   dropVisitorCalendar,
   parseFreeBusy,
   putVisitorCalendarForTests,
@@ -69,8 +70,8 @@ describe("inert without the owner's app", () => {
   });
 });
 
-describe("authorize asks for calendar.freebusy and nothing else", () => {
-  it("puts only that scope on the URL, online access, and include_granted_scopes=false", () => {
+describe("authorize asks for free/busy and the address, and nothing else", () => {
+  it("puts those three scopes on the URL, online access, and include_granted_scopes=false", () => {
     setConfigured();
     const start = startVisitorCalendarConnect({
       publicBaseUrl: "https://top-rated.team",
@@ -80,7 +81,14 @@ describe("authorize asks for calendar.freebusy and nothing else", () => {
     if (!start.ok) return;
     const url = new URL(start.url);
     assert.equal(url.origin + url.pathname, "https://accounts.google.com/o/oauth2/v2/auth");
-    assert.equal(url.searchParams.get("scope"), VISITOR_CALENDAR_SCOPE);
+    /* openid and email so the booking form can fill in the address of the
+       account that was just authorised. Both non-sensitive; neither opens any
+       calendar data. Everything WIDER is still refused below. */
+    assert.deepEqual((url.searchParams.get("scope") ?? "").split(" ").sort(), [
+      "email",
+      "openid",
+      VISITOR_CALENDAR_SCOPE,
+    ].sort());
     assert.equal(url.searchParams.get("access_type"), "online");
     assert.equal(url.searchParams.get("include_granted_scopes"), "false");
     assert.equal(url.searchParams.get("prompt"), "consent");
@@ -327,6 +335,43 @@ describe("freeBusy.query", () => {
     );
     assert.equal(parseFreeBusy({ calendars: {} }), null);
     assert.deepEqual(parseFreeBusy({ calendars: { primary: { busy: [] } } }), []);
+  });
+});
+
+describe("the address that fills the booking field", () => {
+  function idToken(claims: Record<string, unknown>): string {
+    const body = Buffer.from(JSON.stringify(claims), "utf8").toString("base64url");
+    return `header.${body}.signature`;
+  }
+
+  it("reads a verified address, and refuses an unverified one", () => {
+    assert.equal(emailFromIdToken(idToken({ email: "ada@example.test", email_verified: true })), "ada@example.test");
+    /* No claim at all is Google's normal shape for a plain `email` grant. */
+    assert.equal(emailFromIdToken(idToken({ email: "ada@example.test" })), "ada@example.test");
+    /* An address Google has NOT confirmed is not a default to put under a
+       button somebody will press without reading. */
+    assert.equal(emailFromIdToken(idToken({ email: "ada@example.test", email_verified: false })), null);
+    assert.equal(emailFromIdToken(idToken({ email: "not-an-address" })), null);
+    assert.equal(emailFromIdToken(idToken({})), null);
+    assert.equal(emailFromIdToken("not.a.token"), null);
+    assert.equal(emailFromIdToken(undefined), null);
+  });
+
+  it("carries it on the view while the connection lives, and never after", () => {
+    setConfigured();
+    putVisitorCalendarForTests({
+      handle: "with-address",
+      accessToken: "t",
+      email: "ada@example.test",
+      now: NOW.getTime(),
+    });
+    const live = visitorCalendarView("with-address", NOW.getTime());
+    assert.equal(live.offered, true);
+    if (!live.offered || !live.connected) return;
+    assert.equal(live.email, "ada@example.test");
+
+    const after = visitorCalendarView("with-address", NOW.getTime() + VISITOR_CALENDAR_TTL_MS);
+    assert.deepEqual(after, { offered: true, connected: false });
   });
 });
 

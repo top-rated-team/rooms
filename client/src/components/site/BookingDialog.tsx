@@ -138,6 +138,9 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
   const [bookerEmail, setBookerEmail] = useState<string | null>(null);
   const [droppingCalendar, setDroppingCalendar] = useState(false);
   const [calendarFailed, setCalendarFailed] = useState(false);
+  /* The address the calendar connection told us, once. Kept so filling the
+     field is a one-off and not something that fights the person typing. */
+  const filledFromCalendar = useRef<string | null>(null);
   const pollAbort = useRef<AbortController | null>(null);
   const slotsRef = useRef<SlotsPayload | null>(slots);
   slotsRef.current = slots;
@@ -617,6 +620,23 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
       setSending(false);
     }
   }
+
+  /**
+   * Somebody who has just authorised a Google account should not then be asked
+   * to type its address. Only into an EMPTY field, and only once per address:
+   * a person who clears it or corrects it has said something, and a effect
+   * that puts it back is an argument with the person using the form.
+   */
+  const connectedEmail =
+    slots?.visitorCalendar?.offered && slots.visitorCalendar.connected
+      ? slots.visitorCalendar.email
+      : undefined;
+  useEffect(() => {
+    if (!connectedEmail) return;
+    if (filledFromCalendar.current === connectedEmail) return;
+    filledFromCalendar.current = connectedEmail;
+    setEmail((was) => (was.trim() === "" ? connectedEmail : was));
+  }, [connectedEmail]);
 
   const timezone = slots?.timezone;
   const title = "Book a call";

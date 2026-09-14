@@ -14,12 +14,13 @@
  * The headline is the argument, not a benefit claim: seven offers, and one room
  * behind all of them. That is what this company actually is.
  * ------------------------------------------------------------------------- */
-import { Fragment, lazy, Suspense, useState } from "react";
+import { Fragment, lazy, Suspense, useEffect, useRef, useState } from "react";
 
 import { Link } from "wouter";
 
 import { BOOK_A_CALL_URL, PROOF } from "@shared/roster";
 import { RoomMenu } from "@/components/site/RoomMenu";
+import { isCoarsePointer } from "@/components/WhatsAppQr";
 import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBooking } from "@/hooks/use-booking";
 
@@ -37,9 +38,21 @@ import { useBooking } from "@/hooks/use-booking";
  * typography. asChild does that, and tabIndex puts the keyboard back — the
  * native title it replaces was never reachable that way at all.
  *
- * No touch branch. A tooltip does not open on tap, and neither did the title;
- * making one do so means deciding what a tap on a word in a paragraph means,
- * which is a bigger question than this sentence is asking.
+ * THERE IS A TOUCH BRANCH NOW, and it had to exist: on a phone these blinked
+ * and never stayed. Radix closes a tooltip on the pointerdown that opened it,
+ * which on a mouse is right and on a finger is the whole gesture. So on a
+ * coarse pointer the panel is driven by tap, Radix's own open/close is
+ * ignored, and a tap anywhere else closes it. It also shows the WORDS ONLY:
+ * the pair inside it is a hover within a hover, which on a finger is two
+ * things to dismiss, and every one of those actions is already in the burger.
+ *
+ * THE SIDE IS CHOSEN ONCE, WHEN IT OPENS, and never again while it is open.
+ * Whichever side of the line has more room gets it. Radix's own collision
+ * avoidance is off, because it re-decides continuously: pointing at something
+ * inside the panel makes the panel taller, Radix moves it to the other side,
+ * the pointer is suddenly outside it, it closes, the pointer is back on the
+ * word, it opens — which is the flicker the owner kept seeing. A panel that
+ * grows when you use it must not also be allowed to move.
  */
 function Hover({
   text,
@@ -53,11 +66,61 @@ function Hover({
   /** Rendered under the sentence, inside the same panel. */
   below?: React.ReactNode;
 }) {
+  const trigger = useRef<HTMLSpanElement>(null);
+  const [open, setOpen] = useState(false);
+  const [side, setSide] = useState<"top" | "bottom">("bottom");
+  /* Read once per render rather than held in state: it cannot change without a
+     navigation, and a listener for it would be a listener for nothing. */
+  const coarse = isCoarsePointer();
+
+  /** More room above the line, or below it. Measured at the moment of opening. */
+  function chooseSide(): void {
+    const el = trigger.current;
+    if (!el) return;
+    const box = el.getBoundingClientRect();
+    const above = box.top;
+    const under = window.innerHeight - box.bottom;
+    setSide(above > under ? "top" : "bottom");
+  }
+
+  /* On a finger, a tap somewhere else is how you dismiss it. */
+  useEffect(() => {
+    if (!coarse || !open) return;
+    const away = (event: PointerEvent) => {
+      const el = trigger.current;
+      const target = event.target as Node | null;
+      if (el && target && el.contains(target)) return;
+      if (target instanceof Element && target.closest("[data-hover-panel]")) return;
+      setOpen(false);
+    };
+    document.addEventListener("pointerdown", away);
+    return () => document.removeEventListener("pointerdown", away);
+  }, [coarse, open]);
+
   return (
-    <Tooltip delayDuration={0}>
+    <Tooltip
+      delayDuration={0}
+      open={open}
+      onOpenChange={(next) => {
+        /* Touch is driven by the tap handler below; Radix's own open and close
+           are ignored there, or the pointerdown that opens it closes it again. */
+        if (coarse) return;
+        if (next) chooseSide();
+        setOpen(next);
+      }}
+    >
       <TooltipTrigger asChild>
         <span
+          ref={trigger}
           tabIndex={0}
+          onClick={
+            coarse
+              ? () => {
+                  if (!open) chooseSide();
+                  setOpen((was) => !was);
+                }
+              : undefined
+          }
           className="underline decoration-from-font underline-offset-[0.18em] outline-none focus-visible:rounded-[2px] focus-visible:ring-2 focus-visible:ring-ring"
           data-testid={testId}
         >
@@ -70,39 +133,22 @@ function Hover({
             left a wide empty margin down the right of the tooltip. Filling to
             the measure and shrinking the box to the text is what closes it. */}
         <TooltipContent
-          side="bottom"
+          data-hover-panel=""
+          side={side}
           align="start"
-          collisionPadding={12}
-          /* A panel that grows when you point at something inside it must not
-             also be allowed to flip. With collision avoidance on, opening the
-             room list made the panel taller than the space below, Radix moved
-             it above the line, the pointer was suddenly outside it, it closed,
-             the pointer was back on the trigger, it opened — the blinking the
-             owner saw. Downward always; if the bottom of the screen cuts it
-             off, the page scrolls, which is a thing a person already knows
-             how to do. */
-          /* Collision handling stays ON, and the panel is capped at the
-             height Radix measures as actually available below the trigger.
-             That is what stops the flip: with the content bounded to the
-             space below it, there is never a reason to move above the line,
-             so the blinking the owner saw — grow, flip, pointer outside,
-             close, reopen — cannot start. Turning collisions off instead
-             just moved the problem: the panel is in a position:fixed
-             wrapper, so the part past the bottom of the screen was
-             unreachable, measured at 218px cut off with no way to scroll to
-             it. The panel scrolls itself; overscroll-contain keeps the page
-             behind it still. */
-          /* No cap and no scrollbar of its own. It grew to the space below
-             the trigger and scrolled inside itself, and the owner wants the
-             whole thing open with the rest of it simply on the next screen.
-             That works because Radix keeps the panel pinned to the trigger as
-             the page scrolls: scrolling moves the line up and the panel with
-             it, so what was below the fold comes into view. Collisions stay
-             off so it can never decide to flip above the line instead. */
+          avoidCollisions={false}
+          /* THREE COMMENTS USED TO SIT HERE, each describing the fix before
+             it, and none of them describing the code any more. What is true:
+             the side is decided by `chooseSide` when the panel opens and does
+             not change while it is open; collision avoidance is off so Radix
+             cannot re-decide it; no height cap and no scrollbar of its own,
+             because Radix keeps the panel pinned to the word as the page
+             scrolls, so anything past the fold comes into view by scrolling,
+             which is a thing a person already knows how to do. */
           className="w-fit max-w-[min(38ch,calc(100vw-1.5rem))]"
         >
           {text}
-          {below ? (
+          {below && !coarse ? (
             /* Inside the same panel rather than a second floating layer. The
                owner's own instruction, and his own worry about it: the pair
                has a hover of its own, so two panels over one another would be
