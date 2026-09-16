@@ -7,6 +7,7 @@
  * With no address on a house host, POST does not create an event.
  */
 
+import { generateKeyPairSync } from "node:crypto";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 
@@ -14,14 +15,32 @@ import { resetUnipileCalendarForTests } from "../unipile/calendar";
 import { SLOT_TAKEN_LINE, bookingEventTitle, cancelBooking, changeBooking, getExistingBooking, parseCreateBooking, postBooking } from "./calendar";
 import { resetBookingCodesForTests } from "./confirm";
 import { ADDRESS_REQUIRED_LINE, HOST_LINKEDIN_LINE, resetHoldsForTests } from "./hold";
+import {
+  GOOGLE_CALENDAR_API,
+  GOOGLE_FREEBUSY_URL,
+  GOOGLE_TOKEN_URL,
+  resetGcalForTests,
+} from "./gcal";
 import { resetSlotsCacheForTests } from "./slots";
 
 const DSN = "unipile.test.example:9443";
 const KEY = "test-unipile-key-do-not-log";
 const ACCOUNT = "cal_account_for_tests";
-const CALENDAR_ID = "primary-cal-id";
+const CALENDAR_ID = "dan@top-rated.team";
 const TZ = "Europe/Bratislava";
 const NOW = new Date("2026-09-09T08:00:00.000Z");
+
+const { privateKey: TEST_PRIVATE_KEY } = generateKeyPairSync("rsa", {
+  modulusLength: 2048,
+  privateKeyEncoding: { type: "pkcs8", format: "pem" },
+  publicKeyEncoding: { type: "spki", format: "pem" },
+});
+
+const SERVICE_ACCOUNT_JSON = JSON.stringify({
+  type: "service_account",
+  client_email: "sa@test.iam.gserviceaccount.com",
+  private_key: TEST_PRIVATE_KEY,
+});
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -31,6 +50,8 @@ function jsonResponse(status: number, body: unknown): Response {
 }
 
 function setConfigured(): void {
+  process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON = SERVICE_ACCOUNT_JSON;
+  process.env.GOOGLE_CALENDAR_ID = CALENDAR_ID;
   process.env.UNIPILE_DSN = DSN;
   process.env.UNIPILE_API_KEY = KEY;
   process.env.UNIPILE_CALENDAR_ACCOUNT_ID = ACCOUNT;
@@ -39,85 +60,84 @@ function setConfigured(): void {
 beforeEach(() => {
   resetSlotsCacheForTests();
   resetUnipileCalendarForTests();
+  resetGcalForTests();
   resetBookingCodesForTests();
   resetHoldsForTests();
   delete process.env.UNIPILE_DSN;
   delete process.env.UNIPILE_API_KEY;
   delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
+  delete process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON;
+  delete process.env.GOOGLE_CALENDAR_ID;
   delete process.env.PUBLIC_BASE_URL;
 });
 
 afterEach(() => {
   resetSlotsCacheForTests();
   resetUnipileCalendarForTests();
+  resetGcalForTests();
   resetBookingCodesForTests();
   resetHoldsForTests();
   delete process.env.UNIPILE_DSN;
   delete process.env.UNIPILE_API_KEY;
   delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
+  delete process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON;
+  delete process.env.GOOGLE_CALENDAR_ID;
   delete process.env.PUBLIC_BASE_URL;
 });
 
-function mockUnipile(opts: { busy?: boolean; meetUrl?: string | null } = {}): {
+function mockCalendar(opts: { busy?: boolean; meetUrl?: string | null } = {}): {
   fetchImpl: typeof fetch;
   posts: Record<string, unknown>[];
+  postUrls: string[];
   deletes: string[];
 } {
   const posts: Record<string, unknown>[] = [];
+  const postUrls: string[] = [];
   const deletes: string[] = [];
+  const busyStart = "2026-09-10T12:00:00.000Z";
+  const busyEnd = "2026-09-10T12:30:00.000Z";
   const fetchImpl: typeof fetch = async (input, init) => {
     const url = String(input);
     const method = (init?.method ?? "GET").toUpperCase();
-    if (method === "GET" && (url.includes("/calendars?") || /\/api\/v1\/calendars$/.test(url.split("?")[0]))) {
+    if (url === GOOGLE_TOKEN_URL) {
+      return jsonResponse(200, { access_token: "sa-token-for-tests", expires_in: 3600 });
+    }
+    if (method === "GET" && url === `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(CALENDAR_ID)}`) {
+      return jsonResponse(200, { id: CALENDAR_ID, timeZone: TZ });
+    }
+    if (method === "POST" && url === GOOGLE_FREEBUSY_URL) {
       return jsonResponse(200, {
-        data: [{ id: CALENDAR_ID, is_primary: true, is_read_only: false, timezone: TZ }],
+        calendars: {
+          [CALENDAR_ID]: {
+            busy: opts.busy ? [{ start: busyStart, end: busyEnd }] : [],
+          },
+        },
       });
     }
-    if (method === "GET" && url.includes("/events/") && !url.endsWith("/events")) {
+    if (method === "POST" && url.includes("/calendars/") && url.includes("/events")) {
+      posts.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+      postUrls.push(url);
+      return jsonResponse(200, {
+        id: `evt_${posts.length}`,
+        hangoutLink: opts.meetUrl === null ? undefined : (opts.meetUrl ?? "https://meet.google.com/aaa-bbbb-ccc"),
+      });
+    }
+    if (method === "GET" && url.includes("/events/")) {
       return jsonResponse(200, {
         id: "evt_1",
-        is_cancelled: false,
-        transparency: "opaque",
-        event_type: "default",
-        start: { date_time: "2026-09-10T12:00:00.000Z", time_zone: TZ },
-        end: { date_time: "2026-09-10T12:30:00.000Z", time_zone: TZ },
-        conference:
-          opts.meetUrl === null
-            ? { provider: "google_meet" }
-            : { provider: "google_meet", url: opts.meetUrl ?? "https://meet.google.com/aaa-bbbb-ccc" },
+        hangoutLink: opts.meetUrl === null ? undefined : (opts.meetUrl ?? "https://meet.google.com/aaa-bbbb-ccc"),
       });
-    }
-    if (method === "GET" && url.includes("/events")) {
-      if (opts.busy) {
-        return jsonResponse(200, {
-          data: [
-            {
-              id: "taken",
-              is_cancelled: false,
-              transparency: "opaque",
-              event_type: "default",
-              start: { date_time: "2026-09-10T12:00:00.000Z", time_zone: TZ },
-              end: { date_time: "2026-09-10T12:30:00.000Z", time_zone: TZ },
-            },
-          ],
-        });
-      }
-      return jsonResponse(200, { data: [] });
-    }
-    if (method === "POST" && url.includes("/events")) {
-      posts.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
-      return jsonResponse(201, { object: "CalendarEventCreated", event_id: `evt_${posts.length}` });
     }
     if (method === "DELETE" && url.includes("/events/")) {
       deletes.push(url);
-      return jsonResponse(200, {});
+      return new Response(null, { status: 204 });
     }
     if (method === "POST" && /\/chats\/[^/]+\/messages/.test(url)) {
       return jsonResponse(200, { object: "MessageSent", message_id: "msg_out_1" });
     }
     return jsonResponse(404, {});
   };
-  return { fetchImpl, posts, deletes };
+  return { fetchImpl, posts, postUrls, deletes };
 }
 
 describe("bookingEventTitle", () => {
@@ -152,9 +172,9 @@ describe("parseCreateBooking", () => {
 });
 
 describe("postBooking", () => {
-  it("writes UTC-with-Z and time_zone, notify true, opaque, Meet with no url, then reads the Meet link back", async () => {
+  it("writes UTC-with-Z, opaque, Meet createRequest, sendUpdates when inviting, and a Meet link", async () => {
     setConfigured();
-    const { fetchImpl, posts } = mockUnipile();
+    const { fetchImpl, posts, postUrls } = mockCalendar();
     const result = await postBooking(
       { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
       { fetchImpl, now: NOW },
@@ -172,23 +192,24 @@ describe("postBooking", () => {
     assert.match(result.body.whatsapp.code, /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/);
 
     assert.equal(posts.length, 1);
+    assert.match(postUrls[0] ?? "", /conferenceDataVersion=1/);
+    assert.match(postUrls[0] ?? "", /sendUpdates=all/);
     const body = posts[0];
-    assert.equal(body.notify, true);
     assert.equal(body.transparency, "opaque");
-    assert.deepEqual(body.conference, { provider: "google_meet" });
-    assert.equal("url" in (body.conference as object), false);
-    const start = body.start as { date_time: string; time_zone: string };
-    assert.match(start.date_time, /Z$/);
-    assert.equal(start.time_zone, TZ);
+    const conference = body.conferenceData as { createRequest?: { conferenceSolutionKey?: { type?: string } } };
+    assert.equal(conference.createRequest?.conferenceSolutionKey?.type, "hangoutsMeet");
+    const start = body.start as { dateTime: string; timeZone: string };
+    assert.match(start.dateTime, /Z$/);
+    assert.equal(start.timeZone, TZ);
     assert.deepEqual(body.attendees, [{ email: "ada@example.com" }]);
-    assert.equal(typeof body.body, "string");
-    assert.equal(String(body.body).includes(HOST_LINKEDIN_LINE), true);
-    assert.equal(String(body.body).includes("Ada:"), false);
+    assert.equal(typeof body.description, "string");
+    assert.equal(String(body.description).includes(HOST_LINKEDIN_LINE), true);
+    assert.equal(String(body.description).includes("Ada:"), false);
   });
 
   it("does not create an event when there is no address: it holds the slot and returns the WhatsApp code", async () => {
     setConfigured();
-    const { fetchImpl, posts } = mockUnipile();
+    const { fetchImpl, posts } = mockCalendar();
     const result = await postBooking(
       { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads" },
       { fetchImpl, now: NOW },
@@ -208,7 +229,7 @@ describe("postBooking", () => {
   it("requires an address off a house host, and never returns the house WhatsApp number", async () => {
     setConfigured();
     process.env.PUBLIC_BASE_URL = "https://partner.example";
-    const { fetchImpl, posts } = mockUnipile();
+    const { fetchImpl, posts } = mockCalendar();
     const result = await postBooking(
       { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads" },
       { fetchImpl, now: NOW, host: "https://partner.example" },
@@ -223,7 +244,7 @@ describe("postBooking", () => {
 
   it("still creates the event immediately with notify true when a fork booking has an address", async () => {
     setConfigured();
-    const { fetchImpl, posts } = mockUnipile();
+    const { fetchImpl, posts, postUrls } = mockCalendar();
     const result = await postBooking(
       { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
       { fetchImpl, now: NOW, host: "https://partner.example" },
@@ -233,14 +254,14 @@ describe("postBooking", () => {
     assert.equal(result.body.booked, true);
     if (!result.body.booked) return;
     assert.equal(result.body.invited, true);
-    assert.equal(posts[0]?.notify, true);
+    assert.match(postUrls[0] ?? "", /sendUpdates=all/);
     assert.deepEqual(posts[0]?.attendees, [{ email: "ada@example.com" }]);
     assert.equal(result.body.whatsapp.url.includes("420774654822"), false);
   });
 
   it("returns 409 with fresh days when that time has just been taken", async () => {
     setConfigured();
-    const { fetchImpl } = mockUnipile({ busy: true });
+    const { fetchImpl, posts } = mockCalendar({ busy: true });
     const result = await postBooking(
       { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
       { fetchImpl, now: NOW },
@@ -255,7 +276,7 @@ describe("postBooking", () => {
 
   it("returns 409 when a hold already covers that time", async () => {
     setConfigured();
-    const { fetchImpl, posts } = mockUnipile();
+    const { fetchImpl, posts } = mockCalendar();
     const first = await postBooking(
       { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads" },
       { fetchImpl, now: NOW },
@@ -280,7 +301,7 @@ describe("coming back to a booking", () => {
 
   it("returns the time and Meet link, not the name or address", async () => {
     setConfigured();
-    const { fetchImpl } = mockUnipile();
+    const { fetchImpl } = mockCalendar();
     const created = await postBooking(
       { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
       { fetchImpl, now: NOW },
@@ -299,7 +320,7 @@ describe("coming back to a booking", () => {
 
   it("hides the booking once the call has ended, not when it starts", async () => {
     setConfigured();
-    const { fetchImpl } = mockUnipile();
+    const { fetchImpl } = mockCalendar();
     const created = await postBooking(
       { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
       { fetchImpl, now: NOW },
@@ -313,7 +334,7 @@ describe("coming back to a booking", () => {
 
   it("checks the new slot is free before releasing the old one, and writes the new event first", async () => {
     setConfigured();
-    const { fetchImpl, posts, deletes } = mockUnipile();
+    const { fetchImpl, posts, deletes } = mockCalendar();
     const created = await postBooking(
       { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
       { fetchImpl, now: NOW },
@@ -337,7 +358,7 @@ describe("coming back to a booking", () => {
 
   it("refuses a move onto a taken slot and keeps the original", async () => {
     setConfigured();
-    const { fetchImpl, posts, deletes } = mockUnipile({ busy: true });
+    const { fetchImpl, posts, deletes } = mockCalendar({ busy: true });
     const created = await postBooking(
       { date: "2026-09-11", time: "10:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
       { fetchImpl, now: NOW },
@@ -359,7 +380,7 @@ describe("coming back to a booking", () => {
 
   it("cancels by deleting the event with notify true when they were invited", async () => {
     setConfigured();
-    const { fetchImpl, deletes } = mockUnipile();
+    const { fetchImpl, deletes } = mockCalendar();
     const created = await postBooking(
       { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
       { fetchImpl, now: NOW },
@@ -368,10 +389,8 @@ describe("coming back to a booking", () => {
     const cancelled = await cancelBooking({ code: created.body.whatsapp.code }, { fetchImpl, now: NOW });
     assert.equal(cancelled.ok, true);
     assert.equal(deletes.length, 1);
-    /* The delete carries account_id and nothing else. notify was a guess:
-       the connector documents it on the create call's body and documents no
-       parameter but account_id here, so what this used to assert was that we
-       sent something the far side ignores. */
+    /* Google Calendar honours sendUpdates on delete. The connector did not. */
+    assert.match(deletes[0] ?? "", /sendUpdates=all/);
     assert.doesNotMatch(deletes[0] ?? "", /notify=/);
     assert.deepEqual(getExistingBooking(created.body.whatsapp.code, NOW.getTime()), { found: false });
   });

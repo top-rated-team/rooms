@@ -1,32 +1,37 @@
 /**
- * Availability. Unipile has no free/busy endpoint, so we list events over a
- * padded window and do the overlap test here.
- *
- * Three traps, each of which silently shows a busy day as free:
- *   1. An all-day event is {date} with no date_time.
- *   2. Unipile's start/end are containment filters, not overlap filters.
- *   3. Without expand_recurring a weekly standup arrives as one master RRULE.
+ * Availability. When the service account is configured, this is
+ * freeBusy.query on OUR calendar: busy ranges, no titles, no guests.
+ * Listing events was a workaround for a connector with no free/busy
+ * endpoint; that path remains only when the two Google variables are
+ * unset, so callers this parcel does not own can still run their tests.
  *
  * Working hours are 09:00–17:00 on weekdays in the calendar's own timezone,
  * 30-minute slots. A day with nothing free is still present, with an empty
  * array, so the popup can say so rather than omitting the day.
  *
- * The computed window is cached for 45 seconds. One Unipile call covers every
- * cell the widget renders.
+ * The computed window is cached for 45 seconds. One freeBusy call covers
+ * every cell the widget renders.
  *
  * A visitor who connected their own Google Calendar adds a second overlay:
  * slots they are busy in stay in `slots` and are also listed in `visitorBusy`.
  * That overlay is never cached with the owner's window — visitor A must not
- * mark visitor B's picker. Our own calendar is still read through Unipile.
+ * mark visitor B's picker. The visitor grant is server/booking/freebusy.ts
+ * and is a different app, a different person, and is not this file.
  */
 
 import type { BookingDay, BookingSlotsResponse, VisitorCalendarView } from "@shared/api";
-import { available, unavailableLine } from "../unipile/client";
+import { available as unipileAvailable } from "../unipile/client";
 import {
-  getPrimaryCalendar,
+  getPrimaryCalendar as getUnipilePrimaryCalendar,
   listCalendarEvents,
   type UnipileCalendarEvent,
 } from "../unipile/calendar";
+import {
+  available as gcalAvailable,
+  getOurCalendar,
+  queryFreeBusy,
+  unavailableLine as gcalUnavailableLine,
+} from "./gcal";
 import { queryVisitorFreeBusy, visitorCalendarView } from "./freebusy";
 import { activeHeldSlots } from "./hold";
 
@@ -42,6 +47,9 @@ export const MAX_SLOT_DAYS = 31;
  * Event types that do not block a slot even when they look like events.
  * "declined" is not a Google type; it is here so a declined/birthday set is
  * one readable list rather than an undocumented busy=true query.
+ *
+ * On the Google path this set is unused: freeBusy.query already returns
+ * only opaque busy ranges. It remains for the Unipile fallback.
  */
 export const SKIPPED_EVENT_TYPES = new Set(["birthday", "fromGmail", "declined"]);
 
@@ -237,16 +245,20 @@ function slotTimes(): string[] {
 
 const SLOT_GRID = slotTimes();
 
-export function daysFromEvents(input: {
+/**
+ * Slot grid from busy ranges. freeBusy.query already expands recurrence and
+ * treats all-day events as ranges, so the Unipile traps — {date} with no
+ * date_time, containment filters, unexpanded RRULEs — do not apply on the
+ * Google path. The overlap test itself is still ours, because a 09:00–10:00
+ * busy range must block 09:30.
+ */
+export function daysFromBusyIntervals(input: {
   from: string;
   days: number;
   timezone: string;
-  events: UnipileCalendarEvent[];
+  busy: BusyInterval[];
   now: Date;
 }): BookingDay[] {
-  const busy = input.events
-    .map((event) => busyInterval(event, input.timezone))
-    .filter((row): row is BusyInterval => row !== null);
   const nowMs = input.now.getTime();
   const days: BookingDay[] = [];
 
@@ -261,13 +273,26 @@ export function daysFromEvents(input: {
         if (!start) continue;
         const end = start.getTime() + SLOT_MINUTES * 60_000;
         if (end <= nowMs) continue;
-        const taken = busy.some((interval) => overlaps(start.getTime(), end, interval.start, interval.end));
+        const taken = input.busy.some((interval) => overlaps(start.getTime(), end, interval.start, interval.end));
         if (!taken) slots.push(time);
       }
     }
     days.push({ date, slots });
   }
   return days;
+}
+
+export function daysFromEvents(input: {
+  from: string;
+  days: number;
+  timezone: string;
+  events: UnipileCalendarEvent[];
+  now: Date;
+}): BookingDay[] {
+  const busy = input.events
+    .map((event) => busyInterval(event, input.timezone))
+    .filter((row): row is BusyInterval => row !== null);
+  return daysFromBusyIntervals({ from: input.from, days: input.days, timezone: input.timezone, busy, now: input.now });
 }
 
 /**
@@ -310,9 +335,11 @@ export async function getBookingSlots(
 ): Promise<GetBookingSlotsResult> {
   const fetchImpl = opts.fetchImpl ?? fetch;
   const now = opts.now ?? new Date();
-  if (!available()) return { ok: false, status: 503, error: unavailableLine() };
+  if (!gcalAvailable() && !unipileAvailable()) {
+    return { ok: false, status: 503, error: gcalUnavailableLine() };
+  }
 
-  const primary = await getPrimaryCalendar(fetchImpl);
+  const primary = gcalAvailable() ? await getOurCalendar(fetchImpl) : await getUnipilePrimaryCalendar(fetchImpl);
   if (!primary.ok) return { ok: false, status: 503, error: primary.line };
 
   const from = isCalendarDate(fromRaw) ? fromRaw : wallDateInZone(now, primary.calendar.timezone);
@@ -328,23 +355,33 @@ export async function getBookingSlots(
   const window = paddedWindow(from, days, primary.calendar.timezone);
   if (!window) return { ok: false, status: 503, error: "That date is not one we can offer." };
 
-  const listed = await listCalendarEvents(
-    {
-      calendarId: primary.calendar.id,
-      start: window.start,
-      end: window.end,
-      expandRecurring: true,
-    },
-    fetchImpl,
-  );
-  if (!listed.ok) return { ok: false, status: 503, error: listed.line };
+  let busy: { start: number; end: number }[];
+  if (gcalAvailable()) {
+    const queried = await queryFreeBusy({ start: window.start, end: window.end }, fetchImpl);
+    if (!queried.ok) return { ok: false, status: 503, error: queried.error };
+    busy = queried.busy;
+  } else {
+    const listed = await listCalendarEvents(
+      {
+        calendarId: primary.calendar.id,
+        start: window.start,
+        end: window.end,
+        expandRecurring: true,
+      },
+      fetchImpl,
+    );
+    if (!listed.ok) return { ok: false, status: 503, error: listed.line };
+    busy = listed.body
+      .map((event) => busyInterval(event, primary.calendar.timezone))
+      .filter((row): row is { start: number; end: number } => row !== null);
+  }
 
   const held = activeHeldSlots(now.getTime());
-  const dayRows = daysFromEvents({
+  const dayRows = daysFromBusyIntervals({
     from,
     days,
     timezone: primary.calendar.timezone,
-    events: listed.body,
+    busy,
     now,
   }).map((day) => ({
     date: day.date,

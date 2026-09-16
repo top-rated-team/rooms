@@ -1,10 +1,18 @@
 /**
- * Write a booking onto the primary calendar. There is no visitor-calendar
+ * Write a booking onto OUR calendar. There is no visitor-calendar
  * connection: the cheap 95% of two-way sync is notify: true, so Google emails
  * the invite and the visitor's own client does the conflict check.
  *
- * 201 from Unipile is only {event_id}. The Meet URL, if any, is read back
- * with GET. email is the only optional field.
+ * Production talks to Google Calendar through a service account
+ * (server/booking/gcal.ts). Availability is freeBusy.query; creating the
+ * event, deleting it on cancel, moving it on reschedule, the Meet link and
+ * the invite go through the same client. Nothing is written into anybody
+ * else's calendar.
+ *
+ * Callers this parcel does not own still configure only Unipile in their
+ * tests. When the two Google variables are unset, the Unipile calendar path
+ * remains so those tests keep their contract. Production has the variables
+ * and never takes that branch.
  *
  * WITH an address the event is created immediately, notify true. WITHOUT an
  * address this file does not create an event: hold.ts reserves the slot and
@@ -26,10 +34,21 @@ import { calendarAccountId } from "../unipile/accounts";
 import {
   createCalendarEvent,
   getCalendarEvent,
-  getPrimaryCalendar,
+  getPrimaryCalendar as getUnipilePrimaryCalendar,
 } from "../unipile/calendar";
-import { available, unipileRequest, unavailableLine } from "../unipile/client";
+import {
+  available as unipileAvailable,
+  unipileRequest,
+  unavailableLine as unipileUnavailableLine,
+} from "../unipile/client";
 import { sendInChat } from "../unipile/messaging";
+import {
+  available as gcalAvailable,
+  createEvent as createGcalEvent,
+  deleteEvent as deleteGcalEvent,
+  getOurCalendar,
+  unavailableLine as gcalUnavailableLine,
+} from "./gcal";
 import { mintBookingCode, normalizeBookingCode } from "./code";
 import {
   ADDRESS_REQUIRED_LINE,
@@ -63,6 +82,21 @@ import {
  */
 export const HOST_ATTENDEE_EMAIL = "dan@top-rated.team";
 export const SLOT_TAKEN_LINE = "That time has just been taken. Here is what is still free.";
+
+function bookingCalendarReady(): boolean {
+  return gcalAvailable() || unipileAvailable();
+}
+
+function bookingCalendarUnavailableLine(): string {
+  return gcalAvailable() ? gcalUnavailableLine() : unipileUnavailableLine();
+}
+
+async function primaryCalendar(
+  fetchImpl: typeof fetch,
+): Promise<{ ok: true; calendar: { id: string; timezone: string } } | { ok: false; line: string }> {
+  if (gcalAvailable()) return getOurCalendar(fetchImpl);
+  return getUnipilePrimaryCalendar(fetchImpl);
+}
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -155,11 +189,28 @@ export async function createBookingEvent(
   fetchImpl: typeof fetch,
 ): Promise<{ ok: true; eventId: string; meetUrl: string | null; invited: boolean } | { ok: false; error: string }> {
   const { invited, attendees, notify } = attendeesFor(input.email);
+  const description = bookingEventDescription({ topic: input.topic, visitorProfile: input.visitorProfile });
+  if (gcalAvailable()) {
+    const created = await createGcalEvent(
+      {
+        title: bookingEventTitle(input),
+        description,
+        attendees,
+        start: { dateTime: input.starts.toISOString(), timeZone: input.timezone },
+        end: { dateTime: input.ends.toISOString(), timeZone: input.timezone },
+        notify,
+      },
+      fetchImpl,
+    );
+    if (!created.ok) return { ok: false, error: created.error };
+    return { ok: true, eventId: created.eventId, meetUrl: created.meetUrl, invited };
+  }
+
   const created = await createCalendarEvent(
     {
       calendarId: input.calendarId,
       title: bookingEventTitle(input),
-      body: bookingEventDescription({ topic: input.topic, visitorProfile: input.visitorProfile }),
+      body: description,
       attendees,
       start: { dateTime: input.starts.toISOString(), timeZone: input.timezone },
       end: { dateTime: input.ends.toISOString(), timeZone: input.timezone },
@@ -182,7 +233,7 @@ export async function postBooking(
 ): Promise<PostBookingResult> {
   const fetchImpl = opts.fetchImpl ?? fetch;
   const now = opts.now ?? new Date();
-  if (!available()) return { ok: false, status: 503, error: unavailableLine() };
+  if (!bookingCalendarReady()) return { ok: false, status: 503, error: bookingCalendarUnavailableLine() };
 
   const input = parseCreateBooking(raw);
   if (!input || !isCalendarDate(input.date) || !isWallClockTime(input.time)) {
@@ -197,7 +248,7 @@ export async function postBooking(
     return { ok: false, status: 503, error: ADDRESS_REQUIRED_LINE };
   }
 
-  const primary = await getPrimaryCalendar(fetchImpl);
+  const primary = await primaryCalendar(fetchImpl);
   if (!primary.ok) return { ok: false, status: 503, error: primary.line };
 
   const starts = wallClockToUtc(input.date, input.time, primary.calendar.timezone);
@@ -291,20 +342,20 @@ export function getExistingBooking(codeRaw: string, now = Date.now()): ExistingB
 }
 
 export async function deleteCalendarEvent(
-  input: { calendarId: string; eventId: string },
+  input: { calendarId: string; eventId: string; notify?: boolean },
   fetchImpl: typeof fetch,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (gcalAvailable()) {
+    return deleteGcalEvent(input.eventId, { notify: Boolean(input.notify) }, fetchImpl);
+  }
   const result = await unipileRequest<unknown>(
     {
       method: "DELETE",
       path: `/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.eventId)}`,
-      /* notify is NOT sent. The connector documents it as a body field of
-         the CREATE call and documents no parameter but account_id on the
-         delete — and this client refuses a body on a DELETE, so a query
-         string was the only carrier available and it was a guess. An unknown
-         query parameter is ignored, which is the quiet kind of wrong: the
-         code looked as though it asked Google to tell the guest and it did
-         not. The popup no longer promises that either. */
+      /* notify is NOT sent on this branch. The connector documents it as a
+         body field of the CREATE call and documents no parameter but
+         account_id on the delete. Google Calendar, on the gcal branch above,
+         does honour sendUpdates. */
       query: { account_id: calendarAccountId() },
     },
     fetchImpl,
@@ -365,7 +416,7 @@ export async function changeBooking(
 ): Promise<ChangeBookingResult> {
   const fetchImpl = opts.fetchImpl ?? fetch;
   const now = opts.now ?? new Date();
-  if (!available()) return { ok: false, status: 503, error: unavailableLine() };
+  if (!bookingCalendarReady()) return { ok: false, status: 503, error: bookingCalendarUnavailableLine() };
 
   const input = parseChangeBooking(raw);
   if (!input || !isCalendarDate(input.date) || !isWallClockTime(input.time)) {
@@ -379,7 +430,7 @@ export async function changeBooking(
     return { ok: true, status: 200, body: existingBookingResponse(input.code, now.getTime()) };
   }
 
-  const primary = await getPrimaryCalendar(fetchImpl);
+  const primary = await primaryCalendar(fetchImpl);
   if (!primary.ok) return { ok: false, status: 503, error: primary.line };
 
   const starts = wallClockToUtc(input.date, input.time, primary.calendar.timezone);
@@ -433,7 +484,7 @@ export async function changeBooking(
      new slot already taken, so this cannot fail the whole move; it reports
      instead, and says which event was left behind so a person can remove it. */
   const removedOld = await deleteCalendarEvent(
-    { calendarId: previous.calendarId, eventId: previous.eventId },
+    { calendarId: previous.calendarId, eventId: previous.eventId, notify: previous.invited },
     fetchImpl,
   );
   if (!removedOld.ok) {
@@ -458,7 +509,7 @@ export async function cancelBooking(
 ): Promise<CancelBookingResult> {
   const fetchImpl = opts.fetchImpl ?? fetch;
   const now = opts.now ?? new Date();
-  if (!available()) return { ok: false, status: 503, error: unavailableLine() };
+  if (!bookingCalendarReady()) return { ok: false, status: 503, error: bookingCalendarUnavailableLine() };
 
   const code = parseCancelBooking(raw);
   if (!code) return { ok: false, status: 404, error: BOOKING_GONE_LINE };
@@ -467,7 +518,7 @@ export async function cancelBooking(
   if (!existing) return { ok: false, status: 404, error: BOOKING_GONE_LINE };
 
   const deleted = await deleteCalendarEvent(
-    { calendarId: existing.calendarId, eventId: existing.eventId },
+    { calendarId: existing.calendarId, eventId: existing.eventId, notify: existing.invited },
     fetchImpl,
   );
   if (!deleted.ok) return { ok: false, status: 503, error: deleted.error };

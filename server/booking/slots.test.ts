@@ -3,11 +3,12 @@
  *
  *   npx tsx --test server/booking/slots.test.ts
  *
- * Three fixtures, each of which shows a busy day as free if its trap is
- * missing: all-day {date} with no date_time, a containment-filtered event
- * that still overlaps, and an unexpanded RRULE master.
+ * Production availability is freeBusy.query. The three Unipile traps still
+ * have fixtures for the overlap test itself: all-day as a day-long range,
+ * a 09:00–10:00 block that must cover 09:30, and expanded recurrence.
  */
 
+import { generateKeyPairSync } from "node:crypto";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 
@@ -16,8 +17,15 @@ import { resetUnipileCalendarForTests } from "../unipile/calendar";
 import { placeHold, resetHoldsForTests } from "./hold";
 import { putVisitorCalendarForTests, resetVisitorCalendarForTests } from "./freebusy";
 import {
+  GOOGLE_CALENDAR_API,
+  GOOGLE_FREEBUSY_URL,
+  GOOGLE_TOKEN_URL,
+  resetGcalForTests,
+} from "./gcal";
+import {
   WINDOW_PAD_MS,
   busyInterval,
+  daysFromBusyIntervals,
   daysFromEvents,
   eventIsBusy,
   getBookingSlots,
@@ -27,13 +35,22 @@ import {
   wallClockToUtc,
 } from "./slots";
 
-const DSN = "unipile.test.example:9443";
-const KEY = "test-unipile-key-do-not-log";
-const ACCOUNT = "cal_account_for_tests";
-const CALENDAR_ID = "primary-cal-id";
+const CALENDAR_ID = "dan@top-rated.team";
 const TZ = "Europe/Bratislava";
 const FROM = "2026-09-10";
 const NOW = new Date("2026-09-09T08:00:00.000Z");
+
+const { privateKey: TEST_PRIVATE_KEY } = generateKeyPairSync("rsa", {
+  modulusLength: 2048,
+  privateKeyEncoding: { type: "pkcs8", format: "pem" },
+  publicKeyEncoding: { type: "spki", format: "pem" },
+});
+
+const SERVICE_ACCOUNT_JSON = JSON.stringify({
+  type: "service_account",
+  client_email: "sa@test.iam.gserviceaccount.com",
+  private_key: TEST_PRIVATE_KEY,
+});
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -43,9 +60,38 @@ function jsonResponse(status: number, body: unknown): Response {
 }
 
 function setConfigured(): void {
-  process.env.UNIPILE_DSN = DSN;
-  process.env.UNIPILE_API_KEY = KEY;
-  process.env.UNIPILE_CALENDAR_ACCOUNT_ID = ACCOUNT;
+  process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON = SERVICE_ACCOUNT_JSON;
+  process.env.GOOGLE_CALENDAR_ID = CALENDAR_ID;
+}
+
+function mockOwnerGoogle(opts: {
+  busy?: { start: string; end: string }[];
+  onOwnerFreeBusy?: () => void;
+  visitor?: { busy?: { start: string; end: string }[]; errors?: unknown };
+}): typeof fetch {
+  return async (input, init) => {
+    const url = String(input);
+    const method = (init?.method ?? "GET").toUpperCase();
+    if (url === GOOGLE_TOKEN_URL) {
+      return jsonResponse(200, { access_token: "sa-token-for-tests", expires_in: 3600 });
+    }
+    if (method === "GET" && url === `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(CALENDAR_ID)}`) {
+      return jsonResponse(200, { id: CALENDAR_ID, timeZone: TZ });
+    }
+    if (method === "POST" && url === GOOGLE_FREEBUSY_URL) {
+      const body = JSON.parse(String(init?.body ?? "{}")) as { items?: { id?: string }[] };
+      const asked = body.items?.[0]?.id;
+      if (asked === "primary") {
+        if (opts.visitor?.errors) {
+          return jsonResponse(200, { calendars: { primary: { errors: opts.visitor.errors, busy: [] } } });
+        }
+        return jsonResponse(200, { calendars: { primary: { busy: opts.visitor?.busy ?? [] } } });
+      }
+      opts.onOwnerFreeBusy?.();
+      return jsonResponse(200, { calendars: { [CALENDAR_ID]: { busy: opts.busy ?? [] } } });
+    }
+    return jsonResponse(404, {});
+  };
 }
 
 function event(partial: Partial<UnipileCalendarEvent> & Pick<UnipileCalendarEvent, "id" | "start">): UnipileCalendarEvent {
@@ -67,11 +113,14 @@ function event(partial: Partial<UnipileCalendarEvent> & Pick<UnipileCalendarEven
 beforeEach(() => {
   resetSlotsCacheForTests();
   resetUnipileCalendarForTests();
+  resetGcalForTests();
   resetHoldsForTests();
   resetVisitorCalendarForTests();
   delete process.env.UNIPILE_DSN;
   delete process.env.UNIPILE_API_KEY;
   delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
+  delete process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON;
+  delete process.env.GOOGLE_CALENDAR_ID;
   delete process.env.GOOGLE_FREEBUSY_CLIENT_ID;
   delete process.env.GOOGLE_FREEBUSY_CLIENT_SECRET;
 });
@@ -79,11 +128,14 @@ beforeEach(() => {
 afterEach(() => {
   resetSlotsCacheForTests();
   resetUnipileCalendarForTests();
+  resetGcalForTests();
   resetHoldsForTests();
   resetVisitorCalendarForTests();
   delete process.env.UNIPILE_DSN;
   delete process.env.UNIPILE_API_KEY;
   delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
+  delete process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON;
+  delete process.env.GOOGLE_CALENDAR_ID;
   delete process.env.GOOGLE_FREEBUSY_CLIENT_ID;
   delete process.env.GOOGLE_FREEBUSY_CLIENT_SECRET;
 });
@@ -112,6 +164,17 @@ describe("trap 1: all-day events have no date_time", () => {
     assert.equal(Number.isNaN(new Date((holiday.start as { date_time?: string }).date_time as string).getTime()), true);
 
     const days = daysFromEvents({ from: FROM, days: 2, timezone: TZ, events: [holiday], now: NOW });
+    const fromDay = wallClockToUtc("2026-09-10", "00:00", TZ);
+    const untilDay = wallClockToUtc("2026-09-11", "00:00", TZ);
+    assert.ok(fromDay && untilDay);
+    const fromRanges = daysFromBusyIntervals({
+      from: FROM,
+      days: 2,
+      timezone: TZ,
+      busy: [{ start: fromDay.getTime(), end: untilDay.getTime() }],
+      now: NOW,
+    });
+    assert.deepEqual(fromRanges.find((row) => row.date === "2026-09-10")?.slots, []);
     const thursday = days.find((row) => row.date === "2026-09-10");
     const friday = days.find((row) => row.date === "2026-09-11");
     assert.ok(thursday);
@@ -147,36 +210,20 @@ describe("trap 2: start/end are containment filters", () => {
   });
 });
 
-describe("trap 3: expand_recurring", () => {
-  it("sends expand_recurring=true, and expanded Wednesday instances block that slot", async () => {
+describe("trap 3: recurrence is already expanded on freeBusy", () => {
+  it("asks freeBusy.query, and a Wednesday busy range blocks that slot", async () => {
     setConfigured();
     const urls: string[] = [];
     const wedStart = wallClockToUtc("2026-09-16", "10:00", TZ);
     const wedEnd = wallClockToUtc("2026-09-16", "10:30", TZ);
     assert.ok(wedStart && wedEnd);
 
-    const fetchImpl: typeof fetch = async (input) => {
-      const url = String(input);
-      urls.push(url);
-      if (url.includes("/calendars?") || /\/api\/v1\/calendars$/.test(url.split("?")[0])) {
-        return jsonResponse(200, {
-          data: [{ id: CALENDAR_ID, is_primary: true, is_read_only: false, timezone: TZ }],
-        });
-      }
-      assert.match(url, /expand_recurring=true/);
-      return jsonResponse(200, {
-        data: [
-          {
-            id: "standup-2026-09-16",
-            master_event_id: "standup-master",
-            is_cancelled: false,
-            transparency: "opaque",
-            event_type: "default",
-            start: { date_time: wedStart.toISOString(), time_zone: TZ },
-            end: { date_time: wedEnd.toISOString(), time_zone: TZ },
-          },
-        ],
-      });
+    const inner = mockOwnerGoogle({
+      busy: [{ start: wedStart.toISOString(), end: wedEnd.toISOString() }],
+    });
+    const fetchImpl: typeof fetch = async (input, init) => {
+      urls.push(String(input));
+      return inner(input, init);
     };
 
     const result = await getBookingSlots(FROM, 14, { fetchImpl, now: NOW });
@@ -186,10 +233,8 @@ describe("trap 3: expand_recurring", () => {
     assert.ok(wednesday);
     assert.equal(wednesday?.slots.includes("10:00"), false);
     assert.equal(wednesday?.slots.includes("09:30"), true);
-    assert.equal(
-      urls.some((url) => url.includes("expand_recurring=true")),
-      true,
-    );
+    assert.equal(urls.some((url) => url === GOOGLE_FREEBUSY_URL), true);
+    assert.equal(urls.some((url) => url.includes("expand_recurring")), false);
   });
 
   it("does not let an unexpanded RRULE master hide a week as free once instances are present", () => {
@@ -248,17 +293,8 @@ describe("what counts as busy", () => {
 describe("getBookingSlots", () => {
   it("returns a day with an empty array rather than omitting it, and caches the window", async () => {
     setConfigured();
-    let eventLists = 0;
-    const fetchImpl: typeof fetch = async (input) => {
-      const url = String(input);
-      if (url.includes("/calendars?") || /\/api\/v1\/calendars$/.test(url.split("?")[0])) {
-        return jsonResponse(200, {
-          data: [{ id: CALENDAR_ID, is_primary: true, is_read_only: false, timezone: TZ }],
-        });
-      }
-      eventLists += 1;
-      return jsonResponse(200, { data: [] });
-    };
+    let freeBusyCalls = 0;
+    const fetchImpl = mockOwnerGoogle({ onOwnerFreeBusy: () => { freeBusyCalls += 1; } });
     const first = await getBookingSlots(FROM, 14, { fetchImpl, now: NOW });
     const second = await getBookingSlots(FROM, 14, { fetchImpl, now: NOW });
     assert.equal(first.ok, true);
@@ -271,7 +307,7 @@ describe("getBookingSlots", () => {
     assert.ok(saturday);
     assert.deepEqual(saturday?.slots, []);
     assert.equal(second.ok, true);
-    assert.equal(eventLists, 1);
+    assert.equal(freeBusyCalls, 1);
   });
 
   it("hides a slot that is held, even when the calendar itself is free", async () => {
@@ -285,23 +321,14 @@ describe("getBookingSlots", () => {
       startsAt: "2026-09-10T12:00:00.000Z",
     });
     assert.equal("taken" in held, false);
-    const fetchImpl: typeof fetch = async (input) => {
-      const url = String(input);
-      if (url.includes("/calendars?") || /\/api\/v1\/calendars$/.test(url.split("?")[0])) {
-        return jsonResponse(200, {
-          data: [{ id: CALENDAR_ID, is_primary: true, is_read_only: false, timezone: TZ }],
-        });
-      }
-      return jsonResponse(200, { data: [] });
-    };
-    const result = await getBookingSlots(FROM, 1, { fetchImpl, now: NOW });
+    const result = await getBookingSlots(FROM, 1, { fetchImpl: mockOwnerGoogle({}), now: NOW });
     assert.equal(result.ok, true);
     if (!result.ok) return;
     assert.equal(result.body.days[0]?.slots.includes("14:00"), false);
     assert.equal(result.body.days[0]?.slots.includes("09:00"), true);
   });
 
-  it("is inert with a sentence when Unipile is not configured", async () => {
+  it("is inert with a sentence when the calendar is not configured", async () => {
     const result = await getBookingSlots(FROM, 14, { now: NOW });
     assert.equal(result.ok, false);
     if (result.ok) return;
@@ -312,16 +339,7 @@ describe("getBookingSlots", () => {
 
   it("does not mention a visitor calendar on a fork", async () => {
     setConfigured();
-    const fetchImpl: typeof fetch = async (input) => {
-      const url = String(input);
-      if (url.includes("/calendars?") || /\/api\/v1\/calendars$/.test(url.split("?")[0])) {
-        return jsonResponse(200, {
-          data: [{ id: CALENDAR_ID, is_primary: true, is_read_only: false, timezone: TZ }],
-        });
-      }
-      return jsonResponse(200, { data: [] });
-    };
-    const result = await getBookingSlots(FROM, 1, { fetchImpl, now: NOW });
+    const result = await getBookingSlots(FROM, 1, { fetchImpl: mockOwnerGoogle({}), now: NOW });
     assert.equal(result.ok, true);
     if (!result.ok) return;
     assert.deepEqual(result.body.visitorCalendar, { offered: false });
@@ -356,24 +374,9 @@ describe("visitor busy is marked, not removed", () => {
     const end = wallClockToUtc(FROM, "15:00", TZ);
     assert.ok(start && end);
 
-    const fetchImpl: typeof fetch = async (input) => {
-      const url = String(input);
-      if (url.includes("googleapis.com/calendar/v3/freeBusy")) {
-        return jsonResponse(200, {
-          calendars: {
-            primary: {
-              busy: [{ start: start.toISOString(), end: end.toISOString() }],
-            },
-          },
-        });
-      }
-      if (url.includes("/calendars?") || /\/api\/v1\/calendars$/.test(url.split("?")[0])) {
-        return jsonResponse(200, {
-          data: [{ id: CALENDAR_ID, is_primary: true, is_read_only: false, timezone: TZ }],
-        });
-      }
-      return jsonResponse(200, { data: [] });
-    };
+    const fetchImpl = mockOwnerGoogle({
+      visitor: { busy: [{ start: start.toISOString(), end: end.toISOString() }] },
+    });
 
     const withVisitor = await getBookingSlots(FROM, 1, {
       fetchImpl,
@@ -411,18 +414,9 @@ describe("visitor busy is marked, not removed", () => {
       now: NOW.getTime(),
     });
 
-    const fetchImpl: typeof fetch = async (input) => {
-      const url = String(input);
-      if (url.includes("googleapis.com/calendar/v3/freeBusy")) {
-        return jsonResponse(200, { calendars: { primary: { errors: [{ reason: "notFound" }], busy: [] } } });
-      }
-      if (url.includes("/calendars?") || /\/api\/v1\/calendars$/.test(url.split("?")[0])) {
-        return jsonResponse(200, {
-          data: [{ id: CALENDAR_ID, is_primary: true, is_read_only: false, timezone: TZ }],
-        });
-      }
-      return jsonResponse(200, { data: [] });
-    };
+    const fetchImpl = mockOwnerGoogle({
+      visitor: { errors: [{ reason: "notFound" }] },
+    });
 
     const result = await getBookingSlots(FROM, 1, { fetchImpl, now: NOW, visitorHandle: "visitor-c" });
     assert.equal(result.ok, true);
