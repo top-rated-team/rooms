@@ -180,7 +180,7 @@ matter operationally:
 So: **enable the calendar scopes in the Unipile dashboard and reconnect
 `dan@top-rated.team`.** The `account_id` may or may not survive a reconnect — the code must
 read it from config (`UNIPILE_CALENDAR_ACCOUNT_ID`, default
-`SddnpBwYRJWtOyJhzFzlnQ`) rather than assuming it.
+the configured calendar account) rather than assuming it.
 
 Calendar support is **Google and Microsoft only**. No IMAP calendar.
 
@@ -654,7 +654,7 @@ So the flow becomes three steps rather than one:
    shows the same link as a QR code, and the QR is itself clickable** — a
    desktop visitor may well have WhatsApp on that machine, and making them
    choose between scanning and clicking is a decision they should not have to
-   make. The message goes to +420774654822, account `y8T1nMDYR0ejEsMQpLr9OA`,
+   make. The message goes to the configured WhatsApp number and account,
    and arrives through the inbound handler wave 2 built, with its seven checks.
 3. **Confirm.** When the matcher fires, the event is created, and only then does
    the popup show the confirmation with the Google Meet link. The popup is
@@ -713,8 +713,8 @@ visitor books again.
 |---|---|---|
 | `UNIPILE_DSN` | Render dashboard ✅ set | every Unipile path reports unavailable in a sentence |
 | `UNIPILE_API_KEY` | Render dashboard ✅ set | same |
-| `UNIPILE_CALENDAR_ACCOUNT_ID` | default `SddnpBwYRJWtOyJhzFzlnQ` | falls back to the default |
-| `UNIPILE_WHATSAPP_ACCOUNT_ID` | default `y8T1nMDYR0ejEsMQpLr9OA` | falls back to the default |
+| `UNIPILE_CALENDAR_ACCOUNT_ID` | none — required | refuses, and says which variable is unset |
+| `UNIPILE_WHATSAPP_ACCOUNT_ID` | none — required | refuses, and says which variable is unset |
 | `UNIPILE_WEBHOOK_SECRET` | Render dashboard — **needed** | the inbound endpoint refuses everything |
 | `LINKEDIN_CLIENT_ID` / `_SECRET` | Render dashboard — status unknown | the LinkedIn route says so and WhatsApp stays |
 | `DATABASE_URL` | Render dashboard — **set 2026-09-09**, Neon pooled, six tables created | without it rooms live in memory and every deploy destroys them |

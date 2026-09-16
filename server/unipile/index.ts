@@ -31,8 +31,6 @@ export {
   getAccount,
   ourAccounts,
   parseAccount,
-  DEFAULT_CALENDAR_ACCOUNT_ID,
-  DEFAULT_WHATSAPP_ACCOUNT_ID,
   SOURCE_STATUSES,
   type AccountRole,
   type AccountSource,

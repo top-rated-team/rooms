@@ -11,7 +11,6 @@ import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import {
-  DEFAULT_WHATSAPP_ACCOUNT_ID,
 } from "../unipile/accounts";
 import { resetUnipileCalendarForTests } from "../unipile/calendar";
 import {
@@ -38,6 +37,10 @@ import {
   setBookingEventFetchForTests,
 } from "./confirm";
 import { resetHoldsForTests } from "./hold";
+
+/* Fixture ids, not ours. The real ones are environment now — see
+   ACCOUNT_UNSET_LINE in server/unipile/accounts.ts for why. */
+const DEFAULT_WHATSAPP_ACCOUNT_ID = "acct_whatsapp_for_tests";
 
 const SECRET = "test-unipile-webhook-secret-value";
 const OUR_USER = "42000000000@s.whatsapp.net";
@@ -121,6 +124,9 @@ beforeEach(() => {
   delete process.env.UNIPILE_WHATSAPP_ACCOUNT_ID;
   setBookingEventFetchForTests(mockCalendarFetch());
   installBookingInbound();
+  /* The id is environment now; this is a fixture, not ours. Set AFTER the
+     deletes above, or it is deleted in the same breath. */
+  process.env.UNIPILE_WHATSAPP_ACCOUNT_ID = DEFAULT_WHATSAPP_ACCOUNT_ID;
 });
 
 afterEach(() => {

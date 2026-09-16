@@ -11,7 +11,6 @@
 import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 
-import { DEFAULT_WHATSAPP_ACCOUNT_ID } from "../unipile/accounts";
 import { resetUnipileCalendarForTests } from "../unipile/calendar";
 import { acceptUnipileInbound, resetInboundForTests, type AcceptedInboundMessage } from "../unipile/inbound";
 import { bookingConfirmMessage } from "./code";
@@ -25,6 +24,10 @@ import {
 import { cancelBooking, getExistingBooking } from "./calendar";
 import { HOST_LINKEDIN_LINE, holdToResponse, placeHold, resetHoldsForTests } from "./hold";
 import { resetSlotsCacheForTests } from "./slots";
+
+/* Fixture ids, not ours. The real ones are environment now — see
+   ACCOUNT_UNSET_LINE in server/unipile/accounts.ts for why. */
+const DEFAULT_WHATSAPP_ACCOUNT_ID = "acct_whatsapp_for_tests";
 
 const DSN = "unipile.test.example:9443";
 const KEY = "test-unipile-key-do-not-log";
@@ -144,6 +147,9 @@ beforeEach(() => {
   delete process.env.UNIPILE_DSN;
   delete process.env.UNIPILE_API_KEY;
   installBookingInbound();
+  /* The id is environment now; this is a fixture, not ours. Set AFTER the
+     deletes above, or it is deleted in the same breath. */
+  process.env.UNIPILE_WHATSAPP_ACCOUNT_ID = DEFAULT_WHATSAPP_ACCOUNT_ID;
 });
 
 afterEach(() => {

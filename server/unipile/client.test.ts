@@ -28,9 +28,12 @@ import {
   ourAccounts,
   parseAccount,
   whatsappAccountId,
-  DEFAULT_CALENDAR_ACCOUNT_ID,
-  DEFAULT_WHATSAPP_ACCOUNT_ID,
 } from "./accounts";
+
+/* Fixture ids, not ours. The real ones are environment now — see
+   ACCOUNT_UNSET_LINE in server/unipile/accounts.ts for why. */
+const DEFAULT_CALENDAR_ACCOUNT_ID = "acct_calendar_for_tests";
+const DEFAULT_WHATSAPP_ACCOUNT_ID = "acct_whatsapp_for_tests";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(HERE, "..", "..");
@@ -255,7 +258,16 @@ describe("unipileRequest", () => {
 });
 
 describe("accounts", () => {
-  it("falls back to the brief's account ids when the env vars are unset", () => {
+  it("has no account id at all when the env vars are unset, and takes them when they are set", () => {
+    /* THERE IS NO FALLBACK ANY MORE. Our two account ids were written into
+       this source, in a repository that is going public and is the fork
+       target, and a fork that set its own UNIPILE_API_KEY and forgot these
+       addressed ids that do not exist in its tenant. Unset now means unset. */
+    assert.equal(calendarAccountId(), "");
+    assert.equal(whatsappAccountId(), "");
+
+    process.env.UNIPILE_CALENDAR_ACCOUNT_ID = DEFAULT_CALENDAR_ACCOUNT_ID;
+    process.env.UNIPILE_WHATSAPP_ACCOUNT_ID = DEFAULT_WHATSAPP_ACCOUNT_ID;
     assert.equal(calendarAccountId(), DEFAULT_CALENDAR_ACCOUNT_ID);
     assert.equal(whatsappAccountId(), DEFAULT_WHATSAPP_ACCOUNT_ID);
     process.env.UNIPILE_CALENDAR_ACCOUNT_ID = CALENDAR_ID;

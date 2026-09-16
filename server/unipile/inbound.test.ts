@@ -12,8 +12,6 @@ import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import {
-  DEFAULT_CALENDAR_ACCOUNT_ID,
-  DEFAULT_WHATSAPP_ACCOUNT_ID,
 } from "./accounts";
 import {
   INBOUND_MAX_AGE_MS,
@@ -33,6 +31,11 @@ import {
   selfIdKnown,
   timestampIsRecent,
 } from "./inbound";
+
+/* Fixture ids, not ours. The real ones are environment now — see
+   ACCOUNT_UNSET_LINE in server/unipile/accounts.ts for why. */
+const DEFAULT_CALENDAR_ACCOUNT_ID = "acct_calendar_for_tests";
+const DEFAULT_WHATSAPP_ACCOUNT_ID = "acct_whatsapp_for_tests";
 
 const SECRET = "test-unipile-webhook-secret-value";
 const OUR_USER = "42000000000@s.whatsapp.net";
@@ -62,8 +65,9 @@ function liveMessage(overrides: Record<string, unknown> = {}): Record<string, un
 beforeEach(() => {
   resetInboundForTests();
   delete process.env.UNIPILE_WEBHOOK_SECRET;
-  delete process.env.UNIPILE_WHATSAPP_ACCOUNT_ID;
-  delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
+  /* The ids are environment now; these are fixtures, not ours. */
+  process.env.UNIPILE_CALENDAR_ACCOUNT_ID = DEFAULT_CALENDAR_ACCOUNT_ID;
+  process.env.UNIPILE_WHATSAPP_ACCOUNT_ID = DEFAULT_WHATSAPP_ACCOUNT_ID;
   process.env.UNIPILE_WEBHOOK_SECRET = SECRET;
 });
 

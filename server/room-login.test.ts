@@ -56,7 +56,7 @@ function jsonResponse(status: number, body: unknown): Response {
 
 function inbound(message: string, chatId = CHAT): AcceptedInboundMessage {
   return {
-    accountId: "y8T1nMDYR0ejEsMQpLr9OA",
+    accountId: "acct_whatsapp_for_tests",
     chatId,
     messageId: "msg_login_1",
     message,
