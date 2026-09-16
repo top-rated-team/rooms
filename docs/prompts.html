@@ -170,7 +170,7 @@ WHEN YOU FINISH, report exactly this:
           <h3>whatsapp-waha</h3>
           <button class="copy" data-target="p-whatsapp-waha">Copy this prompt</button>
         </header>
-        <p class="what">After the calendar moves, WhatsApp is the only thing left on the connector — and WAHA is already in this repository, two-way, in server/bridge/waha.ts.</p>
+        <p class="what">WhatsApp on top-rated.team and adgrant.ai keeps working exactly as it does — the same number, the same account, the same bindings.</p>
         <pre id="p-whatsapp-waha">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "whatsapp-waha".
 
 Read these first, before you write anything, in this order:
@@ -192,10 +192,9 @@ Read these first, before you write anything, in this order:
 Then read three files next to the ones you are about to change.
 
 WHAT YOU OWN. These files, and nothing else in the repository:
+  server/whatsapp/*
   server/waha.ts
   server/waha.test.ts
-  server/bridge/waha.ts
-  server/bridge/waha.test.ts
   server/room-login.ts
   server/room-login.test.ts
   server/booking/confirm.ts
@@ -204,7 +203,7 @@ WHAT YOU OWN. These files, and nothing else in the repository:
 
 SHARED FILES YOU MAY TOUCH, and only in the way described:
   server/routes.ts
-      - the inbound webhook and the WhatsApp routes, pointed at WAHA
+      - the inbound webhook and the WhatsApp routes, pointed at the new interface
   shared/api.ts
       - whatever the panel learns about WhatsApp, if it changes at all
 
@@ -217,34 +216,45 @@ NEVER EDIT THESE, whatever the reason:
   client/src/index.css
 
 WHAT DONE MEANS FOR THIS PARCEL:
-  WHATSAPP RUNS ON WAHA, AND THE CONNECTOR IS GONE FROM THE REPOSITORY. (1) THREE THINGS MOVE,
-  and all three have tests today: the room sign-in code a visitor sends and the inbound match
-  that proves it, the booking confirmation a visitor replies to, and the message this deployment
-  sends back. server/bridge/waha.ts already sends and already parses an inbound body — use it
-  rather than writing a second client. (2) THE SEVEN INBOUND CHECKS SURVIVE, because they are
-  the reason nobody has been able to prove a room they do not own: who it is from, who it is to,
-  which chat it is in, is it our own echo, is it a group, has the code expired, and is the
-  account ours. Read server/unipile/inbound.ts before you delete it and carry EVERY check
-  across, with its test. A check that is dropped because the new transport spells a field
-  differently is the bug this parcel exists to avoid. (3) THE IDENTIFIER CHANGES, AND THAT IS
-  SAFE EXACTLY NOW. A person is identified by a peppered hash of the chat id, and WAHA spells a
-  chat id differently from the connector, so the hashes will not match the old ones. There are
-  ZERO room bindings in the database today — verified — so nothing is orphaned. Say so in the
-  spec, because it will not be true a second time. (4) DELETE server/unipile ENTIRELY, and with
-  it every UNIPILE_ variable, every mention in .env.example, in README.md, in docs/, and in
-  every comment. The vendor's own brief, docs/specs/unipile-rooms-and-booking.md, is replaced by
-  docs/specs/whatsapp.md: what this deployment needs from WhatsApp, and HOW A FORK POINTS WAHA
-  AT ITS OWN NUMBER — a few lines, not a manual, because that is the only WhatsApp instruction a
-  partner ever gets. (5) NO PHONE NUMBER IS EVER STORED OR LOGGED. That rule predates this
-  parcel and outlives it. WHAT MUST NOT CHANGE: WhatsApp stays house-only where
-  shared/operator.ts says so, the sign-in code is still spent on first use, and the QR still
-  renders on a white plate and not at all on a phone.
+  ONE WHATSAPP INTERFACE, TWO TRANSPORTS BEHIND IT, AND ONLY ONE OF THEM IS ON GIT BY NAME. (1)
+  THE INTERFACE, in server/whatsapp/: send a message to a chat, parse an inbound body, tell me
+  our own number, tell me whether the account is alive. Everything above it — room sign-in, the
+  booking proof, the confirmation reply, the QR probe — talks to THAT and to nothing else.
+  server/waha.ts currently asks the hosted service for our own number; after this it asks the
+  interface. (2) WAHA IS THE DEFAULT AND THE ONLY ONE DOCUMENTED. server/bridge/waha.ts already
+  sends and already parses; make it the interface's WAHA transport rather than writing a second
+  client. .env.example, README.md and docs/specs/whatsapp.md describe WAHA and nothing else, and
+  docs/specs/whatsapp.md carries the few lines a fork needs: run WAHA, pair your number, set
+  these variables, point the webhook here. That is the ONLY WhatsApp instruction a partner ever
+  gets. (3) THE OTHER TRANSPORT IS A GENERIC HOSTED-API ADAPTER, server/whatsapp/hosted.ts, and
+  it names no vendor. Its base URL, its auth header, its account ids and its webhook secret all
+  come from the environment — they are values on a deployment, not strings in a repository.
+  Where a request or response shape is specific to the service we happen to use, handle it there
+  and say what the shape is, not whose it is. THIS IS NOT DECEPTION AND MUST NOT BECOME IT: the
+  file is honestly a generic adapter, and a comment at its head says so and says that the
+  vendor-specific transcript lives in private/ for whoever maintains it. (4) THE HOUSE
+  DEPLOYMENT DOES NOT CHANGE ITS BEHAVIOUR. Same number, same account, same peppered chat-id
+  hashes, so every existing binding still resolves — selecting the transport is reading the
+  environment, not a migration. If both are configured, the hosted one wins on a house host and
+  WAHA everywhere else; write that rule down where a person will find it. (5) THE SEVEN INBOUND
+  CHECKS SURVIVE INTACT — who it is from, who it is to, which chat it is in, is it our own echo,
+  is it a group, has the code expired, is the account ours — for BOTH transports, with their
+  tests. They are the reason nobody has proved a room they do not own, and a check dropped
+  because a webhook spells a field differently is the bug this parcel exists to avoid. (6) THE
+  VENDOR LEAVES THE REPOSITORY: docs/specs/unipile-rooms-and-booking.md goes, its
+  transport-neutral content — the seven checks, the four decisions, the booking shapes —
+  reappearing in docs/specs/whatsapp.md and docs/specs/booking.md written without a vendor in
+  them, and its endpoint transcript moving to private/, which is already gitignored and already
+  where things that must not be published live. Then no UNIPILE_ name, no vendor name, in any
+  tracked file. WHAT MUST NOT CHANGE: WhatsApp stays house-only where shared/operator.ts says
+  so, the sign-in code is still spent on first use, no phone number is ever stored or logged,
+  and the QR still renders on a white plate and not at all on a phone.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
-  After the calendar moves, WhatsApp is the only thing left on the connector — and WAHA is
-  already in this repository, two-way, in server/bridge/waha.ts. The owner's instruction is that
-  a fork or a white-label partner never reads the vendor's name at all: they are told, in a few
-  lines, how to point WAHA at their own WhatsApp.
+  WhatsApp on top-rated.team and adgrant.ai keeps working exactly as it does — the same number,
+  the same account, the same bindings. What changes is that the repository stops naming the
+  hosted service those two use, and describes WAHA instead, because WAHA is the only thing a
+  fork or a white-label partner can actually run.
 
 RULES
   - `npm run verify` must pass when you finish. Run it yourself.
