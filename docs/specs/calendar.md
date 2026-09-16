@@ -75,7 +75,19 @@ Four attempts, service account
 | the same with one attendee | **403 `forbiddenForServiceAccounts`** — *"Service accounts cannot invite attendees without Domain-Wide Delegation of Authority."* |
 | impersonating the owner | `401 unauthorized_client` — delegation not granted yet |
 
-So **delegation is not optional on this deployment**. A shared calendar is
+Delegation was then granted, and the same probe run again the same day:
+
+| | Result |
+|---|---|
+| impersonating the owner, with a Meet conference | **`hangoutLink` returned, `status.statusCode: "success"`** |
+| impersonating the owner, with an attendee | **accepted, no 403** |
+| impersonating the owner, conference AND attendee | **both** |
+
+So this deployment runs with `GOOGLE_CALENDAR_IMPERSONATE=true`, and the
+booking keeps everything it had: a Meet link and an invitation to the person
+who booked. Every probe event was deleted.
+
+**Delegation is not optional on this deployment.** A shared calendar is
 enough to hold a booking and no more: it loses the Meet link AND the
 invitation to the person booking, and both of those work today. The Meet
 failure is the nastier of the two because nothing reports it — the event is
