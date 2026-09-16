@@ -25,5 +25,52 @@
   ],
   "//alone": "Parcels marked runAlone touch the room, the panel or the shell - everything reads those, and two agents in them at once produce a merge nobody can check. One agent, let it finish, then start the others.",
   "//order": "The waves are in scripts/build-prompts.mjs and check-parcels.mjs reads them back. Programme three's ordering is a dependency chain, not a preference, and it has three links. (1) unipile-core is wave one ALONE because four parcels import its client; a parcel that writes its own Unipile client because the shared one did not exist yet is four incompatible error mappers. (2) booking-server and booking-dialog are the same wave and build to the request and response shapes fixed in the brief's section 3 - that is what fixing them in writing was for. (3) room-identity precedes login-create-room, because the claim dialog the site's new menu opens is the one room-identity builds. Beyond the chain, one standing rule: AT MOST ONE PARCEL PER WAVE MAY TOUCH server/routes.ts. Three parcels here need a route, and they are in three different waves for that reason alone.",
-  "parcels": {}
+  "parcels": {
+    "calendar-direct": {
+      "owns": [
+        "server/booking/gcal.ts",
+        "server/booking/gcal.test.ts",
+        "server/booking/calendar.ts",
+        "server/booking/calendar.test.ts",
+        "server/booking/slots.ts",
+        "server/booking/slots.test.ts",
+        "docs/specs/calendar.md"
+      ],
+      "seams": {
+        "server/routes.ts": [
+          "the booking routes, pointed at the new calendar client"
+        ],
+        "package.json": [
+          "a Google auth dependency, if one is genuinely needed"
+        ]
+      },
+      "runAlone": true,
+      "why": "The booking calendar is the only thing left that a third party stands between us and, and that third party's account ids were in the source of a repository that is going public. A service account with the calendar shared to it needs no consent screen, no verification, no refresh token, and no vendor.",
+      "done": "BOOKINGS TALK TO GOOGLE CALENDAR DIRECTLY, THROUGH A SERVICE ACCOUNT. (1) THE MECHANISM, and it is chosen because it avoids three things: a service account authenticates with its own key, and the owner SHARES his calendar with that account's address with permission to make changes. No OAuth consent screen, so no sensitive-scope verification and no demo video; no refresh token to store; no vendor. The key is one environment variable holding the service account JSON, and .env.example says what breaks without it and, in one line each, the two steps in Google Cloud and in Google Calendar that a person has to do by hand. (2) EVERYTHING THE BOOKING ALREADY DOES KEEPS WORKING, and there are tests for all of it: the free/busy of OUR calendar that builds the slot grid, creating the event, deleting it on cancel, moving it on reschedule, the Meet link, the invite to an address, and the 45-second cache. Read server/booking/slots.ts and calendar.ts before you write: the behaviour is specified by their tests, and those tests are the contract, not the vendor. (3) OUR OWN AVAILABILITY CAN NOW USE freeBusy.query RATHER THAN LISTING EVENTS. Listing events was a workaround for a connector with no free/busy endpoint; reading busy ranges is narrower, faster and does not bring titles and guests into this process at all. If anything genuinely needs an event's own fields, say in a comment which and why. (4) NOTHING IS WRITTEN INTO ANYBODY ELSE'S CALENDAR. One calendar, the one shared with the service account. (5) THE VISITOR'S OWN CALENDAR IS NOT YOURS TO TOUCH: server/booking/freebusy.ts is a different app, a different grant and a different person, and it stays exactly as it is. WHAT MUST NOT CHANGE: the slot grid's shape on the wire, the booking codes, the return links, and the popup. A person with a booking made yesterday must still be able to open, change and cancel it."
+    },
+    "whatsapp-waha": {
+      "owns": [
+        "server/waha.ts",
+        "server/waha.test.ts",
+        "server/bridge/waha.ts",
+        "server/bridge/waha.test.ts",
+        "server/room-login.ts",
+        "server/room-login.test.ts",
+        "server/booking/confirm.ts",
+        "server/booking/confirm.test.ts",
+        "docs/specs/whatsapp.md"
+      ],
+      "seams": {
+        "server/routes.ts": [
+          "the inbound webhook and the WhatsApp routes, pointed at WAHA"
+        ],
+        "shared/api.ts": [
+          "whatever the panel learns about WhatsApp, if it changes at all"
+        ]
+      },
+      "runAlone": true,
+      "why": "After the calendar moves, WhatsApp is the only thing left on the connector — and WAHA is already in this repository, two-way, in server/bridge/waha.ts. The owner's instruction is that a fork or a white-label partner never reads the vendor's name at all: they are told, in a few lines, how to point WAHA at their own WhatsApp.",
+      "done": "WHATSAPP RUNS ON WAHA, AND THE CONNECTOR IS GONE FROM THE REPOSITORY. (1) THREE THINGS MOVE, and all three have tests today: the room sign-in code a visitor sends and the inbound match that proves it, the booking confirmation a visitor replies to, and the message this deployment sends back. server/bridge/waha.ts already sends and already parses an inbound body — use it rather than writing a second client. (2) THE SEVEN INBOUND CHECKS SURVIVE, because they are the reason nobody has been able to prove a room they do not own: who it is from, who it is to, which chat it is in, is it our own echo, is it a group, has the code expired, and is the account ours. Read server/unipile/inbound.ts before you delete it and carry EVERY check across, with its test. A check that is dropped because the new transport spells a field differently is the bug this parcel exists to avoid. (3) THE IDENTIFIER CHANGES, AND THAT IS SAFE EXACTLY NOW. A person is identified by a peppered hash of the chat id, and WAHA spells a chat id differently from the connector, so the hashes will not match the old ones. There are ZERO room bindings in the database today — verified — so nothing is orphaned. Say so in the spec, because it will not be true a second time. (4) DELETE server/unipile ENTIRELY, and with it every UNIPILE_ variable, every mention in .env.example, in README.md, in docs/, and in every comment. The vendor's own brief, docs/specs/unipile-rooms-and-booking.md, is replaced by docs/specs/whatsapp.md: what this deployment needs from WhatsApp, and HOW A FORK POINTS WAHA AT ITS OWN NUMBER — a few lines, not a manual, because that is the only WhatsApp instruction a partner ever gets. (5) NO PHONE NUMBER IS EVER STORED OR LOGGED. That rule predates this parcel and outlives it. WHAT MUST NOT CHANGE: WhatsApp stays house-only where shared/operator.ts says so, the sign-in code is still spent on first use, and the QR still renders on a white plate and not at all on a phone."
+    }
+  }
 }

@@ -90,8 +90,21 @@ const WAVES = [
      address does not have. Re-running the parcel would undo them. */
   /* Wave 22 has run and adgrant-room-setup is retired. */
   /* Wave 23 has run and people-admin is retired. */
-  /* Wave 24 has run and testimonials is retired. The programme is finished;
-     the page below says so rather than offering nothing. */
+  /* Waves 4 to 24 are landed and retired to docs/parcels-programme-3-landed.json.
+   *
+   * PROGRAMME FOUR: the last vendor leaves. The calendar goes direct to Google
+   * through a service account, WhatsApp goes to WAHA — which is already in this
+   * repository and already two-way — and the connector is deleted, name and
+   * all, because a fork or a white-label partner is never told to sign up for
+   * something we happen to use.
+   *
+   * The order is a dependency: the calendar first, because after it moves,
+   * WhatsApp is the only thing left on the connector and the second parcel can
+   * delete the whole directory rather than half of it. Both want
+   * server/routes.ts, so they are two waves and not one.
+   */
+  { n: 25, keys: ["calendar-direct"], alone: true },
+  { n: 26, keys: ["whatsapp-waha"], alone: true },
 ];
 
 function prompt(key) {

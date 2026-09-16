@@ -45,12 +45,228 @@
 
 <div class="wrap">
   <h1>Prompts to Paste</h1>
-  <p class="lede">Nothing left to run. Every parcel in this programme has landed and
-  been retired to <code>docs/parcels-programme-3-landed.json</code>; what each one turned out to be
-  wrong about is in <code>docs/review/</code>. Add a parcel to <code>parcels.json</code>, put it in a
-  wave in <code>scripts/build-prompts.mjs</code>, rebuild, and this page fills again.</p>
+  <p class="lede">2 still to run. Copy one, paste
+  it into a fresh agent, and that is the whole job. Nothing on this page needs reading twice.</p>
 
+  <ol class="steps">
+    <li>Open a terminal in the project.
+      <div class="cmd">cd ~/Documents/ChatGPT\ Ads</div>
+    </li>
+    <li>Check the tree is clean before anyone writes in it.
+      <div class="cmd">node scripts/check-parcels.mjs &amp;&amp; npm run verify</div>
+    </li>
+    <li>Start the agents in a wave — press <b>Copy this prompt</b>, paste into a new agent, one agent per prompt.</li>
+    <li>Wait for every agent in that wave to report. <b>Do not run anything while they type.</b></li>
+    <li>Run the same two commands again. If they pass, commit. Then the next wave.</li>
+  </ol>
 
+    <section class="wave">
+      <h2>Wave 25 — this one runs alone</h2>
+      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
+      <article class="parcel">
+        <header>
+          <h3>calendar-direct</h3>
+          <button class="copy" data-target="p-calendar-direct">Copy this prompt</button>
+        </header>
+        <p class="what">The booking calendar is the only thing left that a third party stands between us and, and that third party's account ids were in the source of a repository that is going public.</p>
+        <pre id="p-calendar-direct">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "calendar-direct".
+
+Read these first, before you write anything, in this order:
+  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
+    content API and what was captured through it; the six statements in that material
+    that are wrong against Google's current documentation, each with the page that
+    contradicts it; why "generate and upload" is two products with a Google approval
+    between them; and the answer to the owner's question about per-agent limits.
+  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
+    endpoint it touches, transcribed with the URL it came from. Four decisions already
+    made, with the reasoning, so you do not spend your wave relitigating them. The
+    request and response shapes two parcels build to in parallel. And the rule the
+    owner set: every message is checked for who it is from, who it is to and which
+    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
+    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
+    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
+    A paraphrase would not, and you would find out after building on all three.
+  README.md, private/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  server/booking/gcal.ts
+  server/booking/gcal.test.ts
+  server/booking/calendar.ts
+  server/booking/calendar.test.ts
+  server/booking/slots.ts
+  server/booking/slots.test.ts
+  docs/specs/calendar.md
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  server/routes.ts
+      - the booking routes, pointed at the new calendar client
+  package.json
+      - a Google auth dependency, if one is genuinely needed
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  BOOKINGS TALK TO GOOGLE CALENDAR DIRECTLY, THROUGH A SERVICE ACCOUNT. (1) THE MECHANISM, and
+  it is chosen because it avoids three things: a service account authenticates with its own key,
+  and the owner SHARES his calendar with that account's address with permission to make changes.
+  No OAuth consent screen, so no sensitive-scope verification and no demo video; no refresh
+  token to store; no vendor. The key is one environment variable holding the service account
+  JSON, and .env.example says what breaks without it and, in one line each, the two steps in
+  Google Cloud and in Google Calendar that a person has to do by hand. (2) EVERYTHING THE
+  BOOKING ALREADY DOES KEEPS WORKING, and there are tests for all of it: the free/busy of OUR
+  calendar that builds the slot grid, creating the event, deleting it on cancel, moving it on
+  reschedule, the Meet link, the invite to an address, and the 45-second cache. Read
+  server/booking/slots.ts and calendar.ts before you write: the behaviour is specified by their
+  tests, and those tests are the contract, not the vendor. (3) OUR OWN AVAILABILITY CAN NOW USE
+  freeBusy.query RATHER THAN LISTING EVENTS. Listing events was a workaround for a connector
+  with no free/busy endpoint; reading busy ranges is narrower, faster and does not bring titles
+  and guests into this process at all. If anything genuinely needs an event's own fields, say in
+  a comment which and why. (4) NOTHING IS WRITTEN INTO ANYBODY ELSE'S CALENDAR. One calendar,
+  the one shared with the service account. (5) THE VISITOR'S OWN CALENDAR IS NOT YOURS TO TOUCH:
+  server/booking/freebusy.ts is a different app, a different grant and a different person, and
+  it stays exactly as it is. WHAT MUST NOT CHANGE: the slot grid's shape on the wire, the
+  booking codes, the return links, and the popup. A person with a booking made yesterday must
+  still be able to open, change and cancel it.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  The booking calendar is the only thing left that a third party stands between us and, and that
+  third party's account ids were in the source of a repository that is going public. A service
+  account with the calendar shared to it needs no consent screen, no verification, no refresh
+  token, and no vendor.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+    </section>
+    <section class="wave">
+      <h2>Wave 26 — this one runs alone</h2>
+      <p class="waveNote">Start it, wait for it to finish, then move on. Nothing else at the same time.</p>
+      <article class="parcel">
+        <header>
+          <h3>whatsapp-waha</h3>
+          <button class="copy" data-target="p-whatsapp-waha">Copy this prompt</button>
+        </header>
+        <p class="what">After the calendar moves, WhatsApp is the only thing left on the connector — and WAHA is already in this repository, two-way, in server/bridge/waha.ts.</p>
+        <pre id="p-whatsapp-waha">You are working in ~/Documents/ChatGPT Ads, branch main. One parcel, called "whatsapp-waha".
+
+Read these first, before you write anything, in this order:
+  docs/specs/adgrant-and-dev-agents.md — the second brief. adgrant.ai's own public
+    content API and what was captured through it; the six statements in that material
+    that are wrong against Google's current documentation, each with the page that
+    contradicts it; why "generate and upload" is two products with a Google approval
+    between them; and the answer to the owner's question about per-agent limits.
+  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile
+    endpoint it touches, transcribed with the URL it came from. Four decisions already
+    made, with the reasoning, so you do not spend your wave relitigating them. The
+    request and response shapes two parcels build to in parallel. And the rule the
+    owner set: every message is checked for who it is from, who it is to and which
+    chat it is in. Do not work from a paraphrase of the owner's request instead. Three
+    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,
+    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.
+    A paraphrase would not, and you would find out after building on all three.
+  README.md, private/doors.md, shared/doors.ts.
+Then read three files next to the ones you are about to change.
+
+WHAT YOU OWN. These files, and nothing else in the repository:
+  server/waha.ts
+  server/waha.test.ts
+  server/bridge/waha.ts
+  server/bridge/waha.test.ts
+  server/room-login.ts
+  server/room-login.test.ts
+  server/booking/confirm.ts
+  server/booking/confirm.test.ts
+  docs/specs/whatsapp.md
+
+SHARED FILES YOU MAY TOUCH, and only in the way described:
+  server/routes.ts
+      - the inbound webhook and the WhatsApp routes, pointed at WAHA
+  shared/api.ts
+      - whatever the panel learns about WhatsApp, if it changes at all
+
+Add to those, never delete from them. Other agents are editing the same files right now.
+
+NEVER EDIT THESE, whatever the reason:
+  client/index.html
+  server/index.ts
+  render.yaml
+  client/src/index.css
+
+WHAT DONE MEANS FOR THIS PARCEL:
+  WHATSAPP RUNS ON WAHA, AND THE CONNECTOR IS GONE FROM THE REPOSITORY. (1) THREE THINGS MOVE,
+  and all three have tests today: the room sign-in code a visitor sends and the inbound match
+  that proves it, the booking confirmation a visitor replies to, and the message this deployment
+  sends back. server/bridge/waha.ts already sends and already parses an inbound body — use it
+  rather than writing a second client. (2) THE SEVEN INBOUND CHECKS SURVIVE, because they are
+  the reason nobody has been able to prove a room they do not own: who it is from, who it is to,
+  which chat it is in, is it our own echo, is it a group, has the code expired, and is the
+  account ours. Read server/unipile/inbound.ts before you delete it and carry EVERY check
+  across, with its test. A check that is dropped because the new transport spells a field
+  differently is the bug this parcel exists to avoid. (3) THE IDENTIFIER CHANGES, AND THAT IS
+  SAFE EXACTLY NOW. A person is identified by a peppered hash of the chat id, and WAHA spells a
+  chat id differently from the connector, so the hashes will not match the old ones. There are
+  ZERO room bindings in the database today — verified — so nothing is orphaned. Say so in the
+  spec, because it will not be true a second time. (4) DELETE server/unipile ENTIRELY, and with
+  it every UNIPILE_ variable, every mention in .env.example, in README.md, in docs/, and in
+  every comment. The vendor's own brief, docs/specs/unipile-rooms-and-booking.md, is replaced by
+  docs/specs/whatsapp.md: what this deployment needs from WhatsApp, and HOW A FORK POINTS WAHA
+  AT ITS OWN NUMBER — a few lines, not a manual, because that is the only WhatsApp instruction a
+  partner ever gets. (5) NO PHONE NUMBER IS EVER STORED OR LOGGED. That rule predates this
+  parcel and outlives it. WHAT MUST NOT CHANGE: WhatsApp stays house-only where
+  shared/operator.ts says so, the sign-in code is still spent on first use, and the QR still
+  renders on a white plate and not at all on a phone.
+
+WHY IT EXISTS, so you can judge the edge cases yourself:
+  After the calendar moves, WhatsApp is the only thing left on the connector — and WAHA is
+  already in this repository, two-way, in server/bridge/waha.ts. The owner's instruction is that
+  a fork or a white-label partner never reads the vendor's name at all: they are told, in a few
+  lines, how to point WAHA at their own WhatsApp.
+
+RULES
+  - `npm run verify` must pass when you finish. Run it yourself.
+  - No new dependency. No change to package.json unless it is listed as yours above.
+  - No git command that changes anything: no commit, no checkout, no branch, no stash.
+  - If you need a change in a file you do not own, DO NOT make it. Put it at the end of
+    your report as a handoff: the file, the exact change, and why.
+  - Write real copy: plain words, no marketing verbs, no exclamation marks. Both light and
+    dark themes. Tailwind tokens only, never a hex colour.
+  - Anything you tell a visitor must be true of the code as it stands. If it is not true,
+    change the code or change the sentence — never ship the sentence.
+  - There is no OPENAI_API_KEY on this machine, so the Ask panel shows its "live answers
+    aren't configured" state and `npm run kb:embed` cannot run. That is normal. Do not
+    try to work around it and do not report it as a fault.
+
+WHEN YOU FINISH, report exactly this:
+  1. What you built, in plain sentences.
+  2. What you could not do, and why.
+  3. Every handoff.
+  4. The output of `npm run verify`.</pre>
+      </article>
+    </section>
 
   <footer>Generated from <code>parcels.json</code> by <code>scripts/build-prompts.mjs</code>. Change a parcel
   and rebuild — never edit a prompt here by hand, or it will name files that have moved.</footer>
