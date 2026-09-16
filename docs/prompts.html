@@ -131,9 +131,25 @@ WHAT DONE MEANS FOR THIS PARCEL:
   a comment which and why. (4) NOTHING IS WRITTEN INTO ANYBODY ELSE'S CALENDAR. One calendar,
   the one shared with the service account. (5) THE VISITOR'S OWN CALENDAR IS NOT YOURS TO TOUCH:
   server/booking/freebusy.ts is a different app, a different grant and a different person, and
-  it stays exactly as it is. WHAT MUST NOT CHANGE: the slot grid's shape on the wire, the
-  booking codes, the return links, and the popup. A person with a booking made yesterday must
-  still be able to open, change and cancel it.
+  it stays exactly as it is. (6) THE TWO VARIABLES ARE ALREADY SET ON THE DEPLOYMENT AND ARE NOT
+  YOURS TO RENAME: GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON holds the whole service-account JSON as
+  one value — parse it, and note that private_key carries escaped newlines that JSON.parse
+  restores — and GOOGLE_CALENDAR_ID is the calendar, dan@top-rated.team. The account is
+  top-rated-team@top-rated-team-cal.iam.gserviceaccount.com and the calendar is already shared
+  with it with permission to make changes. Document both in .env.example under those exact
+  names. (7) TEST THE MEET LINK BEFORE YOU BUILD ANYTHING ELSE. A booking produces a Google Meet
+  link today — it is in the bookings table and in the confirmation — and whether a service
+  account can create one on a calendar merely shared with it is the one thing nobody here has
+  verified. Google's own guide does not say it cannot; it also does not say it can. Write the
+  smallest possible script, create one event with conferenceData and conferenceDataVersion=1,
+  look at whether a link comes back, and DELETE the event. If no link comes back,
+  dan@top-rated.team is Google Workspace, so the answer is domain-wide delegation: the service
+  account impersonates him, which is configured in the Workspace admin console and needs the
+  delegation flag on the account. Say in docs/specs/calendar.md which of the two this deployment
+  ended up needing, because a fork has to make the same choice and should not have to rediscover
+  it. WHAT MUST NOT CHANGE: the slot grid's shape on the wire, the booking codes, the return
+  links, and the popup. A person with a booking made yesterday must still be able to open,
+  change and cancel it.
 
 WHY IT EXISTS, so you can judge the edge cases yourself:
   The booking calendar is the only thing left that a third party stands between us and, and that
