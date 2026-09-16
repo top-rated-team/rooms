@@ -37,7 +37,7 @@ Two steps a person has to do by hand, once:
   with "Make changes to events".
 
 Without both variables, the booking routes answer 503 with one sentence a
-visitor can read. WhatsApp still uses Unipile; that is a different grant.
+visitor can read. WhatsApp still uses the hosted connector; that is a different grant.
 
 Nothing is written into anybody else's calendar. Attendees are an invite
 Google emails; they are not a write into the visitor's calendar. The
@@ -110,7 +110,7 @@ bookings.
 
 ## Availability is freeBusy.query
 
-Listing events was a workaround for a connector with no free/busy endpoint.
+Listing events was a workaround for a hosted connector that had no free/busy endpoint.
 `freeBusy.query` is narrower, faster, and does not bring titles or guests
 into this process. Recurring instances are already expanded. All-day events
 arrive as busy ranges. Transparent events are omitted.
@@ -133,11 +133,11 @@ cached 45 seconds. Booking codes, return links and the popup contract are
 untouched. A person with a booking made yesterday can still open, change
 and cancel it.
 
-## Unipile fallback
+## the hosted connector fallback
 
 Callers this parcel does not own (`server/booking/confirm.ts`,
-`server/booking/signin.ts`, and their tests) still import Unipile's
-calendar client and still mock Unipile URLs. When the two Google variables
+`server/booking/signin.ts`, and their tests) still import the hosted connector's
+calendar client and still mock the hosted connector URLs. When the two Google variables
 are unset, `calendar.ts` and `slots.ts` keep that path so those tests hold.
 Production has the variables and takes the Google path. The handoff is to
 point those two files at `server/booking/gcal.ts`.

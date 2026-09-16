@@ -38,8 +38,8 @@ import {
   whatsappProviderId,
 } from "./room-login";
 import { claimWhatsAppSession, isSessionTicketLine, resetRoomAccountForTests, whoAmI, ROOM_SESSION_COOKIE } from "./room-account";
-import { dispatchInbound, resetInboundForTests } from "./unipile/inbound";
-import type { AcceptedInboundMessage } from "./unipile/inbound";
+import { dispatchInbound, resetInboundForTests } from "./whatsapp";
+import type { AcceptedInboundMessage } from "./whatsapp";
 
 const PUBLIC_BASE = "https://ai.top-rated.team";
 const ROOM_TOKEN = "roomTokenFromLogin";
@@ -66,6 +66,8 @@ function inbound(message: string, chatId = CHAT): AcceptedInboundMessage {
       attendeeProviderId: { form: "lid", value: "123@lid" },
     },
     timestamp: new Date().toISOString(),
+    fromMe: false,
+    isGroup: false,
   };
 }
 

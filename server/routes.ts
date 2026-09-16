@@ -55,6 +55,12 @@ import { connectorMcp, connectorRouter } from "./connector";
 import { operatorGate, readOperator, writeOperator } from "./operator";
 import { acceptUnipileInbound, dispatchInbound } from "./unipile/inbound";
 import { ensureUnipileWebhooks, INBOUND_PATH, RETIRED_INBOUND_PATHS, UNIPILE_WEBHOOK_AUTH_HEADER } from "./unipile/webhooks";
+import {
+  acceptInbound,
+  dispatchInbound as dispatchWhatsAppInbound,
+  inboundSecretHeader,
+  WHATSAPP_INBOUND_PATH,
+} from "./whatsapp";
 import { getBookingSlots, parseSlotsQuery } from "./booking/slots";
 import {
   VISITOR_CALENDAR_COOKIE,
@@ -1672,23 +1678,26 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
-  /* The retired addresses stay answerable. The reconciler moves the tenant's
-     webhooks onto INBOUND_PATH at boot, but it can only do that if it reaches
-     the provider, and a webhook still pointing at an address that 404s is a
-     confirmation silently thrown away — which is the exact failure this file
-     spent an evening on. Drop a retired path only after a boot has been seen
-     to reconcile. */
+  /* The WhatsApp interface owns inbound parse. WHATSAPP_INBOUND_PATH is the
+     address a fork points WAHA at. The retired list stays answerable so a
+     house webhook that has not moved yet is not a silent 404 — drop a retired
+     path only after a boot has been seen to reconcile. */
   app.post(
-    [INBOUND_PATH, ...RETIRED_INBOUND_PATHS],
+    Array.from(new Set([WHATSAPP_INBOUND_PATH, INBOUND_PATH, ...RETIRED_INBOUND_PATHS])),
     identityWebhookLimit,
     route(async (req, res) => {
-      const result = acceptUnipileInbound(req.body, req.get(UNIPILE_WEBHOOK_AUTH_HEADER) ?? undefined);
+      const provided =
+        req.get(inboundSecretHeader()) ??
+        req.get(UNIPILE_WEBHOOK_AUTH_HEADER) ??
+        req.get("x-webhook-secret") ??
+        undefined;
+      const result = acceptInbound(req.body, provided);
       if (!result.authorized) {
         res.status(401).json({ error: "Not found" });
         return;
       }
       res.status(200).json({ ok: true });
-      dispatchInbound(result);
+      dispatchWhatsAppInbound(result);
     }),
   );
 

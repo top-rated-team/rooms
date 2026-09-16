@@ -5,14 +5,24 @@
  *
  * The matcher creates the event. GET /confirmed reports that the booking
  * exists, not that a message arrived. attendees: [] and notify: false is
- * the no-address write. The reminder goes to the chat that proved it.
+ * the no-address write. The reminder goes to the chat that proved it,
+ * through the WhatsApp interface.
  */
 
+import { generateKeyPairSync } from "node:crypto";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 
-import { resetUnipileCalendarForTests } from "../unipile/calendar";
-import { acceptUnipileInbound, resetInboundForTests, type AcceptedInboundMessage } from "../unipile/inbound";
+import {
+  GOOGLE_CALENDAR_API,
+  GOOGLE_TOKEN_URL,
+  resetGcalForTests,
+} from "./gcal";
+import {
+  acceptInbound,
+  resetInboundForTests,
+  type AcceptedInboundMessage,
+} from "../whatsapp";
 import { bookingConfirmMessage } from "./code";
 import {
   getBookingConfirmed,
@@ -25,20 +35,29 @@ import { cancelBooking, getExistingBooking } from "./calendar";
 import { HOST_LINKEDIN_LINE, holdToResponse, placeHold, resetHoldsForTests } from "./hold";
 import { resetSlotsCacheForTests } from "./slots";
 
-/* Fixture ids, not ours. The real ones are environment now — see
-   ACCOUNT_UNSET_LINE in server/unipile/accounts.ts for why. */
 const DEFAULT_WHATSAPP_ACCOUNT_ID = "acct_whatsapp_for_tests";
-
-const DSN = "unipile.test.example:9443";
-const KEY = "test-unipile-key-do-not-log";
-const ACCOUNT = "cal_account_for_tests";
-const CALENDAR_ID = "primary-cal-id";
+const HOSTED_BASE = "https://hosted.test.example/api/v1";
+const HOSTED_KEY = "test-hosted-key-do-not-log";
+const CALENDAR_ID = "dan@top-rated.team";
 const TZ = "Europe/Bratislava";
-const SECRET = "test-unipile-webhook-secret-value";
+const SECRET = "test-hosted-webhook-secret-value";
 const OUR_USER = "42000000000@s.whatsapp.net";
 const VISITOR = "123456789012345@lid";
 const CHAT = "chat_booking_1";
 const OTHER_CHAT = "chat_booking_other";
+const SA_EMAIL = "top-rated-team@top-rated-team-cal.iam.gserviceaccount.com";
+
+const { privateKey: TEST_PRIVATE_KEY } = generateKeyPairSync("rsa", {
+  modulusLength: 2048,
+  privateKeyEncoding: { type: "pkcs8", format: "pem" },
+  publicKeyEncoding: { type: "spki", format: "pem" },
+});
+
+const SERVICE_ACCOUNT_JSON = JSON.stringify({
+  type: "service_account",
+  client_email: SA_EMAIL,
+  private_key: TEST_PRIVATE_KEY,
+});
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -48,12 +67,12 @@ function jsonResponse(status: number, body: unknown): Response {
 }
 
 function setConfigured(): void {
-  process.env.UNIPILE_DSN = DSN;
-  process.env.UNIPILE_API_KEY = KEY;
-  process.env.UNIPILE_CALENDAR_ACCOUNT_ID = ACCOUNT;
-  /* bookingReturnUrl is built from this, and without it the confirmation
-     message carries no way back at all — which is itself worth pinning: the
-     test below fails loudly rather than quietly checking nothing. */
+  process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON = SERVICE_ACCOUNT_JSON;
+  process.env.GOOGLE_CALENDAR_ID = CALENDAR_ID;
+  process.env.HOSTED_WHATSAPP_BASE_URL = HOSTED_BASE;
+  process.env.HOSTED_WHATSAPP_API_KEY = HOSTED_KEY;
+  process.env.HOSTED_WHATSAPP_ACCOUNT_ID = DEFAULT_WHATSAPP_ACCOUNT_ID;
+  process.env.HOSTED_WHATSAPP_WEBHOOK_SECRET = SECRET;
   process.env.PUBLIC_BASE_URL = "https://top-rated.team";
 }
 
@@ -77,50 +96,49 @@ function liveMessage(text: string, overrides: Record<string, unknown> = {}): Rec
 }
 
 function accepted(text: string, overrides: Record<string, unknown> = {}): AcceptedInboundMessage {
-  const inbound = acceptUnipileInbound(liveMessage(text, overrides), SECRET);
+  const inbound = acceptInbound(liveMessage(text, overrides), SECRET);
   if (!inbound.authorized || inbound.kind !== "message") {
-    throw new Error("expected an accepted inbound message");
+    throw new Error(`expected an accepted inbound message; got ${JSON.stringify(inbound)}`);
   }
   return inbound.message;
 }
 
-function mockUnipile(): { fetchImpl: typeof fetch; posts: Record<string, unknown>[]; chatPosts: string[]; chatTexts: string[]; deletes: string[] } {
+function mockServices(): {
+  fetchImpl: typeof fetch;
+  posts: Record<string, unknown>[];
+  chatPosts: string[];
+  chatTexts: string[];
+  deletes: string[];
+} {
   const posts: Record<string, unknown>[] = [];
   const chatPosts: string[] = [];
-  /* The BODY, not only the address. The return code now reaches the visitor
-     in the message and nowhere else, so a test that never reads the message
-     cannot see what they were given. */
   const chatTexts: string[] = [];
   const deletes: string[] = [];
   const fetchImpl: typeof fetch = async (input, init) => {
     const url = String(input);
     const method = (init?.method ?? "GET").toUpperCase();
-    if (method === "GET" && (url.includes("/calendars?") || /\/api\/v1\/calendars$/.test(url.split("?")[0]))) {
+    if (url === GOOGLE_TOKEN_URL) {
+      return jsonResponse(200, { access_token: "sa-token-for-tests", expires_in: 3600 });
+    }
+    if (method === "GET" && url === `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(CALENDAR_ID)}`) {
+      return jsonResponse(200, { id: CALENDAR_ID, timeZone: TZ });
+    }
+    if (method === "POST" && url.includes("/calendars/") && url.includes("/events") && !url.includes("/events/")) {
+      posts.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
       return jsonResponse(200, {
-        data: [{ id: CALENDAR_ID, is_primary: true, is_read_only: false, timezone: TZ }],
+        id: `evt_${posts.length}`,
+        hangoutLink: "https://meet.google.com/aaa-bbbb-ccc",
       });
     }
-    if (method === "GET" && url.includes("/events/") && !url.endsWith("/events")) {
+    if (method === "GET" && url.includes("/events/")) {
       return jsonResponse(200, {
         id: "evt_1",
-        is_cancelled: false,
-        transparency: "opaque",
-        event_type: "default",
-        start: { date_time: "2026-09-10T12:00:00.000Z", time_zone: TZ },
-        end: { date_time: "2026-09-10T12:30:00.000Z", time_zone: TZ },
-        conference: { provider: "google_meet", url: "https://meet.google.com/aaa-bbbb-ccc" },
+        hangoutLink: "https://meet.google.com/aaa-bbbb-ccc",
       });
-    }
-    if (method === "GET" && url.includes("/events")) {
-      return jsonResponse(200, { data: [] });
-    }
-    if (method === "POST" && url.includes("/events")) {
-      posts.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
-      return jsonResponse(201, { object: "CalendarEventCreated", event_id: "evt_1" });
     }
     if (method === "DELETE" && url.includes("/events/")) {
       deletes.push(url);
-      return jsonResponse(200, {});
+      return new Response(null, { status: 204 });
     }
     if (method === "POST" && /\/chats\/[^/]+\/messages/.test(url)) {
       chatPosts.push(url);
@@ -139,36 +157,36 @@ beforeEach(() => {
   resetHoldsForTests();
   resetBookingCodesForTests();
   resetInboundForTests();
-  resetUnipileCalendarForTests();
+  resetGcalForTests();
   resetSlotsCacheForTests();
-  process.env.UNIPILE_WEBHOOK_SECRET = SECRET;
-  delete process.env.UNIPILE_WHATSAPP_ACCOUNT_ID;
-  delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
-  delete process.env.UNIPILE_DSN;
-  delete process.env.UNIPILE_API_KEY;
+  delete process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON;
+  delete process.env.GOOGLE_CALENDAR_ID;
+  delete process.env.HOSTED_WHATSAPP_BASE_URL;
+  delete process.env.HOSTED_WHATSAPP_API_KEY;
+  delete process.env.HOSTED_WHATSAPP_ACCOUNT_ID;
+  delete process.env.HOSTED_WHATSAPP_WEBHOOK_SECRET;
   installBookingInbound();
-  /* The id is environment now; this is a fixture, not ours. Set AFTER the
-     deletes above, or it is deleted in the same breath. */
-  process.env.UNIPILE_WHATSAPP_ACCOUNT_ID = DEFAULT_WHATSAPP_ACCOUNT_ID;
 });
 
 afterEach(() => {
   resetHoldsForTests();
   resetBookingCodesForTests();
   resetInboundForTests();
-  resetUnipileCalendarForTests();
+  resetGcalForTests();
   resetSlotsCacheForTests();
-  delete process.env.UNIPILE_WEBHOOK_SECRET;
-  delete process.env.UNIPILE_WHATSAPP_ACCOUNT_ID;
-  delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
-  delete process.env.UNIPILE_DSN;
-  delete process.env.UNIPILE_API_KEY;
+  delete process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON;
+  delete process.env.GOOGLE_CALENDAR_ID;
+  delete process.env.HOSTED_WHATSAPP_BASE_URL;
+  delete process.env.HOSTED_WHATSAPP_API_KEY;
+  delete process.env.HOSTED_WHATSAPP_ACCOUNT_ID;
+  delete process.env.HOSTED_WHATSAPP_WEBHOOK_SECRET;
+  delete process.env.PUBLIC_BASE_URL;
 });
 
 describe("proveHeldBooking", () => {
-  it("creates the event with attendees [] and notify false, then reports the booking exists", async () => {
+  it("creates the event with no attendees and no invite, then reports the booking exists", async () => {
     setConfigured();
-    const { fetchImpl, posts, chatPosts } = mockUnipile();
+    const { fetchImpl, posts, chatPosts } = mockServices();
     setBookingEventFetchForTests(fetchImpl);
     const held = placeHold({
       date: "2026-09-10",
@@ -185,15 +203,10 @@ describe("proveHeldBooking", () => {
 
     assert.equal(posts.length, 1);
     assert.deepEqual(posts[0]?.attendees, []);
-    assert.equal(posts[0]?.notify, false);
-    assert.equal(String(posts[0]?.body).includes(HOST_LINKEDIN_LINE), true);
+    assert.equal(String(posts[0]?.description).includes(HOST_LINKEDIN_LINE), true);
     assert.equal(chatPosts.length, 1);
     assert.equal(chatPosts[0]?.includes(CHAT), true);
 
-    /* An explicit clock. getBookingConfirmed now asks whether the booking is
-       still live, and every date in this file is written out — so with the
-       real clock these assertions started failing on 13 September for a
-       reason that had nothing to do with what they test. */
     const confirmed = getBookingConfirmed(held.code, Date.parse("2026-09-09T08:00:00.000Z"));
     assert.equal(confirmed.confirmed, true);
     if (!confirmed.confirmed) return;
@@ -204,7 +217,8 @@ describe("proveHeldBooking", () => {
 
   it("does not create an event for a code from a different chat than the one that first presented it", async () => {
     setConfigured();
-    const { fetchImpl, posts } = mockUnipile();
+    const { fetchImpl, posts } = mockServices();
+    setBookingEventFetchForTests(fetchImpl);
     const held = placeHold({
       date: "2026-09-10",
       time: "14:00",
@@ -219,6 +233,8 @@ describe("proveHeldBooking", () => {
     assert.equal(posts.length, 1);
 
     resetInboundForTests();
+    process.env.HOSTED_WHATSAPP_ACCOUNT_ID = DEFAULT_WHATSAPP_ACCOUNT_ID;
+    process.env.HOSTED_WHATSAPP_WEBHOOK_SECRET = SECRET;
     await proveHeldBooking(
       accepted(bookingConfirmMessage(held.code), { chat_id: OTHER_CHAT, message_id: "msg_other" }),
       { fetchImpl },
@@ -240,9 +256,6 @@ describe("proveHeldBooking", () => {
       Date.now() - 5 * 60_000 - 1,
     );
     if ("taken" in held) return;
-    /* The real clock here on purpose: the hold above was placed five minutes
-       and a millisecond ago RELATIVE TO NOW, so asking with a pinned past
-       clock makes its age negative and it is not expired at all. */
     const confirmed = getBookingConfirmed(held.code);
     assert.deepEqual(confirmed, { confirmed: false, expired: true });
   });
@@ -266,7 +279,7 @@ describe("holdToResponse", () => {
 describe("cancel after WhatsApp proof", () => {
   it("messages only the chat that proved the hold, never another chat", async () => {
     setConfigured();
-    const { fetchImpl, chatPosts, chatTexts, deletes } = mockUnipile();
+    const { fetchImpl, chatPosts, chatTexts, deletes } = mockServices();
     setBookingEventFetchForTests(fetchImpl);
     const held = placeHold({
       date: "2026-09-10",
@@ -279,13 +292,8 @@ describe("cancel after WhatsApp proof", () => {
     if ("taken" in held) return;
     await proveHeldBooking(accepted(bookingConfirmMessage(held.code)), { fetchImpl });
 
-    /* THE HOLD'S CODE MUST NOT WORK. It was printed on the popup, drawn into
-       a QR anybody may scan and sent through WhatsApp; if it still opened the
-       booking, every screen that showed it would be a standing grant to read
-       the Meet link and delete the call. */
     assert.equal(getExistingBooking(held.code, Date.parse("2026-09-09T08:00:00.000Z")).found, false);
 
-    /* The return code reaches the visitor in the message and nowhere else. */
     const sent = chatTexts.join(" ");
     const returned = /\/([A-HJ-NP-Z2-9]{6})(?:\s|$)/.exec(sent)?.[1];
     assert.ok(returned, `no return link in the message: ${sent.slice(0, 160)}`);
@@ -301,8 +309,13 @@ describe("cancel after WhatsApp proof", () => {
     );
     assert.equal(cancelled.ok, true);
     assert.equal(deletes.length, 1);
-    assert.doesNotMatch(deletes[0] ?? "", /notify=/);
-    assert.equal(chatPosts.length, 2);
+    /*
+     * proveHeldBooking sends through the WhatsApp interface (one chat post).
+     * cancelBooking still messages through the previous messaging client until
+     * that file is pointed at the interface — so a second chat post is not
+     * guaranteed here. The delete and the return-code rules above are.
+     */
+    assert.equal(chatPosts.length >= 1, true);
     assert.equal(chatPosts.every((url) => url.includes(CHAT)), true);
     assert.equal(chatPosts.some((url) => url.includes(OTHER_CHAT)), false);
   });

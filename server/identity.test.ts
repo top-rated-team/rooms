@@ -379,9 +379,9 @@ describe("inbound extraction", () => {
 });
 
 describe("WAHA helpers", () => {
-  it("treats Unipile as unavailable without throwing", async () => {
-    process.env.UNIPILE_DSN = "api1.example.test:13111";
-    process.env.UNIPILE_API_KEY = "test-unipile-key";
+  it("treats an unreachable hosted transport as unavailable without throwing", async () => {
+    process.env.HOSTED_WHATSAPP_BASE_URL = "https://api1.example.test:13111/api/v1";
+    process.env.HOSTED_WHATSAPP_API_KEY = "test-key";
     const probe = await probeWaha(async () => {
       throw new Error("ECONNREFUSED");
     });
@@ -390,7 +390,9 @@ describe("WAHA helpers", () => {
     assert.equal(probe.line, WAHA_UNAVAILABLE_LINE);
   });
 
-  it("says WhatsApp is not configured when Unipile env vars are missing", async () => {
+  it("says WhatsApp is not configured when no transport is set", async () => {
+    delete process.env.HOSTED_WHATSAPP_BASE_URL;
+    delete process.env.HOSTED_WHATSAPP_API_KEY;
     delete process.env.UNIPILE_DSN;
     delete process.env.UNIPILE_API_KEY;
     const probe = await probeWaha(async () => {

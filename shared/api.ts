@@ -328,9 +328,9 @@ export interface RoomBridge {
 }
 
 /* ------------------------------- booking ---------------------------------- */
-/* Fixed in docs/specs/unipile-rooms-and-booking.md §3 so booking-server and
- * booking-dialog can build in parallel. Slots are local wall-clock times in
- * `timezone`. email is the only optional field on the create body. */
+/* Fixed in docs/specs/booking.md so booking-server and booking-dialog can
+ * build in parallel. Slots are local wall-clock times in `timezone`. email is
+ * the only optional field on the create body. */
 
 export interface BookingDay {
   date: string;

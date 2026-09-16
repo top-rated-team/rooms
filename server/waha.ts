@@ -1,23 +1,19 @@
 /**
- * The one-way WhatsApp client for room identity: a click-to-chat link (and a
- * QR of that link) that opens WhatsApp with a pre-filled message carrying the
- * room's address, sent to us.
+ * Click-to-chat and the QR of that link. Send, inbound parse, our own number
+ * and whether the account is alive live in server/whatsapp/ — this file asks
+ * that interface for our number, and builds the wa.me URL plus a QR of it.
  *
- * Our own number is learned from Unipile — GET /api/v1/accounts/{id} — so the
- * wa.me link has a destination. The visitor still taps that link and messages
- * us. We do not connect their WhatsApp. When Unipile is down, unconfigured, or
- * the account has no number, the probe fails with a sentence — the identity
- * layer then keeps the LinkedIn route and prints that sentence. There is no
- * dead button.
+ * The visitor still taps that link and messages us. We do not connect their
+ * WhatsApp. When WhatsApp is down, unconfigured, or the account has no
+ * number, the probe fails with a sentence — the identity layer then keeps
+ * the LinkedIn route and prints that sentence. There is no dead button.
  *
  * This is not the two-way bridge. It does not send a reply, does not read a
  * contact list, and does not log a phone number. The only number it needs is
  * ours, so a wa.me link has somewhere to go; that number is not stored.
  */
 
-import { WHATSAPP_URL } from "@shared/roster";
-import { available, unipileRequest } from "./unipile/client";
-import { whatsappAccountId } from "./unipile/accounts";
+import { digitsFromAccountBody, digitsFromMeId, probeWhatsApp } from "./whatsapp";
 
 /** Printed when WhatsApp cannot be used. Identity keeps the LinkedIn route. */
 export const WAHA_UNAVAILABLE_LINE =
@@ -33,60 +29,13 @@ export type WahaProbe =
   | { ok: true; digits: string }
   | { ok: false; line: string };
 
-function publishedDigits(): string | null {
-  const match = /wa\.me\/(\d+)/.exec(WHATSAPP_URL);
-  return match?.[1] ?? null;
-}
-
-/** Digits only, which is what wa.me wants. */
-export function digitsFromMeId(id: string): string | null {
-  const trimmed = id.trim();
-  const beforeAt = trimmed.includes("@") ? trimmed.slice(0, trimmed.indexOf("@")) : trimmed;
-  const digits = beforeAt.replace(/\D/g, "");
-  return digits.length >= 8 ? digits : null;
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (value === null || typeof value !== "object") return null;
-  return value as Record<string, unknown>;
-}
+export { digitsFromMeId, digitsFromAccountBody };
 
 /**
- * Pull digits off a Unipile account body without keeping the body. Phone
- * numbers live in connection_params; the accounts parser drops that field,
- * so this probe reads it once and returns only digits.
+ * Alias kept while identity.test.ts still imports this name. Prefer
+ * digitsFromAccountBody. Handoff: repoint that import and delete this line.
  */
-export function digitsFromUnipileAccount(body: unknown): string | null {
-  const record = asRecord(body);
-  if (!record) return null;
-
-  const params = asRecord(record.connection_params);
-  if (params) {
-    const im = asRecord(params.im);
-    const fromIm = im && typeof im.phone_number === "string" ? digitsFromMeId(im.phone_number) : null;
-    if (fromIm) return fromIm;
-    if (typeof params.phone_number === "string") {
-      const fromParams = digitsFromMeId(params.phone_number);
-      if (fromParams) return fromParams;
-    }
-  }
-
-  if (typeof record.id === "string") {
-    const fromId = digitsFromMeId(record.id);
-    if (fromId) return fromId;
-  }
-  return null;
-}
-
-function sourceIsOk(body: unknown): boolean {
-  const record = asRecord(body);
-  if (!record) return false;
-  const sources = Array.isArray(record.sources) ? record.sources : [];
-  return sources.some((source) => {
-    const row = asRecord(source);
-    return row?.status === "OK";
-  });
-}
+export const digitsFromUnipileAccount = digitsFromAccountBody;
 
 /**
  * Click-to-chat. The visitor's own WhatsApp opens with `text` already written,
@@ -98,34 +47,13 @@ export function waMeUrl(digits: string, text: string): string {
 }
 
 /**
- * Asks Unipile who we are on our own WhatsApp account. A timeout, a 5xx, a
- * missing account or an account with no number are all the same fact to the
- * visitor: WhatsApp is not a route right now. The raw body is not logged — it
- * can carry a phone number.
+ * Asks the WhatsApp interface who we are on our own account. A timeout, a
+ * 5xx, a missing account or an account with no number are all the same fact
+ * to the visitor: WhatsApp is not a route right now. The raw body is not
+ * logged — it can carry a phone number.
  */
 export async function probeWaha(fetchImpl: typeof fetch = fetch): Promise<WahaProbe> {
-  if (!available()) return { ok: false, line: WAHA_UNCONFIGURED_LINE };
-
-  const accountId = whatsappAccountId();
-  try {
-    const result = await unipileRequest<unknown>(
-      {
-        method: "GET",
-        path: `/accounts/${encodeURIComponent(accountId)}`,
-      },
-      fetchImpl,
-    );
-    if (!result.ok) {
-      if (result.error.status === 404) return { ok: false, line: WAHA_DISCONNECTED_LINE };
-      return { ok: false, line: WAHA_UNAVAILABLE_LINE };
-    }
-    if (!sourceIsOk(result.body)) return { ok: false, line: WAHA_DISCONNECTED_LINE };
-    const digits = digitsFromUnipileAccount(result.body) ?? publishedDigits();
-    if (!digits) return { ok: false, line: WAHA_DISCONNECTED_LINE };
-    return { ok: true, digits };
-  } catch {
-    return { ok: false, line: WAHA_UNAVAILABLE_LINE };
-  }
+  return probeWhatsApp(fetchImpl);
 }
 
 /* -------------------------------- QR of a link -------------------------------- */

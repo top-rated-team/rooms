@@ -43,7 +43,7 @@ import {
   sessionTicketFromLine,
   type LinkedInTicketFinish,
 } from "./room-account";
-import { registerInboundMatcher, type AcceptedInboundMessage } from "./unipile/inbound";
+import { registerInboundMatcher, type AcceptedInboundMessage } from "./whatsapp";
 import { probeWaha, qrSvg, waMeUrl, type WahaProbe } from "./waha";
 
 const PENDING_MS = 15 * 60_000;

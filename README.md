@@ -72,6 +72,7 @@ that lies is worse than one that admits what it cannot do.
 | `data/kb/kb.json` | Retrieval returns nothing and the agent says what it is missing. |
 | `data/kb/kb.embeddings.json` | Retrieval falls back to BM25-style keyword scoring. |
 | `LEAD_WEBHOOK_URL` | Leads are printed to stdout in a readable block instead of being POSTed. |
+| `WAHA_BASE_URL` | WhatsApp paths report unavailable in one sentence. LinkedIn stays the way in. See `docs/specs/whatsapp.md`. |
 
 ## Layout
 

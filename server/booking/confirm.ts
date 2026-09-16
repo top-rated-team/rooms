@@ -1,7 +1,7 @@
 /**
  * Match the inbound WhatsApp that carries a planted booking code, create the
  * event, and answer GET /api/booking/confirmed. The seven inbound checks
- * belong to server/unipile/inbound.ts; this file registers a matcher and does
+ * belong to server/whatsapp/; this file registers a matcher and does
  * not parse a webhook itself.
  *
  * confirmed means the booking exists — the calendar event was written —
@@ -13,10 +13,9 @@
  */
 
 import type { BookingConfirmedResponse } from "@shared/api";
-import { getPrimaryCalendar } from "../unipile/calendar";
-import { registerInboundMatcher, type AcceptedInboundMessage } from "../unipile/inbound";
-import { sendInChat } from "../unipile/messaging";
+import { registerInboundMatcher, sendMessage, type AcceptedInboundMessage } from "../whatsapp";
 import { createBookingEvent } from "./calendar";
+import { available as gcalAvailable, getOurCalendar } from "./gcal";
 import { BOOKING_CODE_RE, extractBookingCode, mintBookingCode } from "./code";
 import {
   HOLD_TTL_MS,
@@ -157,15 +156,19 @@ export async function proveHeldBooking(
   if (!bound) return;
   if (bound.eventId) return;
 
-  const primary = await getPrimaryCalendar(fetchImpl);
-  if (!primary.ok) return;
+  let calendarId = "";
+  if (gcalAvailable()) {
+    const primary = await getOurCalendar(fetchImpl);
+    if (!primary.ok) return;
+    calendarId = primary.calendar.id;
+  }
   const starts = wallClockToUtc(bound.date, bound.time, bound.timezone);
   if (!starts) return;
   const ends = new Date(starts.getTime() + SLOT_MINUTES * 60_000);
 
   const created = await createBookingEvent(
     {
-      calendarId: primary.calendar.id,
+      calendarId,
       timezone: bound.timezone,
       starts,
       ends,
@@ -199,7 +202,7 @@ export async function proveHeldBooking(
   recordBooking({
     code: returnCode,
     eventId: created.eventId,
-    calendarId: primary.calendar.id,
+    calendarId,
     date: proved.date,
     time: proved.time,
     startsAt: proved.startsAt,
@@ -216,7 +219,7 @@ export async function proveHeldBooking(
   invalidateSlotsCache();
 
   if (!proved.chatId) return;
-  await sendInChat({ chatId: proved.chatId, text: reminderText(proved, returnCode) }, fetchImpl);
+  await sendMessage({ chatId: proved.chatId, text: reminderText(proved, returnCode) }, fetchImpl);
 }
 
 function onBookingMessage(message: AcceptedInboundMessage): void {
