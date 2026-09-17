@@ -53,8 +53,7 @@ import {
 import { startDigestSchedule } from "./schedule";
 import { connectorMcp, connectorRouter } from "./connector";
 import { operatorGate, readOperator, writeOperator } from "./operator";
-import { acceptUnipileInbound, dispatchInbound } from "./unipile/inbound";
-import { ensureUnipileWebhooks, INBOUND_PATH, RETIRED_INBOUND_PATHS, UNIPILE_WEBHOOK_AUTH_HEADER } from "./unipile/webhooks";
+import { ensureInboundWebhooks, INBOUND_AUTH_HEADER, INBOUND_PATH, RETIRED_INBOUND_PATHS } from "./whatsapp/webhooks";
 import {
   acceptInbound,
   dispatchInbound as dispatchWhatsAppInbound,
@@ -1688,7 +1687,7 @@ export function registerRoutes(app: Express): void {
     route(async (req, res) => {
       const provided =
         req.get(inboundSecretHeader()) ??
-        req.get(UNIPILE_WEBHOOK_AUTH_HEADER) ??
+        req.get(INBOUND_AUTH_HEADER) ??
         req.get("x-webhook-secret") ??
         undefined;
       const result = acceptInbound(req.body, provided);
@@ -2102,5 +2101,5 @@ export function registerRoutes(app: Express): void {
   // Off unless WEEKLY_DIGEST is set. server/index.ts is frozen, so this is the mount.
   startDigestSchedule();
   installBookingInbound();
-  void ensureUnipileWebhooks();
+  void ensureInboundWebhooks();
 }

@@ -489,31 +489,5 @@ export function dispatchInbound(result: InboundResult): void {
       /* a matcher must not take the process down */
     });
   }
-  forwardToLegacyRoomBind(message);
 }
 
-/**
- * Temporary bridge for room binding. Remove once identity.ts registers with
- * this module. The import path is the previous inbound module; this parcel
- * does not own that file and cannot repoint it.
- */
-function forwardToLegacyRoomBind(message: AcceptedInboundMessage): void {
-  void import("../unipile/inbound")
-    .then((legacy) => {
-      legacy.dispatchInbound({
-        authorized: true,
-        kind: "message",
-        message: {
-          accountId: message.accountId,
-          chatId: message.chatId,
-          messageId: message.messageId,
-          message: message.message,
-          sender: message.sender,
-          timestamp: message.timestamp,
-        },
-      });
-    })
-    .catch(() => {
-      /* the previous module may already be gone on a fork */
-    });
-}

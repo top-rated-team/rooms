@@ -10,7 +10,7 @@
  * real navigation. With JavaScript a plain left click preventDefault's and the
  * popup opens; a cmd-click is left alone so it still opens a tab.
  *
- * WHY WARMING IS A SLOTS FETCH. Unipile has no free/busy endpoint. Slots are
+ * WHY WARMING IS A SLOTS FETCH. the hosted connector has no free/busy endpoint. Slots are
  * computed on our server and cached briefly. Fetching them on the first
  * pointer, key or scroll anywhere on the page means a tap on a phone is not
  * racing the network — there is no hover, and touchstart is only about 50 ms

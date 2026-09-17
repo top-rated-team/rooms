@@ -14,7 +14,7 @@
  *
  *   - LinkedIn, through the official Sign In with LinkedIn (OpenID Connect)
  *     authorization screen. Nothing scraped, nothing session-based.
- *   - WhatsApp, through Unipile on our own number only: a wa.me link or a QR
+ *   - WhatsApp, through the hosted connector on our own number only: a wa.me link or a QR
  *     of that link opens WhatsApp with a pre-filled message carrying this
  *     room's address, sent to us. The visitor still taps a wa.me link. We
  *     do not connect their WhatsApp.
@@ -55,7 +55,7 @@ export { hydrateIdentityStore };
 import {
   registerInboundMatcher,
   type AcceptedInboundMessage,
-} from "./unipile/inbound";
+} from "./whatsapp";
 import {
   WAHA_UNAVAILABLE_LINE,
   probeWaha,
@@ -666,8 +666,8 @@ async function bindFromWhatsAppFields(fields: InboundFields): Promise<boolean> {
  * room is left exactly as it was. The chat id is hashed; the raw payload is
  * not logged.
  *
- * Kept for the WAHA-shaped webhook that is still registered. Unipile inbound
- * goes through installIdentityInbound() and hashes Unipile's chat_id the same way.
+ * Kept for the WAHA-shaped webhook that is still registered. the hosted connector inbound
+ * goes through installIdentityInbound() and hashes the hosted connector's chat_id the same way.
  */
 export async function acceptWhatsAppInbound(
   raw: unknown,
@@ -680,7 +680,7 @@ export async function acceptWhatsAppInbound(
   return { accepted: true, bound };
 }
 
-function onUnipileIdentityMessage(message: AcceptedInboundMessage): void {
+function onIdentityMessage(message: AcceptedInboundMessage): void {
   const pushName = message.sender.attendeeName?.trim() ?? "";
   void bindFromWhatsAppFields({
     chatId: message.chatId,
@@ -689,11 +689,11 @@ function onUnipileIdentityMessage(message: AcceptedInboundMessage): void {
   });
 }
 
-/** Register once with Unipile's inbound dispatcher. Idempotent. */
+/** Register once with the hosted connector's inbound dispatcher. Idempotent. */
 export function installIdentityInbound(): void {
   if (inboundMatcherInstalled) return;
   inboundMatcherInstalled = true;
-  uninstallInbound = registerInboundMatcher(onUnipileIdentityMessage);
+  uninstallInbound = registerInboundMatcher(onIdentityMessage);
 }
 
 export async function saveWhatsAppNote(workspaceId: string, number: string): Promise<RoomClaimState> {

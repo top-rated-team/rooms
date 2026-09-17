@@ -5,7 +5,7 @@ generator, or the Google Ads Dev and LinkedIn Dev agents say "read this first", 
 why: the content that is being carried over is wrong in six places, and the feature that
 sounds like one product is two with a Google-shaped approval between them.**
 
-`docs/specs/unipile-rooms-and-booking.md` is the other brief and still applies — the Unipile
+`docs/specs/the hosted connector-rooms-and-booking.md` is the other brief and still applies — the the hosted connector
 contract, the identity decisions, and the message rule are all there.
 
 **[V]** = verified this week against a live API, a repository file, or Google's own
@@ -175,7 +175,7 @@ bidding is still in play.
 ## 3. The two dev agents, and the limit question answered
 
 The owner asked for **Google Ads Dev** (official Google Ads API, on the Top-Rated Team MCC)
-and **LinkedIn Dev** (Unipile API, described white-label because we are only the developer),
+and **LinkedIn Dev** (the hosted connector API, described white-label because we are only the developer),
 both helping a client build their own agents against those platforms, in every Google Ads,
 paid-ads and dev room.
 

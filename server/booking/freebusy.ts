@@ -17,7 +17,7 @@
  * include_granted_scopes is sent as false so a previous grant of a wider
  * scope on this app cannot ride along.
  *
- * WHY NOT THROUGH THE SCHEDULING CONNECTOR. Unipile has no free/busy
+ * WHY NOT THROUGH THE SCHEDULING CONNECTOR. the hosted connector has no free/busy
  * endpoint. Availability there is computed by listing events, which would
  * hand us titles, guests and locations to answer a question whose whole
  * content is "busy or not". Direct is the narrow path. It is also the only
@@ -37,7 +37,7 @@
  * DISCONNECT REMOVES THAT VISITOR'S OWN GOOGLE ACCOUNT AND NOTHING ELSE.
  * Never dan@top-rated.team, never any LinkedIn or WhatsApp account. Drop
  * revokes the visitor's token at Google and deletes the row. It does not
- * call Unipile.
+ * call the hosted connector.
  */
 
 import { nanoid } from "nanoid";
@@ -415,7 +415,7 @@ function takeConnection(handle: string | undefined, now: number): StoredVisitorC
 
 /**
  * Drop this visitor's Google token and nothing else. Revokes it at Google so
- * the grant leaves their account. Does not call Unipile, does not name
+ * the grant leaves their account. Does not call the hosted connector, does not name
  * dan@top-rated.team, and does not touch a LinkedIn or WhatsApp row.
  */
 export async function dropVisitorCalendar(

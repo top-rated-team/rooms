@@ -9,8 +9,8 @@
  * the invite go through the same client. Nothing is written into anybody
  * else's calendar.
  *
- * Callers this parcel does not own still configure only Unipile in their
- * tests. When the two Google variables are unset, the Unipile calendar path
+ * Callers this parcel does not own still configure only the hosted connector in their
+ * tests. When the two Google variables are unset, the the hosted connector calendar path
  * remains so those tests keep their contract. Production has the variables
  * and never takes that branch.
  *

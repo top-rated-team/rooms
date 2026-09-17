@@ -3,7 +3,7 @@
  *
  *   npx tsx --test server/booking/slots.test.ts
  *
- * Production availability is freeBusy.query. The three Unipile traps still
+ * Production availability is freeBusy.query. The three the hosted connector traps still
  * have fixtures for the overlap test itself: all-day as a day-long range,
  * a 09:00–10:00 block that must cover 09:30, and expanded recurrence.
  */
@@ -12,8 +12,6 @@ import { generateKeyPairSync } from "node:crypto";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 
-import type { UnipileCalendarEvent } from "../unipile/calendar";
-import { resetUnipileCalendarForTests } from "../unipile/calendar";
 import { placeHold, resetHoldsForTests } from "./hold";
 import { putVisitorCalendarForTests, resetVisitorCalendarForTests } from "./freebusy";
 import {
@@ -91,31 +89,13 @@ function mockOwnerGoogle(opts: {
   };
 }
 
-function event(partial: Partial<UnipileCalendarEvent> & Pick<UnipileCalendarEvent, "id" | "start">): UnipileCalendarEvent {
-  return {
-    title: null,
-    isCancelled: false,
-    isAllDay: false,
-    transparency: "opaque",
-    eventType: "default",
-    end: null,
-    recurrence: null,
-    masterEventId: null,
-    conferenceUrl: null,
-    attendees: [],
-    ...partial,
-  };
-}
 
 beforeEach(() => {
   resetSlotsCacheForTests();
-  resetUnipileCalendarForTests();
+  resetGcalForTests();
   resetGcalForTests();
   resetHoldsForTests();
   resetVisitorCalendarForTests();
-  delete process.env.UNIPILE_DSN;
-  delete process.env.UNIPILE_API_KEY;
-  delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
   delete process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON;
   delete process.env.GOOGLE_CALENDAR_ID;
   delete process.env.GOOGLE_FREEBUSY_CLIENT_ID;
@@ -124,13 +104,10 @@ beforeEach(() => {
 
 afterEach(() => {
   resetSlotsCacheForTests();
-  resetUnipileCalendarForTests();
+  resetGcalForTests();
   resetGcalForTests();
   resetHoldsForTests();
   resetVisitorCalendarForTests();
-  delete process.env.UNIPILE_DSN;
-  delete process.env.UNIPILE_API_KEY;
-  delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
   delete process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON;
   delete process.env.GOOGLE_CALENDAR_ID;
   delete process.env.GOOGLE_FREEBUSY_CLIENT_ID;

@@ -1,7 +1,7 @@
 /**
- * Unipile webhook lifecycle. Run it with:
+ * the hosted transport webhook lifecycle. Run it with:
  *
- *   npx tsx --test server/unipile/webhooks.test.ts
+ *   npx tsx --test server/the hosted transport/webhooks.test.ts
  *
  * Two webhooks, never a third. Created only when absent. Retired hosts are
  * deleted. Content-Type and the shared secret header are both set, because
@@ -14,25 +14,28 @@ import assert from "node:assert/strict";
 import {
   WEBHOOK_SOURCE_ACCOUNT_STATUS,
   WEBHOOK_SOURCE_MESSAGING,
-  UNIPILE_WEBHOOK_AUTH_HEADER,
+  INBOUND_AUTH_HEADER,
   INBOUND_PATH,
   RETIRED_INBOUND_PATHS,
-  ensureUnipileWebhooks,
+  ensureInboundWebhooks,
   inboundRequestUrl,
   isOurInboundPath,
   parseWebhook,
 } from "./webhooks";
 
-const DSN = "unipile.test.example:9443";
-const KEY = "test-unipile-key-do-not-log";
-const SECRET = "test-unipile-webhook-secret";
+const DSN = "https://hosted.test.example:9443/api/v1";
+const KEY = "test-the hosted transport-key-do-not-log";
+const SECRET = "test-the hosted transport-webhook-secret";
 const BASE = "https://top-rated.team";
 const CURRENT = `${BASE}${INBOUND_PATH}`;
 /* A retired HOST on the address we answer on now. */
 const RETIRED = `https://ai.top-rated.team${INBOUND_PATH}`;
 /* A retired PATH on the host we are. Both have to be recognised as ours, or
    the reconciler leaves them posting into an address that is gone. */
-const RETIRED_PATH = `${BASE}${RETIRED_INBOUND_PATHS[0]}`;
+/* A path this deployment no longer serves. The production list is empty;
+   this stands in for one so the migration mechanism stays tested. */
+const WAS_HERE = "/api/was/here";
+const RETIRED_PATH = `${BASE}${WAS_HERE}`;
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -42,32 +45,34 @@ function jsonResponse(status: number, body: unknown): Response {
 }
 
 function setConfigured(): void {
-  process.env.UNIPILE_DSN = DSN;
-  process.env.UNIPILE_API_KEY = KEY;
-  process.env.UNIPILE_WEBHOOK_SECRET = SECRET;
+  process.env.HOSTED_WHATSAPP_BASE_URL = DSN;
+  process.env.HOSTED_WHATSAPP_API_KEY = KEY;
+  process.env.HOSTED_WHATSAPP_WEBHOOK_SECRET = SECRET;
   process.env.PUBLIC_BASE_URL = BASE;
 }
 
 beforeEach(() => {
-  delete process.env.UNIPILE_DSN;
-  delete process.env.UNIPILE_API_KEY;
-  delete process.env.UNIPILE_WEBHOOK_SECRET;
+  delete process.env.HOSTED_WHATSAPP_BASE_URL;
+  delete process.env.HOSTED_WHATSAPP_API_KEY;
+  delete process.env.HOSTED_WHATSAPP_WEBHOOK_SECRET;
   delete process.env.PUBLIC_BASE_URL;
 });
 
 afterEach(() => {
-  delete process.env.UNIPILE_DSN;
-  delete process.env.UNIPILE_API_KEY;
-  delete process.env.UNIPILE_WEBHOOK_SECRET;
+  delete process.env.HOSTED_WHATSAPP_BASE_URL;
+  delete process.env.HOSTED_WHATSAPP_API_KEY;
+  delete process.env.HOSTED_WHATSAPP_WEBHOOK_SECRET;
   delete process.env.PUBLIC_BASE_URL;
 });
 
 describe("isOurInboundPath", () => {
-  it("claims the current address and every address we have retired", () => {
+  it("claims the current address, and the retired list is empty until an address moves", () => {
     assert.equal(isOurInboundPath(CURRENT), true);
     assert.equal(isOurInboundPath(`${CURRENT}/`), true);
-    assert.equal(isOurInboundPath(RETIRED), true);
-    assert.equal(isOurInboundPath(RETIRED_PATH), true);
+    assert.deepEqual([...RETIRED_INBOUND_PATHS], [], "an entry is added the day an address moves, not before");
+    /* And the mechanism still works when there is one. */
+    assert.equal(isOurInboundPath(RETIRED_PATH, [WAS_HERE]), true);
+    assert.equal(isOurInboundPath(RETIRED_PATH), false);
   });
 
   it("does not claim somebody else's webhook", () => {
@@ -79,7 +84,7 @@ describe("isOurInboundPath", () => {
   });
 
   it("keeps the vendor out of the address a stranger reads first", () => {
-    assert.equal(INBOUND_PATH.toLowerCase().includes("unipile"), false);
+    assert.equal(INBOUND_PATH.toLowerCase().includes("the hosted transport"), false);
   });
 });
 
@@ -105,33 +110,33 @@ describe("parseWebhook", () => {
   });
 });
 
-describe("ensureUnipileWebhooks", () => {
-  it("is inert when Unipile env is missing, and does not call fetch", async () => {
+describe("ensureInboundWebhooks", () => {
+  it("is inert when the hosted transport env is missing, and does not call fetch", async () => {
     let called = 0;
     const fetchImpl: typeof fetch = async () => {
       called += 1;
       return jsonResponse(200, { items: [] });
     };
-    const result = await ensureUnipileWebhooks(fetchImpl);
+    const result = await ensureInboundWebhooks(fetchImpl);
     assert.deepEqual(result, { ok: true, skipped: "unconfigured" });
     assert.equal(called, 0);
   });
 
   it("is inert when the secret or PUBLIC_BASE_URL is missing", async () => {
-    process.env.UNIPILE_DSN = DSN;
-    process.env.UNIPILE_API_KEY = KEY;
+    process.env.HOSTED_WHATSAPP_BASE_URL = DSN;
+    process.env.HOSTED_WHATSAPP_API_KEY = KEY;
     let called = 0;
     const fetchImpl: typeof fetch = async () => {
       called += 1;
       return jsonResponse(200, { items: [] });
     };
-    assert.deepEqual(await ensureUnipileWebhooks(fetchImpl), { ok: true, skipped: "no-address-or-secret" });
+    assert.deepEqual(await ensureInboundWebhooks(fetchImpl), { ok: true, skipped: "no-address-or-secret" });
     process.env.PUBLIC_BASE_URL = BASE;
-    assert.deepEqual(await ensureUnipileWebhooks(fetchImpl), { ok: true, skipped: "no-address-or-secret" });
+    assert.deepEqual(await ensureInboundWebhooks(fetchImpl), { ok: true, skipped: "no-address-or-secret" });
     assert.equal(called, 0);
   });
 
-  it("creates both sources when absent, with Content-Type and Unipile-Auth, and never a calendar source", async () => {
+  it("creates both sources when absent, with Content-Type and the configured auth header, and never a calendar source", async () => {
     setConfigured();
     const created: unknown[] = [];
     const fetchImpl: typeof fetch = async (input, init) => {
@@ -154,7 +159,7 @@ describe("ensureUnipileWebhooks", () => {
       return jsonResponse(500, { type: "errors/unexpected_error", status: 500 });
     };
 
-    const result = await ensureUnipileWebhooks(fetchImpl);
+    const result = await ensureInboundWebhooks(fetchImpl);
     assert.equal(result.ok, true);
     assert.equal(created.length, 2);
     const sources = created.map((row) => (row as { source: string }).source);
@@ -173,8 +178,8 @@ describe("ensureUnipileWebhooks", () => {
         { key: "Content-Type", value: "application/json" },
       );
       assert.deepEqual(
-        body.headers.find((header) => header.key === UNIPILE_WEBHOOK_AUTH_HEADER),
-        { key: UNIPILE_WEBHOOK_AUTH_HEADER, value: SECRET },
+        body.headers.find((header) => header.key === INBOUND_AUTH_HEADER),
+        { key: INBOUND_AUTH_HEADER, value: SECRET },
       );
     }
   });
@@ -196,7 +201,7 @@ describe("ensureUnipileWebhooks", () => {
         ],
       });
     };
-    const result = await ensureUnipileWebhooks(fetchImpl);
+    const result = await ensureInboundWebhooks(fetchImpl);
     assert.equal(result.ok, true);
     assert.equal(posts, 0);
   });
@@ -227,7 +232,7 @@ describe("ensureUnipileWebhooks", () => {
       return jsonResponse(500, {});
     };
 
-    const result = await ensureUnipileWebhooks(fetchImpl);
+    const result = await ensureInboundWebhooks(fetchImpl);
     assert.equal(result.ok, true);
     assert.deepEqual(deleted.sort(), ["wh_msg_b", "wh_old"].sort());
   });
@@ -264,7 +269,7 @@ describe("ensureUnipileWebhooks", () => {
       return jsonResponse(500, {});
     };
 
-    const result = await ensureUnipileWebhooks(fetchImpl);
+    const result = await ensureInboundWebhooks(fetchImpl, [WAS_HERE]);
     assert.equal(result.ok, true);
     assert.deepEqual(deleted.sort(), ["wh_old_acc", "wh_old_msg"]);
     assert.deepEqual(created, [CURRENT, CURRENT]);

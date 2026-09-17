@@ -35,7 +35,7 @@ export { digitsFromMeId, digitsFromAccountBody };
  * Alias kept while identity.test.ts still imports this name. Prefer
  * digitsFromAccountBody. Handoff: repoint that import and delete this line.
  */
-export const digitsFromUnipileAccount = digitsFromAccountBody;
+export const digitsFromHostedAccount = digitsFromAccountBody;
 
 /**
  * Click-to-chat. The visitor's own WhatsApp opens with `text` already written,

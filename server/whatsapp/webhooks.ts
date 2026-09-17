@@ -1,38 +1,25 @@
 /**
- * Create our Unipile webhooks in code, not in a dashboard. The owner asked
- * for that by name.
+ * The inbound webhook, reconciled in code rather than in a dashboard.
  *
- * Two, and no third. Unipile's webhook types do not include a calendar, so
- * the calendar is polled. One webhook is source: messaging. The other is
- * source: account_status — the value on the Create a webhook OpenAPI under
- * the title "Account status webhook"
- * (https://developer.unipile.com/reference/webhookscontroller_createwebhook)
- * which is the registration contract for the Account status updates page
- * (https://developer.unipile.com/docs/account-lifecycle). That page describes
- * the payload and the statuses; it does not print the source literal. The
- * OpenAPI enum does: ["account_status"]. A wrong source is a webhook that
- * silently never fires.
+ * A hosted WhatsApp API delivers inbound messages by POSTing to an address we
+ * give it. This keeps that address correct: it lists what the tenant has,
+ * deletes any of ours that point at a path we no longer serve, creates what is
+ * missing, and removes duplicates. That is what makes moving the inbound path
+ * a one-line change rather than a dashboard errand.
  *
- * Both point at ${PUBLIC_BASE_URL}${INBOUND_PATH} and carry the same shared
- * secret in a header we name. UNIPILE_WEBHOOK_SECRET is that secret, not an
- * address.
- *
- * Two silent failures if we skip the documented headers:
- *   1. A webhook created by API has no Content-Type by default, so
- *      express.json() leaves req.body empty unless we send
- *      {key: Content-Type, value: application/json}.
- *   2. There is no HMAC. Authentication is the secret in Unipile-Auth.
- *
- * Idempotent: list, find ours by request_url and source, create only when
- * absent, delete extras and anything pointing at a host OR A PATH we have
- * retired. That second half is what migrates the address without anybody
- * opening a dashboard: change INBOUND_PATH, and the next boot deletes the
- * webhooks on the old path and creates them on the new one.
- * Inert when Unipile, PUBLIC_BASE_URL or the secret is missing.
+ * It names no vendor. Base URL, key, account and secret all come from the
+ * environment — see server/whatsapp/hosted.ts. WAHA configures its webhook at
+ * its own end, so this does nothing there.
  */
 
 import {
-  UNIPILE_UNCONFIGURED_LINE, available, unipileRequest, type UnipileResult } from "./client";
+  HOSTED_UNCONFIGURED_LINE,
+  hostedConfigured,
+  hostedRequest,
+  hostedWebhookHeader,
+  hostedWebhookSecret,
+  type HostedResult,
+} from "./hosted";
 
 /**
  * Where the webhooks post. No vendor in it: this repository is public and
@@ -42,26 +29,32 @@ import {
 export const INBOUND_PATH = "/api/hooks/inbound";
 
 /**
- * Addresses we used to answer on. Kept so the reconciler can recognise its own
- * old webhooks and delete them; drop an entry only once no tenant can still
- * hold a webhook pointing at it, because an unrecognised webhook is not
- * cleaned up — it is left posting into a path that no longer exists.
+ * Addresses we used to answer on, so the reconciler can recognise its own old
+ * webhooks and delete them rather than leave them posting into a path that no
+ * longer exists.
+ *
+ * EMPTY, AND CHECKED RATHER THAN ASSUMED. On 17 September 2026 the live
+ * tenant's webhook list was read: the only two rows belonging to this
+ * deployment are messaging and account_status, both already on INBOUND_PATH.
+ * The one retired address this list used to carry named a vendor, and nothing
+ * pointed at it any more. Add an entry here the day an address changes, not
+ * before.
  */
-export const RETIRED_INBOUND_PATHS = ["/api/unipile/inbound"] as const;
+export const RETIRED_INBOUND_PATHS: readonly string[] = [];
 
-/** The header Unipile echoes back to us. Their own docs use this name. */
-export const UNIPILE_WEBHOOK_AUTH_HEADER = "Unipile-Auth";
+/** The header the hosted transport echoes back to us. Their own docs use this name. */
+export const INBOUND_AUTH_HEADER = hostedWebhookHeader();
 
 export const WEBHOOK_SOURCE_MESSAGING = "messaging";
 /**
  * From the Create a webhook OpenAPI, title "Account status webhook",
  * source enum: ["account_status"].
- * https://developer.unipile.com/reference/webhookscontroller_createwebhook
+ * https://developer.the hosted transport.com/reference/webhookscontroller_createwebhook
  */
 export const WEBHOOK_SOURCE_ACCOUNT_STATUS = "account_status";
 
 export const WEBHOOK_SOURCES = [WEBHOOK_SOURCE_MESSAGING, WEBHOOK_SOURCE_ACCOUNT_STATUS] as const;
-export type UnipileWebhookSource = (typeof WEBHOOK_SOURCES)[number];
+export type InboundWebhookSource = (typeof WEBHOOK_SOURCES)[number];
 
 const WEBHOOK_NAME_MESSAGING = "top-rated-team-messaging";
 const WEBHOOK_NAME_ACCOUNT_STATUS = "top-rated-team-account-status";
@@ -76,15 +69,15 @@ const ACCOUNT_STATUS_EVENTS = [
   "permissions",
 ] as const;
 
-export interface UnipileWebhook {
+export interface InboundWebhook {
   id: string;
   requestUrl: string;
-  source: UnipileWebhookSource | "unknown";
+  source: InboundWebhookSource | "unknown";
   name: string | null;
 }
 
 export type EnsureWebhooksResult =
-  | { ok: true; skipped?: "unconfigured" | "no-address-or-secret"; webhooks?: UnipileWebhook[] }
+  | { ok: true; skipped?: "unconfigured" | "no-address-or-secret"; webhooks?: InboundWebhook[] }
   | { ok: false; line: string };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -96,10 +89,6 @@ function asString(value: unknown): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
-function webhookSecret(): string | null {
-  const raw = process.env.UNIPILE_WEBHOOK_SECRET?.trim();
-  return raw && raw.length > 0 ? raw : null;
-}
 
 /** ${PUBLIC_BASE_URL}${INBOUND_PATH}, or null when the base is unset. */
 export function inboundRequestUrl(): string | null {
@@ -108,11 +97,11 @@ export function inboundRequestUrl(): string | null {
   return `${raw}${INBOUND_PATH}`;
 }
 
-function nameForSource(source: UnipileWebhookSource): string {
+function nameForSource(source: InboundWebhookSource): string {
   return source === WEBHOOK_SOURCE_MESSAGING ? WEBHOOK_NAME_MESSAGING : WEBHOOK_NAME_ACCOUNT_STATUS;
 }
 
-function inferSource(record: Record<string, unknown>): UnipileWebhook["source"] {
+function inferSource(record: Record<string, unknown>): InboundWebhook["source"] {
   const source = record.source;
   if (source === WEBHOOK_SOURCE_MESSAGING || source === WEBHOOK_SOURCE_ACCOUNT_STATUS) return source;
   const name = asString(record.name);
@@ -126,7 +115,7 @@ function inferSource(record: Record<string, unknown>): UnipileWebhook["source"] 
   return "unknown";
 }
 
-export function parseWebhook(value: unknown): UnipileWebhook | null {
+export function parseWebhook(value: unknown): InboundWebhook | null {
   const record = asRecord(value);
   if (!record) return null;
   const id = asString(record.id);
@@ -147,10 +136,20 @@ function sameUrl(left: string, right: string): boolean {
   return left.replace(/\/+$/, "") === right.replace(/\/+$/, "");
 }
 
-export function isOurInboundPath(url: string): boolean {
+/**
+ * The retired list is empty today, so the second argument is what keeps the
+ * migration mechanism honest: a test hands it a retired address and proves the
+ * reconciler still recognises, deletes and remakes its own webhooks. Without
+ * that seam the day an address moves is the day the mechanism is first
+ * exercised, on a live tenant.
+ */
+export function isOurInboundPath(
+  url: string,
+  retired: readonly string[] = RETIRED_INBOUND_PATHS,
+): boolean {
   try {
     const path = new URL(url).pathname.replace(/\/+$/, "");
-    return path === INBOUND_PATH || RETIRED_INBOUND_PATHS.includes(path as (typeof RETIRED_INBOUND_PATHS)[number]);
+    return path === INBOUND_PATH || retired.includes(path);
   } catch {
     return false;
   }
@@ -159,11 +158,11 @@ export function isOurInboundPath(url: string): boolean {
 function webhookHeaders(secret: string): { key: string; value: string }[] {
   return [
     { key: "Content-Type", value: "application/json" },
-    { key: UNIPILE_WEBHOOK_AUTH_HEADER, value: secret },
+    { key: INBOUND_AUTH_HEADER, value: secret },
   ];
 }
 
-function createBody(source: UnipileWebhookSource, requestUrl: string, secret: string): Record<string, unknown> {
+function createBody(source: InboundWebhookSource, requestUrl: string, secret: string): Record<string, unknown> {
   const base = {
     request_url: requestUrl,
     source,
@@ -177,17 +176,17 @@ function createBody(source: UnipileWebhookSource, requestUrl: string, secret: st
   return { ...base, events: [...ACCOUNT_STATUS_EVENTS] };
 }
 
-export async function listWebhooks(fetchImpl: typeof fetch = fetch): Promise<UnipileResult<UnipileWebhook[]>> {
-  const result = await unipileRequest<unknown>({ method: "GET", path: "/webhooks" }, fetchImpl);
+export async function listWebhooks(fetchImpl: typeof fetch = fetch): Promise<HostedResult<InboundWebhook[]>> {
+  const result = await hostedRequest<unknown>({ method: "GET", path: "/webhooks" }, fetchImpl);
   if (!result.ok) return result;
   const webhooks = listItems(result.body)
     .map(parseWebhook)
-    .filter((row): row is UnipileWebhook => row !== null);
+    .filter((row): row is InboundWebhook => row !== null);
   return { ok: true, status: result.status, body: webhooks };
 }
 
-export async function deleteWebhook(id: string, fetchImpl: typeof fetch = fetch): Promise<UnipileResult<null>> {
-  const result = await unipileRequest<unknown>(
+export async function deleteWebhook(id: string, fetchImpl: typeof fetch = fetch): Promise<HostedResult<null>> {
+  const result = await hostedRequest<unknown>(
     { method: "DELETE", path: `/webhooks/${encodeURIComponent(id)}` },
     fetchImpl,
   );
@@ -196,15 +195,15 @@ export async function deleteWebhook(id: string, fetchImpl: typeof fetch = fetch)
 }
 
 export async function createWebhook(
-  source: UnipileWebhookSource,
+  source: InboundWebhookSource,
   fetchImpl: typeof fetch = fetch,
-): Promise<UnipileResult<UnipileWebhook | null>> {
+): Promise<HostedResult<InboundWebhook | null>> {
   const requestUrl = inboundRequestUrl();
-  const secret = webhookSecret();
+  const secret = hostedWebhookSecret();
   if (!requestUrl || !secret) {
-    return { ok: false, error: { type: "unknown", status: 0 }, line: UNIPILE_UNCONFIGURED_LINE };
+    return { ok: false, status: 0, line: HOSTED_UNCONFIGURED_LINE };
   }
-  const result = await unipileRequest<unknown>(
+  const result = await hostedRequest<unknown>(
     { method: "POST", path: "/webhooks", json: createBody(source, requestUrl, secret) },
     fetchImpl,
   );
@@ -217,18 +216,24 @@ export async function createWebhook(
  * current address, create a missing one, delete retired hosts and duplicates.
  * Never a third source. Called from route registration.
  */
-export async function ensureUnipileWebhooks(fetchImpl: typeof fetch = fetch): Promise<EnsureWebhooksResult> {
-  if (!available()) return { ok: true, skipped: "unconfigured" };
+export async function ensureInboundWebhooks(
+  fetchImpl: typeof fetch = fetch,
+  /* Same seam as isOurInboundPath, and for the same reason: the production
+     list is empty, so without it the migration path is never exercised until
+     it runs for real. */
+  retired: readonly string[] = RETIRED_INBOUND_PATHS,
+): Promise<EnsureWebhooksResult> {
+  if (!hostedConfigured()) return { ok: true, skipped: "unconfigured" };
   const requestUrl = inboundRequestUrl();
-  const secret = webhookSecret();
+  const secret = hostedWebhookSecret();
   if (!requestUrl || !secret) return { ok: true, skipped: "no-address-or-secret" };
 
   const listed = await listWebhooks(fetchImpl);
   if (!listed.ok) return { ok: false, line: listed.line };
 
-  const kept: UnipileWebhook[] = [];
+  const kept: InboundWebhook[] = [];
   for (const hook of listed.body) {
-    if (isOurInboundPath(hook.requestUrl) && !sameUrl(hook.requestUrl, requestUrl)) {
+    if (isOurInboundPath(hook.requestUrl, retired) && !sameUrl(hook.requestUrl, requestUrl)) {
       const removed = await deleteWebhook(hook.id, fetchImpl);
       if (!removed.ok) return { ok: false, line: removed.line };
       continue;

@@ -103,8 +103,9 @@ const WAVES = [
    * delete the whole directory rather than half of it. Both want
    * server/routes.ts, so they are two waves and not one.
    */
-  { n: 25, keys: ["calendar-direct"], alone: true },
-  { n: 26, keys: ["whatsapp-waha"], alone: true },
+  /* Waves 25 and 26 have run. The calendar is Google's own, WhatsApp sits
+     behind one interface with two transports, and the connector's module,
+     name and documentation are out of this repository. */
 ];
 
 function prompt(key) {
@@ -121,15 +122,14 @@ function prompt(key) {
   lines.push("    that are wrong against Google's current documentation, each with the page that");
   lines.push("    contradicts it; why \"generate and upload\" is two products with a Google approval");
   lines.push("    between them; and the answer to the owner's question about per-agent limits.");
-  lines.push("  docs/specs/unipile-rooms-and-booking.md — the first brief. Every Unipile");
-  lines.push("    endpoint it touches, transcribed with the URL it came from. Four decisions already");
-  lines.push("    made, with the reasoning, so you do not spend your wave relitigating them. The");
-  lines.push("    request and response shapes two parcels build to in parallel. And the rule the");
-  lines.push("    owner set: every message is checked for who it is from, who it is to and which");
-  lines.push("    chat it is in. Do not work from a paraphrase of the owner's request instead. Three");
-  lines.push("    things a reasonable person assumes Unipile has, it does not: a free/busy endpoint,");
-  lines.push("    a LID-to-phone resolver, and an HMAC signature on its webhooks. The brief says so.");
-  lines.push("    A paraphrase would not, and you would find out after building on all three.");
+  lines.push("  docs/specs/whatsapp.md — what this deployment needs from WhatsApp, written");
+  lines.push("    without a vendor in it: the transports, the seven checks every inbound message");
+  lines.push("    is put through — who it is from, who it is to, which chat it is in — and the few");
+  lines.push("    lines a fork needs to point WAHA at its own number. Do not work from a paraphrase");
+  lines.push("    of the owner's request instead.");
+  lines.push("  docs/specs/booking.md and docs/specs/calendar.md — the booking's own shapes, and");
+  lines.push("    the service account the calendar runs on, including which of the two grants this");
+  lines.push("    deployment needed and why. Measured, not assumed.");
   lines.push("  README.md, private/doors.md, shared/doors.ts.");
   lines.push("Then read three files next to the ones you are about to change.");
   lines.push("");

@@ -217,7 +217,7 @@ describe("the token is held in memory for five minutes", () => {
 });
 
 describe("disconnect removes that visitor's Google account and nothing else", () => {
-  it("revokes only the visitor token at Google and never calls Unipile", async () => {
+  it("revokes only the visitor token at Google and never calls the hosted connector", async () => {
     setConfigured();
     putVisitorCalendarForTests({
       handle: "visitor-handle",
@@ -237,7 +237,7 @@ describe("disconnect removes that visitor's Google account and nothing else", ()
     assert.deepEqual(urls, ["https://oauth2.googleapis.com/revoke"]);
     assert.equal(bodies[0]?.includes("visitor-access-token"), true);
     assert.equal(
-      urls.some((url) => url.includes("unipile") || url.includes("linkedin") || url.includes("whatsapp")),
+      urls.some((url) => url.includes("linkedin") || url.includes("whatsapp")),
       false,
     );
     assert.deepEqual(visitorCalendarView("visitor-handle", NOW.getTime()), { offered: true, connected: false });

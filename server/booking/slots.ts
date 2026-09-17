@@ -43,7 +43,7 @@ export const MAX_SLOT_DAYS = 31;
  * one readable list rather than an undocumented busy=true query.
  *
  * On the Google path this set is unused: freeBusy.query already returns
- * only opaque busy ranges. It remains for the Unipile fallback.
+ * only opaque busy ranges. It remains for the the hosted connector fallback.
  */
 export 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -189,7 +189,7 @@ const SLOT_GRID = slotTimes();
 
 /**
  * Slot grid from busy ranges. freeBusy.query already expands recurrence and
- * treats all-day events as ranges, so the Unipile traps — {date} with no
+ * treats all-day events as ranges, so the the hosted connector traps — {date} with no
  * date_time, containment filters, unexpanded RRULEs — do not apply on the
  * Google path. The overlap test itself is still ours, because a 09:00–10:00
  * busy range must block 09:30.

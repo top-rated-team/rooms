@@ -33,7 +33,7 @@ const REQUEST_MS = 20_000;
 const BACKOFF_MS = [400, 1_200] as const;
 const RETRY_STATUSES = new Set([503, 504]);
 
-const UNCONFIGURED_LINE =
+export const HOSTED_UNCONFIGURED_LINE =
   "WhatsApp is not configured on this deployment, so LinkedIn is the way to bind this room.";
 const UNAVAILABLE_LINE =
   "WhatsApp is not reachable from this page right now, so LinkedIn is the way to bind this room.";
@@ -117,11 +117,11 @@ async function readBody(res: Response): Promise<unknown> {
   }
 }
 
-type HostedResult<T> =
+export type HostedResult<T> =
   | { ok: true; status: number; body: T }
   | { ok: false; status: number; line: string };
 
-async function hostedRequest<T>(
+export async function hostedRequest<T>(
   input: {
     method?: "GET" | "POST" | "PATCH" | "DELETE";
     path: string;
@@ -133,7 +133,7 @@ async function hostedRequest<T>(
 ): Promise<HostedResult<T>> {
   const root = hostedBaseUrl();
   const key = hostedApiKey();
-  if (!root || !key) return { ok: false, status: 0, line: UNCONFIGURED_LINE };
+  if (!root || !key) return { ok: false, status: 0, line: HOSTED_UNCONFIGURED_LINE };
 
   const method = input.method ?? "GET";
   const url = joinUrl(root, input.path, input.query);
@@ -231,7 +231,7 @@ export async function sendHosted(
 }
 
 export async function probeHosted(fetchImpl: typeof fetch = fetch): Promise<ProbeResult> {
-  if (!hostedConfigured()) return { ok: false, line: UNCONFIGURED_LINE };
+  if (!hostedConfigured()) return { ok: false, line: HOSTED_UNCONFIGURED_LINE };
   const accountId = hostedAccountId();
   if (!accountId) {
     /* Base URL and key are set but no account id — the host is reachable in

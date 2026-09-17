@@ -36,7 +36,7 @@ import {
   claimStateForWorkspace,
   BIND_CODE_RE,
 } from "./identity";
-import { WAHA_UNAVAILABLE_LINE, WAHA_UNCONFIGURED_LINE, digitsFromUnipileAccount, probeWaha, qrSvg, waMeUrl } from "./waha";
+import { WAHA_UNAVAILABLE_LINE, WAHA_UNCONFIGURED_LINE, digitsFromHostedAccount, probeWaha, qrSvg, waMeUrl } from "./waha";
 
 const WORKSPACE = "ws_identity_test";
 const TOKEN = "tokIdentityTestToken12";
@@ -393,8 +393,6 @@ describe("WAHA helpers", () => {
   it("says WhatsApp is not configured when no transport is set", async () => {
     delete process.env.HOSTED_WHATSAPP_BASE_URL;
     delete process.env.HOSTED_WHATSAPP_API_KEY;
-    delete process.env.UNIPILE_DSN;
-    delete process.env.UNIPILE_API_KEY;
     const probe = await probeWaha(async () => {
       throw new Error("should not be called");
     });
@@ -403,8 +401,8 @@ describe("WAHA helpers", () => {
     assert.equal(probe.line, WAHA_UNCONFIGURED_LINE);
   });
 
-  it("reads our digits from Unipile's account body and does not keep the body", () => {
-    const digits = digitsFromUnipileAccount({
+  it("reads our digits from the hosted connector's account body and does not keep the body", () => {
+    const digits = digitsFromHostedAccount({
       id: "acct",
       type: "WHATSAPP",
       sources: [{ id: "im", status: "OK" }],
