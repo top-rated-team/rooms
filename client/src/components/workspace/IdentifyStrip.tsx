@@ -159,14 +159,24 @@ export function IdentifyStrip({ token }: IdentifyStripProps) {
   const offering = !state.bound && (state.needsIdentify || asked);
 
   if (!state.bound && !offering) {
+    /*
+     * QUIET IS NOT THE SAME AS HIDDEN, and the first version of this line was
+     * hidden in practice: eleven pixels of muted grey with no underline until
+     * hovered, sitting low against the composer. Measured on the live site it
+     * was inside the viewport at every size and the owner still could not find
+     * it — twice. Everything a room can become waits on this one line, so it
+     * is set in the reading-chrome size and its action is the room's plain
+     * ACTION, which carries the foreground colour and a rule under it. The
+     * padding is there to make it a target a thumb can hit.
+     */
     return (
-      <div className="shrink-0 border-b border-border px-5 py-2.5 sm:px-8" data-testid="strip-identify-quiet">
-        <p className={cn(META, "text-muted-foreground")}>
-          {UNCLAIMED_LINE}{" "}
+      <div className="shrink-0 border-b border-border px-5 py-3 sm:px-8" data-testid="strip-identify-quiet">
+        <p className={cn(CHROME, "flex flex-wrap items-baseline gap-x-3 gap-y-1 text-muted-foreground")}>
+          <span>{UNCLAIMED_LINE}</span>
           <button
             type="button"
             onClick={() => setAsked(true)}
-            className={cn(ACTION_QUIET, "align-baseline")}
+            className={cn(ACTION, "py-1 align-baseline")}
             data-testid="button-identify-open"
           >
             Make it yours

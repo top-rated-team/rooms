@@ -766,6 +766,24 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
          went to the other half is the bug this replaced. */
       onMouseLeave={() => {
         if (isCoarsePointer()) return;
+        /*
+         * NOT WHILE SOMETHING IN HERE IS BEING TYPED IN.
+         *
+         * This is what actually took the form away when the owner reached for
+         * the browser's saved-address list. That list is a native layer drawn
+         * OVER the page: the moment the pointer moves onto it the page is no
+         * longer under the pointer, so the browser fires mouseleave here and
+         * the menu closed — on hover alone, before any click. The pointerdown
+         * guard could not see it, because no pointerdown ever reached us.
+         *
+         * A field somebody is typing in must survive the pointer wandering
+         * off, whatever it wandered onto. Escape and a click outside still
+         * close it, and a menu with nothing focused still closes on the way
+         * out as it always did.
+         */
+        const root = rootRef.current;
+        const focused = root && document.activeElement instanceof HTMLElement && root.contains(document.activeElement);
+        if (focused && document.activeElement instanceof HTMLInputElement) return;
         setOpen(false);
         setLogin({ phase: "closed" });
       }}
