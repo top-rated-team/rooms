@@ -16,6 +16,7 @@ import {
   type Citation,
   type Lead,
   type Message,
+  type Member,
   type MessageMeta,
 } from "@shared/schema";
 import type { AskEvent, CreateWorkspaceResponse, WorkspaceState } from "@shared/api";
@@ -117,7 +118,17 @@ import {
 } from "./room-account";
 import { listAdminPeople, requireDeploymentOperator } from "./admin/people";
 
-type Turn = { role: "user" | "assistant"; content: string };
+/**
+ * One line of a room's history as an agent sees it.
+ *
+ * `speaker` is present on every line that is NOT this agent's own. It has to
+ * be: the room is a group, and an agent reading it used to see every other
+ * agent's words mapped to `assistant` — that is, as its own earlier turns.
+ * An agent cannot answer another agent, or a person, if it cannot tell which
+ * of them said what, and it will happily contradict "itself" in somebody
+ * else's voice.
+ */
+type Turn = { role: "user" | "assistant"; content: string; speaker?: string };
 
 /** How much of a channel's history an agent is given for context. */
 const MAX_HISTORY_TURNS = 10;
@@ -286,14 +297,43 @@ function resolveAgent(channel: Channel, body: string, mentions?: string[]): stri
   return null;
 }
 
-function buildHistory(messages: Message[], channelId: string): Turn[] {
+/**
+ * `selfKey` is the author key of the agent this history is being built FOR.
+ * Only its own lines are `assistant`; everybody else — the visitor, an expert,
+ * another agent — is input, carrying the name they are known by in the room.
+ */
+function buildHistory(
+  messages: Message[],
+  channelId: string,
+  selfKey?: string,
+  members: Member[] = [],
+): Turn[] {
+  const nameOf = new Map(members.map((member) => [member.memberKey, member.displayName]));
   return messages
     .filter((message) => message.channelId === channelId && message.authorKind !== "system" && message.body.trim().length > 0)
     .slice(-MAX_HISTORY_TURNS)
-    .map((message) => ({
-      role: message.authorKind === "agent" ? ("assistant" as const) : ("user" as const),
-      content: message.body,
-    }));
+    .map((message) => {
+      const mine = selfKey !== undefined && message.authorKey === selfKey;
+      if (mine) return { role: "assistant" as const, content: message.body };
+      return {
+        role: "user" as const,
+        content: message.body,
+        speaker: nameOf.get(message.authorKey) ?? speakerFallback(message),
+      };
+    });
+}
+
+/** Test seam: the history an agent is handed, which decides who it thinks it is. */
+export const buildHistoryForTests = buildHistory;
+
+/** A name for somebody the member list does not carry. Never a raw key. */
+function speakerFallback(message: Message): string {
+  if (message.authorKind === "agent") {
+    const id = agentFromKey(message.authorKey);
+    return id ? (AGENT_BY_ID[id]?.name ?? "An agent") : "An agent";
+  }
+  if (message.authorKind === "expert") return "Someone from the team";
+  return "The visitor";
 }
 
 interface AgentReply {
@@ -704,7 +744,7 @@ export function registerRoutes(app: Express): void {
         // The opening question goes to the agent's own channel so it gets an
         // answer; the project channel keeps the welcome and the checklist.
         const channel = await ensureAgentSurface(created, agentId);
-        const history = buildHistory(created.messages, channel.id);
+        const history = buildHistory(created.messages, channel.id, `agent:${agentId}`, created.members);
         await storage.addMessage(created.workspace.id, {
           channelId: channel.id,
           authorKey: "visitor",
@@ -828,7 +868,7 @@ export function registerRoutes(app: Express): void {
           channelId,
           agentId,
           question: body,
-          history: buildHistory(state.messages, channelId),
+          history: buildHistory(state.messages, channelId, `agent:${agentId}`, state.members),
         });
       }
     }),

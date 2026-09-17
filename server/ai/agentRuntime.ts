@@ -46,7 +46,7 @@ export interface AgentStreamChunk {
 export interface AgentTurn {
   agentId: string;
   question: string;
-  history?: Array<{ role: "user" | "assistant"; content: string }>;
+  history?: Array<{ role: "user" | "assistant"; content: string; speaker?: string }>;
 }
 
 /** A hard stop, so a stalled upstream cannot hold a socket open indefinitely. */
@@ -228,7 +228,7 @@ function create(
 export function buildMessages(
   agent: AgentDef,
   question: string,
-  history: Array<{ role: "user" | "assistant"; content: string }>,
+  history: Array<{ role: "user" | "assistant"; content: string; speaker?: string }>,
   excerpts: RetrievedChunk[],
 ): ChatCompletionMessageParam[] {
   const messages: ChatCompletionMessageParam[] = [{ role: "system", content: agent.systemPrompt }];
@@ -250,9 +250,15 @@ export function buildMessages(
     messages.push({ role: "system", content: excerpts.length > 0 ? contextBlock(excerpts) : NO_EXCERPTS_INSTRUCTION });
   }
 
+  /* A room is a group, so a line that is not this agent's own carries the
+     name of whoever said it. Without that, every other speaker arrives as an
+     anonymous "user" and two agents in one room read each other's words as
+     their own. */
   for (const turn of history.slice(-MAX_HISTORY_TURNS)) {
     const content = turn.content.trim().slice(0, MAX_HISTORY_CHARS);
-    if (content) messages.push({ role: turn.role, content });
+    if (!content) continue;
+    const named = turn.speaker ? `${turn.speaker}: ${content}` : content;
+    messages.push({ role: turn.role, content: named });
   }
 
   messages.push({ role: "user", content: question });
