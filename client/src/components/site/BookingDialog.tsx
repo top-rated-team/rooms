@@ -38,6 +38,7 @@ import type {
   BookingLinkedInSession,
   ExistingBookingResponse,
   HoldBookingResponse,
+  RoomSession,
   VisitorCalendarView,
 } from "@shared/api";
 import { BOOKING_LINKEDIN_SESSION_QUERY } from "@shared/api";
@@ -137,7 +138,39 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
   const [linkedin, setLinkedin] = useState<BookingLinkedInAvailability | null>(null);
   const [bookerEmail, setBookerEmail] = useState<string | null>(null);
   const [droppingCalendar, setDroppingCalendar] = useState(false);
+  /* Whether the address in the field was typed here or came from the session.
+     Only a filled-in one may be replaced by a later answer; a typed one is
+     the person correcting us and must never be overwritten. */
+  const [emailFromSession, setEmailFromSession] = useState(false);
   const [calendarFailed, setCalendarFailed] = useState(false);
+
+  /**
+   * If we already know who this is, do not ask them for their address again.
+   *
+   * The session carries a readable email only when a way in told us one — the
+   * address on a LinkedIn profile, or one typed into a room. It is sent to the
+   * browser holding that account's own session and nowhere else, so this is
+   * the person's own address being handed back to them.
+   *
+   * It never overwrites typing. The field is filled only while it is empty or
+   * still holds an earlier answer from the session.
+   */
+  useEffect(() => {
+    if (!open) return;
+    const ac = new AbortController();
+    void fetch("/api/session", { headers: { Accept: "application/json" }, credentials: "same-origin", signal: ac.signal })
+      .then((res) => (res.ok ? (res.json() as Promise<RoomSession>) : null))
+      .then((session) => {
+        if (!session || !session.signedIn || !session.email) return;
+        setEmail((was) => (was.trim().length === 0 || emailFromSession ? session.email! : was));
+        setEmailFromSession(true);
+      })
+      .catch(() => {
+        /* Not signed in, offline, or the endpoint is not there. The form works
+           exactly as it did; it simply starts empty. */
+      });
+    return () => ac.abort();
+  }, [open, emailFromSession]);
   /* The address the calendar connection told us, once. Kept so filling the
      field is a one-off and not something that fights the person typing. */
   const filledFromCalendar = useRef<string | null>(null);

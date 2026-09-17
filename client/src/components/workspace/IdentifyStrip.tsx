@@ -14,6 +14,21 @@ import { WhatsAppQr } from "@/components/WhatsAppQr";
  * anyone who has the link from opening it. Two routes, and the strip will not
  * render a button for a route that cannot work: if WhatsApp is down, LinkedIn
  * stays, with a sentence saying why.
+ *
+ * IT USED TO DISAPPEAR ENTIRELY until the visitor had pasted something of
+ * their own, and that was a dead end with no way out of it. Binding a room is
+ * the ONLY thing that makes a room somebody's, and everything that follows —
+ * renaming it, putting a card on it, admitting an agent, signing in from
+ * another browser and finding it again — waits on that. So a visitor who
+ * simply wanted their room to be theirs had nowhere to say so, and the owner
+ * hit exactly that: signed in with LinkedIn on the site, opened a room, and
+ * found no way to make it his. Now the offer is always reachable; what the
+ * paste changes is whether it is already open or sits on one quiet line.
+ *
+ * THE THIRD ROUTE IS NOT A FOURTH WAY TO OWN THE ROOM. An email address here
+ * is a way BACK IN — a link, once, for an hour — and it is labelled as that.
+ * It is not a proof of who anybody is, so it does not mark the room as theirs,
+ * and this file must not imply that it does.
  */
 
 export interface IdentifyStripProps {
@@ -29,6 +44,14 @@ const BEARER =
 const LINKEDIN_LINE =
   "This opens LinkedIn's own sign-in. We keep an id and the name on your profile. LinkedIn does not endorse this room or this company.";
 
+/** The one-line form when nothing has asked for the strip yet. */
+const UNCLAIMED_LINE = "This room is not marked as anyone's yet.";
+
+const EMAIL_PURPOSE =
+  "So you can get back in from another browser: we send a link to this address, good once and for an hour. It is not a proof of who you are, so it does not mark the room as yours — LinkedIn or WhatsApp does that.";
+
+const EMAIL_KEPT_LINE = "Kept for this room. A link can be sent to it from Open a room.";
+
 interface WhatsAppOffer {
   url: string;
   qrSvg: string | null;
@@ -43,6 +66,11 @@ function providerLabel(provider: RoomBindingState["provider"]): string {
 
 export function IdentifyStrip({ token }: IdentifyStripProps) {
   const [state, setState] = useState<RoomBindingState | null>(null);
+  /* Opened by hand from the quiet line. The paste still opens it on its own. */
+  const [asked, setAsked] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailPhase, setEmailPhase] = useState<"idle" | "saving" | "kept">("idle");
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [whatsapp, setWhatsapp] = useState<WhatsAppOffer | null>(null);
   const [whatsappError, setWhatsappError] = useState<string | null>(null);
   const [whatsappLoading, setWhatsappLoading] = useState(false);
@@ -99,8 +127,54 @@ export function IdentifyStrip({ token }: IdentifyStripProps) {
     }
   }, [load, token]);
 
+  /**
+   * Keep an address against this room.
+   *
+   * The endpoint has existed since the mailed-link parcel and had no caller in
+   * the client at all, which is why "If that email has a room, the link is on
+   * its way" was true of no email anybody could type: nothing ever gave a room
+   * an address. The server stores a HASH of it — this is the only moment the
+   * address itself is in play.
+   */
+  const onSaveEmail = useCallback(async () => {
+    const value = email.trim();
+    if (!value) return;
+    setEmailPhase("saving");
+    setEmailError(null);
+    try {
+      await apiRequest("POST", `/api/workspaces/${encodeURIComponent(token)}/room-address`, { email: value });
+      setEmailPhase("kept");
+    } catch (error) {
+      setEmailPhase("idle");
+      setEmailError(
+        error instanceof ApiError && error.message.trim() ? error.message.trim() : "That address could not be kept.",
+      );
+    }
+  }, [email, token]);
+
   if (!state) return null;
-  if (!state.bound && !state.needsIdentify) return null;
+
+  /* Bound rooms say so. Unbound ones either ask — because the visitor has put
+     something of their own in here — or wait on one line until asked. */
+  const offering = !state.bound && (state.needsIdentify || asked);
+
+  if (!state.bound && !offering) {
+    return (
+      <div className="shrink-0 border-b border-border px-5 py-2.5 sm:px-8" data-testid="strip-identify-quiet">
+        <p className={cn(META, "text-muted-foreground")}>
+          {UNCLAIMED_LINE}{" "}
+          <button
+            type="button"
+            onClick={() => setAsked(true)}
+            className={cn(ACTION_QUIET, "align-baseline")}
+            data-testid="button-identify-open"
+          >
+            Make it yours
+          </button>
+        </p>
+      </div>
+    );
+  }
 
   const linkedinHref = `/api/workspaces/${encodeURIComponent(token)}/identity/linkedin`;
   const showLinkedIn = state.linkedin.available;
@@ -179,6 +253,59 @@ export function IdentifyStrip({ token }: IdentifyStripProps) {
               />
             </div>
           ) : null}
+
+          {/* A WAY BACK, WHICH IS NOT A WAY TO OWN IT. Kept visually apart
+              from the two buttons above for that reason: those mark the room
+              as somebody's, this one only means a link can reach you. */}
+          <div className="mt-5 border-t border-border pt-4">
+            <p className={cn(META, "text-muted-foreground")} data-testid="text-identify-email-purpose">
+              {EMAIL_PURPOSE}
+            </p>
+            {emailPhase === "kept" ? (
+              <p className={cn(CHROME, "mt-2 text-foreground")} data-testid="text-identify-email-kept">
+                {EMAIL_KEPT_LINE}
+              </p>
+            ) : (
+              <form
+                className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-2"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void onSaveEmail();
+                }}
+              >
+                <input
+                  type="email"
+                  name="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  disabled={emailPhase === "saving"}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="you@example.com"
+                  aria-label="Email for a link back to this room"
+                  data-testid="input-identify-email"
+                  className={cn(
+                    READ,
+                    FOCUS,
+                    "min-w-[16rem] flex-1 border-b border-border bg-transparent pb-1 text-foreground placeholder:text-muted-foreground disabled:opacity-50",
+                  )}
+                />
+                <button
+                  type="submit"
+                  className={ACTION_QUIET}
+                  disabled={emailPhase === "saving" || email.trim().length === 0}
+                  data-testid="button-identify-email"
+                >
+                  {emailPhase === "saving" ? "Keeping" : "Keep this address"}
+                </button>
+              </form>
+            )}
+            {emailError ? (
+              <p role="alert" className={cn(META, "mt-2 text-destructive")} data-testid="text-identify-email-error">
+                {emailError}
+              </p>
+            ) : null}
+          </div>
         </>
       )}
     </div>

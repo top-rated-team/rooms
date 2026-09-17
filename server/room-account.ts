@@ -36,6 +36,7 @@ import {
   listIdentitiesForAccount,
   putSession,
   setAccountDisplayName,
+  setAccountEmail,
   type AttachIdentityResult,
   type StoredAccount,
 } from "./identity-store";
@@ -55,6 +56,12 @@ export type SignInIdentity = {
   provider: RoomAccountProvider;
   providerId: string;
   displayName?: string | null;
+  /**
+   * The readable address, when the way in knew one. `providerId` stays a hash;
+   * this is kept only to hand back to the person it belongs to — so a booking
+   * form does not ask them for an address they have already given us.
+   */
+  email?: string | null;
 };
 
 export type SignInResult =
@@ -199,6 +206,8 @@ export async function whoAmI(cookieHeader: string | undefined, now = Date.now())
   return {
     signedIn: true,
     displayName: account.displayName,
+    /* Only ever sent to the browser holding this account's own session. */
+    email: account.email,
     attached,
     rooms: await roomsForIdentities(identities),
   };
@@ -255,6 +264,7 @@ export async function signInOrAttach(input: {
     if (input.identity.displayName) {
       await setAccountDisplayName(current.id, input.identity.displayName);
     }
+    if (input.identity.email) await setAccountEmail(current.id, input.identity.email);
     const token = await rotateSession(current.id, now, held);
     const account = (await getAccount(current.id)) ?? current;
     return { ok: true, kind: "attached", account, token };
@@ -265,6 +275,7 @@ export async function signInOrAttach(input: {
     if (input.identity.displayName) {
       await setAccountDisplayName(existing.id, input.identity.displayName);
     }
+    if (input.identity.email) await setAccountEmail(existing.id, input.identity.email);
     const token = await rotateSession(existing.id, now, held);
     const account = (await getAccount(existing.id)) ?? existing;
     return { ok: true, kind: "signed-in", account, token };
@@ -291,6 +302,7 @@ export async function signInOrAttach(input: {
   const account = await createAccount({
     id,
     displayName: input.identity.displayName ?? null,
+    email: input.identity.email ?? null,
     createdAt: new Date(now).toISOString(),
   });
   const token = await rotateSession(account.id, now, held);

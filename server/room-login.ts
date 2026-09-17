@@ -373,6 +373,10 @@ export async function resolveRoomLoginLinkedIn(input: {
       provider: "linkedin",
       providerId,
       displayName: exchanged.member.displayName,
+      /* LinkedIn gives the address on the profile. It is already used above to
+         bind rooms; keeping it on the account is what lets a booking form come
+         up already filled in for the person it belongs to. */
+      email: exchanged.member.email ?? null,
     },
   };
 }

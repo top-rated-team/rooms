@@ -11,6 +11,17 @@ import { pgTable, text, timestamp, index, primaryKey } from "drizzle-orm/pg-core
 export const accounts = pgTable("accounts", {
   id: text("id").primaryKey(),
   displayName: text("display_name"),
+  /**
+   * The address this person is known by, when a way in told us one — the email
+   * on a LinkedIn profile, or the address they typed to be sent a link.
+   *
+   * IT IS NOT AN IDENTIFIER AND NOTHING IS LOOKED UP BY IT. `account_identities`
+   * holds a HASH for that, so a stolen table of identities yields no addresses,
+   * and that is unchanged. This is the readable copy, kept for one reason: to
+   * put it back in front of the person it belongs to, already typed, instead of
+   * asking them for it a second time.
+   */
+  email: text("email"),
   createdAt: timestamp("created_at").notNull(),
 });
 

@@ -275,7 +275,21 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
   useEffect(() => {
     if (!open && !loginOpen) return;
     const onPointer = (event: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+      /*
+       * A CLICK ON THE BROWSER IS NOT A CLICK ON THE PAGE. Reaching for the
+       * autofill or password bubble the browser puts above the page took this
+       * menu away mid-typing: the bubble is browser furniture, the page is not
+       * focused while it is up, and whatever event arrives has a target
+       * outside this menu. So the only pointerdown that dismisses is one the
+       * page was actually focused for.
+       *
+       * The same guard covers a target that has already left the document —
+       * clicking something that removes itself is not a click outside.
+       */
+      if (!document.hasFocus()) return;
+      const target = event.target as Node | null;
+      if (target instanceof Element && !target.isConnected) return;
+      if (rootRef.current && target && !rootRef.current.contains(target)) {
         setOpen(false);
         setLogin({ phase: "closed" });
       }

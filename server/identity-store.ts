@@ -41,6 +41,8 @@ export interface StoredWhatsappNote {
 export interface StoredAccount {
   id: string;
   displayName: string | null;
+  /** Readable, shown only back to this person. See shared/schema-accounts.ts. */
+  email: string | null;
   createdAt: string;
 }
 
@@ -175,6 +177,7 @@ async function hydrateFromDb(): Promise<void> {
           accountRows.set(row.id, {
             id: row.id,
             displayName: row.displayName,
+            email: row.email,
             createdAt: iso(row.createdAt),
           });
         }
@@ -326,12 +329,14 @@ export async function putWhatsappNote(row: StoredWhatsappNote): Promise<StoredWh
 export async function createAccount(input: {
   id: string;
   displayName?: string | null;
+  email?: string | null;
   createdAt?: string;
 }): Promise<StoredAccount> {
   await hydrateFromDb();
   const row: StoredAccount = {
     id: input.id,
     displayName: input.displayName?.trim() || null,
+    email: input.email?.trim().toLowerCase() || null,
     createdAt: input.createdAt ?? new Date().toISOString(),
   };
   accountRows.set(row.id, row);
@@ -342,6 +347,7 @@ export async function createAccount(input: {
         await db.insert(accounts).values({
           id: row.id,
           displayName: row.displayName,
+          email: row.email,
           createdAt: new Date(row.createdAt),
         });
       } catch (error) {
@@ -376,6 +382,36 @@ export async function setAccountDisplayName(accountId: string, displayName: stri
       } catch (error) {
         console.error(
           "[identity-store] could not persist an account name. It is in this process only.",
+          error instanceof Error ? error.message : error,
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Remember the address a way in told us, once.
+ *
+ * Same shape as the display name above, and for the same reason: the first way
+ * in that knows it wins, and a later one does not quietly overwrite what the
+ * person has been seeing.
+ */
+export async function setAccountEmail(accountId: string, email: string | null): Promise<void> {
+  await hydrateFromDb();
+  const row = accountRows.get(accountId);
+  if (!row) return;
+  if (row.email) return;
+  const next = email?.trim().toLowerCase() || null;
+  if (!next) return;
+  row.email = next;
+  if (hasDb()) {
+    const db = getDb();
+    if (db) {
+      try {
+        await db.update(accounts).set({ email: next }).where(eq(accounts.id, accountId));
+      } catch (error) {
+        console.error(
+          "[identity-store] could not persist an account address. It is in this process only.",
           error instanceof Error ? error.message : error,
         );
       }

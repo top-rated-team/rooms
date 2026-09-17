@@ -809,6 +809,12 @@ export type RoomSession =
   | {
       signedIn: true;
       displayName: string | null;
+      /**
+       * The address this person is known by, when a way in told us one. Sent
+       * only to the browser holding this account's session, and used to fill a
+       * form in front of its owner rather than ask twice.
+       */
+      email: string | null;
       attached: Record<RoomAccountProvider, boolean>;
       rooms: { token: string }[];
     };

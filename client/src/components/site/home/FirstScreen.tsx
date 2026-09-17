@@ -42,29 +42,32 @@ import { useBooking } from "@/hooks/use-booking";
  * and never stayed. Radix closes a tooltip on the pointerdown that opened it,
  * which on a mouse is right and on a finger is the whole gesture. So on a
  * coarse pointer the panel is driven by tap, Radix's own open/close is
- * ignored, and a tap anywhere else closes it. It also shows the WORDS ONLY:
- * the pair inside it is a hover within a hover, which on a finger is two
- * things to dismiss, and every one of those actions is already in the burger.
+ * ignored, and a tap anywhere else closes it.
  *
- * THE SIDE IS CHOSEN ONCE, WHEN IT OPENS, and never again while it is open.
- * Whichever side of the line has more room gets it. Radix's own collision
- * avoidance is off, because it re-decides continuously: pointing at something
- * inside the panel makes the panel taller, Radix moves it to the other side,
- * the pointer is suddenly outside it, it closes, the pointer is back on the
- * word, it opens — which is the flicker the owner kept seeing. A panel that
- * grows when you use it must not also be allowed to move.
+ * WORDS ONLY, ON BOTH POINTERS. The panel used to carry a sign-in control on a
+ * mouse and only the sentence on a finger, which is two different products in
+ * one word. The owner asked for the phone's version everywhere, and it is the
+ * better one: every action that was in here is already in the burger, and a
+ * hover inside a hover is a thing to keep track of rather than a thing to
+ * read.
+ *
+ * THAT IS ALSO WHAT LETS IT STAY ON THE SCREEN. Collision avoidance was off
+ * because the panel GREW when the pointer went into it — Radix moved it, the
+ * pointer fell outside, it closed, and the word re-opened it, which is the
+ * flicker the owner kept seeing. A panel that grows must not also move. This
+ * one no longer grows: it is a fixed block of text, so Radix may shift it back
+ * inside the viewport, which is what stops it hanging off the right edge of a
+ * phone. The side is still chosen by measurement when it opens, and Radix now
+ * only overrides that when the chosen side genuinely does not fit.
  */
 function Hover({
   text,
   testId,
   children,
-  below,
 }: {
   text: string;
   testId: string;
   children: React.ReactNode;
-  /** Rendered under the sentence, inside the same panel. */
-  below?: React.ReactNode;
 }) {
   const trigger = useRef<HTMLSpanElement>(null);
   const [open, setOpen] = useState(false);
@@ -136,7 +139,11 @@ function Hover({
           data-hover-panel=""
           side={side}
           align="start"
-          avoidCollisions={false}
+          /* On, now that the panel is a fixed block of text. `collisionPadding`
+             is the gutter it keeps off every edge, and it is what stops a word
+             near the right of a phone from putting its panel off the screen. */
+          avoidCollisions
+          collisionPadding={12}
           /* THREE COMMENTS USED TO SIT HERE, each describing the fix before
              it, and none of them describing the code any more. What is true:
              the side is decided by `chooseSide` when the panel opens and does
@@ -148,21 +155,6 @@ function Hover({
           className="w-fit max-w-[min(38ch,calc(100vw-1.5rem))]"
         >
           {text}
-          {below && !coarse ? (
-            /* Inside the same panel rather than a second floating layer. The
-               owner's own instruction, and his own worry about it: the pair
-               has a hover of its own, so two panels over one another would be
-               two things to keep track of. layout="inline" is the mode the
-               phone burger already uses — the rooms sit under the control and
-               this panel simply grows downward. */
-            /* ONE rule, drawn here, and the inline list's own suppressed —
-               both were drawing and the pair sat between two hairlines a few
-               pixels apart, which reads as a rendering fault. Suppressing the
-               child's is the whole reason this wrapper exists. */
-            <div className="mt-[var(--s2)] border-t border-popover-border/60 pt-[var(--s2)] [&_ul]:mt-0 [&_ul]:border-t-0 [&_ul]:pt-0">
-              {below}
-            </div>
-          ) : null}
         </TooltipContent>
       </TooltipPortal>
     </Tooltip>
@@ -346,18 +338,13 @@ export function FirstScreen() {
               read, and one underlined term beside a bare one that behaves
               identically would teach the reader the wrong rule. tabIndex makes
               each reachable by keyboard, which the native title never was. */}
-          <Hover
-            text="Come in. We're inside!"
-            testId="text-home-digital-experts"
-            below={<RoomMenu className={ACTION_QUIET} testId="button-hover-open-a-room" layout="inline" />}
-          >
+          <Hover text="Come in. We're inside!" testId="text-home-digital-experts">
             Digital experts
           </Hover>{" "}
           +{" "}
           <Hover
             text="Every room here has its own AI agent, grounded in its service's own documentation. Call any of them into the conversation by name, and bring our people in beside them — the room keeps one thread, with who said what on every line."
             testId="text-home-any-agents"
-            below={<RoomMenu className={ACTION_QUIET} testId="button-agents-open-a-room" layout="inline" />}
           >
             any AI agents
           </Hover>{" "}

@@ -140,9 +140,11 @@ import {
   signInOrAttach,
   claimWhatsAppSession,
   endSession,
+  readSessionAccount,
   sessionCookieOptions,
   whoAmI,
 } from "./room-account";
+import { setAccountEmail } from "./identity-store";
 import { listAdminPeople, requireDeploymentOperator } from "./admin/people";
 
 /**
@@ -1814,6 +1816,11 @@ export function registerRoutes(app: Express): void {
         res.status(result.status).json({ error: result.error });
         return;
       }
+      /* The room stores a hash of this. If the person typing it is signed in,
+         their own account keeps the readable copy as well — it is theirs, and
+         it is what stops a booking form asking them for it again. */
+      const account = await readSessionAccount(req.headers.cookie);
+      if (account) await setAccountEmail(account.id, String(req.body?.email ?? ""));
       res.json({ ok: true });
     }),
   );

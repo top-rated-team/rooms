@@ -857,14 +857,16 @@ export default function WorkspacePage() {
               />
               {/* Above the composer, not on arrival: the strip asks once the
                   room already holds something of theirs, which is the moment
-                  they are about to paste more of it. IdentifyStrip hides
-                  itself until that is true. Remounting on a new visitor turn
-                  is what makes it appear after the paste rather than eight
-                  seconds later on its own poll. */}
-              <IdentifyStrip
-                key={`${state.workspace.token}:${written.filter((m) => m.authorKind === "visitor").length}`}
-                token={state.workspace.token}
-              />
+                  they are about to paste more of it.
+
+                  NO LONGER REMOUNTED ON EVERY VISITOR TURN. That was how it
+                  appeared the instant something was pasted rather than on its
+                  own eight-second poll — but it also threw away whatever was
+                  half-typed in it, and the strip now carries a field. It is
+                  always present as one quiet line, so arriving eight seconds
+                  late is a panel opening itself, not the difference between
+                  having a way in and having none. */}
+              <IdentifyStrip token={state.workspace.token} />
               <Composer
                 channel={activeChannel}
                 members={members}
