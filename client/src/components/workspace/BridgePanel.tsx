@@ -32,7 +32,7 @@ const FAILURE =
   "If a message cannot be delivered, it is marked on that message here. It is not dropped silently.";
 
 const MEMORY =
-  "Bridges are kept in this process. A restart forgets them. Reconnect if that happens.";
+  "A connection is kept in this room's record and survives a restart. Disconnecting here is what ends it.";
 
 const CHATWOOT_INBOX =
   "This room opens its own contact and its own conversation in the inbox. You do not have to paste a conversation id. If the inbox, the account and the host are already set on this deployment, Connect is enough. The room is named in ChatWoot as a custom attribute, not in the message, and the room's address is not sent.";

@@ -23,18 +23,24 @@
  * loop cannot start today without a caller; the function is what a caller has
  * to go through if that ever changes.
  *
- * WHERE THIS LIVES. In memory, in this process — the same constraint
- * server/identity.ts has, because this parcel does not own shared/schema.ts.
- * A restart forgets every seat and every credential. Nothing a visitor reads
- * claims otherwise.
+ * WHERE THIS LIVES. In `room_seats`, read into memory once at boot and
+ * written through on every change. It used to live only in this process's
+ * memory, and said so in the admission line — but this service redeploys
+ * several times a day, so a partner given a credential on Tuesday had a dead
+ * one by Wednesday with nothing but a failing authentication to say why.
+ * Without a database it still works and still forgets, and the admission line
+ * says which of the two is true.
  */
 
 import { createHash } from "node:crypto";
 import { customAlphabet, nanoid } from "nanoid";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
 import type { Seat, SeatMode, SeatRevocation } from "@shared/api";
 import { AGENTS, EXPERT_BY_KEY, type ExpertDef } from "@shared/roster";
+import { roomSeats } from "@shared/schema-seats";
 import type { Member, MemberKind, Message } from "@shared/schema";
+import { getDb, hasDb } from "./db";
 import { storage } from "./storage";
 import { broadcast } from "./ws";
 
@@ -84,7 +90,9 @@ function admitBody(seat: Seat): string {
     `Bound to ${seat.boundParty} on our side.`,
     `${seat.callsPerDay} calls a day. Expires ${dayLabel(seat.expiresOn)}.`,
     ROOM_TOKEN_IS_NOT_A_SEAT,
-    "This admission is remembered in this process. A restart forgets the credential.",
+    hasDb()
+      ? "The credential is shown once, here, and never again. It survives a restart; losing it means being re-admitted."
+      : "This admission is remembered in this process. A restart forgets the credential.",
   ].join(" ");
 }
 
@@ -130,6 +138,129 @@ const seatsByHash = new Map<string, string>();
 export function resetSeatsForTests(): void {
   seats.clear();
   seatsByHash.clear();
+  hydrated = false;
+  hydrateInFlight = null;
+}
+
+/* ------------------------------- the table -------------------------------- */
+
+let hydrated = false;
+let hydrateInFlight: Promise<void> | null = null;
+
+function remember(stored: StoredSeat): void {
+  seats.set(stored.id, stored);
+  seatsByHash.set(stored.credentialHash, stored.id);
+}
+
+/**
+ * Read every admission back at boot.
+ *
+ * Called from the entry points rather than at import, same as the bridges:
+ * a module that talks to a database while it is being imported is a module
+ * that decides when the process connects.
+ */
+export async function hydrateSeats(): Promise<void> {
+  if (hydrated) return;
+  if (!hasDb()) {
+    hydrated = true;
+    return;
+  }
+  if (hydrateInFlight) {
+    await hydrateInFlight;
+    return;
+  }
+  hydrateInFlight = (async () => {
+    const db = getDb();
+    if (!db) return;
+    try {
+      for (const row of await db.select().from(roomSeats)) {
+        if (seats.has(row.id)) continue;
+        remember({
+          id: row.id,
+          workspaceId: row.workspaceId,
+          roomToken: row.roomToken,
+          memberKey: row.memberKey,
+          handle: row.handle,
+          displayName: row.displayName,
+          company: row.company,
+          mode: row.mode,
+          thread: row.thread,
+          channelId: row.channelId,
+          joinedOn: row.joinedOn,
+          expiresOn: row.expiresOn,
+          callsUsed: row.callsUsed,
+          callsPerDay: row.callsPerDay,
+          day: row.day,
+          boundParty: row.boundParty,
+          boundPartyKey: row.boundPartyKey,
+          credentialHash: row.credentialHash,
+          ...(row.revokedOn && row.revokedBy && row.revokedReason
+            ? { revoked: { on: row.revokedOn, by: row.revokedBy, reason: row.revokedReason } }
+            : {}),
+          ...(row.budgetNoticeDay ? { budgetNoticeDay: row.budgetNoticeDay } : {}),
+        });
+      }
+    } catch (error) {
+      console.error(
+        "[seats] room_seats is not readable. Admissions stay in memory and vanish on restart until DATABASE_URL is set and `npm run db:push` creates the table.",
+        error instanceof Error ? error.message : error,
+      );
+    } finally {
+      hydrated = true;
+    }
+  })();
+  try {
+    await hydrateInFlight;
+  } finally {
+    hydrateInFlight = null;
+  }
+}
+
+/**
+ * Write one admission through.
+ *
+ * Fire-and-forget at every call site: a seat that is live in this process and
+ * not yet on disk is the old behaviour, and refusing the call because the
+ * database is slow would be worse than the bug this replaces.
+ */
+function persistSeat(stored: StoredSeat): void {
+  if (!hasDb()) return;
+  const db = getDb();
+  if (!db) return;
+  const values = {
+    id: stored.id,
+    workspaceId: stored.workspaceId,
+    roomToken: stored.roomToken,
+    memberKey: stored.memberKey,
+    handle: stored.handle,
+    displayName: stored.displayName,
+    company: stored.company,
+    mode: stored.mode,
+    thread: stored.thread,
+    channelId: stored.channelId,
+    joinedOn: stored.joinedOn,
+    expiresOn: stored.expiresOn,
+    callsUsed: stored.callsUsed,
+    callsPerDay: stored.callsPerDay,
+    day: stored.day,
+    boundParty: stored.boundParty,
+    boundPartyKey: stored.boundPartyKey,
+    credentialHash: stored.credentialHash,
+    revokedOn: stored.revoked?.on ?? null,
+    revokedBy: stored.revoked?.by ?? null,
+    revokedReason: stored.revoked?.reason ?? null,
+    budgetNoticeDay: stored.budgetNoticeDay ?? null,
+  };
+  void db
+    .insert(roomSeats)
+    .values(values)
+    .onConflictDoUpdate({ target: roomSeats.id, set: values })
+    .catch((error: unknown) => {
+      console.error(
+        "[seats] could not persist an admission. It is live in this process only.",
+        error instanceof Error ? error.message : error,
+      );
+    });
 }
 
 export const admitSeatSchema = z.object({
@@ -150,6 +281,14 @@ export const revokeSeatSchema = z.object({
 });
 
 export type RevokeSeatInput = z.infer<typeof revokeSeatSchema>;
+
+export const seatModeSchema = z.object({
+  mode: z.enum(["watch", "suggest", "act"]),
+});
+
+export const seatPostSchema = z.object({
+  body: z.string().min(1).max(8000),
+});
 
 export type SeatResult<T> = { ok: true } & T | { ok: false; error: string };
 
@@ -388,6 +527,7 @@ export async function admitSeat(
   input: AdmitSeatInput,
   now: number = Date.now(),
 ): Promise<SeatResult<{ seat: Seat; credential: string; member: Member; message: Message }>> {
+  await hydrateSeats();
   const parsed = admitSeatSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: describeParse(parsed.error) };
 
@@ -444,8 +584,8 @@ export async function admitSeat(
     credentialHash: hashCredential(credential),
   };
 
-  seats.set(stored.id, stored);
-  seatsByHash.set(stored.credentialHash, stored.id);
+  remember(stored);
+  persistSeat(stored);
 
   let member: Member;
   try {
@@ -483,6 +623,7 @@ export async function revokeSeat(
   input: RevokeSeatInput,
   now: number = Date.now(),
 ): Promise<SeatResult<{ seat: Seat; message: Message }>> {
+  await hydrateSeats();
   const parsed = revokeSeatSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: describeParse(parsed.error) };
 
@@ -507,6 +648,7 @@ export async function revokeSeat(
       reason,
     };
     seats.set(stored.id, stored);
+  persistSeat(stored);
   }
 
   const publicSeat = toPublic(stored);
@@ -528,6 +670,7 @@ export async function setSeatMode(
   mode: SeatMode,
   now: number = Date.now(),
 ): Promise<SeatResult<{ seat: Seat }>> {
+  await hydrateSeats();
   if (!SEAT_MODES.includes(mode)) return { ok: false, error: "Unknown mode." };
 
   const state = await storage.getWorkspaceByToken(token);
@@ -542,10 +685,12 @@ export async function setSeatMode(
 
   stored.mode = mode;
   seats.set(stored.id, stored);
+  persistSeat(stored);
   return { ok: true, seat: toPublic(stored) };
 }
 
 export async function listSeats(token: string, now: number = Date.now()): Promise<Seat[] | null> {
+  await hydrateSeats();
   const state = await storage.getWorkspaceByToken(token);
   if (!state) return null;
   return [...seats.values()]
@@ -578,6 +723,9 @@ export type SeatAuth =
  * Look up a seat by its own secret. A workspace token, a member key, or any
  * other string that is not the secret minted at admission, fails.
  */
+/* NOT async, and so it cannot hydrate: every caller of this is reached
+   through an async entry point above that already has. `claimSeatCall` says
+   why these two must stay synchronous. */
 export function authenticateSeat(credential: string, now: number = Date.now()): SeatAuth {
   const secret = credential.trim();
   if (!secret.startsWith(CREDENTIAL_PREFIX) || secret.length !== CREDENTIAL_PREFIX.length + CREDENTIAL_LENGTH) {
@@ -629,6 +777,9 @@ export function claimSeatCall(credential: string, now: number = Date.now()): Sea
 
   stored.callsUsed += 1;
   seats.set(stored.id, stored);
+  /* The day's count is written through too. A restart that forgot it would
+     hand a partner's agent a fresh budget several times a day. */
+  persistSeat(stored);
   return { ok: true, seat: toPublic(stored) };
 }
 
@@ -636,6 +787,7 @@ export async function readSeatThread(
   credential: string,
   now: number = Date.now(),
 ): Promise<SeatResult<{ seat: Seat; channelId: string; thread: string; messages: Message[] }>> {
+  await hydrateSeats();
   const auth = authenticateSeat(credential, now);
   if (!auth.ok) return { ok: false, error: auth.error };
 
@@ -657,6 +809,7 @@ export async function postFromSeat(
   body: string,
   now: number = Date.now(),
 ): Promise<SeatResult<{ seat: Seat; message: Message }>> {
+  await hydrateSeats();
   const text = body.trim();
   if (!text) return { ok: false, error: "A post has to have a body." };
   if (text.length > 8000) return { ok: false, error: "That post is too long." };
@@ -692,6 +845,7 @@ async function postBudgetNotice(stored: StoredSeat, now: number): Promise<void> 
   if (stored.budgetNoticeDay === day) return;
   stored.budgetNoticeDay = day;
   seats.set(stored.id, stored);
+  persistSeat(stored);
   try {
     const message = await storage.addMessage(stored.workspaceId, {
       channelId: stored.channelId,

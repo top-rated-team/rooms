@@ -39,6 +39,13 @@ interface BillingView {
 
 export interface AgentExchangePanelProps {
   token: string;
+  /**
+   * Who may attach a card and agree. Defaults off: the server refuses anyone
+   * else anyway, and a button that always refuses is worse than no button.
+   * The state is still shown, because a room's people should be able to see
+   * what their room is allowed to spend.
+   */
+  canManage?: boolean;
   className?: string;
 }
 
@@ -48,7 +55,7 @@ function cardLine(card: BillingView["card"]): string {
   return card.last4 ? `${brand} ending ${card.last4}.` : `${brand} on file.`;
 }
 
-export function AgentExchangePanel({ token, className }: AgentExchangePanelProps) {
+export function AgentExchangePanel({ token, canManage = false, className }: AgentExchangePanelProps) {
   const [view, setView] = useState<BillingView | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -160,13 +167,13 @@ export function AgentExchangePanel({ token, className }: AgentExchangePanelProps
       )}
 
       <div className="mt-3 flex flex-wrap items-center gap-4">
-        {!view.card ? (
+        {canManage && !view.card ? (
           <button type="button" className={ACTION} onClick={() => void addCard()} disabled={busy} data-testid="button-add-card">
             Add a card
           </button>
         ) : null}
 
-        {view.card && (!exchange.turnsAgreed || exchange.turnsLeft <= 0) ? (
+        {canManage && view.card && (!exchange.turnsAgreed || exchange.turnsLeft <= 0) ? (
           <button
             type="button"
             className={ACTION}
@@ -178,7 +185,7 @@ export function AgentExchangePanel({ token, className }: AgentExchangePanelProps
           </button>
         ) : null}
 
-        {exchange.turnsAgreed ? (
+        {canManage && exchange.turnsAgreed ? (
           <button
             type="button"
             className={ACTION_QUIET}

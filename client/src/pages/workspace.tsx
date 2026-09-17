@@ -4,17 +4,25 @@ import { AGENT_BY_ID, BOOK_A_CALL_URL, EXPERTS, MAIN_SITE_URL, type AgentDef, ty
 import { useBooking } from "@/hooks/use-booking";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID, type DoorContract, type DoorDef } from "@shared/doors";
 import type { Channel, Message, TaskStatus } from "@shared/schema";
+import type { RoomClaimState, Seat } from "@shared/api";
 import { useTheme } from "@/hooks/use-theme";
 import { forgetWorkspace, listStoredWorkspaces, useWorkspace } from "@/hooks/use-workspace";
 import { AccountsPanel } from "@/components/workspace/AccountsPanel";
 import { AdGrantPanel, AD_GRANT_SETUP, type SetupLine } from "@/components/workspace/AdGrantPanel";
 import { AgentExchangePanel } from "@/components/workspace/AgentExchangePanel";
+import { BridgePanel } from "@/components/workspace/BridgePanel";
+import {
+  AdmitAgentDialog,
+  detailFromSeat,
+  type AdmitAgentInput,
+  type AdmitAgentIssued,
+} from "@/components/workspace/AdmitAgentDialog";
 import { roomNowLine } from "@shared/room-now";
 import { ChannelHeader, type MobileView } from "@/components/workspace/ChannelHeader";
 import { Composer } from "@/components/workspace/Composer";
 import { IdentifyStrip } from "@/components/workspace/IdentifyStrip";
 import { InviteExpertDialog, type HireOffer } from "@/components/workspace/InviteExpertDialog";
-import { MemberRail } from "@/components/workspace/MemberRail";
+import { MemberRail, type MemberDetail } from "@/components/workspace/MemberRail";
 import { MessageList } from "@/components/workspace/MessageList";
 import { NewChannelDialog } from "@/components/workspace/NewChannelDialog";
 import { RoomArrival } from "@/components/workspace/RoomArrival";
@@ -23,6 +31,7 @@ import { ShareLinkBar } from "@/components/workspace/ShareLinkBar";
 import { TaskPanel } from "@/components/workspace/TaskPanel";
 import { WorkspaceSidebar } from "@/components/workspace/WorkspaceSidebar";
 import { ACTION, ACTION_QUIET, CHROME, LABEL, META, READ } from "@/components/workspace/room-style";
+import { ApiError, apiRequest } from "@/lib/apiRequest";
 import { cn } from "@/lib/utils";
 
 /** How much of an agent's answer goes into a brief before it stops being read. */
@@ -246,6 +255,10 @@ export default function WorkspacePage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [hireOffer, setHireOffer] = useState<HireOffer | undefined>(undefined);
   const [channelDialogOpen, setChannelDialogOpen] = useState(false);
+  const [admitOpen, setAdmitOpen] = useState(false);
+  /* Admitted outside agents, as the room is allowed to see them: no secret in
+     here, and the secret the sheet shows once is never read back. */
+  const [seats, setSeats] = useState<Seat[]>([]);
   const [unread, setUnread] = useState<Record<string, number>>({});
   const [arrivalDismissed, setArrivalDismissed] = useState(false);
   const messageCountsRef = useRef<Record<string, number> | null>(null);
@@ -516,6 +529,105 @@ export default function WorkspacePage() {
       return member !== null;
     },
     [inviteExpert],
+  );
+
+  /* ------------------------- admitted outside agents ----------------------- */
+  /* The list is public — company, mode, thread, dates, calls. The credential
+     is minted once by the server and shown once by the sheet; nothing here
+     keeps it, and there is no endpoint that could hand it back. */
+
+  /* Who may connect a bridge, put a card on the room, or admit an agent: the
+     same claim that decides who may rename it. Read once — the server decides
+     this again on every write, so this only keeps a control off the screen
+     that would refuse. */
+  const [canManageRoom, setCanManageRoom] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+    const ac = new AbortController();
+    void apiRequest<RoomClaimState>("GET", `/api/workspaces/${encodeURIComponent(token)}/claim`, undefined, {
+      signal: ac.signal,
+    })
+      .then((claim) => setCanManageRoom(Boolean(claim.canRename)))
+      .catch(() => setCanManageRoom(false));
+    return () => ac.abort();
+  }, [token]);
+
+  const loadSeats = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!state) return;
+      try {
+        setSeats(
+          await apiRequest<Seat[]>("GET", `/api/workspaces/${encodeURIComponent(state.workspace.token)}/seats`, undefined, {
+            signal,
+          }),
+        );
+      } catch {
+        /* A room that cannot list them has none it can show. */
+      }
+    },
+    [state],
+  );
+
+  useEffect(() => {
+    const ac = new AbortController();
+    void loadSeats(ac.signal);
+    return () => ac.abort();
+  }, [loadSeats]);
+
+  const onAdmitAgent = useCallback(
+    async (input: AdmitAgentInput): Promise<AdmitAgentIssued | { error: string }> => {
+      if (!state) return { error: "This room is not open." };
+      try {
+        const issued = await apiRequest<AdmitAgentIssued>(
+          "POST",
+          `/api/workspaces/${encodeURIComponent(state.workspace.token)}/seats`,
+          input,
+        );
+        /* The new member arrives on its own: server/seats.ts broadcasts one
+           when it admits. This only refreshes what the rail cannot learn from
+           a member row — the mode, the dates and the call count. */
+        await loadSeats();
+        return issued;
+      } catch (error) {
+        return { error: error instanceof ApiError ? error.message : "That agent could not be admitted." };
+      }
+    },
+    [loadSeats, state],
+  );
+
+  const onRevokeAgent = useCallback(
+    async (memberKey: string) => {
+      if (!state) return;
+      const seat = seats.find((row) => row.memberKey === memberKey);
+      if (!seat) return;
+      const reason = window.prompt("Why is this agent being revoked? The room keeps the reason.");
+      if (!reason?.trim()) return;
+      try {
+        await apiRequest("POST", `/api/workspaces/${encodeURIComponent(state.workspace.token)}/seats/revoke`, {
+          seatId: seat.id,
+          by: state.workspace.visitorName?.trim() || "The room owner",
+          reason: reason.trim(),
+        });
+        await loadSeats();
+      } catch {
+        /* The server writes the revocation line into the thread; a failure
+           here leaves the rail as it was rather than claiming a revocation
+           that did not happen. */
+      }
+    },
+    [loadSeats, seats, state],
+  );
+
+  const seatDetail = useMemo<Record<string, MemberDetail>>(() => {
+    const rows: Record<string, MemberDetail> = {};
+    for (const seat of seats) rows[seat.memberKey] = detailFromSeat(seat) as MemberDetail;
+    return rows;
+  }, [seats]);
+
+  const admitThreads = useMemo(
+    () => channels.filter((channel) => channel.kind !== "agent").map((channel) => ({ id: channel.id, slug: channel.slug, name: channel.name })),
+    [channels],
   );
 
   const onCreateChannel = useCallback(
@@ -789,8 +901,14 @@ export default function WorkspacePage() {
                 /* The same contract the footer prints: a line under a badge
                    that names a company must name this room's, not the site's. */
                 contract={door?.contract ?? UNSTAMPED_ROOM}
+                detail={seatDetail}
                 onInvite={() => openInvite()}
                 onOpenDm={(memberKey) => void openDm(memberKey)}
+                /* The rail has drawn an admitted agent's company, mode, dates
+                   and call count since it was written. Until now nothing could
+                   put one there. */
+                onAddAgent={canManageRoom && admitThreads.length > 0 ? () => setAdmitOpen(true) : undefined}
+                onRevoke={(memberKey) => void onRevokeAgent(memberKey)}
                 className="scrollbar-thin max-h-[28vh] shrink-0 overflow-y-auto border-b border-border"
               />
               <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
@@ -812,7 +930,13 @@ export default function WorkspacePage() {
                     every fork: the room does not offer a thing it cannot do.
                     It sits above the tasks for the same reason AdGrantPanel
                     does — under six seeded rows is not on screen. */}
-                <AgentExchangePanel token={state.workspace.token} />
+                <AgentExchangePanel token={state.workspace.token} canManage={canManageRoom} />
+                {/* Where this room is reachable from: a WhatsApp group, a Slack
+                    channel, a ChatWoot inbox, a ClickUp list. The panel drew
+                    all four and nothing could open it. It stays out of a
+                    visitor's way — with no bridge and no claim on the room, it
+                    renders nothing. */}
+                <BridgePanel token={state.workspace.token} canManage={canManageRoom} />
                 <TaskPanel tasks={tasks} members={members} onCreate={onCreateTask} onUpdate={onUpdateTask} />
               </div>
               {/* A room must not be able to render without saying which company
@@ -838,6 +962,13 @@ export default function WorkspacePage() {
         offer={hireOffer}
       />
       <NewChannelDialog open={channelDialogOpen} onOpenChange={setChannelDialogOpen} onCreate={onCreateChannel} />
+      <AdmitAgentDialog
+        open={admitOpen}
+        onOpenChange={setAdmitOpen}
+        threads={admitThreads}
+        defaultChannelId={activeChannel?.kind !== "agent" ? activeChannel?.id : undefined}
+        onAdmit={onAdmitAgent}
+      />
     </Shell>
   );
 }

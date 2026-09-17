@@ -226,3 +226,4 @@ export * from "./schema-adgrant";
 export * from "./schema-accounts";
 export * from "./schema-bridges";
 export * from "./schema-billing";
+export * from "./schema-seats";

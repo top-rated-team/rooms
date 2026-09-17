@@ -43,7 +43,23 @@ import { kbStatus } from "./ai/kb";
 import { routeQuestion } from "./ai/route-question";
 import { ASK_LEDGER_KEY, askBudgetUsd, askLedgerKey, claimAgentTurn, guardAgentTurn, recordTurnCost } from "./spend";
 import { billingFor, countExchangeTurn, mayAgentsAnswerEachOther } from "./billing/consent";
-import { agentsNamedIn, mayAgentReplyToAgent, seatHandlesFor } from "./seats";
+import {
+  ROOM_TOKEN_IS_NOT_A_SEAT,
+  admitSeat,
+  admitSeatSchema,
+  agentsNamedIn,
+  credentialFromAuthorization,
+  listSeats,
+  mayAgentReplyToAgent,
+  postFromSeat,
+  readSeatThread,
+  revokeSeat,
+  revokeSeatSchema,
+  seatHandlesFor,
+  seatModeSchema,
+  seatPostSchema,
+  setSeatMode,
+} from "./seats";
 import {
   billingView,
   cardDoneSchema,
@@ -1834,6 +1850,131 @@ export function registerRoutes(app: Express): void {
         return;
       }
       res.json(result.bridges);
+    }),
+  );
+
+  /* -------------------------- admitted agents --------------------------- */
+  /*
+   * Somebody else's agent, in one thread of this room. server/seats.ts had
+   * every rule and no caller — 716 lines nobody in a room could reach. These
+   * are the doors to it.
+   *
+   * TWO CREDENTIALS, AND THEY ARE NOT THE SAME ONE. The owner acts with the
+   * room token, because that is a person in the room talking about the room.
+   * The agent acts with its own secret under the `Seat` scheme, minted once at
+   * admission and never shown again. A room token presented as a seat secret
+   * is refused by name.
+   */
+
+  app.get(
+    "/api/workspaces/:token/seats",
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const listed = await listSeats(state.workspace.token);
+      if (!listed) return notFound(res, "Workspace not found");
+      res.json(listed);
+    }),
+  );
+
+  app.post(
+    "/api/workspaces/:token/seats",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const owner = await requireRoomOwner(state, res, "admit an agent to it");
+      if (!owner) return;
+      const parsed = admitSeatSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const result = await admitSeat(state.workspace.token, parsed.data);
+      if (!result.ok) {
+        res.status(400).json({ error: result.error });
+        return;
+      }
+      /* The one and only time the secret is in a response. It is not stored
+         and cannot be read back — losing it means being re-admitted. */
+      res.status(201).json({ seat: result.seat, credential: result.credential });
+    }),
+  );
+
+  app.post(
+    "/api/workspaces/:token/seats/revoke",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const owner = await requireRoomOwner(state, res, "revoke an agent from it");
+      if (!owner) return;
+      const parsed = revokeSeatSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const result = await revokeSeat(state.workspace.token, parsed.data);
+      if (!result.ok) {
+        res.status(400).json({ error: result.error });
+        return;
+      }
+      res.json(result.seat);
+    }),
+  );
+
+  app.post(
+    "/api/workspaces/:token/seats/:seatId/mode",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const owner = await requireRoomOwner(state, res, "change what an agent may do in it");
+      if (!owner) return;
+      const parsed = seatModeSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const rawSeatId = req.params.seatId;
+      const seatId = Array.isArray(rawSeatId) ? rawSeatId[0] : rawSeatId;
+      const result = await setSeatMode(state.workspace.token, seatId ?? "", parsed.data.mode);
+      if (!result.ok) {
+        res.status(400).json({ error: result.error });
+        return;
+      }
+      res.json(result.seat);
+    }),
+  );
+
+  /* The agent's own two endpoints. `Authorization: Seat <credential>`. */
+
+  app.get(
+    "/api/seat/thread",
+    messageLimit,
+    route(async (req, res) => {
+      const credential = credentialFromAuthorization(req.get("authorization"));
+      if (!credential) {
+        res.status(401).json({ error: ROOM_TOKEN_IS_NOT_A_SEAT });
+        return;
+      }
+      const result = await readSeatThread(credential);
+      if (!result.ok) {
+        res.status(403).json({ error: result.error });
+        return;
+      }
+      res.json({ seat: result.seat, thread: result.thread, channelId: result.channelId, messages: result.messages });
+    }),
+  );
+
+  app.post(
+    "/api/seat/messages",
+    messageLimit,
+    route(async (req, res) => {
+      const credential = credentialFromAuthorization(req.get("authorization"));
+      if (!credential) {
+        res.status(401).json({ error: ROOM_TOKEN_IS_NOT_A_SEAT });
+        return;
+      }
+      const parsed = seatPostSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const result = await postFromSeat(credential, parsed.data.body);
+      if (!result.ok) {
+        res.status(403).json({ error: result.error });
+        return;
+      }
+      res.status(201).json({ seat: result.seat, message: result.message });
     }),
   );
 

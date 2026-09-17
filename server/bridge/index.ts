@@ -7,9 +7,11 @@
  * spend turn before a bridged agent answers, and writes a delivery failure
  * onto the message that failed.
  *
- * WHERE THIS LIVES. In memory, in this process — the same constraint
- * server/identity.ts has, because this parcel does not own shared/schema.ts.
- * A restart forgets every bridge. The panel says so.
+ * WHERE THIS LIVES. In `room_bridges`, read into memory once and written
+ * through on every change. It used to live only in this process, and this
+ * service redeploys several times a day, so a connected group died silently
+ * and often. Without a database it still works and still forgets; the panel
+ * says which of the two is true.
  */
 
 import { timingSafeEqual } from "node:crypto";
