@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-import { billingFor, rememberCard, resetBillingForTests } from "./consent";
+import { billingFor, rememberCard, rememberCustomer, resetBillingForTests } from "./consent";
 import { billingView, finishCardSetup, setExchangeConsent, startCardSetup } from "./http";
 
 const WS = "ws_http_test";
@@ -230,5 +230,56 @@ describe("the loop rule and the money rule are both asked", () => {
       posts.includes("agentsNamedIn(body, mentions"),
       "the message route no longer reads which agents the person named",
     );
+  });
+});
+
+describe("a key problem never reaches the person reading the room", () => {
+  const stripeError = (status: number, message: string): typeof fetch =>
+    (async () =>
+      new Response(JSON.stringify({ error: { message } }), { status })) as unknown as typeof fetch;
+
+  /*
+   * A key-shaped string, ASSEMBLED AT RUNTIME so no key-shaped literal is ever
+   * in this repository. The first draft of this test pasted the real live key
+   * in as a fixture and GitHub's push protection refused the push, which was
+   * right: a live key does not belong in source, not even as an example of
+   * what not to print.
+   */
+  const FAKE_KEY = ["rk", "live", `51${"E".repeat(30)}`].join("_");
+
+  /* The real shape of Stripe's message when a restricted key lacks a scope. */
+  const PERMISSIONS = `The provided key '${FAKE_KEY}' does not have the required permissions for this endpoint.`;
+
+  it("does not print the key when Stripe names it", async () => {
+    const started = await startCardSetup(
+      { workspaceId: WS, returnUrl: BACK },
+      { fetchImpl: stripeError(403, PERMISSIONS) },
+    );
+    assert.equal(started.ok, false);
+    const line = started.ok === false ? started.error : "";
+    assert.ok(!line.includes(FAKE_KEY), `the key reached the browser: ${line}`);
+    assert.ok(!/\b[a-z]{2}_(live|test)_/.test(line), `something key-shaped reached the browser: ${line}`);
+    assert.match(line, /not set up correctly/i);
+    assert.match(line, /nothing was charged/i);
+  });
+
+  it("treats a 401 the same way, whatever it says", async () => {
+    const started = await startCardSetup(
+      { workspaceId: WS, returnUrl: BACK },
+      { fetchImpl: stripeError(401, `Invalid API Key provided: ${FAKE_KEY.slice(0, 16)}************5u6W`) },
+    );
+    assert.equal(started.ok, false);
+    const line = started.ok === false ? started.error : "";
+    assert.ok(!/\b[a-z]{2}_(live|test)_/.test(line), `something key-shaped reached the browser: ${line}`);
+  });
+
+  it("still passes on a sentence that is about the card and not about the key", async () => {
+    await rememberCustomer(WS, "cus_mine");
+    const done = await finishCardSetup(
+      { workspaceId: WS, checkoutSessionId: "cs_1" },
+      { fetchImpl: stripeError(402, "Your card was declined.") },
+    );
+    assert.equal(done.ok, false);
+    assert.match(done.ok === false ? done.error : "", /card was declined/i);
   });
 });

@@ -22,6 +22,21 @@ const REQUEST_MS = 12_000;
 export const STRIPE_UNCONFIGURED_LINE =
   "Card payments are not set up on this deployment.";
 
+/**
+ * What a person is told when the key is wrong or lacks a permission.
+ *
+ * NOT Stripe's own sentence, which is the one exception to the rule below it:
+ * on a 401 or 403 Stripe names the key in the message — "The provided key
+ * 'rk_live_51UG…' does not have the required permissions" — and that message
+ * was going straight into a browser. It is also useless to the person reading
+ * it, who cannot fix a deployment's key. The detail is logged for us instead.
+ */
+export const STRIPE_NOT_PERMITTED_LINE =
+  "Cards are not set up correctly on this deployment, so that could not be done. Nothing was charged.";
+
+/** Any Stripe key, in any mode, restricted or not. */
+const KEY_SHAPED = /\b[a-z]{2}_(live|test)_[A-Za-z0-9]+/;
+
 export function stripeSecretKey(): string | null {
   const raw = process.env.STRIPE_SECRET_KEY?.trim();
   return raw && raw.length > 0 ? raw : null;
@@ -69,9 +84,17 @@ async function call<T>(
     const parsed: unknown = text ? JSON.parse(text) : null;
     if (!res.ok) {
       const record = parsed as { error?: { message?: string } } | null;
-      /* Stripe's own sentence, which says what is wrong far better than a
-         generic one, and never carries the key. */
-      return { ok: false, line: record?.error?.message ?? "The card service refused that.", status: res.status };
+      const message = record?.error?.message ?? "";
+      /* A key problem is ours, not the reader's: they cannot act on it, and
+         Stripe's sentence for it carries the key. Log it where we will see it
+         and hand back one that is safe to print. */
+      if (res.status === 401 || res.status === 403 || KEY_SHAPED.test(message)) {
+        console.error(`[stripe] ${res.status} on ${path}: ${message.replace(KEY_SHAPED, "<key>")}`);
+        return { ok: false, line: STRIPE_NOT_PERMITTED_LINE, status: res.status };
+      }
+      /* Otherwise Stripe's own sentence, which says what is wrong far better
+         than a generic one — a declined card, an expired session. */
+      return { ok: false, line: message || "The card service refused that.", status: res.status };
     }
     return { ok: true, body: parsed as T };
   } catch {
