@@ -8,6 +8,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { forgetWorkspace, listStoredWorkspaces, useWorkspace } from "@/hooks/use-workspace";
 import { AccountsPanel } from "@/components/workspace/AccountsPanel";
 import { AdGrantPanel, AD_GRANT_SETUP, type SetupLine } from "@/components/workspace/AdGrantPanel";
+import { AgentExchangePanel } from "@/components/workspace/AgentExchangePanel";
 import { roomNowLine } from "@shared/room-now";
 import { ChannelHeader, type MobileView } from "@/components/workspace/ChannelHeader";
 import { Composer } from "@/components/workspace/Composer";
@@ -807,6 +808,11 @@ export default function WorkspacePage() {
                     accounts are ours, and putting them in that room would
                     tell their client they had our capacity on their team. */}
                 {ours === true ? <AccountsPanel token={state.workspace.token} /> : null}
+                {/* Renders nothing where Stripe is not configured, which is
+                    every fork: the room does not offer a thing it cannot do.
+                    It sits above the tasks for the same reason AdGrantPanel
+                    does — under six seeded rows is not on screen. */}
+                <AgentExchangePanel token={state.workspace.token} />
                 <TaskPanel tasks={tasks} members={members} onCreate={onCreateTask} onUpdate={onUpdateTask} />
               </div>
               {/* A room must not be able to render without saying which company

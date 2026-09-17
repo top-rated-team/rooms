@@ -2,7 +2,7 @@
  * The card, and nothing else.
  *
  * This file can do exactly three things: find or make a Stripe Customer for a
- * room, start a SetupIntent so a person can attach a card WITHOUT being
+ * room, open a Stripe-hosted page where a card is attached WITHOUT being
  * charged, and read back which card was attached. It cannot charge. Charging
  * is a separate decision with its own consent, and a file that can only save a
  * card cannot accidentally take money.
@@ -109,6 +109,9 @@ export interface StripeSetupIntent {
   client_secret: string;
   status: string;
   payment_method?: string | null;
+  /* Read back on purpose: a SetupIntent id handed in by a browser is only
+     this room's if it belongs to this room's customer. */
+  customer?: string | null;
 }
 
 /**
@@ -135,6 +138,50 @@ export async function getSetupIntent(
   fetchImpl: typeof fetch = fetch,
 ): Promise<StripeResult<StripeSetupIntent>> {
   return call<StripeSetupIntent>(`/setup_intents/${encodeURIComponent(id)}`, { method: "GET" }, fetchImpl);
+}
+
+export interface StripeCheckoutSession {
+  id: string;
+  url?: string | null;
+  mode?: string;
+  status?: string;
+  customer?: string | null;
+  setup_intent?: string | null;
+}
+
+/**
+ * A page on Stripe's own domain where a card is typed in.
+ *
+ * `mode=setup` is hard-coded and there is no parameter that could make it
+ * anything else. A setup session has no line items and no amount; it cannot
+ * take money even if somebody calls this with the wrong intent. It is also
+ * why there are no card fields anywhere in this repository.
+ */
+export async function createCheckoutSetupSession(
+  input: { customerId: string; successUrl: string; cancelUrl: string },
+  fetchImpl: typeof fetch = fetch,
+): Promise<StripeResult<StripeCheckoutSession>> {
+  return call<StripeCheckoutSession>(
+    "/checkout/sessions",
+    {
+      method: "POST",
+      body: form({
+        mode: "setup",
+        customer: input.customerId,
+        "payment_method_types[0]": "card",
+        success_url: input.successUrl,
+        cancel_url: input.cancelUrl,
+      }),
+    },
+    fetchImpl,
+  );
+}
+
+export async function getCheckoutSession(
+  id: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<StripeResult<StripeCheckoutSession>> {
+  return call<StripeCheckoutSession>(`/checkout/sessions/${encodeURIComponent(id)}`, { method: "GET" }, fetchImpl);
 }
 
 export interface StripePaymentMethod {

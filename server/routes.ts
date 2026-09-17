@@ -42,6 +42,17 @@ import { llmReady, streamAgentAnswer } from "./ai/agentRuntime";
 import { kbStatus } from "./ai/kb";
 import { routeQuestion } from "./ai/route-question";
 import { ASK_LEDGER_KEY, askBudgetUsd, askLedgerKey, claimAgentTurn, guardAgentTurn, recordTurnCost } from "./spend";
+import { billingFor, countExchangeTurn, mayAgentsAnswerEachOther } from "./billing/consent";
+import { agentsNamedIn, mayAgentReplyToAgent, seatHandlesFor } from "./seats";
+import {
+  billingView,
+  cardDoneSchema,
+  cardSetupSchema,
+  exchangeConsentSchema,
+  finishCardSetup,
+  setExchangeConsent,
+  startCardSetup,
+} from "./billing/http";
 import { acceptWhatsAppInbound, bindingStateForToken, claimStateForToken, claimStateForWorkspace, completeLinkedIn, hydrateIdentityStore, installIdentityInbound, saveWhatsAppNote, startLinkedIn, startWhatsApp } from "./identity";
 import { listBoosters } from "./flygen";
 import {
@@ -261,6 +272,26 @@ async function requireWorkspace(req: Request, res: Response): Promise<WorkspaceS
   return state;
 }
 
+/**
+ * The person who may spend this room's money, or null and a 403 already sent.
+ *
+ * Same claim as renaming. `name` is what goes into the record of who agreed,
+ * so a bill can be traced to a person rather than to a room.
+ */
+async function requireRoomOwner(
+  state: WorkspaceState,
+  res: Response,
+  what: string,
+): Promise<{ name: string } | null> {
+  await hydrateIdentityStore();
+  const claim = claimStateForWorkspace(state.workspace.id);
+  if (!claim.canRename || !claim.owner) {
+    res.status(403).json({ error: `This room has no owner yet, so nobody can ${what}.` });
+    return null;
+  }
+  return { name: claim.owner.displayName };
+}
+
 /* -------------------------------- agents ---------------------------------- */
 
 /** Both `@tracking` (the handle) and `conversion-tracking` (the id) resolve. */
@@ -289,11 +320,26 @@ function resolveAgent(channel: Channel, body: string, mentions?: string[]): stri
     const id = agentFromKey(mention);
     if (id) return id;
   }
+  const named = mentionedAgent(body);
+  if (named) return named;
+  if (channel.kind === "agent" && channel.counterpartKey) return agentFromKey(channel.counterpartKey);
+  return null;
+}
+
+/**
+ * The first agent named in a piece of text, and nothing inferred.
+ *
+ * The hand-off between agents uses THIS and never `resolveAgent`: the channel
+ * fallback would make an agent in its own channel answer its own answer, and
+ * the only thing standing between that and a loop would be the ceiling. An
+ * agent hands the turn on when it names somebody, which is a thing a reader of
+ * the room can see in the text.
+ */
+function mentionedAgent(body: string): string | null {
   for (const match of body.matchAll(MENTION_PATTERN)) {
     const id = agentFromKey(match[1]);
     if (id) return id;
   }
-  if (channel.kind === "agent" && channel.counterpartKey) return agentFromKey(channel.counterpartKey);
   return null;
 }
 
@@ -343,6 +389,14 @@ interface AgentReply {
   agentId: string;
   question: string;
   history: Turn[];
+  /**
+   * The agents A PERSON named, in the one message that started this. It is
+   * carried through every hand-off because it is what the loop rule in
+   * server/seats.ts is about: two agents may talk to each other only where
+   * somebody asked them both, and an agent cannot widen that by naming a
+   * third one nobody called for.
+   */
+  namedByPerson?: string[];
 }
 
 /**
@@ -417,6 +471,82 @@ async function runAgentReply(reply: AgentReply): Promise<void> {
   });
   void fanOutIfBridged(reply.token, { ...placeholder, body: finalBody, meta }).catch((error: unknown) => {
     console.error("[bridge] fan-out failed:", error);
+  });
+
+  if (!error && body.trim().length > 0) await handOnToNamedAgent(reply, finalBody);
+}
+
+/*
+ * Which rooms have already been told why two agents did not carry on.
+ *
+ * Deliberately NOT durable, and not the trap that Map usually is here: this
+ * holds no state the room depends on, only the memory of having said one
+ * sentence, so the worst a redeploy can do is say it a second time. The key
+ * carries the consent it was posted under, so agreeing again lets the room
+ * hear the end of the next exchange too.
+ */
+const exchangeNoticed = new Set<string>();
+
+/**
+ * One agent naming another, and whether that may happen.
+ *
+ * The owner's rule: "until the budget runs out" is not a stopping condition.
+ * So this asks server/billing/consent.ts first, and that answers yes only
+ * with a card on the room, a person's consent, and turns left under the
+ * ceiling THEY were shown. Every hand-off spends one of those turns, which is
+ * what makes the exchange end by itself rather than when the money does.
+ */
+async function handOnToNamedAgent(reply: AgentReply, answer: string): Promise<void> {
+  const next = mentionedAgent(answer);
+  if (!next || next === reply.agentId) return;
+
+  /* The scope rule first, because it is not about money: an agent may only
+     hand the turn to an agent the person themselves named. Nothing is said in
+     the room when this refuses — nobody asked for that agent, so a sentence
+     about it would be the room answering a question that was never put. */
+  const scope = mayAgentReplyToAgent({
+    authorKind: "agent",
+    authorKey: `agent:${reply.agentId}`,
+    targetAgentId: next,
+    namedByPerson: reply.namedByPerson ?? [],
+  });
+  if (!scope.ok) return;
+
+  const verdict = await mayAgentsAnswerEachOther(reply.workspaceId);
+  if (!verdict.allowed) {
+    const row = await billingFor(reply.workspaceId);
+    const key = `${reply.channelId}:${verdict.reason}:${row.agentExchangeConsentAt ?? "none"}`;
+    if (exchangeNoticed.has(key)) return;
+    exchangeNoticed.add(key);
+    try {
+      const notice = await storage.addMessage(reply.workspaceId, {
+        channelId: reply.channelId,
+        authorKey: `agent:${next}`,
+        authorKind: "agent",
+        body: verdict.line,
+        meta: { stopped: `agent-exchange:${verdict.reason}` },
+      });
+      broadcast(reply.token, { type: "message", message: notice });
+    } catch (noticeError) {
+      console.error("[billing] could not post the exchange notice:", noticeError);
+    }
+    return;
+  }
+
+  await countExchangeTurn(reply.workspaceId);
+
+  /* Re-read: the answer that raised this turn was written a moment ago, and
+     the agent being handed the turn has to see it. */
+  const state = await storage.getWorkspaceByToken(reply.token);
+  if (!state) return;
+  kickOffAgentReply({
+    token: reply.token,
+    workspaceId: reply.workspaceId,
+    channelId: reply.channelId,
+    agentId: next,
+    question: answer,
+    history: buildHistory(state.messages, reply.channelId, `agent:${next}`, state.members),
+    namedByPerson: reply.namedByPerson,
   });
 }
 
@@ -869,6 +999,9 @@ export function registerRoutes(app: Express): void {
           agentId,
           question: body,
           history: buildHistory(state.messages, channelId, `agent:${agentId}`, state.members),
+          /* Read once, from the person's own words, and carried down every
+             hand-off from here. */
+          namedByPerson: agentsNamedIn(body, mentions, seatHandlesFor(state.workspace.id)),
         });
       }
     }),
@@ -1701,6 +1834,100 @@ export function registerRoutes(app: Express): void {
         return;
       }
       res.json(result.bridges);
+    }),
+  );
+
+  /* ------------------------------- billing ------------------------------- */
+  /*
+   * A card, and a person's yes to agents answering each other. Nothing here
+   * charges anything — server/billing/stripe.ts has no charge call in it.
+   *
+   * Reading is open to whoever holds the room's token, because a room's
+   * members can see the room. Writing is the owner's alone: the claim that
+   * decides who may rename a room is the claim that decides who may put a
+   * card on it, since a room with no owner has nobody who can agree to a bill
+   * on its behalf.
+   */
+
+  app.get(
+    "/api/workspaces/:token/billing",
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      res.json(await billingView(state.workspace.id));
+    }),
+  );
+
+  app.post(
+    "/api/workspaces/:token/billing/card",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const owner = await requireRoomOwner(state, res, "put a card on it");
+      if (!owner) return;
+      const parsed = cardSetupSchema.safeParse(req.body ?? {});
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      /* The room the request came from, on the host it came from. Not
+         PUBLIC_BASE_URL: one process serves two sites, and a room on one of
+         them must not be sent home to the other. */
+      const host = req.get("host") ?? `localhost:${process.env.PORT ?? 5000}`;
+      const result = await startCardSetup({
+        workspaceId: state.workspace.id,
+        ...parsed.data,
+        returnUrl: `${req.protocol}://${host}/w/${state.workspace.token}`,
+      });
+      if (!result.ok) {
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.json(result.body);
+    }),
+  );
+
+  app.post(
+    "/api/workspaces/:token/billing/card/done",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const owner = await requireRoomOwner(state, res, "put a card on it");
+      if (!owner) return;
+      const parsed = cardDoneSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const result = await finishCardSetup({
+        workspaceId: state.workspace.id,
+        checkoutSessionId: parsed.data.checkoutSessionId,
+      });
+      if (!result.ok) {
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.json(result.body);
+    }),
+  );
+
+  app.post(
+    "/api/workspaces/:token/billing/agent-exchange",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const owner = await requireRoomOwner(state, res, "agree to agents answering each other");
+      if (!owner) return;
+      const parsed = exchangeConsentSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const result = await setExchangeConsent({
+        workspaceId: state.workspace.id,
+        agree: parsed.data.agree,
+        turnsShown: parsed.data.turnsShown,
+        by: owner.name,
+      });
+      if (!result.ok) {
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.json(result.body);
     }),
   );
 
