@@ -28,7 +28,7 @@
  * recordTurnCost below. That gap is deliberate and is why the count and the clock
  * are not priced.
  *
- * PER-AGENT LEDGERS. google-ads-dev and linkedin-dev claim twice: their own key
+ * PER-AGENT LEDGERS. google-ads-dev claims twice: its own key
  * first, then the room's. The pattern is the one /api/ask already uses for
  * ask:ip then ask:all. The numbers live in AGENT_CEILINGS below, not on
  * AgentDef — roster.ts is imported by the client, and a dollar figure on an
@@ -231,7 +231,6 @@ export type SpendBound = "room" | "agent";
  */
 const AGENT_CEILINGS: Record<string, { budgetUsd: number; maxTurnsPerHour: number }> = {
   "google-ads-dev": { budgetUsd: 2, maxTurnsPerHour: 12 },
-  "linkedin-dev": { budgetUsd: 2, maxTurnsPerHour: 12 },
 };
 
 export function ceilingForAgent(agentId: string): { budgetUsd: number; maxTurnsPerHour: number } | undefined {

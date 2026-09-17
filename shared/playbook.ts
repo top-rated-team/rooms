@@ -227,7 +227,7 @@ export function seedFor(door: DoorSeedInput): DoorSeed {
   });
 
   /*
-   * google-ads-dev and linkedin-dev are not seeded. They sit on AGENTS, so
+   * google-ads-dev is not seeded. It sits on AGENTS, so
    * they are already reachable in every room via @mention — including every
    * Google Ads, paid ads and custom-AI (dev) room. Seeding would add a
    * channel and a member row per room, and the only house-wide seeded agent

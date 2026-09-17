@@ -400,10 +400,9 @@ describe("where the guard sits", () => {
 
 describe("a per-agent ceiling, claimed before the room's", () => {
   const DEV = "google-ads-dev";
-  const OTHER = "linkedin-dev";
 
   it("names agents that exist, with a ceiling below the room's", () => {
-    for (const id of [DEV, OTHER]) {
+    for (const id of [DEV]) {
       const agent = AGENT_BY_ID[id];
       assert.ok(agent, `${id} is not on AGENTS`);
       const ceiling = ceilingForAgent(id);
@@ -418,12 +417,7 @@ describe("a per-agent ceiling, claimed before the room's", () => {
       );
     }
     assert.equal(AGENT_BY_ID[DEV]?.kbNamespace, "google-ads-api");
-    assert.equal(AGENT_BY_ID[OTHER]?.kbNamespace, "unipile-api");
     assert.equal(AGENT_BY_ID[DEV]?.useKb, true);
-    assert.equal(AGENT_BY_ID[OTHER]?.useKb, true);
-    assert.equal(/unipile/i.test(AGENT_BY_ID[OTHER]?.systemPrompt ?? ""), false);
-    assert.equal(/unipile/i.test(AGENT_BY_ID[OTHER]?.blurb ?? ""), false);
-    assert.equal(/unipile/i.test(AGENT_BY_ID[OTHER]?.name ?? ""), false);
   });
 
   it("parameterises the hourly count, so an agent can have a tighter cap than the room", () => {

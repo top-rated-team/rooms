@@ -109,11 +109,10 @@ describe("visitorLine", () => {
 });
 
 describe("the two new corpora keep to their own documentation", () => {
-  it("draws the Google Ads API corpus only from developers.google.com, and Unipile's only from developer.unipile.com", async () => {
+  it("draws the Google Ads API corpus only from developers.google.com", async () => {
     const { readFileSync } = await import("node:fs");
     const cases = [
       ["data/kb/kb.google-ads-api.json", "developers.google.com"],
-      ["data/kb/kb.unipile-api.json", "developer.unipile.com"],
     ] as const;
 
     for (const [file, host] of cases) {
