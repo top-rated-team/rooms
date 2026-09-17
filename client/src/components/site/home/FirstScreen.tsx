@@ -355,7 +355,7 @@ export function FirstScreen() {
           </Hover>{" "}
           +{" "}
           <Hover
-            text="Every room here has its own AI agent, grounded in its service's own documentation. You can admit your own agents to a room too, and they can work alongside ours as well as collaborate between each other."
+            text="Every room here has its own AI agent, grounded in its service's own documentation. Call any of them into the conversation by name, and bring our people in beside them — the room keeps one thread, with who said what on every line."
             testId="text-home-any-agents"
             below={<RoomMenu className={ACTION_QUIET} testId="button-agents-open-a-room" layout="inline" />}
           >
@@ -374,6 +374,14 @@ export function FirstScreen() {
             became "ours": the route that admits a member rejects anyone outside
             our own roster, and admitting somebody ELSE's agent has no server
             side at all yet. Both come back the moment the parcels land.
+
+            SAID AGAIN, BECAUSE THE SENTENCE CAME BACK. The hover above
+            promised two things the code does not do: admitting somebody
+            else's agent, and agents collaborating with each other. The member
+            route accepts only our own people — `Unknown expert` for anything
+            else — and one message triggers at most one agent turn, which
+            never triggers another. Both are worth building. Neither may be
+            claimed before it is built.
 
             The owner's third clause — your own workspace, invite more into it —
             is deliberately NOT here. The line under the panel already says it,
