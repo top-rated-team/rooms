@@ -114,25 +114,6 @@ export interface StripeSetupIntent {
   customer?: string | null;
 }
 
-/**
- * Start attaching a card. `usage: off_session` because the whole point is a
- * card that can be charged later without the person present — which is the
- * thing the owner said has to be disclosed before anybody agrees to it.
- */
-export async function createSetupIntent(
-  customerId: string,
-  fetchImpl: typeof fetch = fetch,
-): Promise<StripeResult<StripeSetupIntent>> {
-  return call<StripeSetupIntent>(
-    "/setup_intents",
-    {
-      method: "POST",
-      body: form({ customer: customerId, usage: "off_session", "payment_method_types[0]": "card" }),
-    },
-    fetchImpl,
-  );
-}
-
 export async function getSetupIntent(
   id: string,
   fetchImpl: typeof fetch = fetch,

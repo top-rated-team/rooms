@@ -36,11 +36,26 @@ import {
   stripeConfigured,
 } from "./stripe";
 
-/** What the person is told before they agree — the whole of it, in one place. */
+/**
+ * What the person is told before they agree — the whole of it, in one place.
+ *
+ * IT USED TO SAY "the card on this room is what that is billed to", AND THAT
+ * WAS NOT TRUE. Nothing in this product charges the card; there is no charge
+ * call anywhere under server/billing, by design. With a test card that was a
+ * small inaccuracy. With a live key it is a sentence a real person hands a
+ * real card on the strength of, so it says what is actually so.
+ *
+ * The last clause is a promise, and `server/billing/disclosure.test.ts` is
+ * what makes it one: the day a charge call appears under server/billing, that
+ * test fails and whoever added it has to come back and change these words.
+ */
 export const EXCHANGE_DISCLOSURE =
   "Agents answering each other costs money on every turn, and those turns happen " +
-  "while nobody is watching. The card on this room is what that is billed to. " +
-  "It stops on its own after the number of turns you agree to here.";
+  "while nobody is watching. It stops on its own after the number of turns you " +
+  "agree to here. A card has to be on the room before it can be turned on: it is " +
+  "kept on file so that it could be charged later without you present. Nothing " +
+  "here charges it today, and no code in this product can. If that ever changes, " +
+  "this sentence changes with it.";
 
 export const cardSetupSchema = z.object({
   name: z.string().trim().max(120).optional(),
