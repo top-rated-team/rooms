@@ -10,13 +10,19 @@
 
 import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { generateKeyPairSync } from "node:crypto";
 
 import {
   resetIdentityForTests,
   storedBindingForTests,
   storedBindingsForPersonForTests,
 } from "../identity";
-import { resetUnipileCalendarForTests } from "../unipile/calendar";
+import {
+  GOOGLE_CALENDAR_API,
+  GOOGLE_FREEBUSY_URL,
+  GOOGLE_TOKEN_URL,
+  resetGcalForTests,
+} from "./gcal";
 import { SLOT_TAKEN_LINE } from "./calendar";
 import { resetBookingCodesForTests } from "./confirm";
 import { ADDRESS_REQUIRED_LINE, HOST_LINKEDIN_LINE, placeHold, resetHoldsForTests } from "./hold";
@@ -31,13 +37,24 @@ import {
   startBookingLinkedIn,
 } from "./signin";
 
-const DSN = "unipile.test.example:9443";
-const KEY = "test-unipile-key-do-not-log";
+const DSN = "https://hosted.test.example:9443/api/v1";
+const KEY = "test-hosted-key-do-not-log";
 const ACCOUNT = "cal_account_for_tests";
 const CALENDAR_ID = "primary-cal-id";
 const TZ = "Europe/Bratislava";
 const NOW = new Date("2026-09-09T08:00:00.000Z");
 const LINKEDIN_SUB = "782bbtaQ";
+
+const { privateKey: TEST_PRIVATE_KEY } = generateKeyPairSync("rsa", {
+  modulusLength: 2048,
+  privateKeyEncoding: { type: "pkcs8", format: "pem" },
+  publicKeyEncoding: { type: "spki", format: "pem" },
+});
+const SERVICE_ACCOUNT_JSON = JSON.stringify({
+  type: "service_account",
+  client_email: "sa@test.iam.gserviceaccount.com",
+  private_key: TEST_PRIVATE_KEY,
+});
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -51,35 +68,37 @@ function setLinkedIn(): void {
   process.env.LINKEDIN_CLIENT_SECRET = "linkedin-client-secret-for-tests";
 }
 
-function setUnipile(): void {
-  process.env.UNIPILE_DSN = DSN;
-  process.env.UNIPILE_API_KEY = KEY;
-  process.env.UNIPILE_CALENDAR_ACCOUNT_ID = ACCOUNT;
+function sethosted(): void {
+  process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON = SERVICE_ACCOUNT_JSON;
+  process.env.GOOGLE_CALENDAR_ID = CALENDAR_ID;
+  process.env.HOSTED_WHATSAPP_BASE_URL = DSN;
+  process.env.HOSTED_WHATSAPP_API_KEY = KEY;
+  process.env.HOSTED_WHATSAPP_ACCOUNT_ID = ACCOUNT;
 }
 
 beforeEach(() => {
   resetBookingLinkedInForTests();
   resetIdentityForTests();
   resetSlotsCacheForTests();
-  resetUnipileCalendarForTests();
+  resetGcalForTests();
   resetBookingCodesForTests();
   resetHoldsForTests();
   setLinkedIn();
-  setUnipile();
+  sethosted();
 });
 
 afterEach(() => {
   resetBookingLinkedInForTests();
   resetIdentityForTests();
   resetSlotsCacheForTests();
-  resetUnipileCalendarForTests();
+  resetGcalForTests();
   resetBookingCodesForTests();
   resetHoldsForTests();
   delete process.env.LINKEDIN_CLIENT_ID;
   delete process.env.LINKEDIN_CLIENT_SECRET;
-  delete process.env.UNIPILE_DSN;
-  delete process.env.UNIPILE_API_KEY;
-  delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
+  delete process.env.HOSTED_WHATSAPP_DSN;
+  delete process.env.HOSTED_WHATSAPP_API_KEY;
+  delete process.env.HOSTED_WHATSAPP_CALENDAR_ACCOUNT_ID;
   delete process.env.PUBLIC_BASE_URL;
 });
 
@@ -109,6 +128,24 @@ function mockRoundTrip(opts: {
       return jsonResponse(200, opts.userinfo ?? { sub: LINKEDIN_SUB });
     }
 
+    if (url === GOOGLE_TOKEN_URL) {
+      return jsonResponse(200, { access_token: "sa-token-for-tests", expires_in: 3600 });
+    }
+    if (method === "GET" && url === `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(CALENDAR_ID)}`) {
+      return jsonResponse(200, { id: CALENDAR_ID, timeZone: TZ });
+    }
+    if (method === "POST" && url === GOOGLE_FREEBUSY_URL) {
+      return jsonResponse(200, {
+        calendars: { [CALENDAR_ID]: { busy: opts.busy ? [{ start: "2026-09-10T12:00:00.000Z", end: "2026-09-10T12:30:00.000Z" }] : [] } },
+      });
+    }
+    if (method === "POST" && url.includes("/calendars/") && url.includes("/events")) {
+      posts.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+      return jsonResponse(200, { id: "evt_li", hangoutLink: "https://meet.google.com/aaa-bbbb-ccc" });
+    }
+    if (method === "GET" && url.includes("/events/") && url.startsWith(GOOGLE_CALENDAR_API)) {
+      return jsonResponse(200, { id: "evt_li", hangoutLink: "https://meet.google.com/aaa-bbbb-ccc" });
+    }
     if (method === "GET" && (url.includes("/calendars?") || /\/api\/v1\/calendars$/.test(url.split("?")[0]))) {
       return jsonResponse(200, {
         data: [{ id: CALENDAR_ID, is_primary: true, is_read_only: false, timezone: TZ }],
@@ -288,7 +325,7 @@ describe("signed in with an address and a profile", () => {
     const state = new URL(start.url).searchParams.get("state");
     assert.ok(state);
 
-    const { fetchImpl, posts } = mockRoundTrip({
+    const { fetchImpl, posts, urls } = mockRoundTrip({
       userinfo: {
         sub: LINKEDIN_SUB,
         name: "Ada Example",
@@ -311,10 +348,16 @@ describe("signed in with an address and a profile", () => {
     assert.equal(session.booker.email, "ada@example.com");
     assert.equal(session.booker.profileUrl, "https://www.linkedin.com/in/ada-example/");
     assert.deepEqual(posts[0]?.attendees, [{ email: "ada@example.com" }]);
-    assert.equal(posts[0]?.notify, true);
-    assert.equal(String(posts[0]?.body).includes(HOST_LINKEDIN_LINE), true);
+    /* Google's shape, not the old connector's: the invitation is a
+       sendUpdates query parameter and the text is `description`. */
     assert.equal(
-      String(posts[0]?.body).includes("Ada Example: https://www.linkedin.com/in/ada-example/"),
+      urls.some((url) => url.includes("/events") && url.includes("sendUpdates=all")),
+      true,
+      "the attendee is not being notified",
+    );
+    assert.equal(String(posts[0]?.description).includes(HOST_LINKEDIN_LINE), true);
+    assert.equal(
+      String(posts[0]?.description).includes("Ada Example: https://www.linkedin.com/in/ada-example/"),
       true,
     );
     await assertNoRoomClaim();

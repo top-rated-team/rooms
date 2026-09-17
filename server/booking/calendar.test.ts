@@ -11,7 +11,6 @@ import { generateKeyPairSync } from "node:crypto";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 
-import { resetUnipileCalendarForTests } from "../unipile/calendar";
 import { SLOT_TAKEN_LINE, bookingEventTitle, cancelBooking, changeBooking, getExistingBooking, parseCreateBooking, postBooking } from "./calendar";
 import { resetBookingCodesForTests } from "./confirm";
 import { ADDRESS_REQUIRED_LINE, HOST_LINKEDIN_LINE, resetHoldsForTests } from "./hold";
@@ -23,8 +22,8 @@ import {
 } from "./gcal";
 import { resetSlotsCacheForTests } from "./slots";
 
-const DSN = "unipile.test.example:9443";
-const KEY = "test-unipile-key-do-not-log";
+const DSN = "https://hosted.test.example:9443/api/v1";
+const KEY = "test-hosted-key-do-not-log";
 const ACCOUNT = "cal_account_for_tests";
 const CALENDAR_ID = "dan@top-rated.team";
 const TZ = "Europe/Bratislava";
@@ -52,20 +51,22 @@ function jsonResponse(status: number, body: unknown): Response {
 function setConfigured(): void {
   process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON = SERVICE_ACCOUNT_JSON;
   process.env.GOOGLE_CALENDAR_ID = CALENDAR_ID;
-  process.env.UNIPILE_DSN = DSN;
-  process.env.UNIPILE_API_KEY = KEY;
-  process.env.UNIPILE_CALENDAR_ACCOUNT_ID = ACCOUNT;
+  /* A WhatsApp transport as well: the no-address booking path is gated on
+     one, and that gate is about messaging rather than the calendar now. */
+  process.env.HOSTED_WHATSAPP_BASE_URL = DSN;
+  process.env.HOSTED_WHATSAPP_API_KEY = KEY;
+  process.env.HOSTED_WHATSAPP_ACCOUNT_ID = ACCOUNT;
 }
 
 beforeEach(() => {
   resetSlotsCacheForTests();
-  resetUnipileCalendarForTests();
+  resetGcalForTests();
   resetGcalForTests();
   resetBookingCodesForTests();
   resetHoldsForTests();
-  delete process.env.UNIPILE_DSN;
-  delete process.env.UNIPILE_API_KEY;
-  delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
+  delete process.env.HOSTED_WHATSAPP_DSN;
+  delete process.env.HOSTED_WHATSAPP_API_KEY;
+  delete process.env.HOSTED_WHATSAPP_CALENDAR_ACCOUNT_ID;
   delete process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON;
   delete process.env.GOOGLE_CALENDAR_ID;
   delete process.env.PUBLIC_BASE_URL;
@@ -73,13 +74,13 @@ beforeEach(() => {
 
 afterEach(() => {
   resetSlotsCacheForTests();
-  resetUnipileCalendarForTests();
+  resetGcalForTests();
   resetGcalForTests();
   resetBookingCodesForTests();
   resetHoldsForTests();
-  delete process.env.UNIPILE_DSN;
-  delete process.env.UNIPILE_API_KEY;
-  delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
+  delete process.env.HOSTED_WHATSAPP_DSN;
+  delete process.env.HOSTED_WHATSAPP_API_KEY;
+  delete process.env.HOSTED_WHATSAPP_CALENDAR_ACCOUNT_ID;
   delete process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON;
   delete process.env.GOOGLE_CALENDAR_ID;
   delete process.env.PUBLIC_BASE_URL;

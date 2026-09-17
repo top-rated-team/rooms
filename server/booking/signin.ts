@@ -56,8 +56,7 @@ import {
   slotIsFree,
   wallClockToUtc,
 } from "./slots";
-import { getPrimaryCalendar } from "../unipile/calendar";
-import { available, unavailableLine } from "../unipile/client";
+import { available, getOurCalendar, unavailableLine } from "./gcal";
 
 const PENDING_MS = 15 * 60_000;
 const RETURN_ORIGIN = "https://booking.invalid";
@@ -247,7 +246,7 @@ async function writeSignedInBooking(
 > {
   if (!available()) return { ok: false, status: 503, error: unavailableLine() };
 
-  const primary = await getPrimaryCalendar(fetchImpl);
+  const primary = await getOurCalendar(fetchImpl);
   if (!primary.ok) return { ok: false, status: 503, error: primary.line };
 
   const starts = wallClockToUtc(draft.date, draft.time, primary.calendar.timezone);

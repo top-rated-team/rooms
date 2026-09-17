@@ -9,14 +9,9 @@
 
 import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { generateKeyPairSync } from "node:crypto";
 
-import {
-} from "../unipile/accounts";
-import { resetUnipileCalendarForTests } from "../unipile/calendar";
-import {
-  acceptUnipileInbound,
-  resetInboundForTests,
-} from "../unipile/inbound";
+import { acceptInbound, resetInboundForTests } from "../whatsapp";
 import {
   BOOKING_CODE_ALPHABET,
   BOOKING_CODE_LENGTH,
@@ -36,19 +31,24 @@ import {
   resetBookingCodesForTests,
   setBookingEventFetchForTests,
 } from "./confirm";
+import {
+  GOOGLE_CALENDAR_API,
+  GOOGLE_FREEBUSY_URL,
+  GOOGLE_TOKEN_URL,
+  resetGcalForTests,
+} from "./gcal";
 import { resetHoldsForTests } from "./hold";
 
-/* Fixture ids, not ours. The real ones are environment now — see
-   ACCOUNT_UNSET_LINE in server/unipile/accounts.ts for why. */
+/* Fixture ids, not ours: the real ones are environment. */
 const DEFAULT_WHATSAPP_ACCOUNT_ID = "acct_whatsapp_for_tests";
 
-const SECRET = "test-unipile-webhook-secret-value";
+const SECRET = "test-webhook-secret-value";
 const OUR_USER = "42000000000@s.whatsapp.net";
 const VISITOR = "123456789012345@lid";
 const CHAT = "chat_booking_1";
 const OTHER_CHAT = "chat_booking_other";
-const DSN = "unipile.test.example:9443";
-const KEY = "test-unipile-key-do-not-log";
+const DSN = "https://hosted.test.example:9443/api/v1";
+const KEY = "test-key-do-not-log";
 const ACCOUNT = "cal_account_for_tests";
 const CALENDAR_ID = "primary-cal-id";
 const TZ = "Europe/Bratislava";
@@ -64,27 +64,23 @@ function mockCalendarFetch(): typeof fetch {
   return async (input, init) => {
     const url = String(input);
     const method = (init?.method ?? "GET").toUpperCase();
-    if (method === "GET" && (url.includes("/calendars?") || /\/api\/v1\/calendars$/.test(url.split("?")[0]))) {
-      return jsonResponse(200, {
-        data: [{ id: CALENDAR_ID, is_primary: true, is_read_only: false, timezone: TZ }],
-      });
+    if (url === GOOGLE_TOKEN_URL) {
+      return jsonResponse(200, { access_token: "sa-token-for-tests", expires_in: 3600 });
     }
-    if (method === "GET" && url.includes("/events/") && !url.endsWith("/events")) {
-      return jsonResponse(200, {
-        id: "evt_1",
-        is_cancelled: false,
-        transparency: "opaque",
-        event_type: "default",
-        start: { date_time: "2026-09-10T12:00:00.000Z", time_zone: TZ },
-        end: { date_time: "2026-09-10T12:30:00.000Z", time_zone: TZ },
-        conference: { provider: "google_meet", url: "https://meet.google.com/aaa-bbbb-ccc" },
-      });
+    if (method === "GET" && url === `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(CALENDAR_ID)}`) {
+      return jsonResponse(200, { id: CALENDAR_ID, timeZone: TZ });
     }
-    if (method === "GET" && url.includes("/events")) {
-      return jsonResponse(200, { data: [] });
+    if (method === "POST" && url === GOOGLE_FREEBUSY_URL) {
+      return jsonResponse(200, { calendars: { [CALENDAR_ID]: { busy: [] } } });
     }
-    if (method === "POST" && url.includes("/events")) {
-      return jsonResponse(201, { object: "CalendarEventCreated", event_id: "evt_1" });
+    if (method === "POST" && url.includes("/calendars/") && url.includes("/events")) {
+      return jsonResponse(200, { id: "evt_1", hangoutLink: "https://meet.google.com/aaa-bbbb-ccc" });
+    }
+    if (method === "GET" && url.includes("/events/")) {
+      return jsonResponse(200, { id: "evt_1", hangoutLink: "https://meet.google.com/aaa-bbbb-ccc" });
+    }
+    if (method === "DELETE" && url.includes("/events/")) {
+      return new Response(null, { status: 204 });
     }
     if (method === "POST" && /\/chats\/[^/]+\/messages/.test(url)) {
       return jsonResponse(200, { object: "MessageSent", message_id: "msg_out_1" });
@@ -112,33 +108,46 @@ function liveMessage(text: string, overrides: Record<string, unknown> = {}): Rec
   };
 }
 
+const { privateKey: TEST_PRIVATE_KEY } = generateKeyPairSync("rsa", {
+  modulusLength: 2048,
+  privateKeyEncoding: { type: "pkcs8", format: "pem" },
+  publicKeyEncoding: { type: "spki", format: "pem" },
+});
+const SERVICE_ACCOUNT_JSON = JSON.stringify({
+  type: "service_account",
+  client_email: "sa@test.iam.gserviceaccount.com",
+  private_key: TEST_PRIVATE_KEY,
+});
+
 beforeEach(() => {
   resetBookingCodesForTests();
   resetHoldsForTests();
   resetInboundForTests();
-  resetUnipileCalendarForTests();
-  process.env.UNIPILE_WEBHOOK_SECRET = SECRET;
-  process.env.UNIPILE_DSN = DSN;
-  process.env.UNIPILE_API_KEY = KEY;
-  process.env.UNIPILE_CALENDAR_ACCOUNT_ID = ACCOUNT;
-  delete process.env.UNIPILE_WHATSAPP_ACCOUNT_ID;
+  resetGcalForTests();
+  process.env.HOSTED_WHATSAPP_WEBHOOK_SECRET = SECRET;
+  process.env.HOSTED_WHATSAPP_BASE_URL = DSN;
+  process.env.HOSTED_WHATSAPP_API_KEY = KEY;
+  process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON = SERVICE_ACCOUNT_JSON;
+  process.env.GOOGLE_CALENDAR_ID = CALENDAR_ID;
+  delete process.env.HOSTED_WHATSAPP_ACCOUNT_ID;
   setBookingEventFetchForTests(mockCalendarFetch());
   installBookingInbound();
   /* The id is environment now; this is a fixture, not ours. Set AFTER the
      deletes above, or it is deleted in the same breath. */
-  process.env.UNIPILE_WHATSAPP_ACCOUNT_ID = DEFAULT_WHATSAPP_ACCOUNT_ID;
+  process.env.HOSTED_WHATSAPP_ACCOUNT_ID = DEFAULT_WHATSAPP_ACCOUNT_ID;
 });
 
 afterEach(() => {
   resetBookingCodesForTests();
   resetHoldsForTests();
   resetInboundForTests();
-  resetUnipileCalendarForTests();
-  delete process.env.UNIPILE_WEBHOOK_SECRET;
-  delete process.env.UNIPILE_WHATSAPP_ACCOUNT_ID;
-  delete process.env.UNIPILE_CALENDAR_ACCOUNT_ID;
-  delete process.env.UNIPILE_DSN;
-  delete process.env.UNIPILE_API_KEY;
+  resetGcalForTests();
+  delete process.env.HOSTED_WHATSAPP_WEBHOOK_SECRET;
+  delete process.env.HOSTED_WHATSAPP_ACCOUNT_ID;
+  delete process.env.HOSTED_WHATSAPP_BASE_URL;
+  delete process.env.HOSTED_WHATSAPP_API_KEY;
+  delete process.env.GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON;
+  delete process.env.GOOGLE_CALENDAR_ID;
 });
 
 describe("alphabet", () => {
@@ -167,7 +176,7 @@ describe("planted code and /confirmed", () => {
     const planted = plantBookingCode();
     assert.equal(getBookingConfirmed(planted.code).confirmed, false);
 
-    const inbound = acceptUnipileInbound(liveMessage(bookingConfirmMessage(planted.code)), SECRET);
+    const inbound = acceptInbound(liveMessage(bookingConfirmMessage(planted.code)), SECRET);
     assert.equal(inbound.authorized, true);
     if (!inbound.authorized || inbound.kind !== "message") return;
     await proveHeldBooking(inbound.message);
@@ -181,13 +190,13 @@ describe("planted code and /confirmed", () => {
 
   it("does not confirm a code from a different chat than the one that first presented it", async () => {
     const planted = plantBookingCode();
-    const first = acceptUnipileInbound(liveMessage(bookingConfirmMessage(planted.code)), SECRET);
+    const first = acceptInbound(liveMessage(bookingConfirmMessage(planted.code)), SECRET);
     assert.equal(first.authorized, true);
     if (first.authorized && first.kind === "message") await proveHeldBooking(first.message);
 
     resetInboundForTests();
     installBookingInbound();
-    const other = acceptUnipileInbound(
+    const other = acceptInbound(
       liveMessage(bookingConfirmMessage(planted.code), { chat_id: OTHER_CHAT, message_id: "msg_other" }),
       SECRET,
     );
@@ -201,7 +210,7 @@ describe("planted code and /confirmed", () => {
 
   it("does not match after five minutes", async () => {
     const planted = plantBookingCode(Date.now() - BOOKING_CODE_TTL_MS - 1);
-    const inbound = acceptUnipileInbound(liveMessage(bookingConfirmMessage(planted.code)), SECRET);
+    const inbound = acceptInbound(liveMessage(bookingConfirmMessage(planted.code)), SECRET);
     if (inbound.authorized && inbound.kind === "message") await proveHeldBooking(inbound.message);
     assert.equal(getBookingConfirmed(planted.code).confirmed, false);
   });

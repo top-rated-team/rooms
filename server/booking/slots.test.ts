@@ -24,10 +24,7 @@ import {
 } from "./gcal";
 import {
   WINDOW_PAD_MS,
-  busyInterval,
   daysFromBusyIntervals,
-  daysFromEvents,
-  eventIsBusy,
   getBookingSlots,
   overlayVisitorBusy,
   paddedWindow,
@@ -152,63 +149,7 @@ describe("wallClockToUtc", () => {
   });
 });
 
-describe("trap 1: all-day events have no date_time", () => {
-  it("treats a holiday {date} as busy for that whole date; new Date(date_time) would not", () => {
-    const holiday = event({
-      id: "holiday",
-      isAllDay: true,
-      start: { date: "2026-09-10" },
-      end: { date: "2026-09-11" },
-    });
-    assert.equal(holiday.start && "dateTime" in holiday.start ? holiday.start.dateTime : undefined, undefined);
-    assert.equal(Number.isNaN(new Date((holiday.start as { date_time?: string }).date_time as string).getTime()), true);
 
-    const days = daysFromEvents({ from: FROM, days: 2, timezone: TZ, events: [holiday], now: NOW });
-    const fromDay = wallClockToUtc("2026-09-10", "00:00", TZ);
-    const untilDay = wallClockToUtc("2026-09-11", "00:00", TZ);
-    assert.ok(fromDay && untilDay);
-    const fromRanges = daysFromBusyIntervals({
-      from: FROM,
-      days: 2,
-      timezone: TZ,
-      busy: [{ start: fromDay.getTime(), end: untilDay.getTime() }],
-      now: NOW,
-    });
-    assert.deepEqual(fromRanges.find((row) => row.date === "2026-09-10")?.slots, []);
-    const thursday = days.find((row) => row.date === "2026-09-10");
-    const friday = days.find((row) => row.date === "2026-09-11");
-    assert.ok(thursday);
-    assert.deepEqual(thursday?.slots, []);
-    assert.ok(friday && friday.slots.includes("09:00"));
-  });
-});
-
-describe("trap 2: start/end are containment filters", () => {
-  it("marks 09:30 busy when an event 09:00-10:00 overlaps it, which a 09:30-11:00 containment query would drop", () => {
-    const start = wallClockToUtc("2026-09-10", "09:00", TZ);
-    const end = wallClockToUtc("2026-09-10", "10:00", TZ);
-    assert.ok(start && end);
-    const blocking = event({
-      id: "standup",
-      start: { dateTime: start.toISOString(), timeZone: TZ },
-      end: { dateTime: end.toISOString(), timeZone: TZ },
-    });
-    const days = daysFromEvents({ from: FROM, days: 1, timezone: TZ, events: [blocking], now: NOW });
-    const slots = days[0]?.slots ?? [];
-    assert.equal(slots.includes("09:00"), false);
-    assert.equal(slots.includes("09:30"), false);
-    assert.equal(slots.includes("10:00"), true);
-  });
-
-  it("pads the Unipile window by a day on each side", () => {
-    const window = paddedWindow(FROM, 14, TZ);
-    assert.ok(window);
-    const realStart = wallClockToUtc(FROM, "00:00", TZ);
-    assert.ok(realStart);
-    assert.equal(new Date(window.start).getTime(), realStart.getTime() - WINDOW_PAD_MS);
-    assert.equal(new Date(window.end).getTime() - realStart.getTime() > 14 * WINDOW_PAD_MS, true);
-  });
-});
 
 describe("trap 3: recurrence is already expanded on freeBusy", () => {
   it("asks freeBusy.query, and a Wednesday busy range blocks that slot", async () => {
@@ -237,58 +178,8 @@ describe("trap 3: recurrence is already expanded on freeBusy", () => {
     assert.equal(urls.some((url) => url.includes("expand_recurring")), false);
   });
 
-  it("does not let an unexpanded RRULE master hide a week as free once instances are present", () => {
-    const master = event({
-      id: "standup-master",
-      start: { dateTime: "2026-01-07T09:00:00.000Z", timeZone: TZ },
-      end: { dateTime: "2026-01-07T09:30:00.000Z", timeZone: TZ },
-      recurrence: ["RRULE:FREQ=WEEKLY;BYDAY=WE"],
-    });
-    const instanceStart = wallClockToUtc("2026-09-16", "10:00", TZ);
-    const instanceEnd = wallClockToUtc("2026-09-16", "10:30", TZ);
-    assert.ok(instanceStart && instanceEnd);
-    const instance = event({
-      id: "standup-2026-09-16",
-      masterEventId: "standup-master",
-      start: { dateTime: instanceStart.toISOString(), timeZone: TZ },
-      end: { dateTime: instanceEnd.toISOString(), timeZone: TZ },
-    });
-    const withoutExpand = daysFromEvents({ from: FROM, days: 14, timezone: TZ, events: [master], now: NOW });
-    const withExpand = daysFromEvents({ from: FROM, days: 14, timezone: TZ, events: [master, instance], now: NOW });
-    const wedWithout = withoutExpand.find((row) => row.date === "2026-09-16");
-    const wedWith = withExpand.find((row) => row.date === "2026-09-16");
-    assert.equal(wedWithout?.slots.includes("10:00"), true, "a master in January does not block September");
-    assert.equal(wedWith?.slots.includes("10:00"), false);
-  });
 });
 
-describe("what counts as busy", () => {
-  it("skips cancelled, transparent, birthday and fromGmail", () => {
-    const timed = {
-      dateTime: "2026-09-10T07:00:00.000Z",
-      timeZone: TZ,
-    };
-    assert.equal(eventIsBusy(event({ id: "a", start: timed, isCancelled: true })), false);
-    assert.equal(eventIsBusy(event({ id: "b", start: timed, transparency: "transparent" })), false);
-    assert.equal(eventIsBusy(event({ id: "c", start: timed, eventType: "birthday" })), false);
-    assert.equal(eventIsBusy(event({ id: "d", start: timed, eventType: "fromGmail" })), false);
-    assert.equal(eventIsBusy(event({ id: "e", start: timed, eventType: "outOfOffice" })), true);
-    assert.equal(eventIsBusy(event({ id: "f", start: timed })), true);
-  });
-
-  it("does not use busy=true as the only filter: a transparent event still has an interval of null", () => {
-    const start = wallClockToUtc("2026-09-10", "09:00", TZ);
-    const end = wallClockToUtc("2026-09-10", "10:00", TZ);
-    assert.ok(start && end);
-    const free = event({
-      id: "focus-available",
-      transparency: "transparent",
-      start: { dateTime: start.toISOString(), timeZone: TZ },
-      end: { dateTime: end.toISOString(), timeZone: TZ },
-    });
-    assert.equal(busyInterval(free, TZ), null);
-  });
-});
 
 describe("getBookingSlots", () => {
   it("returns a day with an empty array rather than omitting it, and caches the window", async () => {
@@ -352,7 +243,7 @@ describe("visitor busy is marked, not removed", () => {
     const start = wallClockToUtc(FROM, "14:00", TZ);
     const end = wallClockToUtc(FROM, "14:30", TZ);
     assert.ok(start && end);
-    const days = daysFromEvents({ from: FROM, days: 1, timezone: TZ, events: [], now: NOW });
+    const days = daysFromBusyIntervals({ from: FROM, days: 1, timezone: TZ, busy: [], now: NOW });
     assert.equal(days[0]?.slots.includes("14:00"), true);
     const marked = overlayVisitorBusy(days, [{ start: start.getTime(), end: end.getTime() }], TZ);
     assert.equal(marked[0]?.slots.includes("14:00"), true);

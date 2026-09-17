@@ -30,18 +30,7 @@ import type {
   ExistingBookingResponse,
   HoldBookingResponse,
 } from "@shared/api";
-import { calendarAccountId } from "../unipile/accounts";
-import {
-  createCalendarEvent,
-  getCalendarEvent,
-  getPrimaryCalendar as getUnipilePrimaryCalendar,
-} from "../unipile/calendar";
-import {
-  available as unipileAvailable,
-  unipileRequest,
-  unavailableLine as unipileUnavailableLine,
-} from "../unipile/client";
-import { sendInChat } from "../unipile/messaging";
+import { sendMessage } from "../whatsapp";
 import {
   available as gcalAvailable,
   createEvent as createGcalEvent,
@@ -84,18 +73,17 @@ export const HOST_ATTENDEE_EMAIL = "dan@top-rated.team";
 export const SLOT_TAKEN_LINE = "That time has just been taken. Here is what is still free.";
 
 function bookingCalendarReady(): boolean {
-  return gcalAvailable() || unipileAvailable();
+  return gcalAvailable();
 }
 
 function bookingCalendarUnavailableLine(): string {
-  return gcalAvailable() ? gcalUnavailableLine() : unipileUnavailableLine();
+  return gcalUnavailableLine();
 }
 
 async function primaryCalendar(
   fetchImpl: typeof fetch,
 ): Promise<{ ok: true; calendar: { id: string; timezone: string } } | { ok: false; line: string }> {
-  if (gcalAvailable()) return getOurCalendar(fetchImpl);
-  return getUnipilePrimaryCalendar(fetchImpl);
+  return getOurCalendar(fetchImpl);
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -190,42 +178,21 @@ export async function createBookingEvent(
 ): Promise<{ ok: true; eventId: string; meetUrl: string | null; invited: boolean } | { ok: false; error: string }> {
   const { invited, attendees, notify } = attendeesFor(input.email);
   const description = bookingEventDescription({ topic: input.topic, visitorProfile: input.visitorProfile });
-  if (gcalAvailable()) {
-    const created = await createGcalEvent(
-      {
-        title: bookingEventTitle(input),
-        description,
-        attendees,
-        start: { dateTime: input.starts.toISOString(), timeZone: input.timezone },
-        end: { dateTime: input.ends.toISOString(), timeZone: input.timezone },
-        notify,
-      },
-      fetchImpl,
-    );
-    if (!created.ok) return { ok: false, error: created.error };
-    return { ok: true, eventId: created.eventId, meetUrl: created.meetUrl, invited };
-  }
-
-  const created = await createCalendarEvent(
+  const created = await createGcalEvent(
     {
-      calendarId: input.calendarId,
       title: bookingEventTitle(input),
-      body: description,
+      description,
       attendees,
       start: { dateTime: input.starts.toISOString(), timeZone: input.timezone },
       end: { dateTime: input.ends.toISOString(), timeZone: input.timezone },
-      transparency: "opaque",
-      conference: { provider: "google_meet" },
       notify,
     },
     fetchImpl,
   );
-  if (!created.ok) return { ok: false, error: created.line };
-
-  const fetched = await getCalendarEvent(input.calendarId, created.body.eventId, fetchImpl);
-  const meetUrl = fetched.ok && fetched.body ? fetched.body.conferenceUrl : null;
-  return { ok: true, eventId: created.body.eventId, meetUrl, invited };
+  if (!created.ok) return { ok: false, error: created.error };
+  return { ok: true, eventId: created.eventId, meetUrl: created.meetUrl, invited };
 }
+
 
 export async function postBooking(
   raw: unknown,
@@ -345,24 +312,7 @@ export async function deleteCalendarEvent(
   input: { calendarId: string; eventId: string; notify?: boolean },
   fetchImpl: typeof fetch,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (gcalAvailable()) {
-    return deleteGcalEvent(input.eventId, { notify: Boolean(input.notify) }, fetchImpl);
-  }
-  const result = await unipileRequest<unknown>(
-    {
-      method: "DELETE",
-      path: `/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.eventId)}`,
-      /* notify is NOT sent on this branch. The connector documents it as a
-         body field of the CREATE call and documents no parameter but
-         account_id on the delete. Google Calendar, on the gcal branch above,
-         does honour sendUpdates. */
-      query: { account_id: calendarAccountId() },
-    },
-    fetchImpl,
-  );
-  if (result.ok) return { ok: true };
-  if (result.error.status === 404) return { ok: true };
-  return { ok: false, error: result.line };
+  return deleteGcalEvent(input.eventId, { notify: Boolean(input.notify) }, fetchImpl);
 }
 
 function formatWhen(startsAt: string, timeZone: string): string {
@@ -384,7 +334,7 @@ async function messageProvingChat(
   fetchImpl: typeof fetch,
 ): Promise<void> {
   if (!booking.chatId) return;
-  await sendInChat({ chatId: booking.chatId, text }, fetchImpl);
+  await sendMessage({ chatId: booking.chatId, text }, fetchImpl);
 }
 
 export function parseChangeBooking(body: unknown): ChangeBookingRequest | null {

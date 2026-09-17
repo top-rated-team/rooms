@@ -36,33 +36,33 @@ const DRAFT = {
 
 beforeEach(() => {
   resetHoldsForTests();
-  delete process.env.UNIPILE_DSN;
-  delete process.env.UNIPILE_API_KEY;
+  delete process.env.HOSTED_WHATSAPP_DSN;
+  delete process.env.HOSTED_WHATSAPP_API_KEY;
   delete process.env.PUBLIC_BASE_URL;
 });
 
 afterEach(() => {
   resetHoldsForTests();
-  delete process.env.UNIPILE_DSN;
-  delete process.env.UNIPILE_API_KEY;
+  delete process.env.HOSTED_WHATSAPP_DSN;
+  delete process.env.HOSTED_WHATSAPP_API_KEY;
   delete process.env.PUBLIC_BASE_URL;
 });
 
 describe("whatsappGateAllowed", () => {
-  it("is false when Unipile is not configured, even on localhost", () => {
+  it("is false when no WhatsApp transport is configured, even on localhost", () => {
     assert.equal(whatsappGateAllowed("http://localhost"), false);
   });
 
-  it("is true on a house host once Unipile is configured", () => {
-    process.env.UNIPILE_DSN = "unipile.test.example:9443";
-    process.env.UNIPILE_API_KEY = "test-unipile-key-do-not-log";
+  it("is true on a house host once a WhatsApp transport is configured", () => {
+    process.env.HOSTED_WHATSAPP_BASE_URL = "https://hosted.test.example:9443/api/v1";
+    process.env.HOSTED_WHATSAPP_API_KEY = "test-key-do-not-log";
     assert.equal(whatsappGateAllowed("http://localhost"), true);
     assert.equal(whatsappGateAllowed("https://ai.top-rated.team"), true);
   });
 
   it("is false on a fork, so the Prague number cannot leak", () => {
-    process.env.UNIPILE_DSN = "unipile.test.example:9443";
-    process.env.UNIPILE_API_KEY = "test-unipile-key-do-not-log";
+    process.env.HOSTED_WHATSAPP_BASE_URL = "https://hosted.test.example:9443/api/v1";
+    process.env.HOSTED_WHATSAPP_API_KEY = "test-key-do-not-log";
     assert.equal(whatsappGateAllowed("https://partner.example"), false);
     assert.equal(typeof ADDRESS_REQUIRED_LINE, "string");
   });

@@ -22,7 +22,7 @@ import { WHATSAPP_URL } from "@shared/roster";
 import { bookings as bookingsTable, type BookingRow } from "@shared/schema-bookings";
 import { getDb, hasDb } from "../db";
 import { SLOT_MINUTES } from "./slots";
-import { available } from "../unipile/client";
+import { whatsappConfigured } from "../whatsapp";
 import { waMeUrl } from "../waha";
 import { bookingConfirmMessage, mintBookingCode, normalizeBookingCode } from "./code";
 
@@ -200,13 +200,19 @@ function ourDigits(): string {
 }
 
 /**
- * True only on a house host with Unipile configured. Off a house host there
- * is no gate and no no-address path — a fork must never be offered this number.
+ * True only on a house host with a WhatsApp transport configured. Off a house
+ * host there is no gate and no no-address path — a fork must never be offered
+ * this number.
+ *
+ * It used to ask whether the CONNECTOR was configured, which was the same
+ * question while one vendor carried both the calendar and WhatsApp. They are
+ * two things now, and this gate is about WhatsApp: a deployment with a
+ * calendar and no messaging must not offer a WhatsApp booking.
  */
 export function whatsappGateAllowed(hostOrUrl?: string): boolean {
-  if (!available()) return false;
-  const probe = hostOrUrl?.trim() || process.env.PUBLIC_BASE_URL?.trim() || "http://localhost";
-  return isHouseHost(probe);
+  const probeHost = hostOrUrl?.trim() || process.env.PUBLIC_BASE_URL?.trim() || "http://localhost";
+  if (!whatsappConfigured(probeHost)) return false;
+  return isHouseHost(probeHost);
 }
 
 export function resetHoldsForTests(): void {
