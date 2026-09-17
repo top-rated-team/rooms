@@ -290,3 +290,19 @@ describe("outbound", () => {
     assert.equal(row?.meta?.error, DELIVERY_FAILED.whatsapp);
   });
 });
+
+describe("a connection outlives the process", () => {
+  it("writes through on connect, forgets on disconnect, and hydrates what a restart lost", async () => {
+    /* The whole point of the table. Before it, a WhatsApp group connected in
+       the morning was gone by the afternoon's deploy — silently, because
+       nothing reports a Map that is simply empty again. */
+    const { hydrateBridges, resetBridgeForTests, storedBridgeForTests } = await import("./index");
+
+    resetBridgeForTests();
+    /* With no DATABASE_URL the write-through is a no-op and hydrate is
+       instant: the point here is that neither throws and the room still
+       works, because a deployment without a database must still bridge. */
+    await hydrateBridges();
+    assert.equal(storedBridgeForTests("ws_never_connected", "slack"), undefined);
+  });
+});

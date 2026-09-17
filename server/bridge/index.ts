@@ -18,6 +18,9 @@ import { z } from "zod";
 import type { BridgeKind, RoomBridge } from "@shared/api";
 import { AGENT_BY_ID, AGENTS, VISIBLE_AGENTS } from "@shared/roster";
 import type { Member, MemberKind, Message, MessageMeta } from "@shared/schema";
+import { roomBridges } from "@shared/schema-bridges";
+import { and, eq } from "drizzle-orm";
+import { getDb, hasDb } from "../db";
 import { llmReady, streamAgentAnswer } from "../ai/agentRuntime";
 import { storage } from "../storage";
 import { claimAgentTurn, recordTurnCost, type RoomRef } from "../spend";
@@ -102,6 +105,149 @@ const seenInbound = new Map<string, number>();
 
 const SEEN_TTL_MS = 30 * 60_000;
 
+/* --------------------------- keeping them ---------------------------------
+ *
+ * The maps above are a cache. room_bridges is where a connection lives, so a
+ * WhatsApp group connected this morning is still connected after this
+ * afternoon's deploy. Same shape as server/identity-store.ts: hydrate once at
+ * boot, write through on every change, and carry on in memory when the
+ * database is unreachable rather than refusing to work.
+ */
+
+let hydrated = false;
+let hydrateInFlight: Promise<void> | null = null;
+
+function senderMapToJson(map: Map<string, string>): string | null {
+  if (map.size === 0) return null;
+  return JSON.stringify([...map.entries()]);
+}
+
+function senderMapFromJson(raw: string | null): Map<string, string> {
+  const map = new Map<string, string>();
+  if (!raw) return map;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return map;
+    for (const row of parsed) {
+      if (Array.isArray(row) && typeof row[0] === "string" && typeof row[1] === "string") {
+        map.set(row[0], row[1]);
+      }
+    }
+  } catch {
+    /* A row we cannot read is a sender map we do not have, not a dead room. */
+  }
+  return map;
+}
+
+function iso(value: Date | string): string {
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+}
+
+export async function hydrateBridges(): Promise<void> {
+  if (hydrated) return;
+  if (!hasDb()) {
+    hydrated = true;
+    return;
+  }
+  if (hydrateInFlight) {
+    await hydrateInFlight;
+    return;
+  }
+  hydrateInFlight = (async () => {
+    const db = getDb();
+    if (!db) return;
+    try {
+      const rows = await db.select().from(roomBridges);
+      for (const row of rows) {
+        const stored: StoredBridge = {
+          workspaceId: row.workspaceId,
+          token: row.token,
+          kind: row.kind,
+          target: row.target,
+          targetLabel: row.targetLabel,
+          secret: row.secret,
+          accountId: row.accountId,
+          inboxId: row.inboxId,
+          inboxIdentifier: row.inboxIdentifier,
+          contactIdentifier: row.contactIdentifier,
+          baseUrl: row.baseUrl,
+          channelId: row.channelId,
+          senderMap: senderMapFromJson(row.senderMap),
+          connectedAt: iso(row.connectedAt),
+        };
+        const map = bridgesOf(stored.workspaceId);
+        if (!map.has(stored.kind)) {
+          map.set(stored.kind, stored);
+          rememberIndexes(stored);
+        }
+      }
+    } catch (error) {
+      console.error(
+        "[bridge] room_bridges is not readable. Connections stay in memory and vanish on restart until DATABASE_URL is set and `npm run db:push` creates the table.",
+        error instanceof Error ? error.message : error,
+      );
+    } finally {
+      hydrated = true;
+    }
+  })();
+  try {
+    await hydrateInFlight;
+  } finally {
+    hydrateInFlight = null;
+  }
+}
+
+async function persistBridge(stored: StoredBridge): Promise<void> {
+  if (!hasDb()) return;
+  const db = getDb();
+  if (!db) return;
+  const values = {
+    workspaceId: stored.workspaceId,
+    kind: stored.kind,
+    token: stored.token,
+    target: stored.target,
+    targetLabel: stored.targetLabel,
+    secret: stored.secret,
+    accountId: stored.accountId,
+    inboxId: stored.inboxId,
+    inboxIdentifier: stored.inboxIdentifier,
+    contactIdentifier: stored.contactIdentifier,
+    baseUrl: stored.baseUrl,
+    channelId: stored.channelId,
+    senderMap: senderMapToJson(stored.senderMap),
+    connectedAt: new Date(stored.connectedAt),
+  };
+  try {
+    await db
+      .insert(roomBridges)
+      .values(values)
+      /* One row per room per kind, which is the rule the Map already kept:
+         connecting a second Slack channel replaces the first. */
+      .onConflictDoUpdate({ target: [roomBridges.workspaceId, roomBridges.kind], set: values });
+  } catch (error) {
+    console.error(
+      "[bridge] could not persist a connection. It is in this process only.",
+      error instanceof Error ? error.message : error,
+    );
+  }
+}
+
+async function forgetBridge(workspaceId: string, kind: BridgeKind): Promise<void> {
+  if (!hasDb()) return;
+  const db = getDb();
+  if (!db) return;
+  try {
+    await db
+      .delete(roomBridges)
+      .where(and(eq(roomBridges.workspaceId, workspaceId), eq(roomBridges.kind, kind)));
+  } catch (error) {
+    console.error(
+      "[bridge] could not delete a connection row.",
+      error instanceof Error ? error.message : error,
+    );
+  }
+}
+
 export function resetBridgeForTests(): void {
   byWorkspace.clear();
   byWhatsAppChat.clear();
@@ -109,6 +255,8 @@ export function resetBridgeForTests(): void {
   bySlackTarget.clear();
   byClickUpTarget.clear();
   seenInbound.clear();
+  hydrated = false;
+  hydrateInFlight = null;
 }
 
 export { MUST_NOT_CROSS };
@@ -120,6 +268,15 @@ function bridgesOf(workspaceId: string): Map<BridgeKind, StoredBridge> {
     byWorkspace.set(workspaceId, map);
   }
   return map;
+}
+
+function rememberIndexes(stored: StoredBridge): void {
+  if (stored.kind === "whatsapp") byWhatsAppChat.set(stored.target, stored.workspaceId);
+  if (stored.kind === "chatwoot") {
+    byChatwootConversation.set(`${stored.accountId ?? ""}:${stored.target}`, stored.workspaceId);
+  }
+  if (stored.kind === "slack") bySlackTarget.set(stored.target, stored.workspaceId);
+  if (stored.kind === "clickup") byClickUpTarget.set(stored.target, stored.workspaceId);
 }
 
 function forgetIndexes(stored: StoredBridge): void {
@@ -141,6 +298,7 @@ function toPublic(stored: StoredBridge): RoomBridge {
 }
 
 export async function listBridgesForToken(token: string): Promise<RoomBridge[] | null> {
+  await hydrateBridges();
   const state = await storage.getWorkspaceByToken(token);
   if (!state) return null;
   const stored = byWorkspace.get(state.workspace.id);
@@ -157,6 +315,7 @@ export async function connectOrDisconnectBridge(
   input: ConnectBridgeInput,
   fetchImpl: typeof fetch = fetch,
 ): Promise<ConnectResult> {
+  await hydrateBridges();
   const state = await storage.getWorkspaceByToken(token);
   if (!state) return { ok: false, error: "Workspace not found", status: 404 };
 
@@ -167,6 +326,7 @@ export async function connectOrDisconnectBridge(
     if (existing) {
       forgetIndexes(existing);
       map.delete(input.kind);
+      await forgetBridge(state.workspace.id, input.kind);
     }
     return { ok: true, bridges: [...map.values()].map(toPublic) };
   }
@@ -292,12 +452,8 @@ export async function connectOrDisconnectBridge(
   };
 
   map.set(input.kind, stored);
-  if (stored.kind === "whatsapp") byWhatsAppChat.set(stored.target, stored.workspaceId);
-  if (stored.kind === "chatwoot") {
-    byChatwootConversation.set(`${stored.accountId ?? ""}:${stored.target}`, stored.workspaceId);
-  }
-  if (stored.kind === "slack") bySlackTarget.set(stored.target, stored.workspaceId);
-  if (stored.kind === "clickup") byClickUpTarget.set(stored.target, stored.workspaceId);
+  rememberIndexes(stored);
+  await persistBridge(stored);
 
   return { ok: true, bridges: [...map.values()].map(toPublic) };
 }
@@ -407,6 +563,7 @@ export async function acceptBridgeInbound(
   webhookSecret: string | undefined,
   deps: BridgeAgentDeps = {},
 ): Promise<InboundResult> {
+  await hydrateBridges();
   if (!webhookSecretOk(webhookSecret)) return { accepted: false, reason: "unauthorized" };
 
   const waha = parseWahaInbound(raw);
@@ -711,6 +868,7 @@ export async function fanOutIfBridged(
   fetchImpl: typeof fetch = fetch,
   skipKind?: BridgeKind,
 ): Promise<Message | null> {
+  await hydrateBridges();
   return fanOutMessage(token, message, fetchImpl, skipKind);
 }
 

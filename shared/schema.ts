@@ -224,3 +224,4 @@ export * from "./schema-rooms";
 export * from "./schema-bookings";
 export * from "./schema-adgrant";
 export * from "./schema-accounts";
+export * from "./schema-bridges";
