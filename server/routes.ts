@@ -119,6 +119,7 @@ import { resolveDistPath } from "./vite";
 import fs from "node:fs";
 import path from "node:path";
 import { isAdGrantHost } from "@shared/adgrant-site";
+import { bookLinkTarget } from "@shared/booking-link";
 import { openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage, bindRoomAddressForToken } from "./room-access";
 import {
   completeRoomLoginLinkedIn,
@@ -820,6 +821,27 @@ export function registerRoutes(app: Express): void {
    * no thinner page to build that would say more than that.
    */
   app.get("/contact", (_req, res) => res.redirect(301, "/"));
+  /*
+   * /book opens the booking popup over the front page, with the visitor's
+   * address filled in when the link carries one — see shared/booking-link.ts
+   * for the shapes it reads and why the address travels in the fragment.
+   *
+   * A 302 and not a 301 like its neighbours: /book has not moved anywhere, it
+   * is an action that lands on the front page, and a browser keeps a 301 with
+   * no expiry — if /book ever becomes a page of its own, every browser that
+   * had opened it would go on skipping that page. no-store because the
+   * Location carries somebody's address. Not on AdGrant hosts, whose site has
+   * no booking popup.
+   */
+  app.get("/book", (req, res, next) => {
+    if (isAdGrantHost(req.hostname)) {
+      next();
+      return;
+    }
+    const at = req.originalUrl.indexOf("?");
+    res.setHeader("Cache-Control", "no-store");
+    res.redirect(302, bookLinkTarget(at < 0 ? "" : req.originalUrl.slice(at + 1)));
+  });
 
   const createWorkspaceLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many workspaces from this address. Try again later, or book a call." });
   const leadLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many requests from this address. Try again later." });

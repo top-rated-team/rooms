@@ -15,6 +15,7 @@ import assert from "node:assert/strict";
 import {
   SLOT_DAYS,
   bookSlot,
+  bookingLinkEmail,
   buildBookBody,
   confirmedUrl,
   errorFromBody,
@@ -225,6 +226,65 @@ describe("openBooking", () => {
     });
     assert.equal(openBooking(), true);
     assert.equal(mounted, true);
+  });
+});
+
+describe("the /book hop", () => {
+  /* Only what registerBookingHost reads: the address bar and replaceState. */
+  function stubWindow(pathname: string, search: string, hash: string) {
+    const replaced: string[] = [];
+    const location = { pathname, search, hash };
+    (globalThis as { window?: unknown }).window = {
+      location,
+      history: {
+        state: null,
+        replaceState: (_state: unknown, _title: string, url: string) => {
+          replaced.push(url);
+          location.hash = "";
+        },
+      },
+    };
+    return replaced;
+  }
+
+  afterEach(() => {
+    delete (globalThis as { window?: unknown }).window;
+  });
+
+  it("opens the popup with the address the link carried, and takes it off the address bar", () => {
+    const replaced = stubWindow("/", "?utm_source=newsletter", "#book=dan%2Bads%40example.com");
+    let mounted = false;
+    registerBookingHost(() => {
+      mounted = true;
+    });
+    assert.equal(mounted, true);
+    assert.equal(bookingLinkEmail(), "dan+ads@example.com");
+    assert.deepEqual(replaced, ["/?utm_source=newsletter"]);
+  });
+
+  it("opens it empty for a link with no address, or one that is not an address", () => {
+    for (const hash of ["#book", "#book=%7B%7Bemail%7D%7D"]) {
+      resetBookingForTests();
+      const replaced = stubWindow("/", "", hash);
+      let mounted = false;
+      registerBookingHost(() => {
+        mounted = true;
+      });
+      assert.equal(mounted, true, hash);
+      assert.equal(bookingLinkEmail(), null, hash);
+      assert.deepEqual(replaced, ["/"], hash);
+    }
+  });
+
+  it("does nothing on a page that did not come from /book", () => {
+    const replaced = stubWindow("/", "", "#services");
+    let mounted = false;
+    registerBookingHost(() => {
+      mounted = true;
+    });
+    assert.equal(mounted, false);
+    assert.equal(bookingLinkEmail(), null);
+    assert.deepEqual(replaced, []);
   });
 });
 

@@ -26,6 +26,7 @@ import type {
 } from "@shared/api";
 import { BOOKING_LINKEDIN_SESSION_QUERY, BOOKING_VISITOR_CALENDAR_QUERY } from "@shared/api";
 import type { VisitorCalendarView } from "@shared/api";
+import { parseBookLinkHash } from "@shared/booking-link";
 import { DOORS } from "@shared/doors";
 
 export const SLOT_DAYS = 14;
@@ -57,6 +58,9 @@ type OpenListener = (open: boolean) => void;
 let hostFn: HostFn | null = null;
 let requestedOpen = false;
 const listeners = new Set<OpenListener>();
+/* The address a /book link brought, for as long as this page is open: the
+   popup starts with it every time it opens, not only the first. */
+let linkEmail: string | null = null;
 
 let cached: { payload: SlotsPayload; at: number } | null = null;
 let inflight: Promise<SlotsPayload> | null = null;
@@ -65,6 +69,7 @@ export function resetBookingForTests(): void {
   hostFn = null;
   requestedOpen = false;
   listeners.clear();
+  linkEmail = null;
   cached = null;
   inflight = null;
   if (typeof window !== "undefined") {
@@ -78,7 +83,8 @@ export function resetBookingForTests(): void {
 
 export function registerBookingHost(fn: HostFn): void {
   hostFn = fn;
-  if (shouldAutoOpenBooking()) {
+  const fromLink = takeBookLinkHop();
+  if (fromLink || shouldAutoOpenBooking()) {
     requestedOpen = true;
     fn();
     for (const listener of listeners) listener(true);
@@ -259,6 +265,30 @@ export function takeBookingCredential(): string | null {
     }
   }
   return bookingPointer();
+}
+
+/** The address the /book link carried, if it carried one the popup can use. */
+export function bookingLinkEmail(): string | null {
+  return linkEmail;
+}
+
+/**
+ * Read the #book the server's /book hop left (shared/booking-link.ts) and take
+ * it off the address, so a reload is not a second hop and the visitor's
+ * address is not left in the bar, in history or in a link they copy from it.
+ * Runs before the first render, so nothing on the page ever sees it.
+ */
+function takeBookLinkHop(): boolean {
+  if (typeof window === "undefined") return false;
+  const hop = parseBookLinkHash(window.location.hash);
+  if (!hop) return false;
+  if (hop.email) linkEmail = hop.email;
+  try {
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
+  } catch {
+    /* The popup still opens without the tidy address. */
+  }
+  return true;
 }
 
 function shouldAutoOpenBooking(): boolean {
