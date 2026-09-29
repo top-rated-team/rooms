@@ -5,6 +5,7 @@ import { Check, ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
 
 import {
   bookSlot,
+  bookingLinkEmail,
   bookingTopic,
   cachedSlots,
   CONFIRMED_POLL_MS,
@@ -42,6 +43,7 @@ import type {
   VisitorCalendarView,
 } from "@shared/api";
 import { BOOKING_LINKEDIN_SESSION_QUERY } from "@shared/api";
+import { BOOKING_EMAIL_RE as EMAIL_RE } from "@shared/booking-link";
 import { isHouseHost } from "@shared/operator";
 
 import { BookingQr } from "./BookingQr";
@@ -84,9 +86,6 @@ const BTN_ICON =
    focus colour instead of a ring around a box. */
 const FIELD =
   "w-full border-b border-border bg-transparent pb-[var(--s1)] pt-0 text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none disabled:opacity-50";
-
-/** Deliberately permissive: a rejected typo costs a booking, not a lead. */
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 const WEEKDAY_LABELS = weekdayLabels();
 
@@ -154,9 +153,12 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
    *
    * It never overwrites typing. The field is filled only while it is empty or
    * still holds an earlier answer from the session.
+   *
+   * Nor the address a /book link brought: that link was written for this
+   * person, and it is the address they came to book with.
    */
   useEffect(() => {
-    if (!open) return;
+    if (!open || bookingLinkEmail()) return;
     const ac = new AbortController();
     void fetch("/api/session", { headers: { Accept: "application/json" }, credentials: "same-origin", signal: ac.signal })
       .then((res) => (res.ok ? (res.json() as Promise<RoomSession>) : null))
@@ -198,7 +200,7 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
     setLoadError(null);
     setDate(null);
     setTime(null);
-    setEmail("");
+    setEmail(bookingLinkEmail() ?? "");
     setEmailError(null);
     setFormError(null);
     setSending(false);
