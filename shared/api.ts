@@ -392,6 +392,14 @@ export interface CreateBookingRequest {
   email?: string;
   name: string;
   topic: string;
+  /**
+   * "email": hold the slot and send `email` a link that confirms it, instead
+   * of writing the event now. What a time picked inside an email asks for
+   * (shared/booking-widget.ts). Needs `email`. Where this deployment cannot
+   * send mail, the booking is written at once and Google's invite goes out,
+   * as without it.
+   */
+  confirm?: "email";
 }
 
 export interface CreateBookingResponse {
@@ -429,7 +437,44 @@ export interface HoldBookingResponse {
   expiresAt: string;
 }
 
-export type PostBookingResponse = CreateBookingResponse | HoldBookingResponse;
+/**
+ * POST /api/booking with `confirm: "email"`: the slot is held and a link that
+ * confirms it has been sent to `email`. Nothing is on the calendar yet.
+ * `code` is the hold's, for asking GET /api/booking/confirmed; it proves
+ * nothing and is never shown — only the emailed link confirms.
+ */
+export interface EmailHoldBookingResponse {
+  booked: false;
+  held: true;
+  via: "email";
+  email: string;
+  startsAt: string;
+  timezone: string;
+  expiresAt: string;
+  code: string;
+}
+
+export type PostBookingResponse = CreateBookingResponse | HoldBookingResponse | EmailHoldBookingResponse;
+
+/** GET /api/booking/email-confirm?token= — what the emailed link stands for. */
+export type EmailHoldStatusResponse =
+  | { status: "pending"; startsAt: string; timezone: string; expiresAt: string; email: string }
+  | { status: "confirmed"; startsAt: string; timezone: string }
+  | { status: "expired" }
+  | { status: "unknown" };
+
+/**
+ * GET /api/admin/booking-widget — the booking times as a block for an email,
+ * for the person who runs this deployment.
+ */
+export interface AdminBookingWidgetResponse {
+  html: string;
+  text: string;
+  timezone: string;
+  days: BookingDay[];
+  /** Whether a time picked from the block is confirmed by email, and if not, why. */
+  emailConfirmation: { on: true } | { on: false; line: string };
+}
 
 export interface BookingConflictResponse {
   error: string;

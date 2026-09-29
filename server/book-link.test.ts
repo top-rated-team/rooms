@@ -72,12 +72,33 @@ describe("GET /book", () => {
   });
 
   it("moves the address from the query into the fragment, in both shapes", async () => {
-    assert.equal((await get(origin, "/book?email=someone@example.com")).location, "/#book=someone%40example.com");
-    assert.equal((await get(origin, "/book?someone@example.com")).location, "/#book=someone%40example.com");
+    assert.equal((await get(origin, "/book?email=someone@example.com")).location, "/#book&email=someone%40example.com");
+    assert.equal((await get(origin, "/book?someone@example.com")).location, "/#book&email=someone%40example.com");
     assert.equal(
       (await get(origin, "/book?dan+ads%40example.com&utm_source=newsletter")).location,
-      "/?utm_source=newsletter#book=dan%2Bads%40example.com",
+      "/?utm_source=newsletter#book&email=dan%2Bads%40example.com",
     );
+  });
+
+  it("carries a time picked in an email, and that it is confirmed by email", async () => {
+    assert.equal(
+      (await get(origin, "/book?date=2026-10-02&time=09:30&confirm=email&email=someone@example.com")).location,
+      "/#book&email=someone%40example.com&date=2026-10-02&time=09:30&confirm=email",
+    );
+  });
+
+  it("hops the emailed confirmation link into the popup, which asks before anything is booked", async () => {
+    const token = "Ab3_-".repeat(9);
+    const answer = await get(origin, `/book/confirm/${token}`);
+    assert.equal(answer.status, 302);
+    assert.equal(answer.location, `/#book&confirm=email&confirmation=${token}`);
+    assert.equal(answer.cacheControl, "no-store");
+    assert.equal((await get(origin, "/book/confirm/short")).location, "/#book&confirm=email", "a token it cannot read is not passed on");
+  });
+
+  it("keeps the widget maker to the person who runs the deployment", async () => {
+    const answer = await get(origin, "/api/admin/booking-widget");
+    assert.equal(answer.status, 401);
   });
 
   it("is not answered on adgrant.ai, whose site has no booking popup", async () => {

@@ -100,7 +100,8 @@ import {
   visitorCalendarView,
 } from "./booking/freebusy";
 import { postBooking, changeBooking, cancelBooking, getExistingBooking } from "./booking/calendar";
-import { getBookingConfirmed, installBookingInbound } from "./booking/confirm";
+import { confirmEmailHold, emailHoldStatus, getBookingConfirmed, installBookingInbound } from "./booking/confirm";
+import { emailConfirmation } from "./booking/confirm-email";
 import { isBookingReturnCode, normalizeBookingCode } from "./booking/code";
 import {
   bookingLinkedInAvailability,
@@ -119,7 +120,9 @@ import { resolveDistPath } from "./vite";
 import fs from "node:fs";
 import path from "node:path";
 import { isAdGrantHost } from "@shared/adgrant-site";
-import { bookLinkTarget } from "@shared/booking-link";
+import { bookLinkTarget, formatBookLinkHash } from "@shared/booking-link";
+import { buildBookingWidget, type BookingWidgetShow } from "@shared/booking-widget";
+import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
 import { openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage, bindRoomAddressForToken } from "./room-access";
 import {
   completeRoomLoginLinkedIn,
@@ -841,6 +844,22 @@ export function registerRoutes(app: Express): void {
     const at = req.originalUrl.indexOf("?");
     res.setHeader("Cache-Control", "no-store");
     res.redirect(302, bookLinkTarget(at < 0 ? "" : req.originalUrl.slice(at + 1)));
+  });
+  /*
+   * The link in the letter that confirms a time picked inside an email
+   * (server/booking/confirm-email.ts). It confirms nothing by being opened —
+   * a mail scanner opens it first — it opens the popup, which shows the time
+   * and asks. The token goes into the fragment for the same reason /book's
+   * address does, and the popup takes it off the address bar.
+   */
+  app.get("/book/confirm/:token", (req, res, next) => {
+    if (isAdGrantHost(req.hostname)) {
+      next();
+      return;
+    }
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+    res.redirect(302, `/#${formatBookLinkHash({ confirmation: req.params.token, confirmByEmail: true })}`);
   });
 
   const createWorkspaceLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many workspaces from this address. Try again later, or book a call." });
@@ -1749,6 +1768,51 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
+  /*
+   * The booking times as a block for an email, for the person who runs this
+   * deployment. The times are public — the popup shows them to anyone — but
+   * the page that makes the block is a tool for sending mail as us, so it sits
+   * behind the same gate as the people page.
+   */
+  app.get(
+    "/api/admin/booking-widget",
+    roomAccessOpenLimit,
+    route(async (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+      const gate = await requireDeploymentOperator(req);
+      if (!gate.ok) {
+        res.status(gate.status).json({ error: gate.error, ...(gate.youAre?.length ? { youAre: gate.youAre } : {}) });
+        return;
+      }
+      const slots = await getBookingSlots("", 14);
+      if (!slots.ok) {
+        res.status(slots.status).json({ error: slots.error });
+        return;
+      }
+      const query = req.query as Record<string, unknown>;
+      const show: BookingWidgetShow = query.show === "days" ? "days" : "times";
+      const number = (value: unknown, fallback: number) => (typeof value === "string" && value.trim() ? Number(value) : fallback);
+      const contract = DOOR_BY_ID[DEFAULT_DOOR_ID].contract;
+      const widget = buildBookingWidget({
+        baseUrl: process.env.PUBLIC_BASE_URL?.trim() || `${req.protocol}://${req.get("host") ?? "localhost"}`,
+        slots: slots.body,
+        show,
+        days: number(query.days, 5),
+        timesPerDay: number(query.perDay, 6),
+        recipient: typeof query.recipient === "string" ? query.recipient : "",
+        hostName: (contract.displayName ?? contract.legalName).trim(),
+      });
+      res.json({
+        html: widget.html,
+        text: widget.text,
+        timezone: slots.body.timezone,
+        days: widget.days,
+        emailConfirmation: emailConfirmation(),
+      });
+    }),
+  );
+
   app.post(
     "/api/session/whatsapp",
     identityLimit,
@@ -2176,6 +2240,30 @@ export function registerRoutes(app: Express): void {
         res.clearCookie(VISITOR_CALENDAR_COOKIE, { path: "/", sameSite: "lax" });
       }
       res.status(201).json(result.body);
+    }),
+  );
+
+  app.get(
+    "/api/booking/email-confirm",
+    bookingLimit,
+    route(async (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      const token = typeof req.query.token === "string" ? req.query.token : "";
+      res.json(emailHoldStatus(token));
+    }),
+  );
+
+  app.post(
+    "/api/booking/email-confirm",
+    bookingLimit,
+    route(async (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      const result = await confirmEmailHold(req.body?.token);
+      if (!result.ok) {
+        res.status(result.status).json(result.status === 409 ? { error: result.error, days: result.days } : { error: result.error });
+        return;
+      }
+      res.status(result.status).json(result.body);
     }),
   );
 

@@ -219,6 +219,8 @@ describe("postBooking", () => {
     if (!result.ok) return;
     assert.equal(result.body.booked, false);
     if (result.body.booked) return;
+    assert.equal("via" in result.body, false, "a WhatsApp hold, not an email one");
+    if ("via" in result.body) return;
     assert.equal(result.body.held, true);
     assert.equal(result.body.invited, false);
     assert.equal(result.body.meetUrl, null);

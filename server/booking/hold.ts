@@ -16,6 +16,8 @@
  * out off a house host would send a visitor to a phone in Prague.
  */
 
+import { randomBytes } from "node:crypto";
+
 import type { ExistingBookingResponse, HoldBookingResponse } from "@shared/api";
 import { isHouseHost } from "@shared/operator";
 import { WHATSAPP_URL } from "@shared/roster";
@@ -49,6 +51,17 @@ export interface HoldDraft {
 export interface BookingHold extends HoldDraft {
   code: string;
   createdAt: number;
+  /** How long it holds the slot unproven: five minutes for WhatsApp, longer for email. */
+  ttlMs: number;
+  /**
+   * How it is proved. A WhatsApp hold by the planted code arriving; an email
+   * hold only by the link sent to `email` (confirm-email.ts) — never by a
+   * WhatsApp message, because that would prove nothing about the address.
+   */
+  via: "whatsapp" | "email";
+  email: string | null;
+  /** The secret in the emailed link. Null on a WhatsApp hold. */
+  confirmToken: string | null;
   chatId: string | null;
   eventId: string | null;
   meetUrl: string | null;
@@ -88,6 +101,9 @@ export interface StoredBooking {
  * Map is a cache in front of the table now, hydrated at boot.
  */
 const holds = new Map<string, BookingHold>();
+/* Email holds by their link's token, so a lookup is a hash lookup and not a
+   walk that compares secrets one character at a time. */
+const holdsByToken = new Map<string, string>();
 const bookings = new Map<string, StoredBooking>();
 
 /** Tests run without a database and still have to exercise the durable path. */
@@ -181,13 +197,20 @@ function bookingIsLive(row: StoredBooking, now: number): boolean {
   return startsAtMs(row.startsAt) + SLOT_MINUTES * 60_000 > now;
 }
 
+/** An unproven hold whose time is up. A proved one never expires; it is swept. */
+export function holdExpired(row: BookingHold, now = Date.now()): boolean {
+  return !row.eventId && now - row.createdAt > row.ttlMs;
+}
+
+function dropHold(code: string): void {
+  const row = holds.get(code);
+  if (row?.confirmToken) holdsByToken.delete(row.confirmToken);
+  holds.delete(code);
+}
+
 function sweep(now: number): void {
   for (const [code, row] of holds) {
-    if (row.eventId) {
-      if (now - row.createdAt > HOLD_TTL_MS * 3) holds.delete(code);
-      continue;
-    }
-    if (now - row.createdAt > HOLD_TTL_MS * 3) holds.delete(code);
+    if (now - row.createdAt > row.ttlMs * 3) dropHold(code);
   }
   for (const [code, row] of bookings) {
     if (!bookingIsLive(row, now)) bookings.delete(code);
@@ -217,11 +240,24 @@ export function whatsappGateAllowed(hostOrUrl?: string): boolean {
 
 export function resetHoldsForTests(): void {
   holds.clear();
+  holdsByToken.clear();
   bookings.clear();
 }
 
 export function getHold(codeRaw: string): BookingHold | undefined {
   return holds.get(codeRaw.trim().toUpperCase());
+}
+
+export function getHoldByToken(token: string, now = Date.now()): BookingHold | undefined {
+  sweep(now);
+  const code = holdsByToken.get(token);
+  return code ? holds.get(code) : undefined;
+}
+
+/** Give an unproven hold's slot back, e.g. when its confirmation could not be sent. */
+export function releaseHold(codeRaw: string): void {
+  const row = getHold(codeRaw);
+  if (row && !row.eventId) dropHold(row.code);
 }
 
 /** Live unproven holds, plus proved ones still inside the sweep window, plus live bookings. */
@@ -233,7 +269,7 @@ export function activeHeldSlots(now = Date.now()): { date: string; time: string 
       out.push({ date: row.date, time: row.time });
       continue;
     }
-    if (now - row.createdAt > HOLD_TTL_MS) continue;
+    if (holdExpired(row, now)) continue;
     out.push({ date: row.date, time: row.time });
   }
   for (const row of bookings.values()) {
@@ -260,11 +296,15 @@ export function holdToResponse(hold: BookingHold): HoldBookingResponse {
       url: waMeUrl(ourDigits(), bookingConfirmMessage(hold.code)),
       code: hold.code,
     },
-    expiresAt: new Date(hold.createdAt + HOLD_TTL_MS).toISOString(),
+    expiresAt: new Date(hold.createdAt + hold.ttlMs).toISOString(),
   };
 }
 
-export function placeHold(draft: HoldDraft, now = Date.now()): BookingHold | { taken: true } {
+export function placeHold(
+  draft: HoldDraft,
+  now = Date.now(),
+  proof: { via: "email"; email: string; ttlMs: number } | { via: "whatsapp" } = { via: "whatsapp" },
+): BookingHold | { taken: true } {
   sweep(now);
   if (slotIsHeld(draft.date, draft.time, now)) return { taken: true };
   const code = mintBookingCode();
@@ -272,19 +312,26 @@ export function placeHold(draft: HoldDraft, now = Date.now()): BookingHold | { t
     ...draft,
     code,
     createdAt: now,
+    ttlMs: proof.via === "email" ? proof.ttlMs : HOLD_TTL_MS,
+    via: proof.via,
+    email: proof.via === "email" ? proof.email : null,
+    /* 256 bits: the whole credential for writing this booking. */
+    confirmToken: proof.via === "email" ? randomBytes(32).toString("base64url") : null,
     chatId: null,
     eventId: null,
     meetUrl: null,
     confirmedAt: null,
   };
   holds.set(code, hold);
+  if (hold.confirmToken) holdsByToken.set(hold.confirmToken, code);
   return hold;
 }
 
 export function bindHoldChat(code: string, chatId: string, now = Date.now()): BookingHold | null {
   const row = getHold(code);
   if (!row) return null;
-  if (!row.eventId && now - row.createdAt > HOLD_TTL_MS) return null;
+  if (row.via !== "whatsapp") return null;
+  if (holdExpired(row, now)) return null;
   if (row.chatId && row.chatId !== chatId) return null;
   row.chatId = chatId;
   return row;
@@ -385,7 +432,7 @@ export function markBookingCancelled(codeRaw: string, now = Date.now()): StoredB
      the picker and 409'd for the rest of the sweep window — a slot nobody
      could book and nobody could see was taken. */
   for (const [heldCode, held] of holds) {
-    if (held.eventId && held.eventId === row.eventId) holds.delete(heldCode);
+    if (held.eventId && held.eventId === row.eventId) dropHold(heldCode);
   }
   /* Written before it is dropped from the cache, so a restart cannot bring a
      cancelled booking back to life. */

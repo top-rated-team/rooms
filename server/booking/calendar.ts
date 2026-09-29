@@ -18,6 +18,10 @@
  * address this file does not create an event: hold.ts reserves the slot and
  * confirm.ts writes the event after WhatsApp proves it. A hold is not a
  * booking.
+ *
+ * With an address and `confirm: "email"` — a time picked inside an email —
+ * the slot is held the same way and a link that confirms it is mailed to the
+ * address (confirm-email.ts); confirm.ts writes the event when it is used.
  */
 
 import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
@@ -27,6 +31,7 @@ import type {
   ChangeBookingRequest,
   CreateBookingRequest,
   CreateBookingResponse,
+  EmailHoldBookingResponse,
   ExistingBookingResponse,
   HoldBookingResponse,
 } from "@shared/api";
@@ -40,6 +45,13 @@ import {
 } from "./gcal";
 import { mintBookingCode, normalizeBookingCode } from "./code";
 import {
+  EMAIL_CONFIRM_ADDRESS_LINE,
+  EMAIL_CONFIRM_SEND_FAILED_LINE,
+  EMAIL_HOLD_TTL_MS,
+  emailConfirmation,
+  sendConfirmationLetter,
+} from "./confirm-email";
+import {
   ADDRESS_REQUIRED_LINE,
   BOOKING_GONE_LINE,
   bookingEventDescription,
@@ -49,6 +61,7 @@ import {
   markBookingCancelled,
   placeHold,
   recordBooking,
+  releaseHold,
   slotIsHeld,
   updateStoredBooking,
   whatsappGateAllowed,
@@ -89,7 +102,7 @@ async function primaryCalendar(
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type PostBookingResult =
-  | { ok: true; status: 201; body: CreateBookingResponse | HoldBookingResponse }
+  | { ok: true; status: 201; body: CreateBookingResponse | HoldBookingResponse | EmailHoldBookingResponse }
   | { ok: false; status: 409; body: BookingConflictResponse }
   | { ok: false; status: 503; error: string };
 
@@ -124,6 +137,7 @@ export function parseCreateBooking(body: unknown): CreateBookingRequest | null {
   const emailRaw = typeof record.email === "string" ? record.email.trim() : "";
   const parsed: CreateBookingRequest = { date, time, name, topic };
   if (emailRaw) parsed.email = emailRaw;
+  if (record.confirm === "email") parsed.confirm = "email";
   return parsed;
 }
 
@@ -211,6 +225,11 @@ export async function postBooking(
   }
 
   const hasAddress = Boolean(input.email);
+  /* A time picked in an email is confirmed from that inbox and nowhere else:
+     no WhatsApp route, even on a house host. */
+  if (input.confirm === "email" && !hasAddress) {
+    return { ok: false, status: 503, error: EMAIL_CONFIRM_ADDRESS_LINE };
+  }
   if (!hasAddress && !whatsappGateAllowed(opts.host)) {
     return { ok: false, status: 503, error: ADDRESS_REQUIRED_LINE };
   }
@@ -229,6 +248,49 @@ export async function postBooking(
     const wider = await getBookingSlots(input.date, 14, { fetchImpl, now });
     const days = wider.ok ? wider.body.days : slots.body.days;
     return { ok: false, status: 409, body: { error: SLOT_TAKEN_LINE, days } };
+  }
+
+  /* Without a way to send the letter this falls through to the ordinary
+     write: the booking stands at once and Google's invite goes out. The
+     widget page says so to the person who sends the times, so it is never a
+     surprise to them. */
+  if (input.confirm === "email" && input.email && emailConfirmation().on) {
+    const held = placeHold(
+      {
+        date: input.date,
+        time: input.time,
+        name: input.name,
+        topic: input.topic,
+        timezone: primary.calendar.timezone,
+        startsAt: starts.toISOString(),
+      },
+      now.getTime(),
+      { via: "email", email: input.email, ttlMs: EMAIL_HOLD_TTL_MS },
+    );
+    if ("taken" in held) {
+      const wider = await getBookingSlots(input.date, 14, { fetchImpl, now });
+      const days = wider.ok ? wider.body.days : slots.body.days;
+      return { ok: false, status: 409, body: { error: SLOT_TAKEN_LINE, days } };
+    }
+    if (!(await sendConfirmationLetter(held, SLOT_MINUTES, fetchImpl))) {
+      releaseHold(held.code);
+      return { ok: false, status: 503, error: EMAIL_CONFIRM_SEND_FAILED_LINE };
+    }
+    invalidateSlotsCache();
+    return {
+      ok: true,
+      status: 201,
+      body: {
+        booked: false,
+        held: true,
+        via: "email",
+        email: input.email,
+        startsAt: held.startsAt,
+        timezone: held.timezone,
+        expiresAt: new Date(held.createdAt + held.ttlMs).toISOString(),
+        code: held.code,
+      },
+    };
   }
 
   if (!hasAddress) {
