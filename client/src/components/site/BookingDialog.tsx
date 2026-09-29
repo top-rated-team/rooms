@@ -5,8 +5,12 @@ import { Check, ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
 
 import {
   bookSlot,
+  bookingLink,
   bookingLinkEmail,
   bookingTopic,
+  confirmEmailHold,
+  fetchEmailHoldStatus,
+  forgetBookingLinkPick,
   cachedSlots,
   CONFIRMED_POLL_MS,
   CONFIRMED_TIMEOUT_MS,
@@ -37,6 +41,8 @@ import type {
   BookingConfirmedResponse,
   BookingLinkedInAvailability,
   BookingLinkedInSession,
+  EmailHoldBookingResponse,
+  EmailHoldStatusResponse,
   ExistingBookingResponse,
   HoldBookingResponse,
   RoomSession,
@@ -110,10 +116,30 @@ type Phase =
   | { kind: "confirm-cancel"; booking: ExistingBooking; code: string }
   | { kind: "cancelled" }
   | { kind: "expired"; code: string }
-  | { kind: "gone"; reason: "unknown" | "unreachable" };
+  | { kind: "gone"; reason: "unknown" | "unreachable" }
+  /* A time picked inside an email: held, and the link that confirms it sent. */
+  | { kind: "check-email"; hold: EmailHoldBookingResponse }
+  /* The way back from that link. `status` is null while it is looked up. */
+  | { kind: "confirm-email"; token: string; status: EmailHoldStatusResponse | null }
+  /* An email hold that can no longer be confirmed, and why. */
+  | { kind: "lapsed"; line: string };
+
+const LINKED_TIME_GONE_LINE = "The time you picked in the email is no longer free. Pick another one here.";
+const LINKED_DAY_GONE_LINE = "The day you picked in the email has no free times any more. Pick another one here.";
+const EMAIL_CONFIRM_HINT = "We email you a link that confirms the call. Nothing is booked until you use it.";
+const EMAIL_HOLD_LAPSED_LINE = "The link was not used in time, so nothing was booked and the time is free again.";
+const EMAIL_LINK_UNKNOWN_LINE = "This confirmation link is not one we know, or the call it confirmed has since been cancelled.";
+
+/** Opened from a time inside an email: confirmed from that inbox, nothing else offered. */
+function confirmsByEmail(): boolean {
+  return bookingLink()?.confirmByEmail === true;
+}
 
 function offerWhatsAppGate(): boolean {
   if (typeof window === "undefined") return false;
+  /* A WhatsApp step makes no sense for a time picked inside an email: the
+     owner's call, and the reason there is an email step instead. */
+  if (confirmsByEmail()) return false;
   return isHouseHost(window.location.hostname);
 }
 
@@ -222,6 +248,19 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
     });
 
     void (async () => {
+      const confirmation = bookingLink()?.confirmation;
+      if (confirmation) {
+        setPhase({ kind: "confirm-email", token: confirmation, status: null });
+        setLoading(false);
+        try {
+          const status = await fetchEmailHoldStatus(confirmation);
+          if (!cancelled) showEmailHoldStatus(confirmation, status);
+        } catch (error) {
+          if (!cancelled) setFormError(error instanceof Error ? error.message : "That confirmation link could not be checked.");
+        }
+        return;
+      }
+
       const returning = await takeLinkedInSessionFromUrl();
       if (cancelled) return;
 
@@ -267,7 +306,12 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
         if (cancelled) return;
         const floor = payload.days[0]?.date ?? null;
         const draft = returning && returning.session ? returning.session.draft : null;
-        const picked = draft?.date ?? firstDayWithASlot(payload.days);
+        /* The day, and the time, a link from an email picked — if they are
+           still free. It was free when the email was written, which may have
+           been days ago. */
+        const linked = returning ? null : bookingLink();
+        const linkedDay = linked?.date ? payload.days.find((day) => day.date === linked.date && day.slots.length > 0) : undefined;
+        const picked = draft?.date ?? linkedDay?.date ?? firstDayWithASlot(payload.days);
         setSlots(payload);
         setLoadError(null);
         setFloorDate(floor);
@@ -280,6 +324,12 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
         }
         if (draft?.time) {
           setTime(draft.time);
+        } else if (linked?.date) {
+          if (linked.time && linkedDay?.slots.includes(linked.time)) setTime(linked.time);
+          else if (linked.time) setFormError(LINKED_TIME_GONE_LINE);
+          else if (!linkedDay) setFormError(LINKED_DAY_GONE_LINE);
+          /* Used once: opening the popup again from the page starts fresh. */
+          forgetBookingLinkPick();
         }
       } catch (error: unknown) {
         if (cancelled) return;
@@ -485,7 +535,7 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
     if (trimmed) {
       setSending(true);
       try {
-        const result = await bookSlot({ date, time, email: trimmed });
+        const result = await bookSlot({ date, time, email: trimmed, confirmByEmail: confirmsByEmail() });
         if (!result.ok && result.conflict) {
           applyDays(result.days);
           setFormError(result.error);
@@ -493,6 +543,10 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
         }
         if (!result.ok) {
           setFormError(result.error);
+          return;
+        }
+        if ("emailHold" in result) {
+          waitForEmailConfirmation(result.emailHold);
           return;
         }
         setPhase({ kind: "done", booked: result.booked, viaWhatsApp: false, code: result.booked.whatsapp.code });
@@ -628,6 +682,85 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
     await loadPickerDays();
   }
 
+  /**
+   * Held; the letter is on its way. This popup waits, because the person may
+   * confirm in another tab and come back to this one — and when they do it
+   * should say so rather than go on waiting.
+   */
+  function waitForEmailConfirmation(hold: EmailHoldBookingResponse) {
+    setPhase({ kind: "check-email", hold });
+    pollAbort.current?.abort();
+    const controller = new AbortController();
+    pollAbort.current = controller;
+    const timeoutMs = Math.max(0, Date.parse(hold.expiresAt) - Date.now()) + CONFIRMED_POLL_MS * 2;
+    void pollHoldConfirmed(hold.code, controller.signal, timeoutMs)
+      .then((confirmed) => {
+        if (controller.signal.aborted) return;
+        if (confirmed.confirmed) {
+          setPhase({ kind: "done", booked: bookedFromEmailHold(hold, confirmed), viaWhatsApp: false, code: "" });
+        } else {
+          setPhase({ kind: "lapsed", line: EMAIL_HOLD_LAPSED_LINE });
+        }
+      })
+      .catch(() => {
+        /* Closed, or aborted by a newer wait. */
+      });
+  }
+
+  function showEmailHoldStatus(token: string, status: EmailHoldStatusResponse) {
+    if (status.status === "pending") {
+      setEmail(status.email);
+      setPhase({ kind: "confirm-email", token, status });
+      return;
+    }
+    forgetBookingLinkPick();
+    if (status.status === "confirmed") {
+      setPhase({
+        kind: "done",
+        booked: {
+          booked: true,
+          code: "",
+          startsAt: status.startsAt,
+          timezone: status.timezone,
+          meetUrl: null,
+          invited: true,
+          whatsapp: { url: "", code: "" },
+        },
+        viaWhatsApp: false,
+        code: "",
+      });
+      return;
+    }
+    setPhase({ kind: "lapsed", line: status.status === "expired" ? EMAIL_HOLD_LAPSED_LINE : EMAIL_LINK_UNKNOWN_LINE });
+  }
+
+  async function confirmFromEmail(token: string): Promise<void> {
+    setSending(true);
+    setFormError(null);
+    try {
+      const result = await confirmEmailHold(token);
+      if (result.ok) {
+        forgetBookingLinkPick();
+        setPhase({ kind: "done", booked: result.booked, viaWhatsApp: false, code: result.booked.code });
+        return;
+      }
+      if (result.conflict) {
+        forgetBookingLinkPick();
+        await retryPicker();
+        setFormError(result.error);
+        return;
+      }
+      if (result.gone) {
+        forgetBookingLinkPick();
+        setPhase({ kind: "lapsed", line: result.error });
+        return;
+      }
+      setFormError(result.error);
+    } finally {
+      setSending(false);
+    }
+  }
+
   async function confirmCancel(code: string): Promise<void> {
     if (!code) return;
     setSending(true);
@@ -744,6 +877,17 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
               code={phase.code}
               onRetry={() => void retryPicker()}
             />
+          ) : phase.kind === "check-email" ? (
+            <CheckEmailView hold={phase.hold} />
+          ) : phase.kind === "confirm-email" ? (
+            <ConfirmEmailView
+              status={phase.status}
+              sending={sending}
+              error={formError}
+              onConfirm={() => void confirmFromEmail(phase.token)}
+            />
+          ) : phase.kind === "lapsed" ? (
+            <LapsedView line={phase.line} onRetry={() => void retryPicker()} />
           ) : (
             <form onSubmit={submit} noValidate>
               <Dialog.Title className="pr-8 text-xl font-semibold tracking-tight">
@@ -792,12 +936,16 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                     onPick={pickSlot}
                   />
                 </div>
-                <VisitorCalendarRow
-                  view={slots.visitorCalendar}
-                  failed={calendarFailed}
-                  dropping={droppingCalendar}
-                  onDrop={dropCalendar}
-                />
+                {/* Not for a time picked inside an email: that flow asks
+                    nothing of the recipient's own calendar. */}
+                {confirmsByEmail() ? null : (
+                  <VisitorCalendarRow
+                    view={slots.visitorCalendar}
+                    failed={calendarFailed}
+                    dropping={droppingCalendar}
+                    onDrop={dropCalendar}
+                  />
+                )}
                 </>
               ) : null}
 
@@ -860,7 +1008,7 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                       {sending ? <Loader2 className="animate-spin" /> : null}
                       Book
                     </button>
-                    {linkedin?.available === true && date && time ? (
+                    {confirmsByEmail() ? null : linkedin?.available === true && date && time ? (
                       <a
                         href={linkedinStartHref({ date, time })}
                         data-testid="button-booking-linkedin"
@@ -881,7 +1029,7 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                     )}
                   </div>
                   <p id="booking-email-hint" className="mt-1.5 text-xs text-muted-foreground">
-                    {emailHint(offerWhatsAppGate(), linkedin)}
+                    {confirmsByEmail() ? EMAIL_CONFIRM_HINT : emailHint(offerWhatsAppGate(), linkedin)}
                   </p>
                   {emailError ? (
                     <p id="booking-email-error" className="mt-1.5 text-xs text-destructive" role="alert">
@@ -1848,6 +1996,90 @@ function WaitingView({ hold, openedWhatsApp }: { hold: HoldBookingResponse; open
   );
 }
 
+function CheckEmailView({ hold }: { hold: EmailHoldBookingResponse }) {
+  const minutes = Math.max(1, Math.round((Date.parse(hold.expiresAt) - Date.now()) / 60_000));
+  return (
+    <div className="text-center">
+      <Dialog.Title className={`px-8 ${DIALOG_HEADING}`}>Check your inbox</Dialog.Title>
+      <Dialog.Description className={`mx-auto mt-[var(--s2)] max-w-[42ch] ${DIALOG_COPY}`}>
+        We sent a link to <span className="font-medium">{hold.email}</span>. Open it to confirm the call on{" "}
+        {formatBookedWhen(hold.startsAt, hold.timezone)}.
+      </Dialog.Description>
+      <p className={`mx-auto mt-[var(--s2)] max-w-[42ch] ${DIALOG_COPY}`}>
+        The time is held for you for {minutes} {minutes === 1 ? "minute" : "minutes"}. Nothing is booked until you confirm.
+      </p>
+      <p className={`mt-[var(--s3)] flex items-center justify-center gap-[var(--s1)] ${DIALOG_COPY}`} data-testid="text-booking-check-email">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Waiting for you to confirm.
+      </p>
+    </div>
+  );
+}
+
+function ConfirmEmailView({
+  status,
+  sending,
+  error,
+  onConfirm,
+}: {
+  status: EmailHoldStatusResponse | null;
+  sending: boolean;
+  error: string | null;
+  onConfirm: () => void;
+}) {
+  if (!status || status.status !== "pending") {
+    return (
+      <div className="text-center">
+        <Dialog.Title className={`px-8 ${DIALOG_HEADING}`}>Confirm your call</Dialog.Title>
+        {error ? (
+          <Dialog.Description role="alert" className={`mx-auto mt-[var(--s2)] max-w-[42ch] ${DIALOG_COPY} text-destructive`}>
+            {error}
+          </Dialog.Description>
+        ) : (
+          <Dialog.Description className={`mt-[var(--s3)] flex items-center justify-center gap-[var(--s1)] ${DIALOG_COPY}`}>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Looking up the time you picked.
+          </Dialog.Description>
+        )}
+      </div>
+    );
+  }
+  return (
+    <div className="text-center">
+      <Dialog.Title className={`px-8 ${DIALOG_HEADING}`}>Confirm your call</Dialog.Title>
+      <Dialog.Description className={`mx-auto mt-[var(--s2)] max-w-[42ch] ${DIALOG_COPY}`}>
+        {formatBookedWhen(status.startsAt, status.timezone)}. The calendar invite goes to{" "}
+        <span className="font-medium">{status.email}</span>.
+      </Dialog.Description>
+      <div className="mt-[var(--s3)] flex justify-center">
+        <button type="button" className={BTN_PRIMARY} onClick={onConfirm} disabled={sending} data-testid="button-booking-confirm-email">
+          {sending ? <Loader2 className="animate-spin" /> : null}
+          Confirm the call
+        </button>
+      </div>
+      {error ? (
+        <p role="alert" className="mt-4 text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function LapsedView({ line, onRetry }: { line: string; onRetry: () => void }) {
+  return (
+    <div className="text-center">
+      <Dialog.Title className="px-8 text-xl font-semibold tracking-tight">Nothing was booked</Dialog.Title>
+      <Dialog.Description className="mx-auto mt-2 max-w-[42ch] text-sm text-muted-foreground">{line}</Dialog.Description>
+      <div className="mt-6 flex justify-center">
+        <button type="button" className={BTN_PRIMARY} onClick={onRetry} data-testid="button-booking-retry">
+          Pick another time
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ExpiredView({ code, onRetry }: { code: string; onRetry: () => void }) {
   return (
     <div className="text-center">
@@ -1964,8 +2196,12 @@ function parseHoldConfirmed(value: unknown): BookingConfirmedResponse | null {
   return null;
 }
 
-async function pollHoldConfirmed(code: string, signal: AbortSignal): Promise<BookingConfirmedResponse> {
-  const deadline = Date.now() + CONFIRMED_TIMEOUT_MS;
+async function pollHoldConfirmed(
+  code: string,
+  signal: AbortSignal,
+  timeoutMs: number = CONFIRMED_TIMEOUT_MS,
+): Promise<BookingConfirmedResponse> {
+  const deadline = Date.now() + timeoutMs;
   while (!signal.aborted) {
     try {
       const res = await fetch(`/api/booking/confirmed?code=${encodeURIComponent(code)}`, {
@@ -1998,6 +2234,22 @@ async function pollHoldConfirmed(code: string, signal: AbortSignal): Promise<Boo
     });
   }
   throw new DOMException("Aborted", "AbortError");
+}
+
+function bookedFromEmailHold(
+  hold: EmailHoldBookingResponse,
+  confirmed: Extract<BookingConfirmedResponse, { confirmed: true }>,
+): BookedPayload {
+  return {
+    booked: true,
+    /* Confirmed in the other tab, which holds the way back; this one has none. */
+    code: "",
+    startsAt: confirmed.startsAt ?? hold.startsAt,
+    timezone: confirmed.timezone ?? hold.timezone,
+    meetUrl: confirmed.meetUrl ?? null,
+    invited: confirmed.invited ?? true,
+    whatsapp: { url: "", code: "" },
+  };
 }
 
 function bookedFromHold(

@@ -22,11 +22,13 @@ import type {
   BookingSlotsResponse,
   CreateBookingRequest,
   CreateBookingResponse,
+  EmailHoldBookingResponse,
+  EmailHoldStatusResponse,
   ExistingBookingResponse,
 } from "@shared/api";
 import { BOOKING_LINKEDIN_SESSION_QUERY, BOOKING_VISITOR_CALENDAR_QUERY } from "@shared/api";
 import type { VisitorCalendarView } from "@shared/api";
-import { parseBookLinkHash } from "@shared/booking-link";
+import { parseBookLinkHash, type BookLink } from "@shared/booking-link";
 import { DOORS } from "@shared/doors";
 
 export const SLOT_DAYS = 14;
@@ -44,6 +46,8 @@ export type BookedPayload = CreateBookingResponse;
 
 export type BookResult =
   | { ok: true; booked: BookedPayload }
+  /* Held, and a link that confirms it is on its way to the address. */
+  | { ok: true; emailHold: EmailHoldBookingResponse }
   | { ok: false; conflict: true; error: string; days: SlotDay[] }
   | { ok: false; conflict: false; error: string; status: number };
 
@@ -58,9 +62,9 @@ type OpenListener = (open: boolean) => void;
 let hostFn: HostFn | null = null;
 let requestedOpen = false;
 const listeners = new Set<OpenListener>();
-/* The address a /book link brought, for as long as this page is open: the
-   popup starts with it every time it opens, not only the first. */
-let linkEmail: string | null = null;
+/* What a /book link brought, for as long as this page is open: the popup
+   starts with its address every time it opens, not only the first. */
+let link: BookLink | null = null;
 
 let cached: { payload: SlotsPayload; at: number } | null = null;
 let inflight: Promise<SlotsPayload> | null = null;
@@ -69,7 +73,7 @@ export function resetBookingForTests(): void {
   hostFn = null;
   requestedOpen = false;
   listeners.clear();
-  linkEmail = null;
+  link = null;
   cached = null;
   inflight = null;
   if (typeof window !== "undefined") {
@@ -269,7 +273,21 @@ export function takeBookingCredential(): string | null {
 
 /** The address the /book link carried, if it carried one the popup can use. */
 export function bookingLinkEmail(): string | null {
-  return linkEmail;
+  return link?.email ?? null;
+}
+
+/**
+ * Everything the /book link asked for: a day, a time, email confirmation, or
+ * the token of an emailed confirmation link. Null when the page did not come
+ * from one.
+ */
+export function bookingLink(): BookLink | null {
+  return link;
+}
+
+/** Once the popup has acted on it: a confirmation link is used once, and a picked time once. */
+export function forgetBookingLinkPick(): void {
+  if (link) link = { ...link, date: null, time: null, confirmation: null };
 }
 
 /**
@@ -282,7 +300,7 @@ function takeBookLinkHop(): boolean {
   if (typeof window === "undefined") return false;
   const hop = parseBookLinkHash(window.location.hash);
   if (!hop) return false;
-  if (hop.email) linkEmail = hop.email;
+  link = hop;
   try {
     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
   } catch {
@@ -342,7 +360,14 @@ function nameFromEmail(email: string | undefined): string | undefined {
   return local || undefined;
 }
 
-export function buildBookBody(input: { date: string; time: string; email?: string; name?: string; topic?: string }): CreateBookingRequest {
+export function buildBookBody(input: {
+  date: string;
+  time: string;
+  email?: string;
+  name?: string;
+  topic?: string;
+  confirmByEmail?: boolean;
+}): CreateBookingRequest {
   const email = input.email?.trim();
   const body: CreateBookingRequest = {
     date: input.date,
@@ -351,7 +376,27 @@ export function buildBookBody(input: { date: string; time: string; email?: strin
     topic: input.topic?.trim() || bookingTopic(),
   };
   if (email) body.email = email;
+  if (input.confirmByEmail) body.confirm = "email";
   return body;
+}
+
+export function parseEmailHoldPayload(value: unknown): EmailHoldBookingResponse | null {
+  if (typeof value !== "object" || value === null) return null;
+  const record = value as Record<string, unknown>;
+  if (record.booked !== false || record.held !== true || record.via !== "email") return null;
+  for (const key of ["email", "startsAt", "timezone", "expiresAt", "code"] as const) {
+    if (typeof record[key] !== "string") return null;
+  }
+  return {
+    booked: false,
+    held: true,
+    via: "email",
+    email: record.email as string,
+    startsAt: record.startsAt as string,
+    timezone: record.timezone as string,
+    expiresAt: record.expiresAt as string,
+    code: record.code as string,
+  };
 }
 
 export function parseSlotsPayload(value: unknown): SlotsPayload {
@@ -590,7 +635,7 @@ export function prepareBooking(): Promise<boolean> {
     .catch(() => false);
 }
 
-export async function bookSlot(input: { date: string; time: string; email?: string }): Promise<BookResult> {
+export async function bookSlot(input: { date: string; time: string; email?: string; confirmByEmail?: boolean }): Promise<BookResult> {
   let res: Response;
   try {
     res = await fetch("/api/booking", {
@@ -630,6 +675,9 @@ export async function bookSlot(input: { date: string; time: string; email?: stri
     };
   }
 
+  const emailHold = parseEmailHoldPayload(body);
+  if (emailHold) return { ok: true, emailHold };
+
   try {
     const booked = parseBookedPayload(body);
     if (booked.whatsapp.code) rememberBookingPointer(booked.whatsapp.code);
@@ -641,6 +689,76 @@ export async function bookSlot(input: { date: string; time: string; email?: stri
       error: error instanceof Error ? error.message : "That time could not be booked.",
       status: res.status,
     };
+  }
+}
+
+/** What the emailed confirmation link stands for. Anything unreadable is "unknown". */
+export async function fetchEmailHoldStatus(token: string, signal?: AbortSignal): Promise<EmailHoldStatusResponse> {
+  const res = await fetch(`/api/booking/email-confirm?${new URLSearchParams({ token }).toString()}`, {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    credentials: "same-origin",
+    signal,
+  });
+  const body = (await readJson(res)) as Record<string, unknown> | null;
+  if (!res.ok || !body) throw new Error(errorFromBody(body, "That confirmation link could not be checked."));
+  const status = body.status;
+  if (status === "pending" && typeof body.startsAt === "string" && typeof body.timezone === "string" && typeof body.expiresAt === "string") {
+    return {
+      status,
+      startsAt: body.startsAt,
+      timezone: body.timezone,
+      expiresAt: body.expiresAt,
+      email: typeof body.email === "string" ? body.email : "",
+    };
+  }
+  if (status === "confirmed" && typeof body.startsAt === "string" && typeof body.timezone === "string") {
+    return { status, startsAt: body.startsAt, timezone: body.timezone };
+  }
+  if (status === "expired") return { status };
+  return { status: "unknown" };
+}
+
+export type EmailConfirmResult =
+  | { ok: true; booked: BookedPayload }
+  | { ok: false; conflict: true; error: string; days: SlotDay[] }
+  | { ok: false; conflict: false; error: string; gone: boolean };
+
+/** Use the emailed link: this, and not opening it, is what writes the booking. */
+export async function confirmEmailHold(token: string): Promise<EmailConfirmResult> {
+  let res: Response;
+  try {
+    res = await fetch("/api/booking/email-confirm", {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ token }),
+    });
+  } catch {
+    return { ok: false, conflict: false, gone: false, error: "Could not reach the server. Check your connection and try again." };
+  }
+  const body = await readJson(res).catch(() => null);
+  if (res.status === 409) {
+    const days = parseDays(body && typeof body === "object" ? (body as { days?: unknown }).days : undefined);
+    if (days) replaceCachedDays(days);
+    return {
+      ok: false,
+      conflict: true,
+      error: errorFromBody(body, "That time has just been taken. Here is what is still free."),
+      days: days ?? [],
+    };
+  }
+  if (!res.ok) {
+    /* 404 and 410: the hold is not there any more, which is an answer and not
+       a failure to try again. */
+    return { ok: false, conflict: false, gone: res.status === 404 || res.status === 410, error: errorFromBody(body, "The call could not be confirmed.") };
+  }
+  try {
+    const booked = parseBookedPayload(body);
+    if (booked.code) rememberBookingPointer(booked.code);
+    return { ok: true, booked };
+  } catch (error) {
+    return { ok: false, conflict: false, gone: false, error: error instanceof Error ? error.message : "The call could not be confirmed." };
   }
 }
 

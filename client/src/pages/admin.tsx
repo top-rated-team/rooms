@@ -92,6 +92,12 @@ export default function Admin() {
           actually gave us. A room address is a bearer credential. This page does not delete a
           person or cancel a booking.
         </p>
+        <p className={`${READ_MUTED} mt-[var(--s2)] max-w-[40rem]`}>
+          <a href="/admin/booking-widget" className="underline underline-offset-2 hover:text-foreground">
+            Booking times for an email
+          </a>
+          : your free times as a block to paste into a letter.
+        </p>
 
         {state.kind === "loading" ? (
           <p className={`${READ_MUTED} mt-[var(--s5)]`}>Opening the people list.</p>

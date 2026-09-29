@@ -85,3 +85,32 @@ path: an address is required.
 
 There is no visitor-calendar connection. The brief §2.3 prices it and refuses
 it.
+
+## Times inside an email
+
+`/admin/booking-widget` (operator only, `GET /api/admin/booking-widget`) turns
+the free times into a block for an email: tables and inline styles, every day
+or time a `/book` link with `date`, `time` and `confirm=email` on it, and the
+recipient's address or a mail tool's merge tag (`{{email}}`, `*|EMAIL|*`) last.
+`shared/booking-widget.ts` builds it; `shared/booking-link.ts` reads the link.
+The times are the ones free when the block is made. A time gone by the time
+the email is read opens the popup with a line saying so and what is free.
+
+A booking from such a link is confirmed by email and nothing else — no
+WhatsApp route, no LinkedIn button, no visitor-calendar row. POST
+`/api/booking` with `confirm: "email"` does not write the event: it holds the
+slot for 30 minutes (`confirm-email.ts`) and mails a link,
+`/book/confirm/<token>`, to the address. Opening that link confirms nothing —
+mail scanners open every link first — it opens the popup, which shows the time
+and asks. POST `/api/booking/email-confirm` then asks the calendar once more
+(the hold keeps visitors off the slot, not the owner), writes the event with
+the address on it, so Google sends the invite, and records the booking with a
+fresh return code. Twice is one event. A WhatsApp message carrying an email
+hold's code proves nothing.
+
+It needs `RESEND_API_KEY`, `LEAD_EMAIL_FROM` and `PUBLIC_BASE_URL`. Without
+them a time picked from the email is booked at once with Google's invite, as
+any booking with an address is, and the widget page says so in red.
+
+Holds live in memory, so a deploy inside those 30 minutes loses the hold, and
+the link then says it is not one we know.

@@ -28,6 +28,7 @@ import Terms from "@/pages/terms";
 const Workspace = lazy(() => import("@/pages/workspace"));
 const AdGrantApp = lazy(() => import("@/pages/adgrant"));
 const Admin = lazy(() => import("@/pages/admin"));
+const AdminBookingWidget = lazy(() => import("@/pages/admin-booking-widget"));
 
 function RouteFallback() {
   return (
@@ -56,6 +57,20 @@ function AdGrantSite() {
 
 export default function App() {
   const [onAdmin] = useRoute("/admin");
+  const [onBookingWidget] = useRoute("/admin/booking-widget");
+  if (onBookingWidget) {
+    return (
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-background">
+            <p className="type-note text-muted-foreground">Opening the booking times.</p>
+          </div>
+        }
+      >
+        <AdminBookingWidget />
+      </Suspense>
+    );
+  }
   if (onAdmin) {
     return (
       <Suspense

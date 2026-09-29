@@ -15,8 +15,11 @@ import assert from "node:assert/strict";
 import {
   SLOT_DAYS,
   bookSlot,
+  bookingLink,
   bookingLinkEmail,
   buildBookBody,
+  confirmEmailHold,
+  forgetBookingLinkPick,
   confirmedUrl,
   errorFromBody,
   formatSlotDay,
@@ -276,6 +279,26 @@ describe("the /book hop", () => {
     }
   });
 
+  it("keeps the day, the time and the email confirmation a time in an email asked for, and uses the pick once", () => {
+    stubWindow("/", "", "#book&email=ada%40example.com&date=2026-10-02&time=09:30&confirm=email");
+    registerBookingHost(() => {});
+    assert.deepEqual(bookingLink(), {
+      email: "ada@example.com",
+      date: "2026-10-02",
+      time: "09:30",
+      confirmByEmail: true,
+      confirmation: null,
+    });
+    forgetBookingLinkPick();
+    assert.deepEqual(bookingLink(), {
+      email: "ada@example.com",
+      date: null,
+      time: null,
+      confirmByEmail: true,
+      confirmation: null,
+    }, "the address and the email step stay for the page; the picked time does not");
+  });
+
   it("does nothing on a page that did not come from /book", () => {
     const replaced = stubWindow("/", "", "#services");
     let mounted = false;
@@ -285,6 +308,50 @@ describe("the /book hop", () => {
     assert.equal(mounted, false);
     assert.equal(bookingLinkEmail(), null);
     assert.deepEqual(replaced, []);
+  });
+});
+
+describe("confirmation by email", () => {
+  const HELD = {
+    booked: false,
+    held: true,
+    via: "email",
+    email: "ada@example.com",
+    startsAt: "2026-09-10T12:00:00.000Z",
+    timezone: "Europe/Bratislava",
+    expiresAt: "2026-09-09T08:30:00.000Z",
+    code: "K7QMX2",
+  };
+
+  it("asks for it, and reads the hold rather than mistaking it for a booking", async () => {
+    let sent: Record<string, unknown> | null = null;
+    globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      sent = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return jsonResponse(201, HELD);
+    }) as typeof fetch;
+    const result = await bookSlot({ date: "2026-09-10", time: "14:00", email: "ada@example.com", confirmByEmail: true });
+    assert.equal(sent!.confirm, "email");
+    assert.ok(result.ok && "emailHold" in result);
+    if (result.ok && "emailHold" in result) assert.deepEqual(result.emailHold, HELD);
+  });
+
+  it("books when the emailed link is used, and says plainly when it is too late", async () => {
+    globalThis.fetch = (async () => jsonResponse(201, { ...BOOKED, code: "M3NP4Q" })) as typeof fetch;
+    const booked = await confirmEmailHold("t".repeat(43));
+    assert.ok(booked.ok);
+    if (booked.ok) assert.equal(booked.booked.code, "M3NP4Q");
+
+    globalThis.fetch = (async () => jsonResponse(410, { error: "This link was not used in time." })) as typeof fetch;
+    assert.deepEqual(await confirmEmailHold("t".repeat(43)), {
+      ok: false,
+      conflict: false,
+      gone: true,
+      error: "This link was not used in time.",
+    });
+
+    const days = [{ date: "2026-09-10", slots: ["15:00"] }];
+    globalThis.fetch = (async () => jsonResponse(409, { error: "Taken.", days })) as typeof fetch;
+    assert.deepEqual(await confirmEmailHold("t".repeat(43)), { ok: false, conflict: true, error: "Taken.", days });
   });
 });
 
@@ -318,7 +385,7 @@ describe("bookSlot", () => {
 
     const result = await bookSlot({ date: "2026-09-10", time: "14:00", email: "  " });
     assert.equal(result.ok, true);
-    if (!result.ok) throw new Error("expected a booking");
+    if (!result.ok || !("booked" in result)) throw new Error("expected a booking");
     assert.equal(result.booked.whatsapp.code, "K7QMX2");
     assert.deepEqual(JSON.parse(sent ?? ""), {
       date: "2026-09-10",
