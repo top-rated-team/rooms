@@ -116,14 +116,16 @@ describe("buildBookingWidget", () => {
     assert.match(widget.html, /A time crossed out has been taken since this email was sent\./);
   });
 
-  it("says a signed block books at once, and carries the signature in every link", () => {
+  it("books a signed block's times at once, says nothing under them, and carries the signature in every link", () => {
     const widget = buildBookingWidget({ ...BASE, show: "times", days: 1, timesPerDay: 2, recipient: "ada@example.com", recipientSig: "AbCdEfGhIjKlMnOpQrStUv" });
     const links = hrefs(widget.html);
     assert.ok(links.every((href) => href.endsWith("&email=ada%40example.com&sig=AbCdEfGhIjKlMnOpQrStUv")));
     assert.ok(links.slice(0, -1).every((href) => href.includes("&instant=1&")), "a time books in one click");
     assert.ok(!links.at(-1)!.includes("instant=1"), "Other times opens the picker");
-    assert.match(widget.html, /For ada@example\.com only: clicking a time books the call in that name/);
-    assert.doesNotMatch(widget.html, /We email you a link to confirm it/);
+    assert.doesNotMatch(widget.html, /ada@example\.com only|We email you a link to confirm it/, "nothing under the times but Other times");
+    assert.match(widget.html, /<td style="padding:12px 0 0 0;[^"]*"><a [^>]*>Other times<\/a><\/td>/);
+    assert.doesNotMatch(widget.text, /only:|confirm it/);
+    assert.match(widget.text, /Other times: \S+$/);
   });
 
   it("keeps a time with no picture as a plain button", () => {

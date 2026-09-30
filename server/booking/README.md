@@ -62,9 +62,12 @@ or a copied flag is not enough on its own: if the booking was cancelled
 elsewhere, or the call time has passed, the server answers `{ found: false }`
 and the popup shows the picker.
 
-Change re-checks the new slot is free, writes the new event, then deletes the
-old one. Releasing the old slot before the new one exists would lose the
-booking if the write failed.
+Change re-checks the new slot is free, then moves the same event to the new
+time (a PATCH with `sendUpdates=all`): the guest gets Google's "Updated
+invitation" and keeps the Meet link. Writing a new event and deleting the old
+one sent a "Canceled event" letter for a call that was only moving. A failed
+move leaves the call where it was; only an event already deleted from the
+calendar by hand is written afresh.
 
 Cancel deletes the calendar event. Where they were invited, `notify` is true
 so Google tells them. Where they proved by WhatsApp, a message goes to the
@@ -122,8 +125,9 @@ Every copy of one email carries the same links, and nothing tells us who
 clicked — the Cc line, a forward. So a signed block books once: when the
 address already has a call coming up, any further click, on the same time
 or another, is shown that call and nothing more — no return code, so no
-Change or Cancel. The block says whose times they are, and the widget page
-says to send it to that person alone and to make one block each for several.
+Change or Cancel. The widget page says to send the block to that person
+alone and to make one block each for several; the block itself says nothing
+under the times but Other times.
 Somebody else on the email can still be first to click and book a time in
 the addressee's name; they get Google's invite and can decline it. Closing
 that too would take a confirmation step, which the owner declined.

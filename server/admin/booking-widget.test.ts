@@ -164,7 +164,7 @@ describe("GET /api/admin/booking-widget", () => {
     assert.deepEqual(body.recipient, { kind: "address", value: "ada+ads@example.com", signed: true });
     const links = [...String(body.html).matchAll(/href="([^"]*)"/g)].map((m) => m[1]!);
     assert.ok(links.length > 1 && links.every((href) => /&amp;email=ada%2Bads%40example\.com&amp;sig=[A-Za-z0-9_-]{22}$/.test(href)), links[0]);
-    assert.match(String(body.html), /For ada\+ads@example\.com only: clicking a time books the call in that name/);
+    assert.doesNotMatch(String(body.html), /only:|We email you a link/, "no footer line: the block goes to that one person");
     assert.ok(links.slice(0, -1).every((href) => href.includes("&amp;instant=1&amp;")), "each time books in one click");
     assert.ok(!links.at(-1)!.includes("instant=1"), "Other times opens the picker");
   });
