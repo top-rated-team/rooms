@@ -151,6 +151,15 @@ describe("GET /api/admin/booking-widget", () => {
     assert.ok(html.includes("https://top-rated.team/book?date="));
     assert.ok(html.includes("&amp;confirm=email&amp;email={{email}}"));
     assert.deepEqual(body.emailConfirmation, { on: true });
+    assert.deepEqual(body.recipient, { kind: "tag", value: "{{email}}" }, "the page is told what the links carry");
+  });
+
+  it("puts a To field's address into every link, and says so", async () => {
+    const token = await operatorToken();
+    const { body } = await get(`/api/admin/booking-widget?recipient=${encodeURIComponent("Ada <ada+ads@example.com>")}`, token);
+    assert.deepEqual(body.recipient, { kind: "address", value: "ada+ads@example.com" });
+    const links = [...String(body.html).matchAll(/href="([^"]*)"/g)].map((m) => m[1]!);
+    assert.ok(links.length > 1 && links.every((href) => href.endsWith("&amp;email=ada%2Bads%40example.com")));
   });
 
   it("says when a time picked from the block would not be confirmed by email", async () => {
