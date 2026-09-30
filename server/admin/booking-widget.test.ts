@@ -40,13 +40,17 @@ const realFetch = globalThis.fetch;
 
 /* The route asks Google through the global fetch; this test talks to its own
    server over node:http so the two never meet. */
+/* Busy ranges the fake calendar reports; a test may add one between reads. */
+let busy: { start: string; end: string }[] = [];
+
 function fakeGoogle(): void {
+  busy = [];
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
     if (url === GOOGLE_TOKEN_URL) return json({ access_token: "t", expires_in: 3600 });
     if (url === `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(CALENDAR_ID)}`) return json({ id: CALENDAR_ID, timeZone: "Europe/Bratislava" });
-    if (url === GOOGLE_FREEBUSY_URL && init?.method === "POST") return json({ calendars: { [CALENDAR_ID]: { busy: [] } } });
+    if (url === GOOGLE_FREEBUSY_URL && init?.method === "POST") return json({ calendars: { [CALENDAR_ID]: { busy } } });
     return new Response("{}", { status: 404 });
   }) as typeof fetch;
 }
@@ -160,6 +164,28 @@ describe("GET /api/admin/booking-widget", () => {
     assert.deepEqual(body.recipient, { kind: "address", value: "ada+ads@example.com" });
     const links = [...String(body.html).matchAll(/href="([^"]*)"/g)].map((m) => m[1]!);
     assert.ok(links.length > 1 && links.every((href) => href.endsWith("&amp;email=ada%2Bads%40example.com")));
+  });
+
+  it("reads the calendar afresh every time, and names the calendar it read", async () => {
+    const token = await operatorToken();
+    const first = await get("/api/admin/booking-widget?show=times&days=1&perDay=16", token);
+    const calendar = first.body.calendar as { id: string; readAt: string };
+    assert.equal(calendar.id, CALENDAR_ID);
+    assert.ok(Math.abs(Date.parse(calendar.readAt) - Date.now()) < 60_000);
+    const [day] = first.body.days as { date: string; slots: string[] }[];
+    assert.ok(day && day.slots.length > 0);
+
+    /* The owner books the first free half-hour in his own calendar. The next
+       block must not offer it — not in 45 seconds, now. */
+    const time = day.slots[0]!;
+    const offset = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Bratislava", timeZoneName: "longOffset" })
+      .formatToParts(new Date(`${day.date}T12:00:00Z`))
+      .find((part) => part.type === "timeZoneName")!.value.replace("GMT", "") || "+00:00";
+    const start = new Date(`${day.date}T${time}:00${offset}`);
+    busy = [{ start: start.toISOString(), end: new Date(start.getTime() + 30 * 60_000).toISOString() }];
+    const second = await get("/api/admin/booking-widget?show=times&days=1&perDay=16", token);
+    const [again] = second.body.days as { date: string; slots: string[] }[];
+    assert.ok(!(again?.date === day.date && again.slots.includes(time)), `${day.date} ${time} is busy now and must not be offered`);
   });
 
   it("says when a time picked from the block would not be confirmed by email", async () => {

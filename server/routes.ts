@@ -88,7 +88,8 @@ import {
   inboundSecretHeader,
   WHATSAPP_INBOUND_PATH,
 } from "./whatsapp";
-import { getBookingSlots, parseSlotsQuery } from "./booking/slots";
+import { getBookingSlots, invalidateSlotsCache, parseSlotsQuery } from "./booking/slots";
+import { calendarId as bookingCalendarId } from "./booking/gcal";
 import {
   VISITOR_CALENDAR_COOKIE,
   VISITOR_CALENDAR_STATE_COOKIE,
@@ -1785,6 +1786,11 @@ export function registerRoutes(app: Express): void {
         res.status(gate.status).json({ error: gate.error, ...(gate.youAre?.length ? { youAre: gate.youAre } : {}) });
         return;
       }
+      /* Read the calendar now, not the 45-second cache the popup shares: the
+         owner has usually just looked at his calendar, and a block made from
+         a minute-old answer can offer the meeting he booked a moment ago. */
+      invalidateSlotsCache();
+      const readAt = new Date().toISOString();
       const slots = await getBookingSlots("", 14);
       if (!slots.ok) {
         res.status(slots.status).json({ error: slots.error });
@@ -1807,6 +1813,7 @@ export function registerRoutes(app: Express): void {
         html: widget.html,
         text: widget.text,
         recipient: widgetRecipient(typeof query.recipient === "string" ? query.recipient : ""),
+        calendar: { id: bookingCalendarId(), readAt },
         timezone: slots.body.timezone,
         days: widget.days,
         emailConfirmation: emailConfirmation(),

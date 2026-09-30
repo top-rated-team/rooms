@@ -478,6 +478,8 @@ export interface AdminBookingWidgetResponse {
   text: string;
   /** What every link in `html` carries, so the page can say it rather than hope. */
   recipient: BookingWidgetRecipient;
+  /** The calendar the times were read from (GOOGLE_CALENDAR_ID), and when. */
+  calendar: { id: string; readAt: string };
   timezone: string;
   days: BookingDay[];
   /** Whether a time picked from the block is confirmed by email, and if not, why. */

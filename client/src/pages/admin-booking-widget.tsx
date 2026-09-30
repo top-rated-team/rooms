@@ -89,6 +89,8 @@ export default function AdminBookingWidget() {
   /* The address box asks the server only once typing stops. */
   const [asked, setAsked] = useState("");
   const [state, setState] = useState<LoadState>({ kind: "loading" });
+  /* Bumped to read the calendar again with the same options. */
+  const [reads, setReads] = useState(0);
   const [copied, setCopied] = useState<string | null>(null);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -109,6 +111,23 @@ export default function AdminBookingWidget() {
     const timer = setTimeout(() => setAsked(recipient.trim()), 400);
     return () => clearTimeout(timer);
   }, [recipient]);
+
+  /* KEPT IN STEP WITH THE CALENDAR while the page is open: read again when the
+     owner comes back to the tab — usually from the calendar itself — and every
+     two minutes while it is in front of him. */
+  useEffect(() => {
+    const again = () => {
+      if (document.visibilityState === "visible") setReads((n) => n + 1);
+    };
+    window.addEventListener("focus", again);
+    document.addEventListener("visibilitychange", again);
+    const timer = setInterval(again, 120_000);
+    return () => {
+      window.removeEventListener("focus", again);
+      document.removeEventListener("visibilitychange", again);
+      clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
     const ac = new AbortController();
@@ -141,7 +160,7 @@ export default function AdminBookingWidget() {
       }
     })();
     return () => ac.abort();
-  }, [show, days, perDay, asked]);
+  }, [show, days, perDay, asked, reads]);
 
   function flash(label: string) {
     setCopied(label);
@@ -149,12 +168,16 @@ export default function AdminBookingWidget() {
     copiedTimer.current = setTimeout(() => setCopied(null), 2500);
   }
 
+  const calendar = state.kind === "ok" ? state.data.calendar : null;
+  const readAtLabel = calendar
+    ? new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(calendar.readAt))
+    : null;
   const typed = widgetRecipient(recipient);
   const recipientNote =
     recipient.trim() === ""
       ? "Empty: the person types their address in the popup."
       : typed.kind === "tag"
-        ? "A merge tag: only a mail-merge tool fills it in when it sends."
+        ? "A merge tag: Gmail and Outlook will not fill it in. See below."
         : typed.kind === "address"
           ? "One address: use this block for this person only."
           : "That is not an email address or a merge tag, so it would be left out of the links.";
@@ -172,7 +195,7 @@ export default function AdminBookingWidget() {
       : carried.kind === "address"
         ? `Every link carries ${carried.value}, so the popup opens with it filled in.`
         : carried.kind === "tag"
-          ? `Every link carries ${carried.value}. A mail-merge tool (Mailchimp, Brevo, HubSpot, GMass, YAMM and the like) puts each person's address there when it sends. Sent straight from Gmail or Outlook it stays ${carried.value}, and the person types their address in the popup.`
+          ? `Every link carries the tag ${carried.value}, not an address. Gmail and Outlook do not fill tags in: sent from them, the link arrives with ${carried.value} in it and the person has to type their address. For one person, put their address in Recipient instead. For many, use Copy HTML in a mail-merge tool, with that tool's own tag for the address — Mailchimp *|EMAIL|*, Brevo {{ contact.EMAIL }}, HubSpot {{ contact.email }}, Lemlist {{email}}, GMass {Email}, YAMM {{Email}}.`
           : "The links carry no address, so the person types theirs in the popup. Put their address in Recipient to have it filled in.";
 
   return (
@@ -286,7 +309,7 @@ export default function AdminBookingWidget() {
                   className={FIELD}
                   value={recipient}
                   onChange={(event) => setRecipient(event.target.value)}
-                  placeholder="their address, or your mail tool's merge tag, such as {{email}}"
+                  placeholder="the person's email address (or a mail-merge tool's tag)"
                   spellCheck={false}
                   data-testid="input-widget-recipient"
                 />
@@ -341,6 +364,22 @@ export default function AdminBookingWidget() {
             {carriedLine ? (
               <p className={`${READ} mt-[var(--s2)] max-w-[40rem]`} data-testid="text-widget-carries">
                 {carriedLine}
+              </p>
+            ) : null}
+
+            {calendar ? (
+              <p className={`${READ_MUTED} mt-[var(--s4)] max-w-[40rem]`} data-testid="text-widget-calendar">
+                Free times from the calendar <span className="text-foreground">{calendar.id || "(none set)"}</span>, read at{" "}
+                {readAtLabel}: weekdays 09:00–17:00 in {state.kind === "ok" ? state.data.timezone : ""}, less everything
+                busy there. An event marked Free does not block a time.{" "}
+                <button
+                  type="button"
+                  className="underline underline-offset-2 hover:text-foreground"
+                  onClick={() => setReads((n) => n + 1)}
+                  data-testid="button-widget-reread"
+                >
+                  Read again
+                </button>
               </p>
             ) : null}
 
