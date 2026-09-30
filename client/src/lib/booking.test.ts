@@ -17,6 +17,7 @@ import {
   bookSlot,
   bookingLink,
   bookingLinkEmail,
+  bookingLinkSigFor,
   buildBookBody,
   confirmEmailHold,
   forgetBookingLinkPick,
@@ -288,6 +289,7 @@ describe("the /book hop", () => {
       time: "09:30",
       confirmByEmail: true,
       confirmation: null,
+      sig: null,
     });
     forgetBookingLinkPick();
     assert.deepEqual(bookingLink(), {
@@ -296,7 +298,18 @@ describe("the /book hop", () => {
       time: null,
       confirmByEmail: true,
       confirmation: null,
+      sig: null,
     }, "the address and the email step stay for the page; the picked time does not");
+  });
+
+  it("hands over the signature only while the address being booked is the signed one", () => {
+    stubWindow("/", "", "#book&email=ada%40example.com&sig=AbCdEfGhIjKlMnOpQrStUv&date=2026-10-02&time=09:30&confirm=email");
+    registerBookingHost(() => {});
+    assert.equal(bookingLink()?.sig, "AbCdEfGhIjKlMnOpQrStUv");
+    assert.equal(bookingLinkSigFor(" ADA@example.com "), "AbCdEfGhIjKlMnOpQrStUv");
+    assert.equal(bookingLinkSigFor("bea@example.com"), undefined, "a changed address is confirmed by email");
+    assert.equal(buildBookBody({ date: "2026-10-02", time: "09:30", email: "ada@example.com", confirmByEmail: true, sig: "AbCdEfGhIjKlMnOpQrStUv" }).sig, "AbCdEfGhIjKlMnOpQrStUv");
+    assert.equal(buildBookBody({ date: "2026-10-02", time: "09:30", sig: "AbCdEfGhIjKlMnOpQrStUv" }).sig, undefined, "no address, nothing to vouch for");
   });
 
   it("does nothing on a page that did not come from /book", () => {

@@ -32,6 +32,8 @@ const DATE_RE = /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 /* The emailed confirmation link's token: base64url, long enough to be a secret. */
 const TOKEN_RE = /^[A-Za-z0-9_-]{20,100}$/;
+/* The site's signature over the address a block was made for (server/booking/link-sign.ts). */
+const SIG_RE = /^[A-Za-z0-9_-]{16,64}$/;
 
 /** What a /book link can ask of the popup. Every field is optional. */
 export interface BookLink {
@@ -44,9 +46,15 @@ export interface BookLink {
   confirmByEmail: boolean;
   /** The token from that confirmation link, when this is the way back from it. */
   confirmation: string | null;
+  /**
+   * This site's signature over `email`, made when the owner put the address
+   * in the block. With it the booking needs no confirmation email: the link
+   * was sent to that inbox, and nobody else could have made it.
+   */
+  sig: string | null;
 }
 
-const EMPTY: BookLink = { email: null, date: null, time: null, confirmByEmail: false, confirmation: null };
+const EMPTY: BookLink = { email: null, date: null, time: null, confirmByEmail: false, confirmation: null, sig: null };
 
 /**
  * The address, or null. A merge field that was never filled in ({{email}}),
@@ -119,6 +127,7 @@ export function formatBookLinkHash(link: Partial<BookLink>): string {
   const date = calendarDate(link.date ?? null);
   const time = date ? wallClock(link.time ?? null) : null;
   if (email) parts.push(`email=${encodeURIComponent(email)}`);
+  if (email && link.sig && SIG_RE.test(link.sig)) parts.push(`sig=${link.sig}`);
   if (date) parts.push(`date=${date}`);
   if (time) parts.push(`time=${time}`);
   if (link.confirmByEmail) parts.push("confirm=email");
@@ -150,6 +159,11 @@ export function bookLinkTarget(rawQuery: string): string {
     }
     if (key === "time") {
       link.time ??= wallClock(decode(value));
+      continue;
+    }
+    if (key === "sig") {
+      const sig = decode(value).trim();
+      if (SIG_RE.test(sig)) link.sig ??= sig;
       continue;
     }
     if (key === "confirm") {
@@ -189,8 +203,10 @@ export function parseBookLinkHash(hash: string): BookLink | null {
     else if (key === "time") link.time ??= wallClock(text);
     else if (key === "confirm") link.confirmByEmail ||= text.trim().toLowerCase() === "email";
     else if (key === "confirmation" && TOKEN_RE.test(text)) link.confirmation ??= text;
+    else if (key === "sig" && SIG_RE.test(text)) link.sig ??= text;
   }
   if (!link.date) link.time = null;
+  if (!link.email) link.sig = null;
   return link;
 }
 
@@ -218,7 +234,7 @@ export function widgetRecipient(value: string | null | undefined): BookingWidget
  */
 export function bookLinkUrl(
   base: string,
-  input: { recipient?: string; date?: string; time?: string; confirmByEmail?: boolean },
+  input: { recipient?: string; date?: string; time?: string; confirmByEmail?: boolean; sig?: string },
 ): string {
   const params: string[] = [];
   const date = calendarDate(input.date ?? null);
@@ -228,6 +244,9 @@ export function bookLinkUrl(
   if (input.confirmByEmail) params.push("confirm=email");
   const recipient = widgetRecipient(input.recipient);
   if (recipient.kind === "tag") params.push(`email=${recipient.value}`);
-  else if (recipient.kind === "address") params.push(`email=${encodeURIComponent(recipient.value)}`);
+  else if (recipient.kind === "address") {
+    params.push(`email=${encodeURIComponent(recipient.value)}`);
+    if (input.sig && SIG_RE.test(input.sig)) params.push(`sig=${input.sig}`);
+  }
   return `${base.replace(/\/+$/, "")}/book${params.length > 0 ? `?${params.join("&")}` : ""}`;
 }

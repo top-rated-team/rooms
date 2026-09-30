@@ -161,9 +161,17 @@ describe("GET /api/admin/booking-widget", () => {
   it("puts a To field's address into every link, and says so", async () => {
     const token = await operatorToken();
     const { body } = await get(`/api/admin/booking-widget?recipient=${encodeURIComponent("Ada <ada+ads@example.com>")}`, token);
-    assert.deepEqual(body.recipient, { kind: "address", value: "ada+ads@example.com" });
+    assert.deepEqual(body.recipient, { kind: "address", value: "ada+ads@example.com", signed: true });
     const links = [...String(body.html).matchAll(/href="([^"]*)"/g)].map((m) => m[1]!);
-    assert.ok(links.length > 1 && links.every((href) => href.endsWith("&amp;email=ada%2Bads%40example.com")));
+    assert.ok(links.length > 1 && links.every((href) => /&amp;email=ada%2Bads%40example\.com&amp;sig=[A-Za-z0-9_-]{22}$/.test(href)), links[0]);
+    assert.match(String(body.html), /press Book: the call is booked/);
+  });
+
+  it("does not sign a merge tag: the address it stands for is not known here", async () => {
+    const token = await operatorToken();
+    const tagged = await get(`/api/admin/booking-widget?recipient=${encodeURIComponent("{{email}}")}`, token);
+    assert.ok(!String(tagged.body.html).includes("sig="));
+    assert.match(String(tagged.body.html), /We email you a link to confirm it/);
   });
 
   it("reads the calendar afresh every time, and names the calendar it read", async () => {

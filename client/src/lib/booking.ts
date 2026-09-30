@@ -285,6 +285,16 @@ export function bookingLink(): BookLink | null {
   return link;
 }
 
+/**
+ * The site's signature over the link's address, but only while that is still
+ * the address being booked for: a changed address is somebody else's, and is
+ * confirmed by email like any other.
+ */
+export function bookingLinkSigFor(email: string): string | undefined {
+  if (!link?.sig || !link.email) return undefined;
+  return email.trim().toLowerCase() === link.email.toLowerCase() ? link.sig : undefined;
+}
+
 /** Once the popup has acted on it: a confirmation link is used once, and a picked time once. */
 export function forgetBookingLinkPick(): void {
   if (link) link = { ...link, date: null, time: null, confirmation: null };
@@ -367,6 +377,7 @@ export function buildBookBody(input: {
   name?: string;
   topic?: string;
   confirmByEmail?: boolean;
+  sig?: string;
 }): CreateBookingRequest {
   const email = input.email?.trim();
   const body: CreateBookingRequest = {
@@ -377,6 +388,7 @@ export function buildBookBody(input: {
   };
   if (email) body.email = email;
   if (input.confirmByEmail) body.confirm = "email";
+  if (email && input.sig) body.sig = input.sig;
   return body;
 }
 
@@ -635,7 +647,13 @@ export function prepareBooking(): Promise<boolean> {
     .catch(() => false);
 }
 
-export async function bookSlot(input: { date: string; time: string; email?: string; confirmByEmail?: boolean }): Promise<BookResult> {
+export async function bookSlot(input: {
+  date: string;
+  time: string;
+  email?: string;
+  confirmByEmail?: boolean;
+  sig?: string;
+}): Promise<BookResult> {
   let res: Response;
   try {
     res = await fetch("/api/booking", {

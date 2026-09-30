@@ -390,6 +390,12 @@ export interface CreateBookingRequest {
   time: string;
   /** The only optional field. With it, Google emails an invite. Without it the event is still created and `invited` is false. */
   email?: string;
+  /**
+   * The site's signature over `email`, from a booking block the owner made
+   * for that address (server/booking/link-sign.ts). With `confirm: "email"`,
+   * a valid one books at once instead of sending a confirmation link.
+   */
+  sig?: string;
   name: string;
   topic: string;
   /**
@@ -469,7 +475,8 @@ export type EmailHoldStatusResponse =
  */
 /** What the links of an email block carry for the recipient's address. */
 export type BookingWidgetRecipient =
-  | { kind: "address"; value: string }
+  /* signed: the address is signed by the site, so a time is booked at once. */
+  | { kind: "address"; value: string; signed?: boolean }
   | { kind: "tag"; value: string }
   | { kind: "none" };
 

@@ -14,7 +14,7 @@
  */
 
 import type { BookingDay, BookingSlotsResponse } from "./api";
-import { bookLinkUrl } from "./booking-link";
+import { bookLinkUrl, widgetRecipient } from "./booking-link";
 import { replyAddress, replyMailto } from "./booking-reply";
 
 export type BookingWidgetShow = "times" | "days";
@@ -31,6 +31,12 @@ export interface BookingWidgetOptions {
   timesPerDay: number;
   /** An address, a mail tool's merge tag, or empty. */
   recipient?: string;
+  /**
+   * The site's signature over that address (server/booking/link-sign.ts).
+   * With it a picked time is booked at once — the link reached that inbox —
+   * instead of being confirmed from a link we email.
+   */
+  recipientSig?: string;
   /** Who the call is with, for the heading. */
   hostName: string;
   /**
@@ -136,7 +142,8 @@ function button(href: string, label: string): string {
 export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget {
   const chosen = chooseWidgetDays(options.slots, options.days, options.timesPerDay);
   const link = (input: { date?: string; time?: string }) =>
-    bookLinkUrl(options.baseUrl, { ...input, confirmByEmail: true, recipient: options.recipient });
+    bookLinkUrl(options.baseUrl, { ...input, confirmByEmail: true, recipient: options.recipient, sig: options.recipientSig });
+  const signed = Boolean(options.recipientSig) && widgetRecipient(options.recipient).kind === "address";
   const minutes = options.slots.slotMinutes;
   const zone = options.slots.timezone;
   const heading = `Book a ${minutes}-minute call with ${options.hostName}`;
@@ -152,7 +159,9 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
   const replyTo = options.show === "times" ? options.replyTo : undefined;
   const confirmLine = replyTo
     ? "Picking a time opens an email to us. Send it, and the call is booked; Google sends you the invite."
-    : "We email you a link to confirm it. Nothing is booked until you do.";
+    : signed
+      ? "Pick a time and press Book: the call is booked, and Google sends you the invite."
+      : "We email you a link to confirm it. Nothing is booked until you do.";
   const other = link({});
   const when = (date: string, time: string) => `${widgetDayLabel(date)}, ${time} (${zone})`;
   const timeHref = (date: string, time: string) =>

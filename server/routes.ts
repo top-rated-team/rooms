@@ -104,6 +104,7 @@ import { postBooking, changeBooking, cancelBooking, getExistingBooking } from ".
 import { confirmEmailHold, emailHoldStatus, getBookingConfirmed, installBookingInbound } from "./booking/confirm";
 import { emailConfirmation } from "./booking/confirm-email";
 import { handleInboundEmail, replyToBook } from "./booking/reply-to-book";
+import { signAddress } from "./booking/link-sign";
 import { isCalendarDate as isSlotDate, liveSlotState, slotImage, slotImageTime } from "./booking/slot-image";
 import { isBookingReturnCode, normalizeBookingCode } from "./booking/code";
 import {
@@ -1804,6 +1805,8 @@ export function registerRoutes(app: Express): void {
       const number = (value: unknown, fallback: number) => (typeof value === "string" && value.trim() ? Number(value) : fallback);
       const contract = DOOR_BY_ID[DEFAULT_DOOR_ID].contract;
       const reply = replyToBook();
+      const recipient = widgetRecipient(typeof query.recipient === "string" ? query.recipient : "");
+      const recipientSig = recipient.kind === "address" ? (signAddress(recipient.value) ?? undefined) : undefined;
       const widget = buildBookingWidget({
         baseUrl: process.env.PUBLIC_BASE_URL?.trim() || `${req.protocol}://${req.get("host") ?? "localhost"}`,
         slots: slots.body,
@@ -1811,6 +1814,7 @@ export function registerRoutes(app: Express): void {
         days: number(query.days, 5),
         timesPerDay: number(query.perDay, 6),
         recipient: typeof query.recipient === "string" ? query.recipient : "",
+        ...(recipientSig ? { recipientSig } : {}),
         hostName: (contract.displayName ?? contract.legalName).trim(),
         ...(reply.on ? { replyTo: { domain: reply.domain } } : {}),
         liveImages: true,
@@ -1818,7 +1822,7 @@ export function registerRoutes(app: Express): void {
       res.json({
         html: widget.html,
         text: widget.text,
-        recipient: widgetRecipient(typeof query.recipient === "string" ? query.recipient : ""),
+        recipient: recipient.kind === "address" ? { ...recipient, signed: Boolean(recipientSig) } : recipient,
         calendar: { id: bookingCalendarId(), readAt },
         replyToBook: reply,
         timezone: slots.body.timezone,

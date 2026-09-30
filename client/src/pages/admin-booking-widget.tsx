@@ -199,7 +199,9 @@ export default function AdminBookingWidget() {
       : timesReply
         ? "Each time is an email to write to, so the person's address comes from the email they send: nothing to fill in, and no add-on. Recipient only reaches the Other times link."
       : carried.kind === "address"
-        ? `Every link carries ${carried.value}, so the popup opens with it filled in.`
+        ? carried.signed
+          ? `Every link carries ${carried.value}, signed by this site, so the popup opens with it filled in and pressing Book books the call at once: Google sends the invite, no confirmation email.`
+          : `Every link carries ${carried.value}, so the popup opens with it filled in. It is not signed (this deployment has no LEAD_INBOX_KEY), so the person confirms from a link we email them.`
         : carried.kind === "tag"
           ? `Every link carries the tag ${carried.value}, not an address. Gmail and Outlook do not fill tags in: sent from them, the link arrives with ${carried.value} in it and the person has to type their address. For one person, put their address in Recipient instead. For many, use Copy HTML in a mail-merge tool, with that tool's own tag for the address — Mailchimp *|EMAIL|*, Brevo {{ contact.EMAIL }}, HubSpot {{ contact.email }}, Lemlist {{email}}, GMass {Email}, YAMM {{Email}}.`
           : "The links carry no address, so the person types theirs in the popup. Put their address in Recipient to have it filled in.";

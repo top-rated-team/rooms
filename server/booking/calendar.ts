@@ -44,6 +44,7 @@ import {
   unavailableLine as gcalUnavailableLine,
 } from "./gcal";
 import { mintBookingCode, normalizeBookingCode } from "./code";
+import { addressSigned } from "./link-sign";
 import {
   EMAIL_CONFIRM_ADDRESS_LINE,
   EMAIL_CONFIRM_SEND_FAILED_LINE,
@@ -138,6 +139,7 @@ export function parseCreateBooking(body: unknown): CreateBookingRequest | null {
   const parsed: CreateBookingRequest = { date, time, name, topic };
   if (emailRaw) parsed.email = emailRaw;
   if (record.confirm === "email") parsed.confirm = "email";
+  if (typeof record.sig === "string" && record.sig.trim()) parsed.sig = record.sig.trim();
   return parsed;
 }
 
@@ -254,7 +256,11 @@ export async function postBooking(
      write: the booking stands at once and Google's invite goes out. The
      widget page says so to the person who sends the times, so it is never a
      surprise to them. */
-  if (input.confirm === "email" && input.email && emailConfirmation().on) {
+  /* A block the owner made for this very address, signed by us: the link
+     went to that inbox, so opening it proved what the letter would. The owner
+     asked for exactly this: no confirmation email for his own recipients. */
+  const signedForAddress = input.confirm === "email" && addressSigned(input.email, input.sig);
+  if (input.confirm === "email" && input.email && !signedForAddress && emailConfirmation().on) {
     const held = placeHold(
       {
         date: input.date,

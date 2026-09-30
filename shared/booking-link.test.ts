@@ -110,6 +110,7 @@ describe("parseBookLinkHash", () => {
       time: null,
       confirmByEmail: false,
       confirmation: null,
+      sig: null,
     });
     assert.deepEqual(parseBookLinkHash("#book&email=dan%2Bads%40example.com&date=2026-10-02&time=09:30&confirm=email"), {
       email: "dan+ads@example.com",
@@ -117,6 +118,7 @@ describe("parseBookLinkHash", () => {
       time: "09:30",
       confirmByEmail: true,
       confirmation: null,
+      sig: null,
     });
   });
 
@@ -143,8 +145,26 @@ describe("parseBookLinkHash", () => {
   });
 
   it("reads back exactly what formatBookLinkHash writes", () => {
-    const link = { email: "a+b@example.com", date: "2026-10-02", time: "16:30", confirmByEmail: true, confirmation: null };
+    const link = { email: "a+b@example.com", date: "2026-10-02", time: "16:30", confirmByEmail: true, confirmation: null, sig: null };
     assert.deepEqual(parseBookLinkHash(`#${formatBookLinkHash(link)}`), link);
+  });
+});
+
+describe("a signed address", () => {
+  const SIG = "AbCdEfGhIjKlMnOpQrStUv";
+
+  it("travels from the link, through /book, to the popup, beside its address", () => {
+    const url = new URL(bookLinkUrl("https://top-rated.team", { date: "2026-10-02", time: "09:30", confirmByEmail: true, recipient: "ada@example.com", sig: SIG }));
+    assert.equal(url.searchParams.get("sig"), SIG);
+    const target = bookLinkTarget(url.search);
+    assert.doesNotMatch(target.slice(0, target.indexOf("#")), /sig=/, "never in the visible query");
+    assert.equal(parseBookLinkHash(target.slice(target.indexOf("#")))?.sig, SIG);
+  });
+
+  it("is dropped without an address, or when it is not one of ours", () => {
+    assert.ok(!bookLinkUrl("https://top-rated.team", { recipient: "{{email}}", sig: SIG }).includes("sig="), "a tag is not signed");
+    assert.equal(parseBookLinkHash(`#book&sig=${SIG}`)?.sig, null);
+    assert.equal(parseBookLinkHash("#book&email=ada%40example.com&sig=<b>")?.sig, null);
   });
 });
 
@@ -208,6 +228,7 @@ describe("bookLinkUrl", () => {
       time: "09:30",
       confirmByEmail: true,
       confirmation: null,
+      sig: null,
     });
   });
 });
