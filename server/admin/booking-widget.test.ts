@@ -138,13 +138,29 @@ describe("GET /api/admin/booking-widget", () => {
     assert.equal((await get("/api/admin/booking-widget")).status, 401);
   });
 
+  it("looks a place up as a zone for the operator, and for nobody else", async () => {
+    const token = await operatorToken();
+    const { status, body } = await get(`/api/admin/zone-lookup?q=${encodeURIComponent("Brno, Czechia")}`, token);
+    assert.equal(status, 200);
+    assert.deepEqual(body, { found: true, zone: "Europe/Prague", place: "Brno, Czechia", source: "place name" });
+    assert.equal((await get(`/api/admin/zone-lookup?q=Prague`)).status, 401);
+  });
+
+    it("says yes to the operator's own browser when the signature links ask", async () => {
+    const token = await operatorToken();
+    const { status, body } = await get("/api/admin/operator", token);
+    assert.equal(status, 200);
+    assert.deepEqual(body, { operator: true });
+    assert.deepEqual((await get("/api/admin/operator")).body, { operator: false });
+  });
+
   it("gives the operator a block of free times with the options asked for", async () => {
     process.env.RESEND_API_KEY = "re_test";
     process.env.LEAD_EMAIL_FROM = "contact@top-rated.team";
     const token = await operatorToken();
     const { status, body } = await get(`/api/admin/booking-widget?show=times&days=2&perDay=3&recipient=${encodeURIComponent("{{email}}")}`, token);
     assert.equal(status, 200, JSON.stringify(body));
-    assert.equal(body.timezone, "Europe/Bratislava");
+    assert.equal(body.timezone, "Europe/Prague");
     const days = body.days as { date: string; slots: string[] }[];
     assert.equal(days.length, 2);
     /* Late in the day, today may have fewer than three times left. */
@@ -165,7 +181,7 @@ describe("GET /api/admin/booking-widget", () => {
       token,
     );
     assert.equal(status, 200, JSON.stringify(body));
-    assert.equal(body.timezone, "Europe/Bratislava");
+    assert.equal(body.timezone, "Europe/Prague");
     assert.equal(body.zone, "America/New_York");
     assert.deepEqual(body.workHours, { from: "10:00", to: "20:00" });
     const html = String(body.html);
@@ -176,7 +192,7 @@ describe("GET /api/admin/booking-widget", () => {
     assert.match(html, /\/api\/booking\/slot\/\d{4}-\d{2}-\d{2}\/\d{4}\.png\?label=\d{4}/);
 
     const wrong = await get(`/api/admin/booking-widget?recipient=ada%40example.com&tz=Mars%2FBase`, token);
-    assert.equal(wrong.body.zone, "Europe/Bratislava", "a zone that is not one is the calendar's");
+    assert.equal(wrong.body.zone, "Europe/Prague", "a zone that is not one is the site's own");
   });
 
   it("puts a To field's address into every link, and says so", async () => {
@@ -209,7 +225,7 @@ describe("GET /api/admin/booking-widget", () => {
     /* The owner books the first free half-hour in his own calendar. The next
        block must not offer it — not in 45 seconds, now. */
     const time = day.slots[0]!;
-    const offset = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Bratislava", timeZoneName: "longOffset" })
+    const offset = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Prague", timeZoneName: "longOffset" })
       .formatToParts(new Date(`${day.date}T12:00:00Z`))
       .find((part) => part.type === "timeZoneName")!.value.replace("GMT", "") || "+00:00";
     const start = new Date(`${day.date}T${time}:00${offset}`);

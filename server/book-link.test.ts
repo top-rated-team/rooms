@@ -62,13 +62,30 @@ describe("GET /book", () => {
     await new Promise<void>((resolve) => server?.close(() => resolve()));
   });
 
-  it("opens the booking popup on the front page", async () => {
-    for (const pathname of ["/book", "/book/", "/Book"]) {
+  it("serves a bare /book as the page itself, so /book# keeps the mark a redirect would drop", async () => {
+    for (const pathname of ["/book", "/book/", "/Book", "/book?"]) {
       const answer = await get(origin, pathname);
-      assert.equal(answer.status, 302, pathname);
-      assert.equal(answer.location, "/#book", pathname);
+      /* No hop: it falls through to the page (the static catch-all, absent
+         here), which opens the popup (client/src/lib/operator-shortcut.ts). */
+      assert.notEqual(answer.status, 302, pathname);
+      assert.ok(!answer.location, pathname);
       assert.equal(answer.cacheControl, "no-store", pathname);
     }
+  });
+
+  it("tells a browser that is not signed in that it is not the operator, and logs nothing", async () => {
+    const warned: unknown[] = [];
+    const warn = console.warn;
+    console.warn = (...args: unknown[]) => void warned.push(args);
+    try {
+      const res = await fetch(`${origin}/api/admin/operator`, { headers: { host: "top-rated.team" } });
+      assert.equal(res.status, 200);
+      assert.deepEqual(await res.json(), { operator: false });
+      assert.match(res.headers.get("cache-control") ?? "", /no-store/);
+    } finally {
+      console.warn = warn;
+    }
+    assert.equal(warned.length, 0);
   });
 
   it("moves the address from the query into the fragment, in both shapes", async () => {

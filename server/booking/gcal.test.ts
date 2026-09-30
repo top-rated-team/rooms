@@ -21,6 +21,7 @@ import {
   createEvent,
   decodeJwtPayload,
   deleteEvent,
+  bookingTimeZone,
   getOurCalendar,
   meetUrlFromEvent,
   parseServiceAccountJson,
@@ -197,7 +198,9 @@ describe("getOurCalendar", () => {
     assert.equal(first.ok, true);
     if (!first.ok) return;
     assert.equal(first.calendar.id, CALENDAR_ID);
-    assert.equal(first.calendar.timezone, TZ);
+    /* The calendar says Bratislava; the site keeps the owner's Prague time. */
+    assert.equal(TZ, "Europe/Bratislava");
+    assert.equal(first.calendar.timezone, "Europe/Prague");
     assert.equal(second.ok, true);
     assert.equal(
       urls.filter((url) => url.includes("/calendars/") && !url.includes("/events")).length,
@@ -207,6 +210,23 @@ describe("getOurCalendar", () => {
       urls.some((url) => url.includes("/calendarList") || /\/calendars\?/.test(url)),
       false,
     );
+  });
+});
+
+describe("bookingTimeZone", () => {
+  it("is Prague unless BOOKING_TIME_ZONE names a real zone", () => {
+    const before = process.env.BOOKING_TIME_ZONE;
+    try {
+      delete process.env.BOOKING_TIME_ZONE;
+      assert.equal(bookingTimeZone(), "Europe/Prague");
+      process.env.BOOKING_TIME_ZONE = "America/New_York";
+      assert.equal(bookingTimeZone(), "America/New_York");
+      process.env.BOOKING_TIME_ZONE = "Mars/Base";
+      assert.equal(bookingTimeZone(), "Europe/Prague");
+    } finally {
+      if (before === undefined) delete process.env.BOOKING_TIME_ZONE;
+      else process.env.BOOKING_TIME_ZONE = before;
+    }
   });
 });
 

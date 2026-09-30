@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
+    "@photostructure/tz-lookup": "^11.7.0",
     "@radix-ui/react-avatar": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.4",
     "@radix-ui/react-dropdown-menu": "^2.1.4",

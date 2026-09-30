@@ -31,7 +31,7 @@ import {
 } from "./slots";
 
 const CALENDAR_ID = "dan@top-rated.team";
-const TZ = "Europe/Bratislava";
+const TZ = "Europe/Prague";
 const FROM = "2026-09-10";
 const NOW = new Date("2026-09-09T08:00:00.000Z");
 
@@ -115,12 +115,12 @@ afterEach(() => {
 });
 
 describe("wallClockToUtc", () => {
-  it("maps 14:00 in Europe/Bratislava in September to 12:00Z, which is the brief's own example", () => {
+  it("maps 14:00 in Europe/Prague in September to 12:00Z, which is the brief's own example", () => {
     const instant = wallClockToUtc("2026-09-10", "14:00", TZ);
     assert.equal(instant?.toISOString(), "2026-09-10T12:00:00.000Z");
   });
 
-  it("maps 14:00 in Europe/Bratislava in January to 13:00Z", () => {
+  it("maps 14:00 in Europe/Prague in January to 13:00Z", () => {
     const instant = wallClockToUtc("2026-01-15", "14:00", TZ);
     assert.equal(instant?.toISOString(), "2026-01-15T13:00:00.000Z");
   });
