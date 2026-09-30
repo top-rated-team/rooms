@@ -103,6 +103,7 @@ import {
 import { postBooking, changeBooking, cancelBooking, getExistingBooking } from "./booking/calendar";
 import { confirmEmailHold, emailHoldStatus, getBookingConfirmed, installBookingInbound } from "./booking/confirm";
 import { emailConfirmation } from "./booking/confirm-email";
+import { handleInboundEmail, replyToBook } from "./booking/reply-to-book";
 import { isBookingReturnCode, normalizeBookingCode } from "./booking/code";
 import {
   bookingLinkedInAvailability,
@@ -1800,6 +1801,7 @@ export function registerRoutes(app: Express): void {
       const show: BookingWidgetShow = query.show === "days" ? "days" : "times";
       const number = (value: unknown, fallback: number) => (typeof value === "string" && value.trim() ? Number(value) : fallback);
       const contract = DOOR_BY_ID[DEFAULT_DOOR_ID].contract;
+      const reply = replyToBook();
       const widget = buildBookingWidget({
         baseUrl: process.env.PUBLIC_BASE_URL?.trim() || `${req.protocol}://${req.get("host") ?? "localhost"}`,
         slots: slots.body,
@@ -1808,12 +1810,14 @@ export function registerRoutes(app: Express): void {
         timesPerDay: number(query.perDay, 6),
         recipient: typeof query.recipient === "string" ? query.recipient : "",
         hostName: (contract.displayName ?? contract.legalName).trim(),
+        ...(reply.on ? { replyTo: { domain: reply.domain } } : {}),
       });
       res.json({
         html: widget.html,
         text: widget.text,
         recipient: widgetRecipient(typeof query.recipient === "string" ? query.recipient : ""),
         calendar: { id: bookingCalendarId(), readAt },
+        replyToBook: reply,
         timezone: slots.body.timezone,
         days: widget.days,
         emailConfirmation: emailConfirmation(),
@@ -2248,6 +2252,25 @@ export function registerRoutes(app: Express): void {
         res.clearCookie(VISITOR_CALENDAR_COOKIE, { path: "/", sameSite: "lax" });
       }
       res.status(201).json(result.body);
+    }),
+  );
+
+  /*
+   * Reply to book: Resend's email.received webhook for BOOKING_INBOX_DOMAIN
+   * (server/booking/reply-to-book.ts). Its fields are not trusted — the email
+   * is read back from Resend's API by id — so this needs no secret of its own.
+   * 503 asks Resend to try again; everything handled, or deliberately left
+   * alone, is 200.
+   */
+  app.post(
+    "/api/booking/inbound-email",
+    bookingLimit,
+    route(async (req, res) => {
+      const result = await handleInboundEmail(req.body);
+      if (result.status !== 200 || !["not-a-slot", "ignored"].includes(result.outcome)) {
+        console.log(`[booking] inbound email: ${result.outcome}${result.detail ? ` (${result.detail})` : ""}`);
+      }
+      res.status(result.status).json({ ok: result.status === 200, outcome: result.outcome });
     }),
   );
 

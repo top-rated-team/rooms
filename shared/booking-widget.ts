@@ -15,6 +15,7 @@
 
 import type { BookingDay, BookingSlotsResponse } from "./api";
 import { bookLinkUrl } from "./booking-link";
+import { replyAddress, replyMailto } from "./booking-reply";
 
 export type BookingWidgetShow = "times" | "days";
 
@@ -32,6 +33,13 @@ export interface BookingWidgetOptions {
   recipient?: string;
   /** Who the call is with, for the heading. */
   hostName: string;
+  /**
+   * Reply to book (shared/booking-reply.ts): each time is a mailto: to an
+   * address at this domain, and the email the recipient sends books it. Only
+   * when the deployment receives that mail; without it, times are web links
+   * to the popup.
+   */
+  replyTo?: { domain: string };
 }
 
 export interface BookingWidget {
@@ -95,8 +103,10 @@ export function chooseWidgetDays(slots: BookingSlotsResponse, days: number, time
 }
 
 function button(href: string, label: string): string {
+  /* A mailto: opens the mail app, not a tab. */
+  const target = href.startsWith("mailto:") ? "" : ` target="_blank"`;
   return (
-    `<a href="${escapeHtml(href)}" target="_blank" style="display:inline-block;margin:0 6px 6px 0;padding:7px 12px;` +
+    `<a href="${escapeHtml(href)}"${target} style="display:inline-block;margin:0 6px 6px 0;padding:7px 12px;` +
     `border:1px solid ${RULE};border-radius:6px;background:${SLOT};color:${INK};font-family:${SANS};font-size:14px;` +
     `line-height:18px;text-decoration:none;white-space:nowrap;">${escapeHtml(label)}</a>`
   );
@@ -113,8 +123,16 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
     options.show === "times"
       ? `Pick a time. Times are in ${zone}.`
       : `Pick a day, then a time on it. Times are in ${zone}.`;
-  const confirmLine = "We email you a link to confirm it. Nothing is booked until you do.";
+  const replyTo = options.show === "times" ? options.replyTo : undefined;
+  const confirmLine = replyTo
+    ? "Picking a time opens an email to us. Send it, and the call is booked; Google sends you the invite."
+    : "We email you a link to confirm it. Nothing is booked until you do.";
   const other = link({});
+  const when = (date: string, time: string) => `${widgetDayLabel(date)}, ${time} (${zone})`;
+  const timeHref = (date: string, time: string) =>
+    replyTo
+      ? replyMailto(replyTo.domain, { date, time, when: when(date, time), minutes, hostName: options.hostName })
+      : link({ date, time });
 
   const rows = chosen
     .map((day) => {
@@ -123,7 +141,7 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
         const count = options.slots.days.find((row) => row.date === day.date)?.slots.length ?? day.slots.length;
         return `<tr><td style="padding:4px 0 0 0;">${button(link({ date: day.date }), `${label} · ${count} ${count === 1 ? "time" : "times"}`)}</td></tr>`;
       }
-      const times = day.slots.map((time) => button(link({ date: day.date, time }), time)).join("");
+      const times = day.slots.map((time) => button(timeHref(day.date, time), time)).join("");
       return (
         `<tr><td style="padding:10px 0 0 0;font-family:${SANS};font-size:12px;line-height:16px;letter-spacing:0.04em;` +
         `text-transform:uppercase;color:${MUTED};">${escapeHtml(label)}</td></tr>` +
@@ -150,7 +168,12 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
   const textRows = chosen.map((day) => {
     const label = widgetDayLabel(day.date);
     if (options.show === "days") return `${label}: ${link({ date: day.date })}`;
-    return [label, ...day.slots.map((time) => `  ${time}  ${link({ date: day.date, time })}`)].join("\n");
+    return [
+      label,
+      ...day.slots.map((time) =>
+        replyTo ? `  ${time}  email ${replyAddress(replyTo.domain, day.date, time)}` : `  ${time}  ${link({ date: day.date, time })}`,
+      ),
+    ].join("\n");
   });
   const text = [
     heading,
