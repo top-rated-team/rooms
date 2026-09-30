@@ -480,6 +480,11 @@ export interface AdminBookingWidgetResponse {
   recipient: BookingWidgetRecipient;
   /** The calendar the times were read from (GOOGLE_CALENDAR_ID), and when. */
   calendar: { id: string; readAt: string };
+  /**
+   * Reply to book: whether each time is an address to write to (and which
+   * domain receives it), or a link to the popup and why.
+   */
+  replyToBook: { on: true; domain: string } | { on: false; line: string };
   timezone: string;
   days: BookingDay[];
   /** Whether a time picked from the block is confirmed by email, and if not, why. */

@@ -189,9 +189,15 @@ export default function AdminBookingWidget() {
      waits until the block is the one for what is in the boxes. */
   const fresh = state.kind === "ok" && state.forKey === optionsKey(show, days, perDay, recipient);
   const carried = state.kind === "ok" ? state.data.recipient : null;
+  const reply = state.kind === "ok" ? state.data.replyToBook : null;
+  /* With reply to book, a time is an address to write to: the person's own
+     mail app supplies their address, so Recipient only reaches Other times. */
+  const timesReply = Boolean(reply?.on && show === "times");
   const carriedLine =
     !carried
       ? null
+      : timesReply
+        ? "Each time is an email to write to, so the person's address comes from the email they send: nothing to fill in, and no add-on. Recipient only reaches the Other times link."
       : carried.kind === "address"
         ? `Every link carries ${carried.value}, so the popup opens with it filled in.`
         : carried.kind === "tag"
@@ -222,10 +228,39 @@ export default function AdminBookingWidget() {
       <main className={`${PAGE} py-[var(--s5)]`}>
         <h1 className={`${DISPLAY} m-0`}>Booking times for an email</h1>
         <p className={`${READ_MUTED} mt-[var(--s3)] max-w-[40rem]`}>
-          Your free times, as a block to put in an email. A person who picks one lands in the booking popup with
-          that time chosen, and confirms it from a link we send to their address. Nothing goes into your calendar
-          until they do. These are the times free now, so make the block again for a later email.
+          Your free times, as a block to put in an email. These are the times free now, so make the block again
+          for a later email.
         </p>
+        {reply?.on ? (
+          <p className={`${READ} mt-[var(--s3)] max-w-[40rem]`} data-testid="text-widget-reply-on">
+            Reply to book is on. Each time is an email to an address such as call-2026-10-01-0930@{reply.domain}:
+            the person presses Send in Gmail or any mail app, and the email that arrives books the call in their
+            name. Google sends them the invite, and we reply with the way to change or cancel it.
+          </p>
+        ) : reply ? (
+          <div className={`${READ} mt-[var(--s3)] max-w-[40rem]`} data-testid="text-widget-reply-off">
+            <p>
+              A time is now a link to the booking popup, where the person types their address and confirms it from
+              a link we email them. {reply.line}
+            </p>
+            <p className="mt-[var(--s2)]">To let a reply book it instead, with nothing to type and no add-on:</p>
+            <ol className="mt-[var(--s1)] list-decimal pl-[1.25em]">
+              <li>
+                In Resend, open Receiving and pick the domain that takes the booking mail: the ready-made
+                …resend.app address Resend gives you (nothing to set up), or a subdomain of yours such as
+                book.top-rated.team, with the MX record Resend shows for it.
+              </li>
+              <li>
+                In Resend, Webhooks: add https://top-rated.team/api/booking/inbound-email with the event
+                email.received.
+              </li>
+              <li>
+                In Render (the top-rated-team service, Environment): set BOOKING_INBOX_DOMAIN to that domain. The
+                RESEND_API_KEY there needs full access; a sending-only key cannot read received mail.
+              </li>
+            </ol>
+          </div>
+        ) : null}
 
         {state.kind === "refused" ? (
           <div className="mt-[var(--s5)]">

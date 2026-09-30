@@ -114,3 +114,29 @@ any booking with an address is, and the widget page says so in red.
 
 Holds live in memory, so a deploy inside those 30 minutes loses the hold, and
 the link then says it is not one we know.
+
+## Reply to book
+
+Gmail without an add-on changes nothing in a pasted block, so a link in it
+cannot carry the address of whoever it went to. With `BOOKING_INBOX_DOMAIN`
+set, a time in the block is instead a `mailto:` to an address that names the
+slot, `call-2026-09-30-1030@<domain>` (`shared/booking-reply.ts`), and the
+email the recipient sends is the booking (`reply-to-book.ts`):
+
+- Resend receives mail for the domain and posts `email.received` to
+  `POST /api/booking/inbound-email`. The webhook's fields are not believed:
+  the email is read back from `GET /emails/receiving/{id}` with our key, so a
+  forged webhook books nothing. That is also why no signature is checked —
+  `server/index.ts` is frozen and parses JSON before any route.
+- The slot is the address it was sent to, the person the address it came
+  from. Our own mail, automatic replies and other addresses are left alone.
+  An address with a call already coming up is told so, not given a second.
+- `postBooking` writes it with the sender on the event, so Google sends the
+  invite; the sender gets a reply with the way to change or cancel, or, when
+  the time has gone, the times still free as addresses to write to.
+- Each email is handled once however often the webhook comes. 503 asks
+  Resend to try again (Resend or the calendar briefly away); all else is 200.
+
+Not checked: SPF and DKIM. A forged From line books a call in someone else's
+name, and they get an invite they can decline — the same as typing their
+address into the popup. Day links and Other times stay web links to the popup.

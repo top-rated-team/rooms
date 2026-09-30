@@ -94,7 +94,7 @@ function reset(): void {
   resetHoldsForTests();
   resetGcalForTests();
   resetSlotsCacheForTests();
-  for (const name of ["GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON", "GOOGLE_CALENDAR_ID", "RESEND_API_KEY", "LEAD_EMAIL_FROM", "PUBLIC_BASE_URL"]) {
+  for (const name of ["GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON", "GOOGLE_CALENDAR_ID", "RESEND_API_KEY", "LEAD_EMAIL_FROM", "PUBLIC_BASE_URL", "BOOKING_INBOX_DOMAIN"]) {
     delete process.env[name];
   }
 }
@@ -186,6 +186,21 @@ describe("GET /api/admin/booking-widget", () => {
     const second = await get("/api/admin/booking-widget?show=times&days=1&perDay=16", token);
     const [again] = second.body.days as { date: string; slots: string[] }[];
     assert.ok(!(again?.date === day.date && again.slots.includes(time)), `${day.date} ${time} is busy now and must not be offered`);
+  });
+
+  it("makes each time an email to write to once reply to book is set up, and says which mode it is in", async () => {
+    const token = await operatorToken();
+    const off = await get("/api/admin/booking-widget?show=times&days=1&perDay=2", token);
+    assert.equal((off.body.replyToBook as { on: boolean }).on, false);
+    assert.ok(String(off.body.html).includes('href="https://top-rated.team/book?date='));
+
+    process.env.RESEND_API_KEY = "re_test";
+    process.env.BOOKING_INBOX_DOMAIN = "book.top-rated.team";
+    const on = await get("/api/admin/booking-widget?show=times&days=1&perDay=2", token);
+    assert.deepEqual(on.body.replyToBook, { on: true, domain: "book.top-rated.team" });
+    const links = [...String(on.body.html).matchAll(/href="([^"]*)"/g)].map((m) => m[1]!);
+    assert.ok(links.slice(0, -1).every((href) => /^mailto:call-\d{4}-\d{2}-\d{2}-\d{4}@book\.top-rated\.team\?subject=/.test(href)), links.join("\n"));
+    assert.ok(links.at(-1)!.startsWith("https://top-rated.team/book?"), "Other times stays a web link");
   });
 
   it("says when a time picked from the block would not be confirmed by email", async () => {

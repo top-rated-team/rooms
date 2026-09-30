@@ -108,3 +108,13 @@ services:
         sync: false        # optional, and required if RESEND_API_KEY is set: the
                            # address the notification is sent from, on a domain
                            # verified with Resend.
+      - key: BOOKING_INBOX_DOMAIN
+        sync: false        # optional: reply to book. The domain Resend receives
+                           # booking mail for — its ready-made <id>.resend.app, or
+                           # a subdomain such as book.top-rated.team with Resend's
+                           # MX record. With it, a time in the email block is an
+                           # address to write to, and the email sent to it books
+                           # the call (server/booking/reply-to-book.ts). Also add
+                           # the Resend webhook https://<site>/api/booking/inbound-email
+                           # for email.received, and give RESEND_API_KEY full
+                           # access: a sending-only key cannot read received mail.

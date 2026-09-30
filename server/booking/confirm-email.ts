@@ -96,28 +96,48 @@ export function confirmationLetter(
   return { subject: `Confirm your call: ${when(hold, "short")}`, text, html };
 }
 
+/**
+ * One letter through Resend, from this deployment's From address. False when
+ * nothing was sent. Used for the confirmation link and for the replies of
+ * reply to book (reply-to-book.ts).
+ */
+export async function sendBookingLetter(
+  letter: { to: string; subject: string; text: string; html: string; replyTo?: string },
+  fetchImpl: typeof fetch = fetch,
+): Promise<boolean> {
+  const key = process.env.RESEND_API_KEY?.trim();
+  const from = mailFrom();
+  if (!key || !from || !letter.to) return false;
+  try {
+    const response = await fetchImpl(RESEND_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from,
+        to: [letter.to],
+        subject: letter.subject,
+        text: letter.text,
+        html: letter.html,
+        ...(letter.replyTo ? { reply_to: letter.replyTo } : {}),
+      }),
+      signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),
+    });
+    if (!response.ok) console.error(`[booking] a booking email was refused: ${response.status}`);
+    return response.ok;
+  } catch (error) {
+    console.error("[booking] sending a booking email failed:", error instanceof Error ? error.message : error);
+    return false;
+  }
+}
+
 /** False when nothing was sent, so the caller can give the slot back and say so. */
 export async function sendConfirmationLetter(
   hold: Pick<BookingHold, "startsAt" | "timezone" | "email" | "confirmToken">,
   minutes: number,
   fetchImpl: typeof fetch = fetch,
 ): Promise<boolean> {
-  const key = process.env.RESEND_API_KEY?.trim();
-  const from = mailFrom();
   const url = hold.confirmToken ? confirmationUrl(hold.confirmToken) : null;
-  if (!key || !from || !url || !hold.email) return false;
+  if (!url || !hold.email) return false;
   const letter = confirmationLetter(hold, url, minutes);
-  try {
-    const response = await fetchImpl(RESEND_URL, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to: [hold.email], subject: letter.subject, text: letter.text, html: letter.html }),
-      signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),
-    });
-    if (!response.ok) console.error(`[booking] the confirmation email was refused: ${response.status}`);
-    return response.ok;
-  } catch (error) {
-    console.error("[booking] sending the confirmation email failed:", error instanceof Error ? error.message : error);
-    return false;
-  }
+  return sendBookingLetter({ to: hold.email, ...letter }, fetchImpl);
 }
