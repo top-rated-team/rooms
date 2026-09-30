@@ -167,12 +167,12 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
   const imageSrc = (date: string, time: string) =>
     `${options.baseUrl.replace(/\/+$/, "")}/api/booking/slot/${date}/${time.replace(":", "")}.png`;
   const replyTo = options.show === "times" ? options.replyTo : undefined;
+  /* A signed block says nothing under the times: it goes to that one person,
+     and a click books, with Google's invite. */
   const confirmLine = replyTo
     ? "Picking a time opens an email to us. Send it, and the call is booked; Google sends you the invite."
     : signed
-      ? options.show === "times"
-        ? `For ${signedFor} only: clicking a time books the call in that name, and Google sends the invite. Change or cancel it from the page that opens.`
-        : `For ${signedFor} only: pick a day, then a time, and press Book. Google sends the invite.`
+      ? ""
       : "We email you a link to confirm it. Nothing is booked until you do.";
   const other = link({});
   const when = (date: string, time: string) => `${widgetDayLabel(date)}, ${time} (${zone})`;
@@ -213,7 +213,7 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
     `<tr><td style="padding:6px 0 4px 0;font-family:${SERIF};font-size:15px;line-height:22px;color:${MUTED};">${escapeHtml(intro)}</td></tr>` +
     (chosen.length > 0 ? rows : empty) +
     `<tr><td style="padding:12px 0 0 0;font-family:${SERIF};font-size:14px;line-height:20px;color:${MUTED};">` +
-    `${escapeHtml(confirmLine)} <a href="${escapeHtml(other)}" target="_blank" style="color:${ACCENT};text-decoration:underline;">Other times</a></td></tr>` +
+    `${confirmLine ? `${escapeHtml(confirmLine)} ` : ""}<a href="${escapeHtml(other)}" target="_blank" style="color:${ACCENT};text-decoration:underline;">Other times</a></td></tr>` +
     `</table></td></tr></table>`;
 
   const textRows = chosen.map((day) => {
@@ -233,7 +233,7 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
     ...(chosen.length > 0 ? textRows : ["No free times in the next days."]),
     "",
     `Other times: ${other}`,
-    confirmLine,
+    ...(confirmLine ? [confirmLine] : []),
   ].join("\n");
 
   return { html, text, days: chosen };

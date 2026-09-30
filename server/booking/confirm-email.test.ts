@@ -16,7 +16,7 @@ import { generateKeyPairSync } from "node:crypto";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 
-import { postBooking } from "./calendar";
+import { changeBooking, postBooking } from "./calendar";
 import { EMAIL_CONFIRM_ADDRESS_LINE, EMAIL_CONFIRM_SEND_FAILED_LINE, confirmationLetter } from "./confirm-email";
 import { signAddress } from "./link-sign";
 import {
@@ -27,7 +27,7 @@ import {
   resetBookingCodesForTests,
 } from "./confirm";
 import { GOOGLE_CALENDAR_API, GOOGLE_FREEBUSY_URL, GOOGLE_TOKEN_URL, resetGcalForTests } from "./gcal";
-import { bindHoldChat, getHoldByToken, resetHoldsForTests } from "./hold";
+import { bindHoldChat, getHoldByToken, resetHoldsForTests, slotIsHeld } from "./hold";
 import { getBookingSlots, resetSlotsCacheForTests } from "./slots";
 
 const CALENDAR_ID = "dan@top-rated.team";
@@ -91,6 +91,7 @@ afterEach(reset);
 function fakes(opts: { resendStatus?: number } = {}) {
   const state = { busy: false };
   const events: { url: string; body: Record<string, unknown> }[] = [];
+  const moves: { url: string; body: Record<string, unknown> }[] = [];
   const letters: Record<string, unknown>[] = [];
   const fetchImpl: typeof fetch = async (input, init) => {
     const url = String(input);
@@ -108,13 +109,17 @@ function fakes(opts: { resendStatus?: number } = {}) {
       events.push({ url, body: JSON.parse(String(init?.body)) as Record<string, unknown> });
       return jsonResponse(200, { id: `evt_${events.length}`, hangoutLink: "https://meet.google.com/aaa-bbbb-ccc" });
     }
+    if (method === "PATCH" && url.includes("/events/")) {
+      moves.push({ url, body: JSON.parse(String(init?.body)) as Record<string, unknown> });
+      return jsonResponse(200, { id: "evt_1", status: "confirmed", hangoutLink: "https://meet.google.com/aaa-bbbb-ccc" });
+    }
     if (method === "POST" && url === "https://api.resend.com/emails") {
       letters.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
       return jsonResponse(opts.resendStatus ?? 200, { id: "email_1" });
     }
     return jsonResponse(404, {});
   };
-  return { fetchImpl, state, events, letters };
+  return { fetchImpl, state, events, moves, letters };
 }
 
 function tokenFrom(letter: Record<string, unknown>): string {
@@ -183,6 +188,23 @@ describe("a time picked inside an email", () => {
     const polled = getBookingConfirmed("code" in held ? held.code : "", later.getTime());
     assert.equal(polled.confirmed, true, "the popup that is still waiting sees it");
     assert.equal(polled.confirmed && polled.invited, true);
+  });
+
+  it("gives the old time back when the confirmed call is moved", async () => {
+    configure();
+    const fake = fakes();
+    await pick(fake);
+    const later = new Date(NOW.getTime() + 10 * MINUTE);
+    const confirmed = await confirmEmailHold(tokenFrom(fake.letters[0]!), { fetchImpl: fake.fetchImpl, now: later });
+    if (!confirmed.ok) throw new Error("not confirmed");
+    assert.equal(slotIsHeld(PICK.date, PICK.time, later.getTime()), true);
+
+    const moved = await changeBooking({ code: confirmed.body.code, date: PICK.date, time: "15:00" }, { fetchImpl: fake.fetchImpl, now: later });
+    assert.equal(moved.ok, true, JSON.stringify(moved));
+    assert.equal(fake.moves.length, 1, "moved in place");
+    assert.equal(fake.events.length, 1, "no second event");
+    assert.equal(slotIsHeld(PICK.date, PICK.time, later.getTime()), false, "the old time is free again");
+    assert.equal(slotIsHeld(PICK.date, "15:00", later.getTime()), true);
   });
 
   it("runs out when nobody confirms it, and frees the time", async () => {

@@ -86,15 +86,17 @@ afterEach(() => {
   delete process.env.PUBLIC_BASE_URL;
 });
 
-function mockCalendar(opts: { busy?: boolean; meetUrl?: string | null } = {}): {
+function mockCalendar(opts: { busy?: boolean; meetUrl?: string | null; deletedByHand?: boolean } = {}): {
   fetchImpl: typeof fetch;
   posts: Record<string, unknown>[];
   postUrls: string[];
   deletes: string[];
+  patches: { url: string; body: Record<string, unknown> }[];
 } {
   const posts: Record<string, unknown>[] = [];
   const postUrls: string[] = [];
   const deletes: string[] = [];
+  const patches: { url: string; body: Record<string, unknown> }[] = [];
   const busyStart = "2026-09-10T12:00:00.000Z";
   const busyEnd = "2026-09-10T12:30:00.000Z";
   const fetchImpl: typeof fetch = async (input, init) => {
@@ -133,12 +135,23 @@ function mockCalendar(opts: { busy?: boolean; meetUrl?: string | null } = {}): {
       deletes.push(url);
       return new Response(null, { status: 204 });
     }
+    if (method === "PATCH" && url.includes("/events/")) {
+      const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      patches.push({ url, body });
+      if (opts.deletedByHand) return jsonResponse(404, { error: { code: 404, message: "Not Found" } });
+      return jsonResponse(200, {
+        id: /\/events\/([^/?]+)/.exec(url)?.[1],
+        status: "confirmed",
+        ...body,
+        hangoutLink: opts.meetUrl === null ? undefined : (opts.meetUrl ?? "https://meet.google.com/aaa-bbbb-ccc"),
+      });
+    }
     if (method === "POST" && /\/chats\/[^/]+\/messages/.test(url)) {
       return jsonResponse(200, { object: "MessageSent", message_id: "msg_out_1" });
     }
     return jsonResponse(404, {});
   };
-  return { fetchImpl, posts, postUrls, deletes };
+  return { fetchImpl, posts, postUrls, deletes, patches };
 }
 
 describe("bookingEventTitle", () => {
@@ -335,9 +348,9 @@ describe("coming back to a booking", () => {
     assert.deepEqual(getExistingBooking(created.body.code, Date.parse("2026-09-10T12:31:00.000Z")), { found: false });
   });
 
-  it("checks the new slot is free before releasing the old one, and writes the new event first", async () => {
+  it("moves the event in place, so Google tells the guest the new time and never that it was cancelled", async () => {
     setConfigured();
-    const { fetchImpl, posts, deletes } = mockCalendar();
+    const { fetchImpl, posts, deletes, patches } = mockCalendar();
     const created = await postBooking(
       { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
       { fetchImpl, now: NOW },
@@ -350,13 +363,66 @@ describe("coming back to a booking", () => {
     );
     assert.equal(moved.ok, true);
     if (!moved.ok) return;
-    assert.equal(posts.length, 2);
-    assert.equal(deletes.length, 1);
-    assert.equal(deletes[0]?.includes("/events/"), true);
+    /* No second event and no delete: a delete is what sent "Canceled event". */
+    assert.equal(posts.length, 1);
+    assert.equal(deletes.length, 0);
+    assert.equal(patches.length, 1);
+    assert.match(patches[0]?.url ?? "", /\/events\/evt_1\?/);
+    assert.match(patches[0]?.url ?? "", /sendUpdates=all/);
+    assert.deepEqual(patches[0]?.body, {
+      start: { dateTime: "2026-09-10T13:00:00.000Z", timeZone: TZ },
+      end: { dateTime: "2026-09-10T13:30:00.000Z", timeZone: TZ },
+    });
     const shown = getExistingBooking(code, NOW.getTime());
     assert.equal(shown.found, true);
     if (!shown.found) return;
     assert.equal(shown.startsAt, "2026-09-10T13:00:00.000Z");
+    assert.equal(shown.meetUrl, "https://meet.google.com/aaa-bbbb-ccc");
+  });
+
+  it("writes a new event when the old one was deleted from the calendar by hand", async () => {
+    setConfigured();
+    const { fetchImpl, posts, deletes, patches } = mockCalendar({ deletedByHand: true });
+    const created = await postBooking(
+      { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
+      { fetchImpl, now: NOW },
+    );
+    if (!created.ok || !created.body.booked) return;
+    const code = created.body.whatsapp.code;
+    const moved = await changeBooking({ code, date: "2026-09-10", time: "15:00" }, { fetchImpl, now: NOW });
+    assert.equal(moved.ok, true);
+    assert.equal(patches.length, 1);
+    assert.equal(posts.length, 2);
+    assert.equal(deletes.length, 0);
+    const shown = getExistingBooking(code, NOW.getTime());
+    assert.equal(shown.found, true);
+    if (!shown.found) return;
+    assert.equal(shown.startsAt, "2026-09-10T13:00:00.000Z");
+  });
+
+  it("leaves the call where it was when the move cannot be written", async () => {
+    setConfigured();
+    const calendar = mockCalendar();
+    const created = await postBooking(
+      { date: "2026-09-10", time: "14:00", name: "Ada", topic: "google-ads", email: "ada@example.com" },
+      { fetchImpl: calendar.fetchImpl, now: NOW },
+    );
+    if (!created.ok || !created.body.booked) return;
+    const code = created.body.whatsapp.code;
+    const failing: typeof fetch = async (input, init) =>
+      (init?.method ?? "GET").toUpperCase() === "PATCH"
+        ? jsonResponse(500, { error: { code: 500, message: "Backend Error" } })
+        : calendar.fetchImpl(input, init);
+    const moved = await changeBooking({ code, date: "2026-09-10", time: "15:00" }, { fetchImpl: failing, now: NOW });
+    assert.equal(moved.ok, false);
+    if (moved.ok) return;
+    assert.equal(moved.status, 503);
+    assert.equal(calendar.posts.length, 1);
+    assert.equal(calendar.deletes.length, 0);
+    const shown = getExistingBooking(code, NOW.getTime());
+    assert.equal(shown.found, true);
+    if (!shown.found) return;
+    assert.equal(shown.startsAt, "2026-09-10T12:00:00.000Z");
   });
 
   it("refuses a move onto a taken slot and keeps the original", async () => {

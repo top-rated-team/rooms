@@ -41,6 +41,7 @@ import {
   createEvent as createGcalEvent,
   deleteEvent as deleteGcalEvent,
   getOurCalendar,
+  moveEvent as moveGcalEvent,
   unavailableLine as gcalUnavailableLine,
 } from "./gcal";
 import { mintBookingCode, normalizeBookingCode } from "./code";
@@ -452,11 +453,10 @@ export function parseCancelBooking(body: unknown): string | null {
 }
 
 /**
- * Move a booking. The new slot is re-checked as free before the old event
- * is released — losing the slot while moving it is worse than refusing.
- * The new event is written first; the old one is deleted after. That is
- * cancel-and-book in meaning, with the release last so a failed write
- * does not leave them with nothing.
+ * Move a booking. The new slot is re-checked as free before the call moves
+ * — losing the slot while moving it is worse than refusing. The event moves
+ * in place: the guest is told the new time, never that the call was
+ * cancelled.
  */
 export async function changeBooking(
   raw: unknown,
@@ -494,52 +494,56 @@ export async function changeBooking(
     return { ok: false, status: 409, body: { error: SLOT_TAKEN_LINE, days } };
   }
 
-  const created = await createBookingEvent(
+  /* Moved in place, so the guest gets Google's "Updated invitation" and keeps
+     the Meet link. Only an event deleted from the calendar by hand is written
+     afresh: there is nothing left to move, or to cancel. A failed move
+     leaves the call where it was. */
+  const moved = await moveGcalEvent(
+    existing.eventId,
     {
-      calendarId: primary.calendar.id,
-      timezone: primary.calendar.timezone,
-      starts,
-      ends,
-      name: existing.name,
-      topic: existing.topic,
-      email: existing.email ?? undefined,
+      start: { dateTime: starts.toISOString(), timeZone: primary.calendar.timezone },
+      end: { dateTime: ends.toISOString(), timeZone: primary.calendar.timezone },
+      notify: existing.invited,
     },
     fetchImpl,
   );
-  if (!created.ok) return { ok: false, status: 503, error: created.error };
+  let written: { eventId: string; meetUrl: string | null; invited: boolean };
+  if (moved.ok) {
+    written = { eventId: existing.eventId, meetUrl: moved.meetUrl ?? existing.meetUrl, invited: existing.invited };
+  } else if (moved.gone) {
+    const created = await createBookingEvent(
+      {
+        calendarId: primary.calendar.id,
+        timezone: primary.calendar.timezone,
+        starts,
+        ends,
+        name: existing.name,
+        topic: existing.topic,
+        email: existing.email ?? undefined,
+      },
+      fetchImpl,
+    );
+    if (!created.ok) return { ok: false, status: 503, error: created.error };
+    written = { eventId: created.eventId, meetUrl: created.meetUrl, invited: created.invited };
+  } else {
+    return { ok: false, status: 503, error: moved.error };
+  }
 
-  const previous = { eventId: existing.eventId, calendarId: existing.calendarId, invited: existing.invited };
   const updated = updateStoredBooking(
     input.code,
     {
-      eventId: created.eventId,
+      eventId: written.eventId,
       calendarId: primary.calendar.id,
       date: input.date,
       time: input.time,
       startsAt: starts.toISOString(),
       timezone: primary.calendar.timezone,
-      meetUrl: created.meetUrl,
-      invited: created.invited,
+      meetUrl: written.meetUrl,
+      invited: written.invited,
     },
     now.getTime(),
   );
   if (!updated) return { ok: false, status: 404, error: BOOKING_GONE_LINE };
-
-  /* The result used to be discarded. A failed delete then left the OLD
-     event standing in the calendar while the endpoint answered 200 and the
-     store forgot the old event id forever — two calls, one of them
-     unreachable and unremovable. The new event is already written and the
-     new slot already taken, so this cannot fail the whole move; it reports
-     instead, and says which event was left behind so a person can remove it. */
-  const removedOld = await deleteCalendarEvent(
-    { calendarId: previous.calendarId, eventId: previous.eventId, notify: previous.invited },
-    fetchImpl,
-  );
-  if (!removedOld.ok) {
-    console.error(
-      `[booking] moved a booking but could not delete its old event ${previous.eventId}: ${removedOld.error}`,
-    );
-  }
   invalidateSlotsCache();
 
   if (updated.chatId) {

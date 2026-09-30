@@ -466,6 +466,42 @@ export async function createEvent(
   return { ok: true, eventId, meetUrl };
 }
 
+/**
+ * Move an event to a new time IN PLACE: same event, same Meet link, same
+ * guest. With sendUpdates=all Google sends the guest "Updated invitation"
+ * with the new time. Writing a new event and deleting the old one instead
+ * sent a "Canceled event" letter for a call that was only moving, and a new
+ * Meet link. `gone` is an event no longer in the calendar (deleted there by
+ * hand), which cannot be moved.
+ */
+export async function moveEvent(
+  eventId: string,
+  input: Pick<CreateGcalEventInput, "start" | "end" | "notify">,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ ok: true; meetUrl: string | null } | { ok: false; error: string; gone: boolean }> {
+  const id = calendarId();
+  if (!available() || !id) return { ok: false, error: GCAL_UNCONFIGURED_LINE, gone: false };
+  if (!eventId.trim()) return { ok: false, error: GCAL_UNWRITABLE_LINE, gone: true };
+
+  const result = await gcalFetch(
+    {
+      method: "PATCH",
+      url: eventsUrl(eventId, { conferenceDataVersion: "1", sendUpdates: input.notify ? "all" : "none" }),
+      json: {
+        start: { dateTime: input.start.dateTime, timeZone: input.start.timeZone },
+        end: { dateTime: input.end.dateTime, timeZone: input.end.timeZone },
+      },
+    },
+    fetchImpl,
+  );
+  if (!result.ok) return { ok: false, error: result.error, gone: result.status === 404 || result.status === 410 };
+  /* A deleted event can still be read, and patched, as status "cancelled". */
+  if (asString(asRecord(result.body)?.status) === "cancelled") {
+    return { ok: false, error: GCAL_UNWRITABLE_LINE, gone: true };
+  }
+  return { ok: true, meetUrl: meetUrlFromEvent(result.body) };
+}
+
 export async function deleteEvent(
   eventId: string,
   opts: { notify: boolean },

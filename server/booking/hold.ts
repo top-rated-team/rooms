@@ -428,9 +428,18 @@ export function updateStoredBooking(
   const row = getStoredBooking(codeRaw, now);
   if (!row) return undefined;
   const next = { ...row, ...patch, code: row.code };
+  /* Moved: the hold that proved it still names the old time (see cancel). */
+  if (next.date !== row.date || next.time !== row.time) releaseProvingHolds(row.eventId);
   bookings.set(row.code, next);
   persistBooking(next);
   return next;
+}
+
+function releaseProvingHolds(eventId: string): void {
+  if (!eventId) return;
+  for (const [heldCode, held] of holds) {
+    if (held.eventId === eventId) dropHold(heldCode);
+  }
 }
 
 export function markBookingCancelled(codeRaw: string, now = Date.now()): StoredBooking | undefined {
@@ -449,9 +458,7 @@ export function markBookingCancelled(codeRaw: string, now = Date.now()): StoredB
      as an active slot, so without this the freed time stayed invisible in
      the picker and 409'd for the rest of the sweep window — a slot nobody
      could book and nobody could see was taken. */
-  for (const [heldCode, held] of holds) {
-    if (held.eventId && held.eventId === row.eventId) dropHold(heldCode);
-  }
+  releaseProvingHolds(row.eventId);
   /* Written before it is dropped from the cache, so a restart cannot bring a
      cancelled booking back to life. */
   persistBooking(row);
