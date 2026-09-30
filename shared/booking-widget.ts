@@ -40,6 +40,13 @@ export interface BookingWidgetOptions {
    * to the popup.
    */
   replyTo?: { domain: string };
+  /**
+   * Draw each time as an image from /api/booking/slot/<date>/<HHMM>.png
+   * (server/booking/slot-image.ts): fetched when the email is opened, so a
+   * time taken since the email was sent shows crossed out. Its alt text is
+   * the time, for readers who see no images.
+   */
+  liveImages?: boolean;
 }
 
 export interface BookingWidget {
@@ -102,6 +109,20 @@ export function chooseWidgetDays(slots: BookingSlotsResponse, days: number, time
     .map((day) => ({ date: day.date, slots: spreadTimes(day.slots, perDay) }));
 }
 
+/* Pictures exist for every half-hour (scripts/build-slot-images.mjs). */
+function hasPicture(time: string): boolean {
+  return /^([01]\d|2[0-3]):(00|30)$/.test(time);
+}
+
+function imageButton(href: string, src: string, time: string): string {
+  const target = href.startsWith("mailto:") ? "" : ` target="_blank"`;
+  return (
+    `<a href="${escapeHtml(href)}"${target} style="display:inline-block;margin:0 6px 6px 0;text-decoration:none;">` +
+    `<img src="${escapeHtml(src)}" width="64" height="34" alt="${escapeHtml(time)}" ` +
+    `style="display:block;width:64px;height:34px;border:0;outline:none;font-family:${SANS};font-size:14px;color:${INK};"></a>`
+  );
+}
+
 function button(href: string, label: string): string {
   /* A mailto: opens the mail app, not a tab. */
   const target = href.startsWith("mailto:") ? "" : ` target="_blank"`;
@@ -119,10 +140,15 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
   const minutes = options.slots.slotMinutes;
   const zone = options.slots.timezone;
   const heading = `Book a ${minutes}-minute call with ${options.hostName}`;
+  const live = options.show === "times" && options.liveImages === true;
   const intro =
     options.show === "times"
-      ? `Pick a time. Times are in ${zone}.`
+      ? live
+        ? `Pick a time. Times are in ${zone}. A time crossed out has been taken since this email was sent.`
+        : `Pick a time. Times are in ${zone}.`
       : `Pick a day, then a time on it. Times are in ${zone}.`;
+  const imageSrc = (date: string, time: string) =>
+    `${options.baseUrl.replace(/\/+$/, "")}/api/booking/slot/${date}/${time.replace(":", "")}.png`;
   const replyTo = options.show === "times" ? options.replyTo : undefined;
   const confirmLine = replyTo
     ? "Picking a time opens an email to us. Send it, and the call is booked; Google sends you the invite."
@@ -141,7 +167,11 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
         const count = options.slots.days.find((row) => row.date === day.date)?.slots.length ?? day.slots.length;
         return `<tr><td style="padding:4px 0 0 0;">${button(link({ date: day.date }), `${label} · ${count} ${count === 1 ? "time" : "times"}`)}</td></tr>`;
       }
-      const times = day.slots.map((time) => button(timeHref(day.date, time), time)).join("");
+      const times = day.slots
+        .map((time) =>
+          live && hasPicture(time) ? imageButton(timeHref(day.date, time), imageSrc(day.date, time), time) : button(timeHref(day.date, time), time),
+        )
+        .join("");
       return (
         `<tr><td style="padding:10px 0 0 0;font-family:${SANS};font-size:12px;line-height:16px;letter-spacing:0.04em;` +
         `text-transform:uppercase;color:${MUTED};">${escapeHtml(label)}</td></tr>` +

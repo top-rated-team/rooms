@@ -201,7 +201,17 @@ function paragraphs(lines: string[], extraHtml = ""): string {
 
 function freeTimesBlock(slots: BookingSlotsResponse, domain: string, recipient: string) {
   const base = process.env.PUBLIC_BASE_URL?.trim() || "https://top-rated.team";
-  return buildBookingWidget({ baseUrl: base, slots, show: "times", days: 3, timesPerDay: 6, recipient, hostName: hostName(), replyTo: { domain } });
+  return buildBookingWidget({
+    baseUrl: base,
+    slots,
+    show: "times",
+    days: 3,
+    timesPerDay: 6,
+    recipient,
+    hostName: hostName(),
+    replyTo: { domain },
+    liveImages: true,
+  });
 }
 
 /* ------------------------------ the handler -------------------------------- */

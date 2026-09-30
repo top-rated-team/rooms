@@ -105,6 +105,22 @@ describe("buildBookingWidget", () => {
     assert.deepEqual(hrefs(widget.html), ["https://top-rated.team/book?confirm=email"]);
   });
 
+  it("draws each time as a live picture when asked, with the time as its text for readers without images", () => {
+    const widget = buildBookingWidget({ ...BASE, show: "times", days: 1, timesPerDay: 16, liveImages: true, recipient: "ada@example.com" });
+    const images = [...widget.html.matchAll(/<img src="([^"]*)" width="64" height="34" alt="([^"]*)"/g)].map((m) => [m[1], m[2]]);
+    assert.equal(images.length, 16);
+    assert.deepEqual(images[3], ["https://top-rated.team/api/booking/slot/2026-10-02/1030.png", "10:30"]);
+    assert.ok(hrefs(widget.html).slice(0, 16).every((href) => href.includes("confirm=email&email=ada%40example.com")), "each picture is still the link");
+    assert.match(widget.html, /A time crossed out has been taken since this email was sent\./);
+  });
+
+  it("keeps a time with no picture as a plain button", () => {
+    const odd = { ...SLOTS, days: [{ date: "2026-10-02", slots: ["09:15", "10:30"] }] };
+    const widget = buildBookingWidget({ ...BASE, slots: odd, show: "times", days: 1, timesPerDay: 4, liveImages: true });
+    assert.equal((widget.html.match(/<img /g) ?? []).length, 1);
+    assert.match(widget.html, />09:15<\/a>/);
+  });
+
   it("has nothing in it that runs, and nothing that escapes an attribute", () => {
     const widget = buildBookingWidget({ ...BASE, hostName: `<script>alert(1)</script>"`, show: "times", days: 3, timesPerDay: 16, recipient: `x"onmouseover="alert(1)` });
     assert.doesNotMatch(widget.html, /<script|onmouseover=|<style/i);
