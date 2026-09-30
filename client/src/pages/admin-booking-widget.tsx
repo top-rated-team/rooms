@@ -18,7 +18,8 @@ import { WIDGET_MAX_DAYS, WIDGET_MAX_TIMES_PER_DAY, type BookingWidgetShow } fro
 
 type LoadState =
   | { kind: "loading" }
-  | { kind: "refused"; line: string; youAre: string[] }
+  /* signedIn: a 403 (signed in, not the operator) rather than a 401. */
+  | { kind: "refused"; line: string; youAre: string[]; signedIn: boolean }
   | { kind: "failed"; line: string }
   | { kind: "ok"; data: AdminBookingWidgetResponse };
 
@@ -120,6 +121,7 @@ export default function AdminBookingWidget() {
             kind: "refused",
             line: payload.error?.trim() || "This page is only for the person who runs this deployment.",
             youAre: Array.isArray(payload.youAre) ? payload.youAre.filter((line) => typeof line === "string") : [],
+            signedIn: res.status === 403,
           });
           return;
         }
@@ -183,13 +185,35 @@ export default function AdminBookingWidget() {
 
         {state.kind === "refused" ? (
           <div className="mt-[var(--s5)]">
-            <p className={READ} role="alert">
+            <p className={READ} role="alert" data-testid="text-widget-refused">
               {state.line}
             </p>
+            {/* The way in, on the page where the wall is. The operator is
+                whoever signs in with the address in OPERATOR_EMAIL (on a
+                house host also LEAD_NOTIFY_EMAIL) or the LinkedIn account in
+                OPERATOR_LINKEDIN_SUB — see server/admin/people.ts. */}
+            {!state.signedIn ? (
+              <p className={`${READ_MUTED} mt-[var(--s3)] max-w-[40rem]`}>
+                Sign in on the{" "}
+                <a href="/" className="underline underline-offset-2 hover:text-foreground">
+                  front page
+                </a>{" "}
+                (Sign in, at the top, then LinkedIn), and open this page again.
+              </p>
+            ) : null}
             {state.youAre.length > 0 ? (
-              <pre className="mt-[var(--s2)] overflow-x-auto rounded-md border border-border bg-muted p-[var(--s2)] text-sm">
-                {state.youAre.join("\n")}
-              </pre>
+              <>
+                <p className={`${READ} mt-[var(--s3)] max-w-[40rem]`}>
+                  To make this account the operator, add this in Render (the top-rated-team service, Environment),
+                  let it redeploy, and open this page again:
+                </p>
+                <pre
+                  className="mt-[var(--s2)] overflow-x-auto rounded-md border border-border bg-muted p-[var(--s2)] text-sm"
+                  data-testid="text-widget-you-are"
+                >
+                  {state.youAre.join("\n")}
+                </pre>
+              </>
             ) : null}
           </div>
         ) : (
