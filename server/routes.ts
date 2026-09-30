@@ -103,7 +103,7 @@ import {
 import { postBooking, changeBooking, cancelBooking, getExistingBooking } from "./booking/calendar";
 import { confirmEmailHold, emailHoldStatus, getBookingConfirmed, installBookingInbound } from "./booking/confirm";
 import { emailConfirmation } from "./booking/confirm-email";
-import { handleInboundEmail, replyToBook } from "./booking/reply-to-book";
+import { handleInboundEmail } from "./booking/reply-to-book";
 import { signAddress } from "./booking/link-sign";
 import { isCalendarDate as isSlotDate, liveSlotState, slotImage, slotImageTime } from "./booking/slot-image";
 import { isBookingReturnCode, normalizeBookingCode } from "./booking/code";
@@ -1804,7 +1804,9 @@ export function registerRoutes(app: Express): void {
       const show: BookingWidgetShow = query.show === "days" ? "days" : "times";
       const number = (value: unknown, fallback: number) => (typeof value === "string" && value.trim() ? Number(value) : fallback);
       const contract = DOOR_BY_ID[DEFAULT_DOOR_ID].contract;
-      const reply = replyToBook();
+      /* A time is a web link that books on one click (the owner's choice),
+         never an email to write: reply to book's addresses are still answered
+         for blocks already sent, but no new block makes them. */
       const recipient = widgetRecipient(typeof query.recipient === "string" ? query.recipient : "");
       const recipientSig = recipient.kind === "address" ? (signAddress(recipient.value) ?? undefined) : undefined;
       const widget = buildBookingWidget({
@@ -1816,7 +1818,6 @@ export function registerRoutes(app: Express): void {
         recipient: typeof query.recipient === "string" ? query.recipient : "",
         ...(recipientSig ? { recipientSig } : {}),
         hostName: (contract.displayName ?? contract.legalName).trim(),
-        ...(reply.on ? { replyTo: { domain: reply.domain } } : {}),
         liveImages: true,
       });
       res.json({
@@ -1824,7 +1825,6 @@ export function registerRoutes(app: Express): void {
         text: widget.text,
         recipient: recipient.kind === "address" ? { ...recipient, signed: Boolean(recipientSig) } : recipient,
         calendar: { id: bookingCalendarId(), readAt },
-        replyToBook: reply,
         timezone: slots.body.timezone,
         days: widget.days,
         emailConfirmation: emailConfirmation(),

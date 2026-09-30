@@ -111,6 +111,7 @@ describe("parseBookLinkHash", () => {
       confirmByEmail: false,
       confirmation: null,
       sig: null,
+      instant: false,
     });
     assert.deepEqual(parseBookLinkHash("#book&email=dan%2Bads%40example.com&date=2026-10-02&time=09:30&confirm=email"), {
       email: "dan+ads@example.com",
@@ -119,6 +120,7 @@ describe("parseBookLinkHash", () => {
       confirmByEmail: true,
       confirmation: null,
       sig: null,
+      instant: false,
     });
   });
 
@@ -145,7 +147,7 @@ describe("parseBookLinkHash", () => {
   });
 
   it("reads back exactly what formatBookLinkHash writes", () => {
-    const link = { email: "a+b@example.com", date: "2026-10-02", time: "16:30", confirmByEmail: true, confirmation: null, sig: null };
+    const link = { email: "a+b@example.com", date: "2026-10-02", time: "16:30", confirmByEmail: true, confirmation: null, sig: null, instant: false };
     assert.deepEqual(parseBookLinkHash(`#${formatBookLinkHash(link)}`), link);
   });
 });
@@ -159,6 +161,15 @@ describe("a signed address", () => {
     const target = bookLinkTarget(url.search);
     assert.doesNotMatch(target.slice(0, target.indexOf("#")), /sig=/, "never in the visible query");
     assert.equal(parseBookLinkHash(target.slice(target.indexOf("#")))?.sig, SIG);
+  });
+
+  it("asks for one-click booking only with a time to book", () => {
+    const url = new URL(bookLinkUrl("https://top-rated.team", { date: "2026-10-02", time: "09:30", confirmByEmail: true, recipient: "ada@example.com", sig: SIG, instant: true }));
+    assert.equal(url.searchParams.get("instant"), "1");
+    const target = bookLinkTarget(url.search);
+    assert.equal(parseBookLinkHash(target.slice(target.indexOf("#")))?.instant, true);
+    assert.ok(!bookLinkUrl("https://top-rated.team", { date: "2026-10-02", instant: true }).includes("instant"), "a day alone is not a booking");
+    assert.equal(parseBookLinkHash("#book&date=2026-10-02&instant=1")?.instant, false);
   });
 
   it("is dropped without an address, or when it is not one of ours", () => {
@@ -229,6 +240,7 @@ describe("bookLinkUrl", () => {
       confirmByEmail: true,
       confirmation: null,
       sig: null,
+      instant: false,
     });
   });
 });

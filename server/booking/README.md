@@ -108,6 +108,26 @@ the address on it, so Google sends the invite, and records the booking with a
 fresh return code. Twice is one event. A WhatsApp message carrying an email
 hold's code proves nothing.
 
+**One click books.** On the owner's instruction, the widget page requires
+the address the block is for, signs it, and makes every time a
+`/book?…&email=…&sig=…&instant=1` link. The link itself books nothing —
+`/book` only hops to the page, so a mail scanner that fetches every link
+books nothing — the page books it as it opens and opens on the confirmation,
+with the Meet link, Change and Cancel. A browser that says it is driven by a
+program (`navigator.webdriver`, as headless scanners are) gets the picker
+with the time chosen and a Book button instead. A time taken meanwhile opens
+the picker on what is still free.
+
+Every copy of one email carries the same links, and nothing tells us who
+clicked — the Cc line, a forward. So a signed block books once: when the
+address already has a call coming up, any further click, on the same time
+or another, is shown that call and nothing more — no return code, so no
+Change or Cancel. The block says whose times they are, and the widget page
+says to send it to that person alone and to make one block each for several.
+Somebody else on the email can still be first to click and book a time in
+the addressee's name; they get Google's invite and can decline it. Closing
+that too would take a confirmation step, which the owner declined.
+
 A block the owner made for one address skips that step. The widget page
 signs the address (`link-sign.ts`, an HMAC under a label of its own, keyed
 from `BOOKING_LINK_SECRET`, else the `LEAD_INBOX_KEY` render.yaml generates,
@@ -150,6 +170,10 @@ free that day; the emailed confirmation and reply to book ask the calendar
 before writing, and a taken time is answered with the times still free.
 
 ## Reply to book
+
+No longer made by the widget page: the owner chose one click on a web link
+over an email to send. The receiving side stays, so the addresses in blocks
+already sent still book.
 
 Gmail without an add-on changes nothing in a pasted block, so a link in it
 cannot carry the address of whoever it went to. With `BOOKING_INBOX_DOMAIN`

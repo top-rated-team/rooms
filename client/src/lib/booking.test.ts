@@ -290,6 +290,7 @@ describe("the /book hop", () => {
       confirmByEmail: true,
       confirmation: null,
       sig: null,
+      instant: false,
     });
     forgetBookingLinkPick();
     assert.deepEqual(bookingLink(), {
@@ -299,6 +300,7 @@ describe("the /book hop", () => {
       confirmByEmail: true,
       confirmation: null,
       sig: null,
+      instant: false,
     }, "the address and the email step stay for the page; the picked time does not");
   });
 

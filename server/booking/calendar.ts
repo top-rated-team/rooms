@@ -63,6 +63,7 @@ import {
   placeHold,
   recordBooking,
   releaseHold,
+  upcomingBookingFor,
   slotIsHeld,
   updateStoredBooking,
   whatsappGateAllowed,
@@ -236,6 +237,39 @@ export async function postBooking(
     return { ok: false, status: 503, error: ADDRESS_REQUIRED_LINE };
   }
 
+  /* A block the owner made for this very address, signed by us: the link
+     went to that inbox, so opening it proved what a confirmation letter
+     would. The owner asked for exactly this — a click books — so it books at
+     once, with Google's invite. */
+  const signedForAddress = input.confirm === "email" && addressSigned(input.email, input.sig);
+  /* ONE CALL PER SIGNED BLOCK, and only the click that made it can change it.
+     Every link in one email is the same for everyone who got that email — the
+     Cc line, a forward — and nothing tells us who clicked. So once the
+     address has a call coming up, any further click, on the same time or
+     another, is shown that call and nothing more: no return code, so no
+     Change or Cancel. The browser that booked it kept the code; the person
+     booked for can still decline Google's invite. `already` marks a click on
+     a different time than the one booked. */
+  if (signedForAddress && input.email) {
+    const booked = upcomingBookingFor(input.email, now.getTime());
+    if (booked) {
+      return {
+        ok: true,
+        status: 201,
+        body: {
+          booked: true,
+          code: "",
+          startsAt: booked.startsAt,
+          timezone: booked.timezone,
+          meetUrl: booked.meetUrl,
+          invited: booked.invited,
+          whatsapp: { url: "", code: "" },
+          ...(booked.date === input.date && booked.time === input.time ? {} : { already: true as const }),
+        },
+      };
+    }
+  }
+
   const primary = await primaryCalendar(fetchImpl);
   if (!primary.ok) return { ok: false, status: 503, error: primary.line };
 
@@ -256,10 +290,6 @@ export async function postBooking(
      write: the booking stands at once and Google's invite goes out. The
      widget page says so to the person who sends the times, so it is never a
      surprise to them. */
-  /* A block the owner made for this very address, signed by us: the link
-     went to that inbox, so opening it proved what the letter would. The owner
-     asked for exactly this: no confirmation email for his own recipients. */
-  const signedForAddress = input.confirm === "email" && addressSigned(input.email, input.sig);
   if (input.confirm === "email" && input.email && !signedForAddress && emailConfirmation().on) {
     const held = placeHold(
       {

@@ -297,7 +297,7 @@ export function bookingLinkSigFor(email: string): string | undefined {
 
 /** Once the popup has acted on it: a confirmation link is used once, and a picked time once. */
 export function forgetBookingLinkPick(): void {
-  if (link) link = { ...link, date: null, time: null, confirmation: null };
+  if (link) link = { ...link, date: null, time: null, confirmation: null, instant: false };
 }
 
 /**
@@ -511,6 +511,7 @@ export function parseBookedPayload(value: unknown): BookedPayload {
     meetUrl,
     invited: record.invited,
     whatsapp: { url: whatsapp.url, code: whatsapp.code },
+    ...(record.already === true ? { already: true as const } : {}),
   };
 }
 

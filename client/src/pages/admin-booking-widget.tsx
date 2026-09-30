@@ -175,12 +175,10 @@ export default function AdminBookingWidget() {
   const typed = widgetRecipient(recipient);
   const recipientNote =
     recipient.trim() === ""
-      ? "Empty: the person types their address in the popup."
-      : typed.kind === "tag"
-        ? "A merge tag: Gmail and Outlook will not fill it in. See below."
-        : typed.kind === "address"
-          ? "One address: use this block for this person only."
-          : "That is not an email address or a merge tag, so it would be left out of the links.";
+      ? "Required: the address you are sending these times to. A click on a time books it for that address."
+      : typed.kind === "address"
+        ? "One address: use this block for this person only."
+        : "That is not an email address. A time can only be booked in one click for an address.";
 
   /* THE BLOCK ON SCREEN MUST BE THE ONE THAT IS COPIED. The address box asks
      the server once typing stops, so for a moment after a keystroke the block
@@ -189,22 +187,19 @@ export default function AdminBookingWidget() {
      waits until the block is the one for what is in the boxes. */
   const fresh = state.kind === "ok" && state.forKey === optionsKey(show, days, perDay, recipient);
   const carried = state.kind === "ok" ? state.data.recipient : null;
-  const reply = state.kind === "ok" ? state.data.replyToBook : null;
-  /* With reply to book, a time is an address to write to: the person's own
-     mail app supplies their address, so Recipient only reaches Other times. */
-  const timesReply = Boolean(reply?.on && show === "times");
+  /* THE ADDRESS IS REQUIRED, and has to be signed: that is what lets one
+     click book the call. Without it there is nothing to copy. */
+  const ready = fresh && carried?.kind === "address" && carried.signed === true;
   const carriedLine =
     !carried
       ? null
-      : timesReply
-        ? "Each time is an email to write to, so the person's address comes from the email they send: nothing to fill in, and no add-on. Recipient only reaches the Other times link."
       : carried.kind === "address"
         ? carried.signed
-          ? `Every link carries ${carried.value}, signed by this site, so the popup opens with it filled in and pressing Book books the call at once: Google sends the invite, no confirmation email.`
-          : `Every link carries ${carried.value}, so the popup opens with it filled in. It is not signed (this deployment has no LEAD_INBOX_KEY), so the person confirms from a link we email them.`
-        : carried.kind === "tag"
-          ? `Every link carries the tag ${carried.value}, not an address. Gmail and Outlook do not fill tags in: sent from them, the link arrives with ${carried.value} in it and the person has to type their address. For one person, put their address in Recipient instead. For many, use Copy HTML in a mail-merge tool, with that tool's own tag for the address — Mailchimp *|EMAIL|*, Brevo {{ contact.EMAIL }}, HubSpot {{ contact.email }}, Lemlist {{email}}, GMass {Email}, YAMM {{Email}}.`
-          : "The links carry no address, so the person types theirs in the popup. Put their address in Recipient to have it filled in.";
+          ? show === "times"
+            ? `Every time books the call for ${carried.value} in one click: the page that opens shows the confirmation, with Change and Cancel, and Google sends the invite.`
+            : `Every day opens the times for ${carried.value}, and pressing Book books the call at once, with Google's invite.`
+          : `The address cannot be signed: this deployment has none of BOOKING_LINK_SECRET, LEAD_INBOX_KEY or ROOM_HASH_PEPPER. Set one in Render to make blocks that book in one click.`
+        : "Put the address you are sending these times to in Recipient. The block can be copied once it has one.";
 
   return (
     <div className="min-h-screen bg-background text-foreground" data-site-chrome data-testid="page-admin-booking-widget">
@@ -233,36 +228,10 @@ export default function AdminBookingWidget() {
           Your free times, as a block to put in an email. These are the times free now, so make the block again
           for a later email.
         </p>
-        {reply?.on ? (
-          <p className={`${READ} mt-[var(--s3)] max-w-[40rem]`} data-testid="text-widget-reply-on">
-            Reply to book is on. Each time is an email to an address such as call-2026-10-01-0930@{reply.domain}:
-            the person presses Send in Gmail or any mail app, and the email that arrives books the call in their
-            name. Google sends them the invite, and we reply with the way to change or cancel it.
-          </p>
-        ) : reply ? (
-          <div className={`${READ} mt-[var(--s3)] max-w-[40rem]`} data-testid="text-widget-reply-off">
-            <p>
-              A time is now a link to the booking popup, where the person types their address and confirms it from
-              a link we email them. {reply.line}
-            </p>
-            <p className="mt-[var(--s2)]">To let a reply book it instead, with nothing to type and no add-on:</p>
-            <ol className="mt-[var(--s1)] list-decimal pl-[1.25em]">
-              <li>
-                In Resend, open Receiving and pick the domain that takes the booking mail: the ready-made
-                …resend.app address Resend gives you (nothing to set up), or a subdomain of yours such as
-                book.top-rated.team, with the MX record Resend shows for it.
-              </li>
-              <li>
-                In Resend, Webhooks: add https://top-rated.team/api/booking/inbound-email with the event
-                email.received.
-              </li>
-              <li>
-                In Render (the top-rated-team service, Environment): set BOOKING_INBOX_DOMAIN to that domain. The
-                RESEND_API_KEY there needs full access; a sending-only key cannot read received mail.
-              </li>
-            </ol>
-          </div>
-        ) : null}
+        <p className={`${READ} mt-[var(--s3)] max-w-[40rem]`}>
+          Put in the address you are sending them to. The person clicks a time and it is booked for them: the site
+          opens on the confirmation, with Change and Cancel, and Google sends the invite with the Meet link.
+        </p>
 
         {state.kind === "refused" ? (
           <div className="mt-[var(--s5)]">
@@ -346,11 +315,21 @@ export default function AdminBookingWidget() {
                   className={FIELD}
                   value={recipient}
                   onChange={(event) => setRecipient(event.target.value)}
-                  placeholder="the person's email address (or a mail-merge tool's tag)"
+                  placeholder="the person's email address"
+                  type="email"
+                  required
+                  aria-required="true"
                   spellCheck={false}
                   data-testid="input-widget-recipient"
                 />
                 <span className="mt-1.5 block text-xs text-muted-foreground">{recipientNote}</span>
+                {/* Every copy of one email carries the same links, and nothing
+                    tells the site who clicked. */}
+                <span className="mt-1 block text-xs text-foreground" data-testid="text-widget-one-person">
+                  Send this block to that person alone: anyone else who gets the same email (in Cc, or forwarded)
+                  could book in their name with one click. For several people, make one block each. Only the first
+                  click books; later clicks are shown that booking and cannot change or cancel it.
+                </span>
               </label>
             </div>
 
@@ -364,7 +343,7 @@ export default function AdminBookingWidget() {
               <button
                 type="button"
                 className={ACTION}
-                disabled={!fresh}
+                disabled={!ready}
                 onClick={async () => {
                   if (state.kind === "ok" && (await copyRich(state.data.html, state.data.text))) flash("Copied. Paste it into the email.");
                 }}
@@ -375,7 +354,7 @@ export default function AdminBookingWidget() {
               <button
                 type="button"
                 className={ACTION_QUIET}
-                disabled={!fresh}
+                disabled={!ready}
                 onClick={async () => {
                   if (state.kind === "ok" && (await copyPlain(state.data.html))) flash("HTML copied. Paste it into your mail tool's HTML block.");
                 }}
@@ -386,7 +365,7 @@ export default function AdminBookingWidget() {
               <button
                 type="button"
                 className={ACTION_QUIET}
-                disabled={!fresh}
+                disabled={!ready}
                 onClick={async () => {
                   if (state.kind === "ok" && (await copyPlain(state.data.text))) flash("Text copied, one link a time.");
                 }}
