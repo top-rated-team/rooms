@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { ACTION, ACTION_QUIET, DISPLAY, META, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
 import { useTheme } from "@/hooks/use-theme";
 import type { AdminBookingWidgetResponse } from "@shared/api";
-import { isMergeTag } from "@shared/booking-link";
+import { widgetRecipient } from "@shared/booking-link";
 import { WIDGET_MAX_DAYS, WIDGET_MAX_TIMES_PER_DAY, type BookingWidgetShow } from "@shared/booking-widget";
 
 /**
@@ -21,7 +21,12 @@ type LoadState =
   /* signedIn: a 403 (signed in, not the operator) rather than a 401. */
   | { kind: "refused"; line: string; youAre: string[]; signedIn: boolean }
   | { kind: "failed"; line: string }
-  | { kind: "ok"; data: AdminBookingWidgetResponse };
+  /* forKey: the options and recipient this block was made for. */
+  | { kind: "ok"; data: AdminBookingWidgetResponse; forKey: string };
+
+function optionsKey(show: BookingWidgetShow, days: number, perDay: number, recipient: string): string {
+  return JSON.stringify([show, days, perDay, recipient.trim()]);
+}
 
 const FIELD =
   "w-full border-b border-border bg-transparent pb-[var(--s1)] pt-0 text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none";
@@ -129,7 +134,7 @@ export default function AdminBookingWidget() {
           setState({ kind: "failed", line: payload.error?.trim() || "The booking times could not be loaded." });
           return;
         }
-        setState({ kind: "ok", data: payload });
+        setState({ kind: "ok", data: payload, forKey: optionsKey(show, days, perDay, asked) });
       } catch (error) {
         if (ac.signal.aborted) return;
         setState({ kind: "failed", line: error instanceof Error ? error.message : "The booking times could not be loaded." });
@@ -144,15 +149,31 @@ export default function AdminBookingWidget() {
     copiedTimer.current = setTimeout(() => setCopied(null), 2500);
   }
 
-  const trimmed = recipient.trim();
+  const typed = widgetRecipient(recipient);
   const recipientNote =
-    trimmed === ""
+    recipient.trim() === ""
       ? "Empty: the person types their address in the popup."
-      : isMergeTag(trimmed)
-        ? "A merge tag: your mail tool puts each person's address in its place when it sends."
-        : trimmed.includes("@")
+      : typed.kind === "tag"
+        ? "A merge tag: only a mail-merge tool fills it in when it sends."
+        : typed.kind === "address"
           ? "One address: use this block for this person only."
-          : "Not an address or a merge tag, so it is left out of the links.";
+          : "That is not an email address or a merge tag, so it would be left out of the links.";
+
+  /* THE BLOCK ON SCREEN MUST BE THE ONE THAT IS COPIED. The address box asks
+     the server once typing stops, so for a moment after a keystroke the block
+     is the previous one — and a Copy pressed in that moment sent an email
+     whose links carried no address, while the page looked finished. Copying
+     waits until the block is the one for what is in the boxes. */
+  const fresh = state.kind === "ok" && state.forKey === optionsKey(show, days, perDay, recipient);
+  const carried = state.kind === "ok" ? state.data.recipient : null;
+  const carriedLine =
+    !carried
+      ? null
+      : carried.kind === "address"
+        ? `Every link carries ${carried.value}, so the popup opens with it filled in.`
+        : carried.kind === "tag"
+          ? `Every link carries ${carried.value}. A mail-merge tool (Mailchimp, Brevo, HubSpot, GMass, YAMM and the like) puts each person's address there when it sends. Sent straight from Gmail or Outlook it stays ${carried.value}, and the person types their address in the popup.`
+          : "The links carry no address, so the person types theirs in the popup. Put their address in Recipient to have it filled in.";
 
   return (
     <div className="min-h-screen bg-background text-foreground" data-site-chrome data-testid="page-admin-booking-widget">
@@ -283,7 +304,7 @@ export default function AdminBookingWidget() {
               <button
                 type="button"
                 className={ACTION}
-                disabled={state.kind !== "ok"}
+                disabled={!fresh}
                 onClick={async () => {
                   if (state.kind === "ok" && (await copyRich(state.data.html, state.data.text))) flash("Copied. Paste it into the email.");
                 }}
@@ -294,7 +315,7 @@ export default function AdminBookingWidget() {
               <button
                 type="button"
                 className={ACTION_QUIET}
-                disabled={state.kind !== "ok"}
+                disabled={!fresh}
                 onClick={async () => {
                   if (state.kind === "ok" && (await copyPlain(state.data.html))) flash("HTML copied. Paste it into your mail tool's HTML block.");
                 }}
@@ -305,7 +326,7 @@ export default function AdminBookingWidget() {
               <button
                 type="button"
                 className={ACTION_QUIET}
-                disabled={state.kind !== "ok"}
+                disabled={!fresh}
                 onClick={async () => {
                   if (state.kind === "ok" && (await copyPlain(state.data.text))) flash("Text copied, one link a time.");
                 }}
@@ -314,9 +335,14 @@ export default function AdminBookingWidget() {
                 Copy as text
               </button>
             </div>
-            <p className={`${READ_MUTED} mt-[var(--s2)] min-h-[1.5em]`} aria-live="polite">
-              {copied}
+            <p className={`${READ_MUTED} mt-[var(--s2)] min-h-[1.5em]`} aria-live="polite" data-testid="text-widget-copy-status">
+              {state.kind === "ok" && !fresh ? "Updating the block for what you typed." : copied}
             </p>
+            {carriedLine ? (
+              <p className={`${READ} mt-[var(--s2)] max-w-[40rem]`} data-testid="text-widget-carries">
+                {carriedLine}
+              </p>
+            ) : null}
 
             <p className={`${META} mt-[var(--s4)]`}>What the recipient sees</p>
             {state.kind === "loading" ? (

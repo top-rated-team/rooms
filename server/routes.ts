@@ -120,7 +120,7 @@ import { resolveDistPath } from "./vite";
 import fs from "node:fs";
 import path from "node:path";
 import { isAdGrantHost } from "@shared/adgrant-site";
-import { bookLinkTarget, formatBookLinkHash } from "@shared/booking-link";
+import { bookLinkTarget, formatBookLinkHash, widgetRecipient } from "@shared/booking-link";
 import { buildBookingWidget, type BookingWidgetShow } from "@shared/booking-widget";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
 import { openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage, bindRoomAddressForToken } from "./room-access";
@@ -1806,6 +1806,7 @@ export function registerRoutes(app: Express): void {
       res.json({
         html: widget.html,
         text: widget.text,
+        recipient: widgetRecipient(typeof query.recipient === "string" ? query.recipient : ""),
         timezone: slots.body.timezone,
         days: widget.days,
         emailConfirmation: emailConfirmation(),

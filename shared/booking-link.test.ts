@@ -13,7 +13,15 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
-import { bookLinkTarget, bookLinkUrl, bookingLinkEmail, formatBookLinkHash, isMergeTag, parseBookLinkHash } from "./booking-link";
+import {
+  bookLinkTarget,
+  bookLinkUrl,
+  bookingLinkEmail,
+  formatBookLinkHash,
+  isMergeTag,
+  parseBookLinkHash,
+  widgetRecipient,
+} from "./booking-link";
 
 describe("bookLinkTarget", () => {
   it("opens the popup on the front page when the link carries nothing", () => {
@@ -83,6 +91,8 @@ describe("bookingLinkEmail", () => {
     assert.equal(bookingLinkEmail("mailto:someone@example.com"), "someone@example.com");
     assert.equal(bookingLinkEmail("<someone@example.com>"), "someone@example.com");
     assert.equal(bookingLinkEmail("{someone@example.com}"), "someone@example.com");
+    assert.equal(bookingLinkEmail("Dan Burykin <dan+ads@example.com>"), "dan+ads@example.com", "as a To field copies it");
+    assert.equal(bookingLinkEmail('"Burykin, Dan" <dan@example.com>'), "dan@example.com");
   });
 
   it("answers null for anything the popup would reject", () => {
@@ -152,6 +162,15 @@ describe("isMergeTag", () => {
   });
 });
 
+describe("widgetRecipient", () => {
+  it("says what the links will carry: an address, a tag for the mail tool, or nothing", () => {
+    assert.deepEqual(widgetRecipient(" Dan <dan@example.com> "), { kind: "address", value: "dan@example.com" });
+    assert.deepEqual(widgetRecipient("{{email}}"), { kind: "tag", value: "{{email}}" });
+    assert.deepEqual(widgetRecipient(""), { kind: "none" });
+    assert.deepEqual(widgetRecipient("dan@"), { kind: "none" });
+  });
+});
+
 describe("bookLinkUrl", () => {
   const BASE = "https://top-rated.team/";
 
@@ -166,6 +185,13 @@ describe("bookLinkUrl", () => {
     assert.equal(
       bookLinkUrl(BASE, { date: "2026-10-02", confirmByEmail: true, recipient: "{{email}}" }),
       "https://top-rated.team/book?date=2026-10-02&confirm=email&email={{email}}",
+    );
+  });
+
+  it("takes the address out of a To field's \"Name <address>\"", () => {
+    assert.equal(
+      bookLinkUrl(BASE, { recipient: "Ada Lovelace <ada@example.com>" }),
+      "https://top-rated.team/book?email=ada%40example.com",
     );
   });
 

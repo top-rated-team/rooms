@@ -467,9 +467,17 @@ export type EmailHoldStatusResponse =
  * GET /api/admin/booking-widget — the booking times as a block for an email,
  * for the person who runs this deployment.
  */
+/** What the links of an email block carry for the recipient's address. */
+export type BookingWidgetRecipient =
+  | { kind: "address"; value: string }
+  | { kind: "tag"; value: string }
+  | { kind: "none" };
+
 export interface AdminBookingWidgetResponse {
   html: string;
   text: string;
+  /** What every link in `html` carries, so the page can say it rather than hope. */
+  recipient: BookingWidgetRecipient;
   timezone: string;
   days: BookingDay[];
   /** Whether a time picked from the block is confirmed by email, and if not, why. */

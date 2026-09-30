@@ -21,6 +21,8 @@
  * has read it — so an address does not sit in history or in a copied URL.
  */
 
+import type { BookingWidgetRecipient } from "./api";
+
 export const BOOK_LINK_HASH = "book";
 
 /** Deliberately permissive: a rejected typo costs a booking, not a lead. */
@@ -48,14 +50,16 @@ const EMPTY: BookLink = { email: null, date: null, time: null, confirmByEmail: f
 
 /**
  * The address, or null. A merge field that was never filled in ({{email}}),
- * a mailto: that came along with a copied address, and the brackets someone
- * pasted with it are all things a link in the wild carries; none of them is
- * worth losing the address over, and nothing that fails the popup's own test
- * is ever put in the field.
+ * a mailto: that came along with a copied address, the brackets someone
+ * pasted with it, and the "Dan Burykin <dan@…>" a To field copies as are all
+ * things a link or a form in the wild carries; none of them is worth losing
+ * the address over, and nothing that fails the popup's own test is ever put
+ * in the field.
  */
 export function bookingLinkEmail(value: string | null | undefined): string | null {
   if (!value) return null;
-  const cleaned = value
+  const angled = /<([^<>\s]+@[^<>\s]+)>\s*$/.exec(value.trim());
+  const cleaned = (angled ? angled[1]! : value)
     .trim()
     .replace(/^mailto:/i, "")
     .replace(/^[\s{<"']+|[\s}>"']+$/g, "");
@@ -191,6 +195,19 @@ export function parseBookLinkHash(hash: string): BookLink | null {
 }
 
 /**
+ * What a recipient typed on the widget page becomes in the links: an address,
+ * a merge tag left for the mail tool, or nothing. The page, the server and the
+ * links all read it through this, so what the page says the links carry is
+ * what they carry.
+ */
+export function widgetRecipient(value: string | null | undefined): BookingWidgetRecipient {
+  const trimmed = value?.trim() ?? "";
+  if (trimmed && isMergeTag(trimmed)) return { kind: "tag", value: trimmed };
+  const address = bookingLinkEmail(trimmed);
+  return address ? { kind: "address", value: address } : { kind: "none" };
+}
+
+/**
  * A /book link for the booking times inside an email. `recipient` is an
  * address, a mail tool's merge tag, or empty for a link that asks for the
  * address in the popup.
@@ -209,8 +226,8 @@ export function bookLinkUrl(
   const time = date ? wallClock(input.time ?? null) : null;
   if (time) params.push(`time=${time}`);
   if (input.confirmByEmail) params.push("confirm=email");
-  const recipient = input.recipient?.trim() ?? "";
-  if (recipient && isMergeTag(recipient)) params.push(`email=${recipient}`);
-  else if (bookingLinkEmail(recipient)) params.push(`email=${encodeURIComponent(bookingLinkEmail(recipient)!)}`);
+  const recipient = widgetRecipient(input.recipient);
+  if (recipient.kind === "tag") params.push(`email=${recipient.value}`);
+  else if (recipient.kind === "address") params.push(`email=${encodeURIComponent(recipient.value)}`);
   return `${base.replace(/\/+$/, "")}/book${params.length > 0 ? `?${params.join("&")}` : ""}`;
 }
