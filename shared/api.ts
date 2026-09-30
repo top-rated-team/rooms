@@ -493,7 +493,13 @@ export interface AdminBookingWidgetResponse {
   recipient: BookingWidgetRecipient;
   /** The calendar the times were read from (GOOGLE_CALENDAR_ID), and when. */
   calendar: { id: string; readAt: string };
+  /** The calendar's zone, which the times are read in. */
   timezone: string;
+  /** The zone the block shows its times in: the recipient's where one was given. */
+  zone: string;
+  /** Working hours on weekdays, on the calendar's clock: "10:00"–"20:00". */
+  workHours: { from: string; to: string };
+  /** What the block offers, on `zone`'s clock. */
   days: BookingDay[];
   /** Whether a time picked from the block is confirmed by email, and if not, why. */
   emailConfirmation: { on: true } | { on: false; line: string };

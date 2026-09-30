@@ -158,6 +158,27 @@ describe("GET /api/admin/booking-widget", () => {
     assert.deepEqual(body.recipient, { kind: "tag", value: "{{email}}" }, "the page is told what the links carry");
   });
 
+  it("shows the times on the recipient's clock when a zone is given, and says the working hours", async () => {
+    const token = await operatorToken();
+    const { status, body } = await get(
+      `/api/admin/booking-widget?recipient=${encodeURIComponent("ada@example.com")}&tz=${encodeURIComponent("America/New_York")}&days=1&perDay=16`,
+      token,
+    );
+    assert.equal(status, 200, JSON.stringify(body));
+    assert.equal(body.timezone, "Europe/Bratislava");
+    assert.equal(body.zone, "America/New_York");
+    assert.deepEqual(body.workHours, { from: "10:00", to: "20:00" });
+    const html = String(body.html);
+    assert.match(html, /Eastern Time \(New York, GMT-[45]\)/);
+    /* 10:00 to 19:30 in Bratislava is 04:00 to 13:30 in New York, six hours behind. */
+    const days = body.days as { date: string; slots: string[] }[];
+    assert.ok(days[0]!.slots.every((time) => time >= "03:00" && time <= "14:30"), JSON.stringify(days[0]));
+    assert.match(html, /\/api\/booking\/slot\/\d{4}-\d{2}-\d{2}\/\d{4}\.png\?label=\d{4}/);
+
+    const wrong = await get(`/api/admin/booking-widget?recipient=ada%40example.com&tz=Mars%2FBase`, token);
+    assert.equal(wrong.body.zone, "Europe/Bratislava", "a zone that is not one is the calendar's");
+  });
+
   it("puts a To field's address into every link, and says so", async () => {
     const token = await operatorToken();
     const { body } = await get(`/api/admin/booking-widget?recipient=${encodeURIComponent("Ada <ada+ads@example.com>")}`, token);

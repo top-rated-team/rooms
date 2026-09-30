@@ -30,6 +30,7 @@ import { BOOKING_LINKEDIN_SESSION_QUERY, BOOKING_VISITOR_CALENDAR_QUERY } from "
 import type { VisitorCalendarView } from "@shared/api";
 import { parseBookLinkHash, type BookLink } from "@shared/booking-link";
 import { DOORS } from "@shared/doors";
+import { isTimeZone, wallClockIn, zoneCity, zoneOffsetMinutes } from "@shared/time-zones";
 
 export const SLOT_DAYS = 14;
 export const CONFIRMED_POLL_MS = 2_500;
@@ -553,7 +554,7 @@ export function formatSlotDay(date: string): string {
   return weekdayHeading(date);
 }
 
-export function formatBookedWhen(startsAt: string, timeZone: string): string {
+function whenIn(startsAt: string, timeZone: string): string {
   return new Intl.DateTimeFormat("en-GB", {
     weekday: "long",
     day: "numeric",
@@ -564,6 +565,34 @@ export function formatBookedWhen(startsAt: string, timeZone: string): string {
     timeZone,
     timeZoneName: "short",
   }).format(new Date(startsAt));
+}
+
+/** The zone this browser keeps its clock in, or null where it does not say. */
+export function visitorTimeZone(): string | null {
+  try {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return zone && isTimeZone(zone) ? zone : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * When the call is, on the visitor's own clock: the one an email block made
+ * for their zone showed them. Where that is not the calendar's clock, the
+ * calendar's time follows, because the picker lists times on it:
+ * "Thursday 1 October at 10:30 GMT-4 (16:30 CEST in Bratislava)".
+ */
+export function formatBookedWhen(startsAt: string, calendarZone: string, viewerZone: string | null = visitorTimeZone()): string {
+  const ms = Date.parse(startsAt);
+  if (!viewerZone || !Number.isFinite(ms) || !isTimeZone(calendarZone)) return whenIn(startsAt, calendarZone);
+  const here = whenIn(startsAt, viewerZone);
+  if (zoneOffsetMinutes(viewerZone, ms) === zoneOffsetMinutes(calendarZone, ms)) return here;
+  const short =
+    new Intl.DateTimeFormat("en-GB", { timeZone: calendarZone, timeZoneName: "short" })
+      .formatToParts(new Date(ms))
+      .find((part) => part.type === "timeZoneName")?.value ?? calendarZone;
+  return `${here} (${wallClockIn(calendarZone, ms).time} ${short} in ${zoneCity(calendarZone)})`;
 }
 
 async function readJson(res: Response): Promise<unknown> {

@@ -23,6 +23,7 @@ import {
   forgetBookingLinkPick,
   confirmedUrl,
   errorFromBody,
+  formatBookedWhen,
   formatSlotDay,
   openBooking,
   parseBookedPayload,
@@ -415,5 +416,21 @@ describe("bookingReady", () => {
   it("is not exported", async () => {
     const mod = (await import("./booking")) as Record<string, unknown>;
     assert.equal("bookingReady" in mod, false);
+  });
+});
+
+describe("formatBookedWhen", () => {
+  const AT = "2026-10-01T14:30:00.000Z";
+
+  it("says the time on the visitor's clock, and the calendar's beside it where they differ", () => {
+    assert.equal(
+      formatBookedWhen(AT, "Europe/Bratislava", "America/New_York"),
+      "Thursday 1 October at 10:30 GMT-4 (16:30 CEST in Bratislava)",
+    );
+  });
+
+  it("says it once where the two clocks agree", () => {
+    assert.equal(formatBookedWhen(AT, "Europe/Bratislava", "Europe/Vienna"), "Thursday 1 October at 16:30 CEST");
+    assert.equal(formatBookedWhen(AT, "Europe/Bratislava", null), "Thursday 1 October at 16:30 CEST");
   });
 });
