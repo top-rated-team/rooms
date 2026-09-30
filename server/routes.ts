@@ -104,6 +104,7 @@ import { postBooking, changeBooking, cancelBooking, getExistingBooking } from ".
 import { confirmEmailHold, emailHoldStatus, getBookingConfirmed, installBookingInbound } from "./booking/confirm";
 import { emailConfirmation } from "./booking/confirm-email";
 import { handleInboundEmail, replyToBook } from "./booking/reply-to-book";
+import { isCalendarDate as isSlotDate, liveSlotState, slotImage, slotImageTime } from "./booking/slot-image";
 import { isBookingReturnCode, normalizeBookingCode } from "./booking/code";
 import {
   bookingLinkedInAvailability,
@@ -880,6 +881,7 @@ export function registerRoutes(app: Express): void {
     message: "Too many identification attempts from this address. Try again later.",
   });
   const identityWebhookLimit = rateLimit({ windowMs: 60_000, max: 120, message: "Too many requests. Wait a moment." });
+  const slotImageLimit = rateLimit({ windowMs: 60_000, max: 600, message: "Too many requests. Wait a moment." });
   const bookingLimit = rateLimit({ windowMs: 60_000, max: 30, message: "Too many booking requests. Wait a moment." });
   const roomAccessSendLimit = rateLimit({
     windowMs: 60 * 60_000,
@@ -1811,6 +1813,7 @@ export function registerRoutes(app: Express): void {
         recipient: typeof query.recipient === "string" ? query.recipient : "",
         hostName: (contract.displayName ?? contract.legalName).trim(),
         ...(reply.on ? { replyTo: { domain: reply.domain } } : {}),
+        liveImages: true,
       });
       res.json({
         html: widget.html,
@@ -2252,6 +2255,38 @@ export function registerRoutes(app: Express): void {
         res.clearCookie(VISITOR_CALENDAR_COOKIE, { path: "/", sameSite: "lax" });
       }
       res.status(201).json(result.body);
+    }),
+  );
+
+  /*
+   * One time button of the email booking block, free or crossed out as the
+   * calendar stands now (server/booking/slot-image.ts). Never cached: the
+   * point is that a mail client asking again gets today's answer. The limit
+   * is generous because mail proxies — Gmail's above all — fetch for many
+   * readers from few addresses.
+   */
+  app.get(
+    "/api/booking/slot/:date/:file",
+    slotImageLimit,
+    route(async (req, res) => {
+      const date = String(req.params.date ?? "");
+      const time = slotImageTime(String(req.params.file ?? ""));
+      if (!isSlotDate(date) || !time) {
+        res.status(404).json({ error: "No such time." });
+        return;
+      }
+      const state = await liveSlotState(date, time);
+      const image = slotImage(time, state);
+      if (!image) {
+        res.status(404).json({ error: "No such time." });
+        return;
+      }
+      res.setHeader("Content-Type", "image/png");
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+      res.status(200).end(image);
     }),
   );
 

@@ -115,6 +115,29 @@ any booking with an address is, and the widget page says so in red.
 Holds live in memory, so a deploy inside those 30 minutes loses the hold, and
 the link then says it is not one we know.
 
+## Times that stay current in a sent email
+
+A block is frozen when it is sent and read later, when some of its times
+have gone. So each time in it is a link around an image,
+`/api/booking/slot/<date>/<HHMM>.png` (`slot-image.ts`), that answers with a
+free or a crossed-out picture as the calendar stands when it is asked —
+`no-store`, so a mail client that asks again gets the answer of the moment.
+The 96 pictures (every half-hour, free and taken) are drawn once by
+`scripts/build-slot-images.mjs` into `client/public/booking-slots/`; the
+server has no image library and Gmail shows no SVG. The alt text is the
+time, for readers who see no images.
+
+Gmail fetches images through its proxy when a message is opened, which is
+what countdown-timer emails depend on. Apple Mail may fetch them once, on
+arrival; Outlook on the desktop shows none until the reader allows them.
+When the calendar cannot be asked, the answer is "free": a time wrongly
+crossed out loses a booking, one wrongly shown free is caught at the click.
+
+The click is checked again whatever the picture said: the popup opens on the
+picked time only if it is still free, and otherwise says so and shows what is
+free that day; the emailed confirmation and reply to book ask the calendar
+before writing, and a taken time is answered with the times still free.
+
 ## Reply to book
 
 Gmail without an add-on changes nothing in a pasted block, so a link in it
