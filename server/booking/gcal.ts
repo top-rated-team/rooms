@@ -16,6 +16,7 @@
 
 import { createSign } from "node:crypto";
 import { pathToFileURL } from "node:url";
+import { isTimeZone } from "@shared/time-zones";
 
 export const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 export const GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3";
@@ -72,7 +73,18 @@ export const IMPERSONATE_CALENDAR_OWNER = false;
 const TOKEN_LIFETIME_S = 3600;
 const TOKEN_REFRESH_S = 60;
 const REQUEST_MS = 15_000;
-const DEFAULT_TIMEZONE = "Europe/Bratislava";
+/* The owner keeps Prague time. It is the one clock the site books on and
+   names; the calendar's own setting (it said Bratislava) no longer decides. */
+const DEFAULT_TIMEZONE = "Europe/Prague";
+
+/**
+ * The zone working hours are in, and the one every booked time is named in:
+ * BOOKING_TIME_ZONE when it is a real zone, else Prague.
+ */
+export function bookingTimeZone(): string {
+  const zone = process.env.BOOKING_TIME_ZONE?.trim();
+  return zone && isTimeZone(zone) ? zone : DEFAULT_TIMEZONE;
+}
 
 export interface ServiceAccount {
   clientEmail: string;
@@ -342,8 +354,8 @@ export async function getOurCalendar(fetchImpl: typeof fetch = fetch): Promise<O
 
   const result = await gcalFetch({ method: "GET", url: calendarGetUrl() }, fetchImpl);
   if (!result.ok) return { ok: false, line: result.error };
-  const record = asRecord(result.body);
-  const timezone = asString(record?.timeZone) || DEFAULT_TIMEZONE;
+  /* Read to prove the calendar answers; its own zone is not the site's. */
+  const timezone = bookingTimeZone();
   calendarCache = { id, timezone };
   return { ok: true, calendar: calendarCache };
 }

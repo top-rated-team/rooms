@@ -23,6 +23,7 @@ import { and, eq } from "drizzle-orm";
 import { customAlphabet } from "nanoid";
 import {
   ROOM_ACCESS_SENT_LINE,
+  ROOM_ACCESS_SENT_SIGNED_IN_LINE,
   ROOM_ACCESS_TTL_MS,
   ROOM_ACCESS_TTL_PHRASE,
   ROOM_ACCESS_UNAVAILABLE_LINE,
@@ -31,6 +32,8 @@ import {
 } from "@shared/api";
 import { roomAccessLinks, roomAddressBindings } from "@shared/schema-rooms";
 import { getDb, hasDb } from "./db";
+import { findAccountByIdentity } from "./identity-store";
+import { emailProviderId } from "./room-account";
 import { storage } from "./storage";
 
 export {
@@ -279,7 +282,7 @@ function roomAccessReady(): SendRoomAccessResult | null {
  * The Resend call. Same host, key and From address notify.ts already uses for
  * lead mail. A deployment with no key must not reach this.
  */
-async function sendViaResend(to: string, text: string): Promise<boolean> {
+async function sendViaResend(to: string, text: string, subject = "A link to your room"): Promise<boolean> {
   const key = process.env.RESEND_API_KEY?.trim();
   /* mailFrom and not the bare variable: a client handed only an address shows
      the local part as the sender, so this used to arrive from "contact". */
@@ -294,12 +297,18 @@ async function sendViaResend(to: string, text: string): Promise<boolean> {
       body: JSON.stringify({
         from,
         to: [to],
-        subject: "A link to your room",
+        subject,
         text,
       }),
       signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),
     });
     lastSendMs = Math.max(TIMING_FLOOR_MS, Date.now() - started);
+    /* A refusal from Resend (a sender domain not verified, say) used to be a
+       bare false, and the only trace was a letter that never came. */
+    if (!response.ok) {
+      const detail = (await response.text().catch(() => "")).slice(0, 300);
+      console.error(`[room-access] Resend refused the link: ${response.status} ${detail}`);
+    }
     return response.ok;
   } catch (error) {
     lastSendMs = Math.max(TIMING_FLOOR_MS, Date.now() - started);
@@ -310,6 +319,31 @@ async function sendViaResend(to: string, text: string): Promise<boolean> {
 
 function accessUrl(publicBaseUrl: string, token: string): string {
   return `${publicBaseUrl.replace(/\/+$/, "")}/api/room-access/${token}`;
+}
+
+/*
+ * A LINK WITH NO ROOM BEHIND IT. An address can be a way into an account
+ * without being bound to any room: the account's own address, or one a
+ * signed-in person is adding to theirs. That link used to be refused in
+ * silence — the reply said "if that email has a room" and nothing came, to
+ * the operator's own inbox too. It is the same single-use, one-hour row in
+ * the same table, with no room named, and opening it signs in or attaches
+ * the address the way the room link does, then lands on the front page.
+ */
+const SIGN_IN_ONLY: BoundRoomAddress = { workspaceId: "", workspaceToken: "" };
+
+export function isSignInOnlyLink(workspaceToken: string): boolean {
+  return workspaceToken === "";
+}
+
+function signInBody(publicBaseUrl: string, token: string): string {
+  return [
+    `This link signs you in to ${publicBaseUrl.replace(/^https?:\/\//, "")} with this address, once, and only for ${ROOM_ACCESS_TTL_PHRASE}:`,
+    "",
+    accessUrl(publicBaseUrl, token),
+    "",
+    `Opened in a browser that is already signed in, it adds this address to that account. After it has been used, or after ${ROOM_ACCESS_TTL_PHRASE}, it will not work.`,
+  ].join("\n");
 }
 
 function emailBody(publicBaseUrl: string, tokens: string[]): string {
@@ -502,6 +536,12 @@ async function persistLink(row: IssuedLink): Promise<boolean> {
  */
 export async function sendRoomAccessLink(input: {
   email: unknown;
+  /**
+   * The person asking is signed in. Their own state, so saying what happens
+   * tells nobody anything: the link comes, whether or not a room has the
+   * address, and opening it adds the address to their account.
+   */
+  signedIn?: boolean;
   /** Tests only. Production mails PUBLIC_BASE_URL and refuses when it is unset. */
   publicBaseUrl?: string;
   now?: number;
@@ -523,20 +563,26 @@ export async function sendRoomAccessLink(input: {
   const startedAt = Date.now();
   const sleepImpl = input.sleep ?? sleep;
   const emailHash = hashEmail(email);
-  const body: SendRoomAccessResponse = { line: ROOM_ACCESS_SENT_LINE };
+  const body: SendRoomAccessResponse = { line: input.signedIn ? ROOM_ACCESS_SENT_SIGNED_IN_LINE : ROOM_ACCESS_SENT_LINE };
 
   if (coolingDown(sentAtByEmail, emailHash, now)) {
     await equalizeTiming(startedAt, sleepImpl);
     return { ok: true, body };
   }
 
-  const rooms = (await roomsForEmail(email)).filter((room) => !coolingDown(sentAtByRoom, room.workspaceId, now));
-  if (rooms.length === 0) {
+  const bound = await roomsForEmail(email);
+  const rooms = bound.filter((room) => !coolingDown(sentAtByRoom, room.workspaceId, now));
+  /* No room has it: a sign-in link, for an address that is already a way into
+     an account, or one the signed-in person asking is adding to theirs. */
+  const signInOnly =
+    bound.length === 0 &&
+    (input.signedIn === true || (await findAccountByIdentity("email", emailProviderId(emailHash))) !== undefined);
+  if (rooms.length === 0 && !signInOnly) {
     await equalizeTiming(startedAt, sleepImpl);
     return { ok: true, body };
   }
 
-  const issued = rooms.map((room) => issueLink(room, emailHash, now));
+  const issued = signInOnly ? [issueLink(SIGN_IN_ONLY, emailHash, now)] : rooms.map((room) => issueLink(room, emailHash, now));
   for (const item of issued) {
     const kept = await persistLink(item.row);
     if (!kept) {
@@ -548,17 +594,23 @@ export async function sendRoomAccessLink(input: {
 
   const sent = await sendViaResend(
     email,
-    emailBody(
-      publicBaseUrl,
-      issued.map((item) => item.token),
-    ),
+    signInOnly
+      ? signInBody(publicBaseUrl, issued[0]!.token)
+      : emailBody(
+          publicBaseUrl,
+          issued.map((item) => item.token),
+        ),
+    signInOnly ? "Your sign-in link" : undefined,
   );
   if (!sent) {
     await equalizeTiming(startedAt, sleepImpl);
     return { ok: false, status: 503, error: ROOM_ACCESS_SEND_FAILED_LINE };
   }
 
-  for (const item of issued) markSent(emailHash, item.row.workspaceId, now);
+  /* A sign-in link names no room, so it cools down the address only — the
+     empty room id is shared by every such link. */
+  if (signInOnly) sentAtByEmail.set(emailHash, now);
+  else for (const item of issued) markSent(emailHash, item.row.workspaceId, now);
   await equalizeTiming(startedAt, sleepImpl);
   return { ok: true, body };
 }

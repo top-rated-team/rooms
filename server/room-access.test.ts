@@ -17,9 +17,12 @@ import assert from "node:assert/strict";
 
 import {
   ROOM_ACCESS_SENT_LINE,
+  ROOM_ACCESS_SENT_SIGNED_IN_LINE,
   ROOM_ACCESS_TTL_MS,
   ROOM_ACCESS_TTL_PHRASE,
 } from "@shared/api";
+import { resetIdentityStoreForTests } from "./identity-store";
+import { signInOrAttach } from "./room-account";
 import { storage } from "./storage";
 import {
   ROOM_ACCESS_INVALID_EMAIL_LINE,
@@ -33,6 +36,8 @@ import {
   bindRoomAddress,
   bindRoomAddressForToken,
   bindingsForTests,
+  emailHashFor,
+  isSignInOnlyLink,
   issuedLinksForTests,
   mailConfigured,
   openRoomAccess,
@@ -59,6 +64,7 @@ async function noopSleep(ms: number): Promise<void> {
 
 beforeEach(() => {
   resetRoomAccessForTests();
+  resetIdentityStoreForTests();
   useMemoryRoomAccessForTests();
   posted = [];
   sleeps = [];
@@ -303,5 +309,53 @@ describe("openRoomAccess", () => {
     await mailedToken();
     const asAccess = await openRoomAccess(ROOM_TOKEN);
     assert.deepEqual(asAccess, { ok: false, line: ROOM_ACCESS_SPENT_LINE });
+  });
+});
+
+describe("a link with no room behind it", () => {
+  function mailedToken(): string {
+    const letter = JSON.parse(posted.at(-1)!.body) as { subject: string; text: string };
+    const match = /\/api\/room-access\/([A-Za-z0-9_-]+)/.exec(letter.text);
+    assert.ok(match, letter.text);
+    return match[1]!;
+  }
+
+  it("is mailed to a signed-in person adding an address no room has, and signs in once", async () => {
+    const result = await sendRoomAccessLink({ email: "dan@example.test", signedIn: true, sleep: noopSleep });
+    assert.deepEqual(result, { ok: true, body: { line: ROOM_ACCESS_SENT_SIGNED_IN_LINE } });
+    assert.equal(posted.length, 1);
+    const letter = JSON.parse(posted[0]!.body) as { subject: string; text: string; to: string[] };
+    assert.deepEqual(letter.to, ["dan@example.test"]);
+    assert.equal(letter.subject, "Your sign-in link");
+    assert.match(letter.text, /signs you in to example\.test with this address, once, and only for one hour/);
+
+    const opened = await openRoomAccess(mailedToken());
+    assert.equal(opened.ok, true);
+    if (!opened.ok) return;
+    assert.equal(isSignInOnlyLink(opened.workspaceToken), true);
+    assert.equal((await openRoomAccess(mailedToken())).ok, false, "once");
+  });
+
+  it("is mailed to an address that already signs in to an account, to anyone who asks", async () => {
+    await signInOrAttach({ identity: { provider: "email", providerId: `email:${emailHashFor("dan@example.test")}` } });
+    const result = await sendRoomAccessLink({ email: "dan@example.test", sleep: noopSleep });
+    assert.deepEqual(result, { ok: true, body: { line: ROOM_ACCESS_SENT_LINE } });
+    assert.equal(posted.length, 1);
+  });
+
+  it("is not mailed to an address nobody knows, and the answer is the same", async () => {
+    const result = await sendRoomAccessLink({ email: "stranger@example.test", sleep: noopSleep });
+    assert.deepEqual(result, { ok: true, body: { line: ROOM_ACCESS_SENT_LINE } });
+    assert.equal(posted.length, 0);
+  });
+
+  it("cools down the address, not every other sign-in link", async () => {
+    await sendRoomAccessLink({ email: "dan@example.test", signedIn: true, sleep: noopSleep });
+    await sendRoomAccessLink({ email: "dan@example.test", signedIn: true, sleep: noopSleep });
+    await sendRoomAccessLink({ email: "bea@example.test", signedIn: true, sleep: noopSleep });
+    assert.deepEqual(
+      posted.map((row) => (JSON.parse(row.body) as { to: string[] }).to[0]),
+      ["dan@example.test", "bea@example.test"],
+    );
   });
 });

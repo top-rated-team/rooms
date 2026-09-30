@@ -89,6 +89,7 @@ import {
   WHATSAPP_INBOUND_PATH,
 } from "./whatsapp";
 import { WORK_END_HOUR, WORK_START_HOUR, getBookingSlots, invalidateSlotsCache, parseSlotsQuery } from "./booking/slots";
+import { lookUpZone } from "./booking/zone-lookup";
 import { calendarId as bookingCalendarId } from "./booking/gcal";
 import {
   VISITOR_CALENDAR_COOKIE,
@@ -127,7 +128,7 @@ import { isAdGrantHost } from "@shared/adgrant-site";
 import { bookLinkTarget, formatBookLinkHash, widgetRecipient } from "@shared/booking-link";
 import { buildBookingWidget, type BookingWidgetShow } from "@shared/booking-widget";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
-import { openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage, bindRoomAddressForToken } from "./room-access";
+import { isSignInOnlyLink, openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage, bindRoomAddressForToken } from "./room-access";
 import {
   completeRoomLoginLinkedIn,
   getRoomLoginWhatsAppConfirmed,
@@ -149,11 +150,12 @@ import {
   claimWhatsAppSession,
   endSession,
   readSessionAccount,
+  roomSessionOutcomePath,
   sessionCookieOptions,
   whoAmI,
 } from "./room-account";
 import { setAccountEmail } from "./identity-store";
-import { listAdminPeople, requireDeploymentOperator } from "./admin/people";
+import { accountIsOperator, listAdminPeople, requireDeploymentOperator } from "./admin/people";
 
 /**
  * One line of a room's history as an agent sees it.
@@ -846,8 +848,19 @@ export function registerRoutes(app: Express): void {
       return;
     }
     const at = req.originalUrl.indexOf("?");
+    const query = at < 0 ? "" : req.originalUrl.slice(at + 1);
     res.setHeader("Cache-Control", "no-store");
-    res.redirect(302, bookLinkTarget(at < 0 ? "" : req.originalUrl.slice(at + 1)));
+    /* A BARE /book IS THE PAGE ITSELF, not a hop: it carries nobody's
+       address, and a redirect loses the fragment it was opened with — the
+       owner's signature link /book# is marked by exactly that empty "#"
+       (browsers drop an empty one across a 302). The page opens the popup,
+       or for the owner the widget page (client/src/lib/operator-shortcut.ts). */
+    if (query.replace(/&/g, "") === "") {
+      res.setHeader("X-Robots-Tag", "noindex");
+      next();
+      return;
+    }
+    res.redirect(302, bookLinkTarget(query));
   });
   /*
    * The link in the letter that confirms a time picked inside an email
@@ -1779,6 +1792,42 @@ export function registerRoutes(app: Express): void {
    * the page that makes the block is a tool for sending mail as us, so it sits
    * behind the same gate as the people page.
    */
+  /*
+   * Whether this browser is signed in as the operator, and nothing else. The
+   * owner's signature links (top-rated.team/#, /book#) ask it to open the
+   * widget page for him and the site for everyone else. Unlike the gate it
+   * logs no refusal: every visitor who clicks such a link asks.
+   */
+  app.get(
+    "/api/admin/operator",
+    roomAccessOpenLimit,
+    route(async (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+      const account = await readSessionAccount(req.headers.cookie);
+      res.json({ operator: Boolean(account && (await accountIsOperator(account, req.hostname || ""))) });
+    }),
+  );
+
+  /* The recipient's company or town, as the zone to show them times in
+     (server/booking/zone-lookup.ts). Operator only: it asks outside services. */
+  app.get(
+    "/api/admin/zone-lookup",
+    roomAccessOpenLimit,
+    route(async (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+      const gate = await requireDeploymentOperator(req);
+      if (!gate.ok) {
+        res.status(gate.status).json({ error: gate.error });
+        return;
+      }
+      const q = typeof req.query.q === "string" ? req.query.q : "";
+      const hit = await lookUpZone(q);
+      res.json(hit ? { found: true, ...hit } : { found: false });
+    }),
+  );
+
   app.get(
     "/api/admin/booking-widget",
     roomAccessOpenLimit,
@@ -1877,6 +1926,7 @@ export function registerRoutes(app: Express): void {
     route(async (req, res) => {
       const result = await sendRoomAccessLink({
         email: req.body?.email,
+        signedIn: Boolean(await readSessionAccount(req.headers.cookie)),
       });
       if (!result.ok) {
         res.status(result.status).json({ error: result.error });
@@ -1911,6 +1961,11 @@ export function registerRoutes(app: Express): void {
         cookieHeader: req.headers.cookie,
       });
       if (signed.ok) res.cookie(ROOM_SESSION_COOKIE, signed.token, sessionCookieOptions());
+      /* A sign-in link names no room: back to the front page, which says how it went. */
+      if (isSignInOnlyLink(opened.workspaceToken)) {
+        res.redirect(302, roomSessionOutcomePath(!signed.ok ? "refused" : signed.kind === "attached" ? "attached" : "signed-in"));
+        return;
+      }
       res.redirect(302, `/w/${opened.workspaceToken}`);
     }),
   );

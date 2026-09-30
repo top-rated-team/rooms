@@ -174,6 +174,9 @@ const INNER =
 const FORM_COPY = "type-note [text-transform:none] text-foreground";
 
 const EXPLAIN_LINE = `A link sent to your email opens that room once, and only for ${ROOM_ACCESS_TTL_PHRASE}.`;
+/* Signed in, the email row is for adding an address to this account: the link
+   comes whether or not a room has it. */
+const EXPLAIN_SIGNED_IN_LINE = `A link sent to your email adds it to this account, so it signs you in too. It works once, and only for ${ROOM_ACCESS_TTL_PHRASE}.`;
 
 export interface RoomMenuProps {
   /** The classes the old Open-a-room control carried — loud, quiet, or a nav link. */
@@ -665,13 +668,15 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
                 twice, one line apart. The sentence says everything the heading
                 said and says it in a sentence. */}
             {emailUnavailable ? <p className="mt-[var(--s1)]">{emailUnavailable}</p> : null}
-            {emailAvailable ? (
+            {emailAvailable && signedIn && session.signedIn && session.attached.email ? (
+              <p className="text-muted-foreground">Email is already on this account.</p>
+            ) : emailAvailable ? (
               <>
                 {emailForm.phase === "sent" ? (
                   <p data-testid={`${testId}-send-line`}>{emailForm.line}</p>
                 ) : (
                   <>
-                    <p>{EXPLAIN_LINE}</p>
+                    <p>{signedIn ? EXPLAIN_SIGNED_IN_LINE : EXPLAIN_LINE}</p>
                     {emailForm.phase === "error" ? (
                       <p role="alert" className="text-destructive">
                         {emailForm.line}

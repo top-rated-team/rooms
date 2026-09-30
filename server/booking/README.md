@@ -3,7 +3,8 @@
 Availability and the booking write. the hosted connector has no free/busy endpoint — seven
 calendar routes exist and none of them is availability — so slots are computed
 here: a padded events query, our own overlap test, working hours 10:00–20:00
-on weekdays in the calendar's own timezone, 30-minute slots, cached for 45
+on weekdays in the site's zone — `BOOKING_TIME_ZONE`, else Europe/Prague, the
+owner's clock; the calendar's own setting no longer decides — 30-minute slots, cached for 45
 seconds. Live holds occupy a slot the same way a calendar event does, until
 they expire or become a booking.
 
@@ -106,7 +107,13 @@ Recipient's time zone, defaulting to the zone set before for that address
 (kept in the operator's browser), else a guess from a country domain whose
 country keeps one clock (`.de`, `.cz`, `.in`; never `.com`, `.us`, `.au`,
 `.ru`, or `.co` and `.io`, which are bought for their letters), else the
-calendar's zone (`shared/time-zones.ts`). `GET /api/admin/booking-widget?tz=`
+site's own zone, Prague (`shared/time-zones.ts`). For an address that says
+nothing (gmail.com), "Their company or town" asks
+`GET /api/admin/zone-lookup?q=` (`zone-lookup.ts`): a place or one-clock
+country named outright, else Wikidata's headquarters for a company, else
+OpenStreetMap's Nominatim; coordinates become a zone through
+`@photostructure/tz-lookup`. What it found is named on the page and kept for
+that address. `GET /api/admin/booking-widget?tz=`
 passes it on. The block regroups the free times by the recipient's own days,
 shows each on their clock and names the zone — "Eastern Time (New York,
 GMT-4)", with each day's offset instead where the block spans a change of
@@ -223,3 +230,14 @@ email the recipient sends is the booking (`reply-to-book.ts`):
 Not checked: SPF and DKIM. A forged From line books a call in someone else's
 name, and they get an invite they can decline — the same as typing their
 address into the popup. Day links and Other times stay web links to the popup.
+
+## The owner's signature links
+
+`https://top-rated.team/#` and `https://top-rated.team/book#` are the site to
+everyone. In a browser signed in as the operator — by LinkedIn, WhatsApp or
+email, whichever is on that account — they open `/admin/booking-widget`
+instead (`client/src/lib/operator-shortcut.ts`, asking
+`GET /api/admin/operator`, which logs nothing). The empty `#` is the mark, and
+the server never sees it, so a bare `/book` is served as the page itself
+rather than redirected: browsers drop an empty `#` across a 302. `/book` with
+anything after it still hops to `/#book&…`.

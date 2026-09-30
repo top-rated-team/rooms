@@ -1,3 +1,7 @@
+/* FIRST, before any other module runs: a bare /book, and the owner's signature
+   links. The popup's host registers while its module is imported, and reads
+   the address then, so this cannot wait for the body of this file. */
+import "@/lib/operator-shortcut";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";

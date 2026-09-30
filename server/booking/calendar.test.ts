@@ -26,7 +26,7 @@ const DSN = "https://hosted.test.example:9443/api/v1";
 const KEY = "test-hosted-key-do-not-log";
 const ACCOUNT = "cal_account_for_tests";
 const CALENDAR_ID = "dan@top-rated.team";
-const TZ = "Europe/Bratislava";
+const TZ = "Europe/Prague";
 const NOW = new Date("2026-09-09T08:00:00.000Z");
 
 const { privateKey: TEST_PRIVATE_KEY } = generateKeyPairSync("rsa", {

@@ -505,6 +505,11 @@ export interface AdminBookingWidgetResponse {
   emailConfirmation: { on: true } | { on: false; line: string };
 }
 
+/** GET /api/admin/zone-lookup?q= — a company or place, as a time zone. */
+export type ZoneLookupResponse =
+  | { found: true; zone: string; place: string; source: "place name" | "Wikidata" | "OpenStreetMap" }
+  | { found: false };
+
 export interface BookingConflictResponse {
   error: string;
   days: BookingDay[];
@@ -798,7 +803,11 @@ export const ROOM_ACCESS_TTL_PHRASE = "one hour";
 /* "address" meant an email here and a room's own URL three sentences away,
    which is the one word this product cannot afford to overload. Email, in
    every visitor-facing string. */
-export const ROOM_ACCESS_SENT_LINE = "If that email has a room, the link is on its way.";
+export const ROOM_ACCESS_SENT_LINE = "If that email has a room or signs in here, the link is on its way.";
+
+/** Signed in: the link always comes, and adds the address to this account. */
+export const ROOM_ACCESS_SENT_SIGNED_IN_LINE =
+  "The link is on its way. Open it in this browser and the address is added to this account.";
 
 /** Printed when RESEND_API_KEY or LEAD_EMAIL_FROM is missing. */
 export const ROOM_ACCESS_UNAVAILABLE_LINE =
