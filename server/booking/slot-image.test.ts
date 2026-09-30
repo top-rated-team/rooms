@@ -80,7 +80,7 @@ describe("liveSlotState", () => {
 
   it("draws a free time free, and one busy in the calendar crossed out", async () => {
     busy = [{ start: "2026-09-10T08:30:00.000Z", end: "2026-09-10T09:00:00.000Z" }];
-    assert.equal(await liveSlotState("2026-09-10", "09:00", opts), "free");
+    assert.equal(await liveSlotState("2026-09-10", "11:00", opts), "free");
     assert.equal(await liveSlotState("2026-09-10", "10:30", opts), "taken", "10:30 in Bratislava is 08:30Z");
   });
 
@@ -136,7 +136,7 @@ describe("GET /api/booking/slot/<date>/<HHMM>.png", () => {
   function get(pathname: string): Promise<{ status: number; type: string | undefined; cache: string | undefined; body: Buffer }> {
     const url = new URL(pathname, origin);
     return new Promise((resolve, reject) => {
-      const req = httpRequest({ hostname: url.hostname, port: url.port, path: url.pathname, headers: { host: "top-rated.team" } }, (res) => {
+      const req = httpRequest({ hostname: url.hostname, port: url.port, path: `${url.pathname}${url.search}`, headers: { host: "top-rated.team" } }, (res) => {
         const chunks: Buffer[] = [];
         res.on("data", (chunk: Buffer) => chunks.push(chunk));
         res.on("end", () =>
@@ -175,6 +175,30 @@ describe("GET /api/booking/slot/<date>/<HHMM>.png", () => {
     resetSlotsCacheForTests();
     const taken = await get(`/api/booking/slot/${date}/1030.png`);
     assert.deepEqual(taken.body, fs.readFileSync(path.join(PICTURES, "1030-taken.png")));
+  });
+
+  it("draws the reader's own time when the block was made for another zone, crossed out as the calendar slot is", async () => {
+    globalThis.fetch = fakeGoogle;
+    busy = [];
+    resetSlotsCacheForTests();
+    const day = new Date(Date.now() + 7 * 86_400_000);
+    while (day.getUTCDay() === 0 || day.getUTCDay() === 6) day.setUTCDate(day.getUTCDate() + 1);
+    const date = day.toISOString().slice(0, 10);
+    const free = await get(`/api/booking/slot/${date}/1030.png?label=0430`);
+    assert.equal(free.status, 200);
+    assert.deepEqual(free.body, fs.readFileSync(path.join(PICTURES, "0430-free.png")));
+
+    const offset = new Intl.DateTimeFormat("en-US", { timeZone: TZ, timeZoneName: "longOffset" })
+      .formatToParts(new Date(`${date}T12:00:00Z`))
+      .find((part) => part.type === "timeZoneName")!.value.replace("GMT", "") || "+00:00";
+    const start = new Date(`${date}T10:30:00${offset}`);
+    busy = [{ start: start.toISOString(), end: new Date(start.getTime() + 30 * 60_000).toISOString() }];
+    resetSlotsCacheForTests();
+    const taken = await get(`/api/booking/slot/${date}/1030.png?label=0430`);
+    assert.deepEqual(taken.body, fs.readFileSync(path.join(PICTURES, "0430-taken.png")));
+    for (const bad of ["0415", "abc", "2530"]) {
+      assert.equal((await get(`/api/booking/slot/${date}/1030.png?label=${bad}`)).status, 404, bad);
+    }
   });
 
   it("answers 404 for anything that is not a time's picture", async () => {

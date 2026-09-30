@@ -139,10 +139,10 @@ describe("reply to book", () => {
     assert.equal(forged.outcome, "unknown-email");
     assert.equal(fake.events.length, 0);
 
-    fake.received.set("em_2", { from: "ada@example.com", to: ["call-2026-09-10-0900@book.top-rated.team"] });
+    fake.received.set("em_2", { from: "ada@example.com", to: ["call-2026-09-10-1100@book.top-rated.team"] });
     await handleInboundEmail(webhook("em_2", { from: "mallory@example.com", to: [SLOT_TO] }), { fetchImpl: fake.fetchImpl, now: NOW });
     assert.deepEqual(fake.events[0]!.attendees, [{ email: "ada@example.com" }]);
-    assert.equal((fake.events[0]!.start as { dateTime: string }).dateTime, "2026-09-10T07:00:00.000Z", "the slot Resend says it was sent to");
+    assert.equal((fake.events[0]!.start as { dateTime: string }).dateTime, "2026-09-10T09:00:00.000Z", "the slot Resend says it was sent to");
   });
 
   it("handles an email once, however often the webhook comes", async () => {
@@ -168,9 +168,9 @@ describe("reply to book", () => {
     assert.equal(fake.events.length, 0);
     const reply = fake.replies[0]!;
     assert.match(String(reply.subject), /^That time was taken: Thu 10 Sept at 14:00$/);
-    assert.match(String(reply.html), /href="mailto:call-2026-09-10-1500@book\.top-rated\.team\?subject=/);
+    assert.match(String(reply.html), /href="mailto:call-2026-09-10-1600@book\.top-rated\.team\?subject=/);
     assert.doesNotMatch(String(reply.html), /mailto:call-2026-09-10-1400@/, "not the taken time");
-    assert.match(String(reply.text), /email call-2026-09-10-1500@book\.top-rated\.team/);
+    assert.match(String(reply.text), /email call-2026-09-10-1600@book\.top-rated\.team/);
   });
 
   it("does not give one address two upcoming calls", async () => {

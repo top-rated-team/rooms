@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ACTION, ACTION_QUIET, DISPLAY, META, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
 import { useTheme } from "@/hooks/use-theme";
 import type { AdminBookingWidgetResponse } from "@shared/api";
 import { widgetRecipient } from "@shared/booking-link";
 import { WIDGET_MAX_DAYS, WIDGET_MAX_TIMES_PER_DAY, type BookingWidgetShow } from "@shared/booking-widget";
+import { guessZoneFromAddress, isTimeZone, offsetLabel, zoneCity } from "@shared/time-zones";
 
 /**
  * The booking times as a block for an email — /admin/booking-widget.
@@ -24,8 +25,56 @@ type LoadState =
   /* forKey: the options and recipient this block was made for. */
   | { kind: "ok"; data: AdminBookingWidgetResponse; forKey: string };
 
-function optionsKey(show: BookingWidgetShow, days: number, perDay: number, recipient: string): string {
-  return JSON.stringify([show, days, perDay, recipient.trim()]);
+function optionsKey(show: BookingWidgetShow, days: number, perDay: number, recipient: string, tz: string): string {
+  return JSON.stringify([show, days, perDay, recipient.trim(), tz]);
+}
+
+/* The zone set for an address, kept in this browser so the next block for
+   the same person starts on it. A convenience only: nothing else reads it. */
+const ZONES_KEY = "booking-widget-zones";
+
+function readRememberedZones(): Record<string, string> {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(ZONES_KEY) ?? "{}") as unknown;
+    if (!parsed || typeof parsed !== "object") return {};
+    return Object.fromEntries(
+      Object.entries(parsed as Record<string, unknown>).filter(
+        (entry): entry is [string, string] => typeof entry[1] === "string" && isTimeZone(entry[1]),
+      ),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function rememberZone(address: string, zone: string): Record<string, string> {
+  const next = { ...readRememberedZones(), [address]: zone };
+  try {
+    window.localStorage.setItem(ZONES_KEY, JSON.stringify(next));
+  } catch {
+    /* Private window or storage off: the pick still holds for this page. */
+  }
+  return next;
+}
+
+type ZoneSource = "remembered" | "guessed" | "calendar";
+
+function zoneOptions(extra: string[]): { value: string; label: string }[] {
+  const intl = Intl as typeof Intl & { supportedValuesOf?: (key: "timeZone") => string[] };
+  let zones: string[] = [];
+  try {
+    zones = intl.supportedValuesOf?.("timeZone") ?? [];
+  } catch {
+    zones = [];
+  }
+  const all = [...new Set([...zones, ...extra.filter((zone) => zone && isTimeZone(zone)), "UTC"])];
+  const now = Date.now();
+  return all
+    .map((zone) => {
+      const region = zone.includes("/") ? zone.split("/")[0]!.replace(/_/g, " ") : "";
+      return { value: zone, label: `${zoneCity(zone)}${region ? ` — ${region}` : ""} (${offsetLabel(zone, now)})` };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label));
 }
 
 const FIELD =
@@ -93,6 +142,23 @@ export default function AdminBookingWidget() {
   const [reads, setReads] = useState(0);
   const [copied, setCopied] = useState<string | null>(null);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /* The recipient's zone: picked here, set before for this address, guessed
+     from a one-clock country's domain, or else the calendar's own. */
+  const [remembered, setRemembered] = useState<Record<string, string>>(() => readRememberedZones());
+  const [calendarZone, setCalendarZone] = useState("");
+  const zoneFor = (address: string): { zone: string; source: ZoneSource; domain?: string } => {
+    const typedAddress = widgetRecipient(address);
+    const key = typedAddress.kind === "address" ? typedAddress.value.toLowerCase() : "";
+    if (key && remembered[key]) return { zone: remembered[key]!, source: "remembered" };
+    const guess = key ? guessZoneFromAddress(key) : null;
+    if (guess) return { zone: guess.zone, source: "guessed", domain: guess.domain };
+    return { zone: calendarZone, source: "calendar" };
+  };
+  /* What goes to the server: nothing for the calendar's zone, which is its default. */
+  const tzFor = (address: string) => {
+    const found = zoneFor(address);
+    return found.source === "calendar" ? "" : found.zone;
+  };
 
   useEffect(() => {
     const previous = document.title;
@@ -131,7 +197,8 @@ export default function AdminBookingWidget() {
 
   useEffect(() => {
     const ac = new AbortController();
-    const query = new URLSearchParams({ show, days: String(days), perDay: String(perDay), recipient: asked });
+    const tz = tzFor(asked);
+    const query = new URLSearchParams({ show, days: String(days), perDay: String(perDay), recipient: asked, tz });
     void (async () => {
       try {
         const res = await fetch(`/api/admin/booking-widget?${query.toString()}`, {
@@ -153,14 +220,16 @@ export default function AdminBookingWidget() {
           setState({ kind: "failed", line: payload.error?.trim() || "The booking times could not be loaded." });
           return;
         }
-        setState({ kind: "ok", data: payload, forKey: optionsKey(show, days, perDay, asked) });
+        if (typeof payload.timezone === "string") setCalendarZone(payload.timezone);
+        setState({ kind: "ok", data: payload, forKey: optionsKey(show, days, perDay, asked, tz) });
       } catch (error) {
         if (ac.signal.aborted) return;
         setState({ kind: "failed", line: error instanceof Error ? error.message : "The booking times could not be loaded." });
       }
     })();
     return () => ac.abort();
-  }, [show, days, perDay, asked, reads]);
+    /* tzFor reads `remembered`: a zone picked for this address asks again. */
+  }, [show, days, perDay, asked, reads, remembered]);
 
   function flash(label: string) {
     setCopied(label);
@@ -185,7 +254,18 @@ export default function AdminBookingWidget() {
      is the previous one — and a Copy pressed in that moment sent an email
      whose links carried no address, while the page looked finished. Copying
      waits until the block is the one for what is in the boxes. */
-  const fresh = state.kind === "ok" && state.forKey === optionsKey(show, days, perDay, recipient);
+  const fresh = state.kind === "ok" && state.forKey === optionsKey(show, days, perDay, recipient, tzFor(recipient));
+  const shownZone = zoneFor(recipient);
+  const effectiveZone = shownZone.zone || (state.kind === "ok" ? state.data.zone : "");
+  const zoneChoices = useMemo(() => zoneOptions([calendarZone, effectiveZone]), [calendarZone, effectiveZone]);
+  const zoneNote =
+    typed.kind !== "address"
+      ? "Put the address in first: the zone is kept for that person."
+      : shownZone.source === "remembered"
+        ? "The zone you set for this address. Every time in the email is shown on this clock, and the zone is named."
+        : shownZone.source === "guessed"
+          ? `Guessed from the ${shownZone.domain} address. Change it if they are elsewhere: every time in the email is shown on this clock.`
+          : "Nothing in the address says where they are, so this is your calendar's zone. Pick theirs: every time in the email is shown on their clock, and the zone is named.";
   const carried = state.kind === "ok" ? state.data.recipient : null;
   /* THE ADDRESS IS REQUIRED, and has to be signed: that is what lets one
      click book the call. Without it there is nothing to copy. */
@@ -331,6 +411,34 @@ export default function AdminBookingWidget() {
                   click books; later clicks are shown that booking and cannot change or cancel it.
                 </span>
               </label>
+              {show === "times" ? (
+                <label className="block sm:col-span-3">
+                  <span className={`${META} mb-[var(--s1)] block`}>Recipient's time zone</span>
+                  <select
+                    className={FIELD}
+                    value={effectiveZone}
+                    disabled={typed.kind !== "address" || !effectiveZone}
+                    onChange={(event) => {
+                      if (typed.kind !== "address") return;
+                      setRemembered(rememberZone(typed.value.toLowerCase(), event.target.value));
+                    }}
+                    data-testid="select-widget-zone"
+                  >
+                    {zoneChoices.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="mt-1.5 block text-xs text-muted-foreground" data-testid="text-widget-zone">
+                    {zoneNote}
+                  </span>
+                </label>
+              ) : (
+                <p className="text-xs text-muted-foreground sm:col-span-3" data-testid="text-widget-zone">
+                  Days only: the page that opens lists the times, on your calendar's clock, and names the zone.
+                </p>
+              )}
             </div>
 
             {state.kind === "ok" && !state.data.emailConfirmation.on ? (
@@ -386,7 +494,9 @@ export default function AdminBookingWidget() {
             {calendar ? (
               <p className={`${READ_MUTED} mt-[var(--s4)] max-w-[40rem]`} data-testid="text-widget-calendar">
                 Free times from the calendar <span className="text-foreground">{calendar.id || "(none set)"}</span>, read at{" "}
-                {readAtLabel}: weekdays 09:00–17:00 in {state.kind === "ok" ? state.data.timezone : ""}, less everything
+                {readAtLabel}: weekdays{" "}
+                {state.kind === "ok" ? `${state.data.workHours.from}–${state.data.workHours.to}` : ""} in{" "}
+                {state.kind === "ok" ? state.data.timezone : ""}, less everything
                 busy there. An event marked Free does not block a time.{" "}
                 <button
                   type="button"

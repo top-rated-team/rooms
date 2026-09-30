@@ -150,7 +150,7 @@ describe("trap 3: recurrence is already expanded on freeBusy", () => {
     const wednesday = result.body.days.find((row) => row.date === "2026-09-16");
     assert.ok(wednesday);
     assert.equal(wednesday?.slots.includes("10:00"), false);
-    assert.equal(wednesday?.slots.includes("09:30"), true);
+    assert.equal(wednesday?.slots.includes("10:30"), true);
     assert.equal(urls.some((url) => url === GOOGLE_FREEBUSY_URL), true);
     assert.equal(urls.some((url) => url.includes("expand_recurring")), false);
   });
@@ -193,7 +193,7 @@ describe("getBookingSlots", () => {
     assert.equal(result.ok, true);
     if (!result.ok) return;
     assert.equal(result.body.days[0]?.slots.includes("14:00"), false);
-    assert.equal(result.body.days[0]?.slots.includes("09:00"), true);
+    assert.equal(result.body.days[0]?.slots.includes("10:00"), true);
   });
 
   it("is inert with a sentence when the calendar is not configured", async () => {
@@ -225,8 +225,8 @@ describe("visitor busy is marked, not removed", () => {
     const marked = overlayVisitorBusy(days, [{ start: start.getTime(), end: end.getTime() }], TZ);
     assert.equal(marked[0]?.slots.includes("14:00"), true);
     assert.deepEqual(marked[0]?.visitorBusy, ["14:00"]);
-    assert.equal(marked[0]?.slots.includes("09:00"), true);
-    assert.equal(marked[0]?.visitorBusy?.includes("09:00"), false);
+    assert.equal(marked[0]?.slots.includes("10:00"), true);
+    assert.equal(marked[0]?.visitorBusy?.includes("10:00"), false);
   });
 
   it("overlays the visitor's free/busy without changing the owner's slot list or leaking into the cache", async () => {

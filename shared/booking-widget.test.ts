@@ -78,9 +78,70 @@ describe("buildBookingWidget", () => {
       instant: false,
     });
     assert.ok(links.every((href) => href.startsWith("https://top-rated.team/book?") && href.includes("confirm=email")));
-    assert.match(widget.html, /Times are in Europe\/Bratislava\./);
+    assert.match(widget.html, /Times are <strong[^>]*>Central European Time \(Bratislava, GMT\+2\)<\/strong>\./);
+    assert.match(widget.text, /^Pick a time\. Times are Central European Time \(Bratislava, GMT\+2\)\.$/m);
     assert.match(widget.text, /^Fri 2 Oct$/m);
     assert.match(widget.text, /^ {2}16:30 {2}https:\/\/top-rated\.team\/book\?date=2026-10-02&time=16:30&confirm=email&email=dan%2Bads%40example\.com$/m);
+  });
+
+  it("shows the times on the reader's clock and names the zone, while every link books the calendar's own time", () => {
+    const widget = buildBookingWidget({ ...BASE, show: "times", days: 2, timesPerDay: 16, liveImages: true, viewerZone: "America/New_York" });
+    assert.equal(widget.zone, "America/New_York");
+    /* 09:00 in Bratislava on 2 October is 03:00 in New York. */
+    assert.deepEqual(widget.days[0], { date: "2026-10-02", slots: FULL_DAY.map((time) => `${String(Number(time.slice(0, 2)) - 6).padStart(2, "0")}${time.slice(2)}`) });
+    assert.match(widget.html, /Times are <strong[^>]*>Eastern Time \(New York, GMT-4\)<\/strong>/);
+    const links = hrefs(widget.html);
+    assert.ok(links[0]!.includes("date=2026-10-02&time=09:00&"), links[0]);
+    const images = [...widget.html.matchAll(/<img src="([^"]*)" width="64" height="34" alt="([^"]*)"/g)].map((m) => [m[1], m[2]]);
+    assert.deepEqual(images[0], ["https://top-rated.team/api/booking/slot/2026-10-02/0900.png?label=0300", "03:00"]);
+    assert.match(widget.text, /^ {2}03:00 {2}https:\/\/top-rated\.team\/book\?date=2026-10-02&time=09:00&confirm=email$/m);
+  });
+
+  it("moves a time past the reader's midnight onto the reader's next day", () => {
+    const widget = buildBookingWidget({ ...BASE, show: "times", days: 3, timesPerDay: 16, viewerZone: "Asia/Tokyo" });
+    /* Bratislava is seven hours behind Tokyo: 16:30 on the 2nd is 23:30, and 14:00 on the 5th is 21:00. */
+    assert.deepEqual(
+      widget.days.map((day) => [day.date, day.slots[0], day.slots.at(-1)]),
+      [
+        ["2026-10-02", "16:00", "23:30"],
+        ["2026-10-05", "21:00", "23:30"],
+        ["2026-10-06", "16:00", "16:00"],
+      ],
+    );
+    const tokyoMidnight = buildBookingWidget({
+      ...BASE,
+      slots: { ...SLOTS, days: [{ date: "2026-10-02", slots: ["16:30", "17:00", "17:30"] }] },
+      show: "times",
+      days: 3,
+      timesPerDay: 16,
+      viewerZone: "Asia/Tokyo",
+    });
+    assert.deepEqual(tokyoMidnight.days, [
+      { date: "2026-10-02", slots: ["23:30"] },
+      { date: "2026-10-03", slots: ["00:00", "00:30"] },
+    ]);
+    assert.match(tokyoMidnight.html, /Sat 3 Oct/);
+  });
+
+  it("gives each day its own offset when the block spans a change of clocks", () => {
+    const autumn: BookingSlotsResponse = {
+      ...SLOTS,
+      days: [
+        { date: "2026-10-23", slots: ["10:00"] },
+        { date: "2026-10-26", slots: ["10:00"] },
+      ],
+    };
+    const widget = buildBookingWidget({ ...BASE, slots: autumn, show: "times", days: 2, timesPerDay: 4 });
+    assert.match(widget.html, /Times are <strong[^>]*>Central European Time \(Bratislava\)<\/strong>\./);
+    assert.match(widget.html, />Fri 23 Oct · GMT\+2</);
+    assert.match(widget.html, />Mon 26 Oct · GMT\+1</);
+  });
+
+  it("ignores a zone that is not one, and keeps the calendar's days when only days are shown", () => {
+    assert.equal(buildBookingWidget({ ...BASE, show: "times", days: 1, timesPerDay: 2, viewerZone: "Mars/Base" }).zone, "Europe/Bratislava");
+    const days = buildBookingWidget({ ...BASE, show: "days", days: 2, timesPerDay: 2, viewerZone: "Asia/Tokyo" });
+    assert.equal(days.zone, "Europe/Bratislava");
+    assert.deepEqual(days.days.map((day) => day.date), ["2026-10-02", "2026-10-05"]);
   });
 
   it("links days to the popup open on that day when only days are shown", () => {

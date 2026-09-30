@@ -88,7 +88,7 @@ import {
   inboundSecretHeader,
   WHATSAPP_INBOUND_PATH,
 } from "./whatsapp";
-import { getBookingSlots, invalidateSlotsCache, parseSlotsQuery } from "./booking/slots";
+import { WORK_END_HOUR, WORK_START_HOUR, getBookingSlots, invalidateSlotsCache, parseSlotsQuery } from "./booking/slots";
 import { calendarId as bookingCalendarId } from "./booking/gcal";
 import {
   VISITOR_CALENDAR_COOKIE,
@@ -1819,13 +1819,18 @@ export function registerRoutes(app: Express): void {
         ...(recipientSig ? { recipientSig } : {}),
         hostName: (contract.displayName ?? contract.legalName).trim(),
         liveImages: true,
+        /* The recipient's zone, as the owner set it; the builder ignores one that is not a zone. */
+        ...(typeof query.tz === "string" && query.tz.trim() ? { viewerZone: query.tz.trim() } : {}),
       });
+      const hour = (h: number) => `${String(h).padStart(2, "0")}:00`;
       res.json({
         html: widget.html,
         text: widget.text,
         recipient: recipient.kind === "address" ? { ...recipient, signed: Boolean(recipientSig) } : recipient,
         calendar: { id: bookingCalendarId(), readAt },
         timezone: slots.body.timezone,
+        zone: widget.zone,
+        workHours: { from: hour(WORK_START_HOUR), to: hour(WORK_END_HOUR) },
         days: widget.days,
         emailConfirmation: emailConfirmation(),
       });
@@ -2275,12 +2280,16 @@ export function registerRoutes(app: Express): void {
     route(async (req, res) => {
       const date = String(req.params.date ?? "");
       const time = slotImageTime(String(req.params.file ?? ""));
-      if (!isSlotDate(date) || !time) {
+      /* ?label=HHMM draws the reader's own time (a block made for another
+         zone); whether it is crossed out is still the calendar slot's. */
+      const rawLabel = (req.query as Record<string, unknown>).label;
+      const label = typeof rawLabel === "string" ? slotImageTime(`${rawLabel}.png`) : rawLabel === undefined ? time : null;
+      if (!isSlotDate(date) || !time || !label) {
         res.status(404).json({ error: "No such time." });
         return;
       }
       const state = await liveSlotState(date, time);
-      const image = slotImage(time, state);
+      const image = slotImage(label, state);
       if (!image) {
         res.status(404).json({ error: "No such time." });
         return;

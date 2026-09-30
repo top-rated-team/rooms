@@ -16,6 +16,7 @@
 import type { BookingDay, BookingSlotsResponse } from "./api";
 import { bookLinkUrl, widgetRecipient } from "./booking-link";
 import { replyAddress, replyMailto } from "./booking-reply";
+import { isTimeZone, offsetLabel, wallClockIn, wallClockToInstant, zonePhrase } from "./time-zones";
 
 export type BookingWidgetShow = "times" | "days";
 
@@ -53,13 +54,23 @@ export interface BookingWidgetOptions {
    * the time, for readers who see no images.
    */
   liveImages?: boolean;
+  /**
+   * The zone the recipient reads the times in (an IANA name). The days and
+   * times are shown on their clock and the zone is named; every link still
+   * carries the calendar's own date and time, which is what gets booked.
+   * Defaults to the calendar's zone. "Days only" keeps the calendar's days:
+   * the page that opens shows the times, and names its zone.
+   */
+  viewerZone?: string;
 }
 
 export interface BookingWidget {
   html: string;
   text: string;
-  /** What the block offers, for the page that shows it. */
+  /** What the block offers, on the reader's clock, for the page that shows it. */
   days: BookingDay[];
+  /** The zone the block shows its times in. */
+  zone: string;
 }
 
 export const WIDGET_MAX_DAYS = 10;
@@ -91,7 +102,7 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 /** `count` of `times`, spread from the first to the last, in order. */
-export function spreadTimes(times: string[], count: number): string[] {
+export function spreadTimes<T>(times: T[], count: number): T[] {
   if (count >= times.length) return [...times];
   if (count <= 1) return times.slice(0, 1);
   const picked = new Set<number>();
@@ -107,12 +118,62 @@ export function widgetDayLabel(date: string): string {
   );
 }
 
-export function chooseWidgetDays(slots: BookingSlotsResponse, days: number, timesPerDay: number): BookingDay[] {
+/** One time in the block: what the reader sees, and the calendar slot it books. */
+interface WidgetTime {
+  /** On the reader's clock: "10:30". */
+  label: string;
+  /** The calendar's own date and time, which the link and the picture carry. */
+  at: { date: string; time: string };
+  ms: number;
+}
+
+interface WidgetDay {
+  /** The reader's date. */
+  date: string;
+  times: WidgetTime[];
+  /** Free times that day, before spreading. */
+  total: number;
+}
+
+/** The free times regrouped by the reader's own days, in order. */
+function readerDays(slots: BookingSlotsResponse, zone: string): WidgetDay[] {
+  const out: WidgetDay[] = [];
+  for (const day of slots.days) {
+    for (const time of day.slots) {
+      const ms = wallClockToInstant(day.date, time, slots.timezone);
+      if (ms == null) continue;
+      const local = wallClockIn(zone, ms);
+      const entry = { label: local.time, at: { date: day.date, time }, ms };
+      const last = out[out.length - 1];
+      if (last && last.date === local.date) {
+        last.times.push(entry);
+        last.total += 1;
+      } else {
+        out.push({ date: local.date, times: [entry], total: 1 });
+      }
+    }
+  }
+  return out;
+}
+
+function chooseReaderDays(slots: BookingSlotsResponse, days: number, timesPerDay: number, zone: string): WidgetDay[] {
   const perDay = clamp(timesPerDay, 1, WIDGET_MAX_TIMES_PER_DAY);
-  return slots.days
-    .filter((day) => day.slots.length > 0)
+  return readerDays(slots, zone)
     .slice(0, clamp(days, 1, WIDGET_MAX_DAYS))
-    .map((day) => ({ date: day.date, slots: spreadTimes(day.slots, perDay) }));
+    .map((day) => ({ ...day, times: spreadTimes(day.times, perDay) }));
+}
+
+/** The days and times a block offers, on the clock of `zone` (the calendar's by default). */
+export function chooseWidgetDays(
+  slots: BookingSlotsResponse,
+  days: number,
+  timesPerDay: number,
+  zone: string = slots.timezone,
+): BookingDay[] {
+  return chooseReaderDays(slots, days, timesPerDay, zone).map((day) => ({
+    date: day.date,
+    slots: day.times.map((time) => time.label),
+  }));
 }
 
 /* Pictures exist for every half-hour (scripts/build-slot-images.mjs). */
@@ -140,7 +201,11 @@ function button(href: string, label: string): string {
 }
 
 export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget {
-  const chosen = chooseWidgetDays(options.slots, options.days, options.timesPerDay);
+  const calendarZone = options.slots.timezone;
+  /* Days only keeps the calendar's days: the page that opens lists the times. */
+  const zone =
+    options.show === "times" && options.viewerZone && isTimeZone(options.viewerZone) ? options.viewerZone : calendarZone;
+  const chosen = chooseReaderDays(options.slots, options.days, options.timesPerDay, zone);
   const recipient = widgetRecipient(options.recipient);
   const signedFor = options.recipientSig && recipient.kind === "address" ? recipient.value : null;
   const signed = signedFor !== null;
@@ -155,17 +220,26 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
       instant: signed && Boolean(input.time),
     });
   const minutes = options.slots.slotMinutes;
-  const zone = options.slots.timezone;
   const heading = `Book a ${minutes}-minute call with ${options.hostName}`;
   const live = options.show === "times" && options.liveImages === true;
-  const intro =
-    options.show === "times"
-      ? live
-        ? `Pick a time. Times are in ${zone}. A time crossed out has been taken since this email was sent.`
-        : `Pick a time. Times are in ${zone}.`
-      : `Pick a day, then a time on it. Times are in ${zone}.`;
-  const imageSrc = (date: string, time: string) =>
-    `${options.baseUrl.replace(/\/+$/, "")}/api/booking/slot/${date}/${time.replace(":", "")}.png`;
+  /* THE ZONE IS ALWAYS NAMED. Where the block spans a change of clocks, each
+     day says its own offset rather than the intro stating one that is wrong
+     for some of them. */
+  const shown = chosen.flatMap((day) => day.times.map((time) => time.ms));
+  const oneOffset = new Set(shown.map((ms) => offsetLabel(zone, ms))).size <= 1;
+  const zoneText = oneOffset ? zonePhrase(zone, shown[0] ?? Date.now()) : zonePhrase(zone);
+  const introLead = options.show === "times" ? "Pick a time. Times are " : "Pick a day, then a time on it. Times are ";
+  const introTail = live ? ". A time crossed out has been taken since this email was sent." : ".";
+  const intro = `${introLead}${zoneText}${introTail}`;
+  const introHtml = `${escapeHtml(introLead)}<strong style="color:${INK};font-weight:600;">${escapeHtml(zoneText)}</strong>${escapeHtml(introTail)}`;
+  const dayLabel = (day: WidgetDay) =>
+    `${widgetDayLabel(day.date)}${oneOffset || !day.times[0] ? "" : ` · ${offsetLabel(zone, day.times[0].ms)}`}`;
+  const imageSrc = (time: WidgetTime) => {
+    const hhmm = (value: string) => value.replace(":", "");
+    const base = `${options.baseUrl.replace(/\/+$/, "")}/api/booking/slot/${time.at.date}/${hhmm(time.at.time)}.png`;
+    /* The picture is of the reader's time; its state is the calendar slot's. */
+    return time.label === time.at.time ? base : `${base}?label=${hhmm(time.label)}`;
+  };
   const replyTo = options.show === "times" ? options.replyTo : undefined;
   /* A signed block says nothing under the times: it goes to that one person,
      and a click books, with Google's invite. */
@@ -175,27 +249,26 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
       ? ""
       : "We email you a link to confirm it. Nothing is booked until you do.";
   const other = link({});
-  const when = (date: string, time: string) => `${widgetDayLabel(date)}, ${time} (${zone})`;
-  const timeHref = (date: string, time: string) =>
+  const when = (day: WidgetDay, time: WidgetTime) => `${widgetDayLabel(day.date)}, ${time.label} (${zone})`;
+  const timeHref = (day: WidgetDay, time: WidgetTime) =>
     replyTo
-      ? replyMailto(replyTo.domain, { date, time, when: when(date, time), minutes, hostName: options.hostName })
-      : link({ date, time });
+      ? replyMailto(replyTo.domain, { date: time.at.date, time: time.at.time, when: when(day, time), minutes, hostName: options.hostName })
+      : link({ date: time.at.date, time: time.at.time });
 
   const rows = chosen
     .map((day) => {
-      const label = widgetDayLabel(day.date);
       if (options.show === "days") {
-        const count = options.slots.days.find((row) => row.date === day.date)?.slots.length ?? day.slots.length;
-        return `<tr><td style="padding:4px 0 0 0;">${button(link({ date: day.date }), `${label} · ${count} ${count === 1 ? "time" : "times"}`)}</td></tr>`;
+        const label = widgetDayLabel(day.date);
+        return `<tr><td style="padding:4px 0 0 0;">${button(link({ date: day.date }), `${label} · ${day.total} ${day.total === 1 ? "time" : "times"}`)}</td></tr>`;
       }
-      const times = day.slots
+      const times = day.times
         .map((time) =>
-          live && hasPicture(time) ? imageButton(timeHref(day.date, time), imageSrc(day.date, time), time) : button(timeHref(day.date, time), time),
+          live && hasPicture(time.label) ? imageButton(timeHref(day, time), imageSrc(time), time.label) : button(timeHref(day, time), time.label),
         )
         .join("");
       return (
         `<tr><td style="padding:10px 0 0 0;font-family:${SANS};font-size:12px;line-height:16px;letter-spacing:0.04em;` +
-        `text-transform:uppercase;color:${MUTED};">${escapeHtml(label)}</td></tr>` +
+        `text-transform:uppercase;color:${MUTED};">${escapeHtml(dayLabel(day))}</td></tr>` +
         `<tr><td style="padding:6px 0 0 0;">${times}</td></tr>`
       );
     })
@@ -210,19 +283,20 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
     `<tr><td style="padding:20px 22px;background:${PAPER};border:1px solid ${RULE};border-radius:8px;">` +
     `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">` +
     `<tr><td style="font-family:${SANS};font-size:17px;line-height:22px;font-weight:600;color:${INK};">${escapeHtml(heading)}</td></tr>` +
-    `<tr><td style="padding:6px 0 4px 0;font-family:${SERIF};font-size:15px;line-height:22px;color:${MUTED};">${escapeHtml(intro)}</td></tr>` +
+    `<tr><td style="padding:6px 0 4px 0;font-family:${SERIF};font-size:15px;line-height:22px;color:${MUTED};">${introHtml}</td></tr>` +
     (chosen.length > 0 ? rows : empty) +
     `<tr><td style="padding:12px 0 0 0;font-family:${SERIF};font-size:14px;line-height:20px;color:${MUTED};">` +
     `${confirmLine ? `${escapeHtml(confirmLine)} ` : ""}<a href="${escapeHtml(other)}" target="_blank" style="color:${ACCENT};text-decoration:underline;">Other times</a></td></tr>` +
     `</table></td></tr></table>`;
 
   const textRows = chosen.map((day) => {
-    const label = widgetDayLabel(day.date);
-    if (options.show === "days") return `${label}: ${link({ date: day.date })}`;
+    if (options.show === "days") return `${widgetDayLabel(day.date)}: ${link({ date: day.date })}`;
     return [
-      label,
-      ...day.slots.map((time) =>
-        replyTo ? `  ${time}  email ${replyAddress(replyTo.domain, day.date, time)}` : `  ${time}  ${link({ date: day.date, time })}`,
+      dayLabel(day),
+      ...day.times.map((time) =>
+        replyTo
+          ? `  ${time.label}  email ${replyAddress(replyTo.domain, time.at.date, time.at.time)}`
+          : `  ${time.label}  ${link({ date: time.at.date, time: time.at.time })}`,
       ),
     ].join("\n");
   });
@@ -236,5 +310,10 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
     ...(confirmLine ? [confirmLine] : []),
   ].join("\n");
 
-  return { html, text, days: chosen };
+  return {
+    html,
+    text,
+    days: chosen.map((day) => ({ date: day.date, slots: day.times.map((time) => time.label) })),
+    zone,
+  };
 }

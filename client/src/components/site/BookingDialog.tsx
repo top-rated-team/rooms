@@ -37,7 +37,7 @@ import {
   visitorCalendarConnectUrl,
   type BookedPayload,
   type SlotDay,
-  type SlotsPayload, bookingPointer } from "@/lib/booking";
+  type SlotsPayload, bookingPointer, visitorTimeZone } from "@/lib/booking";
 import type {
   BookingConfirmedResponse,
   BookingLinkedInAvailability,
@@ -51,6 +51,7 @@ import type {
 } from "@shared/api";
 import { BOOKING_LINKEDIN_SESSION_QUERY } from "@shared/api";
 import { BOOKING_EMAIL_RE as EMAIL_RE } from "@shared/booking-link";
+import { isTimeZone, offsetLabel, zoneOffsetMinutes, zonePhrase } from "@shared/time-zones";
 import { isHouseHost } from "@shared/operator";
 
 import { BookingQr } from "./BookingQr";
@@ -288,7 +289,9 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
       if (instant?.instant && instant.date && instant.time && instant.email && instant.sig && !drivenByAProgram()) {
         const { date: day, time: at, email: address, sig } = instant;
         forgetBookingLinkPick();
-        setPhase({ kind: "booking-now", startsLabel: `${formatSlotDay(day)} at ${at}` });
+        /* No clock here: the link carries the calendar's time, and the email
+           may have shown it on the reader's. The confirmation says both. */
+        setPhase({ kind: "booking-now", startsLabel: "Booking the time you clicked." });
         setLoading(false);
         const result = await bookSlot({ date: day, time: at, email: address, confirmByEmail: true, sig });
         if (cancelled) return;
@@ -1628,7 +1631,13 @@ function descriptionFor(
   if (loadError) return "Times could not be loaded, so nothing here can be booked yet.";
   if (loading && !slots) return "Looking up times that are free.";
   if (timezone && slots) {
-    return `${slots.slotMinutes} minutes. Times are in ${timezone}.`;
+    const now = Date.now();
+    if (!isTimeZone(timezone)) return `${slots.slotMinutes} minutes. Times are in ${timezone}.`;
+    /* The picker lists the calendar's clock; say so, and the visitor's own where it is not the same. */
+    const mine = visitorTimeZone();
+    const yours =
+      mine && zoneOffsetMinutes(mine, now) !== zoneOffsetMinutes(timezone, now) ? `; your clock is ${offsetLabel(mine, now)}` : "";
+    return `${slots.slotMinutes} minutes. Times are ${zonePhrase(timezone, now)}${yours}.`;
   }
   return "Pick a time that is free.";
 }

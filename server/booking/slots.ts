@@ -5,7 +5,7 @@
  * endpoint; that path remains only when the two Google variables are
  * unset, so callers this parcel does not own can still run their tests.
  *
- * Working hours are 09:00–17:00 on weekdays in the calendar's own timezone,
+ * Working hours are 10:00–20:00 on weekdays in the calendar's own timezone,
  * 30-minute slots. A day with nothing free is still present, with an empty
  * array, so the popup can say so rather than omitting the day.
  *
@@ -30,8 +30,8 @@ import { queryVisitorFreeBusy, visitorCalendarView } from "./freebusy";
 import { activeHeldSlots } from "./hold";
 
 export const SLOT_MINUTES = 30;
-export const WORK_START_HOUR = 9;
-export const WORK_END_HOUR = 17;
+export const WORK_START_HOUR = 10;
+export const WORK_END_HOUR = 20;
 export const SLOTS_CACHE_MS = 45_000;
 export const WINDOW_PAD_MS = 24 * 60 * 60 * 1000;
 export const DEFAULT_SLOT_DAYS = 14;

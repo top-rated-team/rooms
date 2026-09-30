@@ -2,7 +2,7 @@
 
 Availability and the booking write. the hosted connector has no free/busy endpoint — seven
 calendar routes exist and none of them is availability — so slots are computed
-here: a padded events query, our own overlap test, working hours 09:00–17:00
+here: a padded events query, our own overlap test, working hours 10:00–20:00
 on weekdays in the calendar's own timezone, 30-minute slots, cached for 45
 seconds. Live holds occupy a slot the same way a calendar event does, until
 they expire or become a booking.
@@ -98,6 +98,27 @@ recipient's address or a mail tool's merge tag (`{{email}}`, `*|EMAIL|*`) last.
 `shared/booking-widget.ts` builds it; `shared/booking-link.ts` reads the link.
 The times are the ones free when the block is made. A time gone by the time
 the email is read opens the popup with a line saying so and what is free.
+
+### The recipient's clock
+
+Nothing in an email address says where its owner is, so the widget page asks:
+Recipient's time zone, defaulting to the zone set before for that address
+(kept in the operator's browser), else a guess from a country domain whose
+country keeps one clock (`.de`, `.cz`, `.in`; never `.com`, `.us`, `.au`,
+`.ru`, or `.co` and `.io`, which are bought for their letters), else the
+calendar's zone (`shared/time-zones.ts`). `GET /api/admin/booking-widget?tz=`
+passes it on. The block regroups the free times by the recipient's own days,
+shows each on their clock and names the zone — "Eastern Time (New York,
+GMT-4)", with each day's offset instead where the block spans a change of
+clocks. Every link still carries the calendar's date and time, which is what
+is booked, and each picture is `/api/booking/slot/<calendar date>/<HHMM>.png
+?label=<their HHMM>`: their time drawn, the calendar slot's state. "Days only"
+keeps the calendar's days, since the popup lists the times.
+
+The popup's confirmation says the time on the visitor's own clock, with the
+calendar's beside it where they differ. The picker, which Change opens, lists
+times on the calendar's clock, names that zone, and says the visitor's offset
+where it is not the same.
 
 A booking from such a link is confirmed by email and nothing else — no
 WhatsApp route, no LinkedIn button, no visitor-calendar row. POST
