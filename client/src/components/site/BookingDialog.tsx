@@ -112,7 +112,9 @@ type ExistingBooking = Extract<ExistingBookingResponse, { found: true }>;
 type Phase =
   | { kind: "pick"; rescheduleCode?: string }
   | { kind: "waiting"; hold: HoldBookingResponse; openedWhatsApp: boolean }
-  | { kind: "done"; booked: BookedPayload; viaWhatsApp: boolean; code: string }
+  | { kind: "done"; booked: BookedPayload; viaWhatsApp: boolean; code: string; note?: string }
+  /* A time clicked in the owner's email for this address, being booked as the page opens. */
+  | { kind: "booking-now"; startsLabel: string }
   | { kind: "manage"; booking: ExistingBooking; code: string }
   | { kind: "confirm-cancel"; booking: ExistingBooking; code: string }
   | { kind: "cancelled" }
@@ -129,6 +131,20 @@ const LINKED_TIME_GONE_LINE = "The time you picked in the email is no longer fre
 const LINKED_DAY_GONE_LINE = "The day you picked in the email has no free times any more. Pick another one here.";
 const EMAIL_CONFIRM_HINT = "We email you a link that confirms the call. Nothing is booked until you use it.";
 const SIGNED_HINT = "Press Book and the call is booked. Google sends the invite to this address.";
+const INSTANT_TAKEN_LINE = "That time was taken just before you clicked it. Here is what is still free: pick one and press Book.";
+/* Said to whoever clicked, who may not be the person it is for (a Cc, a forward). */
+function alreadyNote(address: string): string {
+  return `A call has already been booked from this email for ${address}, so the time you clicked was not booked. To move it, reply to the email the times came in.`;
+}
+
+/**
+ * A browser driven by a program — the headless ones mail scanners open links
+ * in — says so here. It gets the Book button rather than a booking made on
+ * its behalf; a person never sees the difference.
+ */
+function drivenByAProgram(): boolean {
+  return typeof navigator !== "undefined" && navigator.webdriver === true;
+}
 const EMAIL_HOLD_LAPSED_LINE = "The link was not used in time, so nothing was booked and the time is free again.";
 const EMAIL_LINK_UNKNOWN_LINE = "This confirmation link is not one we know, or the call it confirmed has since been cancelled.";
 
@@ -260,6 +276,39 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
         } catch (error) {
           if (!cancelled) setFormError(error instanceof Error ? error.message : "That confirmation link could not be checked.");
         }
+        return;
+      }
+
+      /* ONE CLICK IN THE EMAIL IS THE BOOKING. The owner made this block for
+         this address and the site signed it, so the time is booked as the page
+         opens and the popup opens on the confirmation, with Change and Cancel.
+         Never by the link itself: /book only hops here, so a mail scanner that
+         fetches every link books nothing. */
+      const instant = bookingLink();
+      if (instant?.instant && instant.date && instant.time && instant.email && instant.sig && !drivenByAProgram()) {
+        const { date: day, time: at, email: address, sig } = instant;
+        forgetBookingLinkPick();
+        setPhase({ kind: "booking-now", startsLabel: `${formatSlotDay(day)} at ${at}` });
+        setLoading(false);
+        const result = await bookSlot({ date: day, time: at, email: address, confirmByEmail: true, sig });
+        if (cancelled) return;
+        if (result.ok && "booked" in result) {
+          if (result.booked.whatsapp.code) rememberBookingPointer(result.booked.whatsapp.code);
+          setPhase({
+            kind: "done",
+            booked: result.booked,
+            viaWhatsApp: false,
+            code: result.booked.whatsapp.code,
+            ...(result.booked.already ? { note: alreadyNote(address) } : {}),
+          });
+          return;
+        }
+        if (result.ok && "emailHold" in result) {
+          waitForEmailConfirmation(result.emailHold);
+          return;
+        }
+        await retryPicker();
+        if (!cancelled) setFormError(result.conflict ? INSTANT_TAKEN_LINE : result.error);
         return;
       }
 
@@ -836,8 +885,17 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
             <span className="sr-only">Close</span>
           </Dialog.Close>
 
-          {phase.kind === "done" ? (
+          {phase.kind === "booking-now" ? (
+            <div className="text-center" data-testid="text-booking-now">
+              <Dialog.Title className={`px-8 ${DIALOG_HEADING}`}>Booking your call</Dialog.Title>
+              <Dialog.Description className={`mt-[var(--s3)] flex items-center justify-center gap-[var(--s1)] ${DIALOG_COPY}`}>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {phase.startsLabel}
+              </Dialog.Description>
+            </div>
+          ) : phase.kind === "done" ? (
             <DoneView
+              note={phase.note}
               booked={phase.booked}
               email={email.trim() || bookerEmail}
               viaWhatsApp={phase.viaWhatsApp}
@@ -1748,6 +1806,7 @@ function weekdayMonday0(date: string): number {
 }
 
 function DoneView({
+  note,
   booked,
   email,
   viaWhatsApp,
@@ -1755,6 +1814,7 @@ function DoneView({
   onChange,
   onCancel,
 }: {
+  note?: string;
   booked: BookedPayload;
   email: string | null;
   viaWhatsApp: boolean;
@@ -1775,6 +1835,11 @@ function DoneView({
       <Dialog.Description className="mt-2 text-sm text-muted-foreground">
         {when}.
       </Dialog.Description>
+      {note ? (
+        <p className="mx-auto mt-2 max-w-[42ch] text-sm text-foreground" data-testid="text-booking-note">
+          {note}
+        </p>
+      ) : null}
       {inviteLine(booked, email)}
       {booked.meetUrl ? (
         <p className="mt-3 text-sm">

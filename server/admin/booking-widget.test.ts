@@ -164,7 +164,9 @@ describe("GET /api/admin/booking-widget", () => {
     assert.deepEqual(body.recipient, { kind: "address", value: "ada+ads@example.com", signed: true });
     const links = [...String(body.html).matchAll(/href="([^"]*)"/g)].map((m) => m[1]!);
     assert.ok(links.length > 1 && links.every((href) => /&amp;email=ada%2Bads%40example\.com&amp;sig=[A-Za-z0-9_-]{22}$/.test(href)), links[0]);
-    assert.match(String(body.html), /press Book: the call is booked/);
+    assert.match(String(body.html), /For ada\+ads@example\.com only: clicking a time books the call in that name/);
+    assert.ok(links.slice(0, -1).every((href) => href.includes("&amp;instant=1&amp;")), "each time books in one click");
+    assert.ok(!links.at(-1)!.includes("instant=1"), "Other times opens the picker");
   });
 
   it("does not sign a merge tag: the address it stands for is not known here", async () => {
@@ -196,19 +198,14 @@ describe("GET /api/admin/booking-widget", () => {
     assert.ok(!(again?.date === day.date && again.slots.includes(time)), `${day.date} ${time} is busy now and must not be offered`);
   });
 
-  it("makes each time an email to write to once reply to book is set up, and says which mode it is in", async () => {
+  it("never makes a time an email to write, even with reply to book set up: a click books", async () => {
     const token = await operatorToken();
-    const off = await get("/api/admin/booking-widget?show=times&days=1&perDay=2", token);
-    assert.equal((off.body.replyToBook as { on: boolean }).on, false);
-    assert.ok(String(off.body.html).includes('href="https://top-rated.team/book?date='));
-
     process.env.RESEND_API_KEY = "re_test";
     process.env.BOOKING_INBOX_DOMAIN = "book.top-rated.team";
-    const on = await get("/api/admin/booking-widget?show=times&days=1&perDay=2", token);
-    assert.deepEqual(on.body.replyToBook, { on: true, domain: "book.top-rated.team" });
-    const links = [...String(on.body.html).matchAll(/href="([^"]*)"/g)].map((m) => m[1]!);
-    assert.ok(links.slice(0, -1).every((href) => /^mailto:call-\d{4}-\d{2}-\d{2}-\d{4}@book\.top-rated\.team\?subject=/.test(href)), links.join("\n"));
-    assert.ok(links.at(-1)!.startsWith("https://top-rated.team/book?"), "Other times stays a web link");
+    const { body } = await get(`/api/admin/booking-widget?show=times&days=1&perDay=2&recipient=${encodeURIComponent("ada@example.com")}`, token);
+    const links = [...String(body.html).matchAll(/href="([^"]*)"/g)].map((m) => m[1]!);
+    assert.ok(links.every((href) => href.startsWith("https://top-rated.team/book?")), links.join("\n"));
+    assert.ok(!("replyToBook" in body));
   });
 
   it("says when a time picked from the block would not be confirmed by email", async () => {

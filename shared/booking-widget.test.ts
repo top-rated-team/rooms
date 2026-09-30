@@ -75,6 +75,7 @@ describe("buildBookingWidget", () => {
       confirmByEmail: true,
       confirmation: null,
       sig: null,
+      instant: false,
     });
     assert.ok(links.every((href) => href.startsWith("https://top-rated.team/book?") && href.includes("confirm=email")));
     assert.match(widget.html, /Times are in Europe\/Bratislava\./);
@@ -117,8 +118,11 @@ describe("buildBookingWidget", () => {
 
   it("says a signed block books at once, and carries the signature in every link", () => {
     const widget = buildBookingWidget({ ...BASE, show: "times", days: 1, timesPerDay: 2, recipient: "ada@example.com", recipientSig: "AbCdEfGhIjKlMnOpQrStUv" });
-    assert.ok(hrefs(widget.html).every((href) => href.endsWith("&email=ada%40example.com&sig=AbCdEfGhIjKlMnOpQrStUv")));
-    assert.match(widget.html, /Pick a time and press Book: the call is booked, and Google sends you the invite\./);
+    const links = hrefs(widget.html);
+    assert.ok(links.every((href) => href.endsWith("&email=ada%40example.com&sig=AbCdEfGhIjKlMnOpQrStUv")));
+    assert.ok(links.slice(0, -1).every((href) => href.includes("&instant=1&")), "a time books in one click");
+    assert.ok(!links.at(-1)!.includes("instant=1"), "Other times opens the picker");
+    assert.match(widget.html, /For ada@example\.com only: clicking a time books the call in that name/);
     assert.doesNotMatch(widget.html, /We email you a link to confirm it/);
   });
 

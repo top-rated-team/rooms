@@ -367,6 +367,24 @@ export function liveBookingsHaveEvent(eventId: string, now = Date.now()): boolea
   return false;
 }
 
+/**
+ * The soonest call an address has that has not yet ended — to come, or under
+ * way. Until it ENDS, as bookingIsLive has it: a slot is offered until its
+ * end, so a call that began ten minutes ago is still the one a second click
+ * on the same email must be shown.
+ */
+export function upcomingBookingFor(email: string, now = Date.now()): StoredBooking | undefined {
+  sweep(now);
+  const address = email.trim().toLowerCase();
+  let soonest: StoredBooking | undefined;
+  for (const row of bookings.values()) {
+    if (row.cancelledAt != null || row.email?.toLowerCase() !== address) continue;
+    if (!bookingIsLive(row, now)) continue;
+    if (!soonest || startsAtMs(row.startsAt) < startsAtMs(soonest.startsAt)) soonest = row;
+  }
+  return soonest;
+}
+
 export function getStoredBooking(codeRaw: string, now = Date.now()): StoredBooking | undefined {
   sweep(now);
   const code = normalizeBookingCode(codeRaw);

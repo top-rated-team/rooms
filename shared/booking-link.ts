@@ -52,9 +52,23 @@ export interface BookLink {
    * was sent to that inbox, and nobody else could have made it.
    */
   sig: string | null;
+  /**
+   * Book `date` at `time` for `email` the moment the page opens — a time
+   * clicked in a block the owner made for that address. Only ever acted on
+   * with a signature; see BookingDialog.
+   */
+  instant: boolean;
 }
 
-const EMPTY: BookLink = { email: null, date: null, time: null, confirmByEmail: false, confirmation: null, sig: null };
+const EMPTY: BookLink = {
+  email: null,
+  date: null,
+  time: null,
+  confirmByEmail: false,
+  confirmation: null,
+  sig: null,
+  instant: false,
+};
 
 /**
  * The address, or null. A merge field that was never filled in ({{email}}),
@@ -131,6 +145,7 @@ export function formatBookLinkHash(link: Partial<BookLink>): string {
   if (date) parts.push(`date=${date}`);
   if (time) parts.push(`time=${time}`);
   if (link.confirmByEmail) parts.push("confirm=email");
+  if (link.instant && time) parts.push("instant=1");
   if (link.confirmation && TOKEN_RE.test(link.confirmation)) parts.push(`confirmation=${link.confirmation}`);
   return parts.join("&");
 }
@@ -159,6 +174,10 @@ export function bookLinkTarget(rawQuery: string): string {
     }
     if (key === "time") {
       link.time ??= wallClock(decode(value));
+      continue;
+    }
+    if (key === "instant") {
+      link.instant = decode(value).trim() === "1";
       continue;
     }
     if (key === "sig") {
@@ -204,9 +223,11 @@ export function parseBookLinkHash(hash: string): BookLink | null {
     else if (key === "confirm") link.confirmByEmail ||= text.trim().toLowerCase() === "email";
     else if (key === "confirmation" && TOKEN_RE.test(text)) link.confirmation ??= text;
     else if (key === "sig" && SIG_RE.test(text)) link.sig ??= text;
+    else if (key === "instant") link.instant = text.trim() === "1";
   }
   if (!link.date) link.time = null;
   if (!link.email) link.sig = null;
+  if (!link.time) link.instant = false;
   return link;
 }
 
@@ -234,7 +255,7 @@ export function widgetRecipient(value: string | null | undefined): BookingWidget
  */
 export function bookLinkUrl(
   base: string,
-  input: { recipient?: string; date?: string; time?: string; confirmByEmail?: boolean; sig?: string },
+  input: { recipient?: string; date?: string; time?: string; confirmByEmail?: boolean; sig?: string; instant?: boolean },
 ): string {
   const params: string[] = [];
   const date = calendarDate(input.date ?? null);
@@ -242,6 +263,7 @@ export function bookLinkUrl(
   const time = date ? wallClock(input.time ?? null) : null;
   if (time) params.push(`time=${time}`);
   if (input.confirmByEmail) params.push("confirm=email");
+  if (input.instant && time) params.push("instant=1");
   const recipient = widgetRecipient(input.recipient);
   if (recipient.kind === "tag") params.push(`email=${recipient.value}`);
   else if (recipient.kind === "address") {

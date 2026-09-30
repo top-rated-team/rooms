@@ -264,6 +264,66 @@ describe("a time picked from a block the owner signed for that address", () => {
     }
   });
 
+  it("books once per block: a later click, on the same time or another, books nothing and cannot change it", async () => {
+    configure();
+    process.env.LEAD_INBOX_KEY = "inbox-key-for-tests";
+    try {
+      const fake = fakes();
+      const sig = signAddress(PICK.email)!;
+      const opts = { fetchImpl: fake.fetchImpl, now: NOW, host: "top-rated.team" };
+      const first = await postBooking({ ...PICK, sig }, opts);
+      assert.ok(first.ok && first.body.booked && first.body.code.length === 6, "the first click gets the way back");
+
+      /* The same email, opened by somebody else in Cc: the same time… */
+      const again = await postBooking({ ...PICK, sig }, opts);
+      assert.ok(again.ok && again.body.booked);
+      if (again.ok && again.body.booked) {
+        assert.equal(again.body.code, "", "no code, so no Change or Cancel");
+        assert.equal(again.body.startsAt, "2026-09-10T12:00:00.000Z");
+        assert.equal("already" in again.body, false);
+      }
+      /* …and another time in the same block. */
+      const other = await postBooking({ ...PICK, time: "15:30", sig }, opts);
+      assert.ok(other.ok && other.body.booked);
+      if (other.ok && other.body.booked) {
+        assert.equal(other.body.code, "");
+        assert.equal(other.body.already, true);
+        assert.equal(other.body.startsAt, "2026-09-10T12:00:00.000Z", "shown the call that stands, not the one clicked");
+      }
+      assert.equal(fake.events.length, 1, "one call in the calendar");
+    } finally {
+      delete process.env.LEAD_INBOX_KEY;
+    }
+  });
+
+  it("still counts a call that has begun: a slot is offered until it ends", async () => {
+    configure();
+    process.env.LEAD_INBOX_KEY = "inbox-key-for-tests";
+    try {
+      const fake = fakes();
+      const sig = signAddress(PICK.email)!;
+      /* 12:10Z: the 14:00-Bratislava (12:00Z) call started ten minutes ago. */
+      const during = new Date("2026-09-10T12:10:00.000Z");
+      const first = await postBooking({ ...PICK, sig }, { fetchImpl: fake.fetchImpl, now: during, host: "top-rated.team" });
+      assert.ok(first.ok && first.body.booked && first.body.code.length === 6);
+      const cc = await postBooking({ ...PICK, time: "15:30", sig }, { fetchImpl: fake.fetchImpl, now: during, host: "top-rated.team" });
+      assert.ok(cc.ok && cc.body.booked && cc.body.code === "" && cc.body.already === true);
+      assert.equal(fake.events.length, 1);
+    } finally {
+      delete process.env.LEAD_INBOX_KEY;
+    }
+  });
+
+  it("keeps the rule to signed blocks: the popup's own bookings are not limited by it", async () => {
+    configure({ mail: false });
+    const fake = fakes();
+    const opts = { fetchImpl: fake.fetchImpl, now: NOW, host: "top-rated.team" };
+    await postBooking({ date: "2026-09-10", time: "14:00", name: "ada", topic: "call", email: "ada@example.com" }, opts);
+    const second = await postBooking({ date: "2026-09-10", time: "15:30", name: "ada", topic: "call", email: "ada@example.com" }, opts);
+    assert.ok(second.ok && second.body.booked && second.body.code.length === 6);
+    assert.equal(fake.events.length, 2);
+  });
+
   it("is still confirmed by email when the signature is not for this address, or not ours", async () => {
     configure();
     process.env.LEAD_INBOX_KEY = "inbox-key-for-tests";

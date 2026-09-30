@@ -141,9 +141,19 @@ function button(href: string, label: string): string {
 
 export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget {
   const chosen = chooseWidgetDays(options.slots, options.days, options.timesPerDay);
+  const recipient = widgetRecipient(options.recipient);
+  const signedFor = options.recipientSig && recipient.kind === "address" ? recipient.value : null;
+  const signed = signedFor !== null;
+  /* A time in a signed block is one click: the page books it as it opens. A
+     day, and Other times, open the picker. */
   const link = (input: { date?: string; time?: string }) =>
-    bookLinkUrl(options.baseUrl, { ...input, confirmByEmail: true, recipient: options.recipient, sig: options.recipientSig });
-  const signed = Boolean(options.recipientSig) && widgetRecipient(options.recipient).kind === "address";
+    bookLinkUrl(options.baseUrl, {
+      ...input,
+      confirmByEmail: true,
+      recipient: options.recipient,
+      sig: options.recipientSig,
+      instant: signed && Boolean(input.time),
+    });
   const minutes = options.slots.slotMinutes;
   const zone = options.slots.timezone;
   const heading = `Book a ${minutes}-minute call with ${options.hostName}`;
@@ -160,7 +170,9 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
   const confirmLine = replyTo
     ? "Picking a time opens an email to us. Send it, and the call is booked; Google sends you the invite."
     : signed
-      ? "Pick a time and press Book: the call is booked, and Google sends you the invite."
+      ? options.show === "times"
+        ? `For ${signedFor} only: clicking a time books the call in that name, and Google sends the invite. Change or cancel it from the page that opens.`
+        : `For ${signedFor} only: pick a day, then a time, and press Book. Google sends the invite.`
       : "We email you a link to confirm it. Nothing is booked until you do.";
   const other = link({});
   const when = (date: string, time: string) => `${widgetDayLabel(date)}, ${time} (${zone})`;
