@@ -7,6 +7,7 @@ import {
   bookSlot,
   bookingLink,
   bookingLinkEmail,
+  bookingLinkSigFor,
   bookingTopic,
   confirmEmailHold,
   fetchEmailHoldStatus,
@@ -127,6 +128,7 @@ type Phase =
 const LINKED_TIME_GONE_LINE = "The time you picked in the email is no longer free. Pick another one here.";
 const LINKED_DAY_GONE_LINE = "The day you picked in the email has no free times any more. Pick another one here.";
 const EMAIL_CONFIRM_HINT = "We email you a link that confirms the call. Nothing is booked until you use it.";
+const SIGNED_HINT = "Press Book and the call is booked. Google sends the invite to this address.";
 const EMAIL_HOLD_LAPSED_LINE = "The link was not used in time, so nothing was booked and the time is free again.";
 const EMAIL_LINK_UNKNOWN_LINE = "This confirmation link is not one we know, or the call it confirmed has since been cancelled.";
 
@@ -535,7 +537,7 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
     if (trimmed) {
       setSending(true);
       try {
-        const result = await bookSlot({ date, time, email: trimmed, confirmByEmail: confirmsByEmail() });
+        const result = await bookSlot({ date, time, email: trimmed, confirmByEmail: confirmsByEmail(), sig: bookingLinkSigFor(trimmed) });
         if (!result.ok && result.conflict) {
           applyDays(result.days);
           setFormError(result.error);
@@ -1029,7 +1031,11 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                     )}
                   </div>
                   <p id="booking-email-hint" className="mt-1.5 text-xs text-muted-foreground">
-                    {confirmsByEmail() ? EMAIL_CONFIRM_HINT : emailHint(offerWhatsAppGate(), linkedin)}
+                    {confirmsByEmail()
+                      ? bookingLinkSigFor(email)
+                        ? SIGNED_HINT
+                        : EMAIL_CONFIRM_HINT
+                      : emailHint(offerWhatsAppGate(), linkedin)}
                   </p>
                   {emailError ? (
                     <p id="booking-email-error" className="mt-1.5 text-xs text-destructive" role="alert">

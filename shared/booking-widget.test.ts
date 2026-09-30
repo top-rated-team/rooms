@@ -74,6 +74,7 @@ describe("buildBookingWidget", () => {
       time: "09:00",
       confirmByEmail: true,
       confirmation: null,
+      sig: null,
     });
     assert.ok(links.every((href) => href.startsWith("https://top-rated.team/book?") && href.includes("confirm=email")));
     assert.match(widget.html, /Times are in Europe\/Bratislava\./);
@@ -112,6 +113,13 @@ describe("buildBookingWidget", () => {
     assert.deepEqual(images[3], ["https://top-rated.team/api/booking/slot/2026-10-02/1030.png", "10:30"]);
     assert.ok(hrefs(widget.html).slice(0, 16).every((href) => href.includes("confirm=email&email=ada%40example.com")), "each picture is still the link");
     assert.match(widget.html, /A time crossed out has been taken since this email was sent\./);
+  });
+
+  it("says a signed block books at once, and carries the signature in every link", () => {
+    const widget = buildBookingWidget({ ...BASE, show: "times", days: 1, timesPerDay: 2, recipient: "ada@example.com", recipientSig: "AbCdEfGhIjKlMnOpQrStUv" });
+    assert.ok(hrefs(widget.html).every((href) => href.endsWith("&email=ada%40example.com&sig=AbCdEfGhIjKlMnOpQrStUv")));
+    assert.match(widget.html, /Pick a time and press Book: the call is booked, and Google sends you the invite\./);
+    assert.doesNotMatch(widget.html, /We email you a link to confirm it/);
   });
 
   it("keeps a time with no picture as a plain button", () => {

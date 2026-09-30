@@ -18,6 +18,7 @@ import assert from "node:assert/strict";
 
 import { postBooking } from "./calendar";
 import { EMAIL_CONFIRM_ADDRESS_LINE, EMAIL_CONFIRM_SEND_FAILED_LINE, confirmationLetter } from "./confirm-email";
+import { signAddress } from "./link-sign";
 import {
   EMAIL_LINK_EXPIRED_LINE,
   confirmEmailHold,
@@ -242,6 +243,47 @@ describe("a time picked inside an email", () => {
   it("knows nothing about a token it did not mint", () => {
     assert.equal(emailHoldStatus("a".repeat(43)).status, "unknown");
     assert.equal(emailHoldStatus("").status, "unknown");
+  });
+});
+
+describe("a time picked from a block the owner signed for that address", () => {
+  it("is booked at once, with Google's invite, and no confirmation letter", async () => {
+    configure();
+    process.env.LEAD_INBOX_KEY = "inbox-key-for-tests";
+    try {
+      const fake = fakes();
+      const sig = signAddress(PICK.email)!;
+      const result = await postBooking({ ...PICK, sig }, { fetchImpl: fake.fetchImpl, now: NOW, host: "top-rated.team" });
+      assert.equal(result.ok && result.body.booked, true, JSON.stringify(result));
+      assert.equal(fake.letters.length, 0, "no confirmation letter");
+      assert.equal(fake.events.length, 1);
+      assert.deepEqual(fake.events[0]!.body.attendees, [{ email: PICK.email }]);
+      assert.match(fake.events[0]!.url, /sendUpdates=all/);
+    } finally {
+      delete process.env.LEAD_INBOX_KEY;
+    }
+  });
+
+  it("is still confirmed by email when the signature is not for this address, or not ours", async () => {
+    configure();
+    process.env.LEAD_INBOX_KEY = "inbox-key-for-tests";
+    try {
+      const fake = fakes();
+      const other = await postBooking(
+        { ...PICK, sig: signAddress("bea@example.com")! },
+        { fetchImpl: fake.fetchImpl, now: NOW, host: "top-rated.team" },
+      );
+      assert.ok(other.ok && "via" in other.body && other.body.via === "email", "an address changed in the popup is somebody else's");
+      const forged = await postBooking(
+        { ...PICK, time: "15:00", sig: "A".repeat(22) },
+        { fetchImpl: fake.fetchImpl, now: NOW, host: "top-rated.team" },
+      );
+      assert.ok(forged.ok && "via" in forged.body && forged.body.via === "email");
+      assert.equal(fake.events.length, 0);
+      assert.equal(fake.letters.length, 2);
+    } finally {
+      delete process.env.LEAD_INBOX_KEY;
+    }
   });
 });
 

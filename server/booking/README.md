@@ -108,6 +108,17 @@ the address on it, so Google sends the invite, and records the booking with a
 fresh return code. Twice is one event. A WhatsApp message carrying an email
 hold's code proves nothing.
 
+A block the owner made for one address skips that step. The widget page
+signs the address (`link-sign.ts`, an HMAC under a label of its own, keyed
+from `BOOKING_LINK_SECRET`, else the `LEAD_INBOX_KEY` render.yaml generates,
+else `ROOM_HASH_PEPPER`), and a picked time whose address carries our
+signature is written at once with Google's invite: the link went to that
+inbox, so opening it proves what the letter would. The owner asked for this.
+An address changed in the popup, a merge tag, or a signature that is not
+ours is still confirmed by email. A deployment with none of those secrets
+signs nothing, and every block keeps the step; changing the secret sends
+older links back to it.
+
 It needs `RESEND_API_KEY`, `LEAD_EMAIL_FROM` and `PUBLIC_BASE_URL`. Without
 them a time picked from the email is booked at once with Google's invite, as
 any booking with an address is, and the widget page says so in red.
