@@ -76,10 +76,11 @@ describe("buildBookingWidget", () => {
       confirmation: null,
       sig: null,
       instant: false,
+      guests: [],
     });
     assert.ok(links.every((href) => href.startsWith("https://top-rated.team/book?") && href.includes("confirm=email")));
-    assert.match(widget.html, /Times are <strong[^>]*>Central European Time \(Bratislava, GMT\+2\)<\/strong>\./);
-    assert.match(widget.text, /^Pick a time\. Times are Central European Time \(Bratislava, GMT\+2\)\.$/m);
+    assert.match(widget.html, /Times are <strong[^>]*>Central European Time \(Bratislava, CEST\)<\/strong>\./);
+    assert.match(widget.text, /^Pick a time\. Times are Central European Time \(Bratislava, CEST\)\.$/m);
     assert.match(widget.text, /^Fri 2 Oct$/m);
     assert.match(widget.text, /^ {2}16:30 {2}https:\/\/top-rated\.team\/book\?date=2026-10-02&time=16:30&confirm=email&email=dan%2Bads%40example\.com$/m);
   });
@@ -89,7 +90,7 @@ describe("buildBookingWidget", () => {
     assert.equal(widget.zone, "America/New_York");
     /* 09:00 in Bratislava on 2 October is 03:00 in New York. */
     assert.deepEqual(widget.days[0], { date: "2026-10-02", slots: FULL_DAY.map((time) => `${String(Number(time.slice(0, 2)) - 6).padStart(2, "0")}${time.slice(2)}`) });
-    assert.match(widget.html, /Times are <strong[^>]*>Eastern Time \(New York, GMT-4\)<\/strong>/);
+    assert.match(widget.html, /Times are <strong[^>]*>Eastern Time \(New York, EDT\)<\/strong>/);
     const links = hrefs(widget.html);
     assert.ok(links[0]!.includes("date=2026-10-02&time=09:00&"), links[0]);
     const images = [...widget.html.matchAll(/<img src="([^"]*)" width="64" height="34" alt="([^"]*)"/g)].map((m) => [m[1], m[2]]);
@@ -133,8 +134,8 @@ describe("buildBookingWidget", () => {
     };
     const widget = buildBookingWidget({ ...BASE, slots: autumn, show: "times", days: 2, timesPerDay: 4 });
     assert.match(widget.html, /Times are <strong[^>]*>Central European Time \(Bratislava\)<\/strong>\./);
-    assert.match(widget.html, />Fri 23 Oct · GMT\+2</);
-    assert.match(widget.html, />Mon 26 Oct · GMT\+1</);
+    assert.match(widget.html, />Fri 23 Oct · CEST</);
+    assert.match(widget.html, />Mon 26 Oct · CET</);
   });
 
   it("ignores a zone that is not one, and keeps the calendar's days when only days are shown", () => {

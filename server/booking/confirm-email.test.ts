@@ -176,7 +176,7 @@ describe("a time picked inside an email", () => {
     if (!first.ok) return;
     assert.match(first.body.code, /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/);
     assert.equal(first.body.invited, true);
-    assert.deepEqual(fake.events[0]!.body.attendees, [{ email: "ada+ads@example.com" }]);
+    assert.deepEqual(fake.events[0]!.body.attendees, [{ email: "ada+ads@example.com" }, { email: "dan@top-rated.team", responseStatus: "accepted" }]);
     assert.match(fake.events[0]!.url, /sendUpdates=all/);
 
     const again = await confirmEmailHold(token, { fetchImpl: fake.fetchImpl, now: later });
@@ -279,8 +279,36 @@ describe("a time picked from a block the owner signed for that address", () => {
       assert.equal(result.ok && result.body.booked, true, JSON.stringify(result));
       assert.equal(fake.letters.length, 0, "no confirmation letter");
       assert.equal(fake.events.length, 1);
-      assert.deepEqual(fake.events[0]!.body.attendees, [{ email: PICK.email }]);
+      assert.deepEqual(fake.events[0]!.body.attendees, [{ email: PICK.email }, { email: "dan@top-rated.team", responseStatus: "accepted" }]);
       assert.match(fake.events[0]!.url, /sendUpdates=all/);
+    } finally {
+      delete process.env.LEAD_INBOX_KEY;
+    }
+  });
+
+  it("invites the guests the owner named, and only when the signature covers them", async () => {
+    configure();
+    process.env.LEAD_INBOX_KEY = "inbox-key-for-tests";
+    try {
+      const guests = ["bea@example.com", "cy@example.org"];
+      const signed = fakes();
+      const ok = await postBooking({ ...PICK, guests, sig: signAddress(PICK.email, guests)! }, { fetchImpl: signed.fetchImpl, now: NOW, host: "top-rated.team" });
+      assert.equal(ok.ok && ok.body.booked, true, JSON.stringify(ok));
+      assert.deepEqual(signed.events[0]!.body.attendees, [
+        { email: PICK.email },
+        { email: "bea@example.com" },
+        { email: "cy@example.org" },
+        { email: "dan@top-rated.team", responseStatus: "accepted" },
+      ]);
+
+      /* Somebody edits a link signed for Ada alone to invite Mallory too: Ada is booked, Mallory is not invited. */
+      reset();
+      configure();
+      process.env.LEAD_INBOX_KEY = "inbox-key-for-tests";
+      const edited = fakes();
+      const booked = await postBooking({ ...PICK, guests: ["mallory@example.net"], sig: signAddress(PICK.email)! }, { fetchImpl: edited.fetchImpl, now: NOW, host: "top-rated.team" });
+      assert.equal(booked.ok && booked.body.booked, true);
+      assert.deepEqual(edited.events[0]!.body.attendees, [{ email: PICK.email }, { email: "dan@top-rated.team", responseStatus: "accepted" }]);
     } finally {
       delete process.env.LEAD_INBOX_KEY;
     }

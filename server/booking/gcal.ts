@@ -106,7 +106,8 @@ export interface BusyRange {
 export interface CreateGcalEventInput {
   title: string;
   description?: string;
-  attendees: { email: string }[];
+  /** responseStatus "accepted" for the host, who is not asked to answer his own call. */
+  attendees: { email: string; responseStatus?: "accepted" }[];
   start: { dateTime: string; timeZone: string };
   end: { dateTime: string; timeZone: string };
   notify: boolean;

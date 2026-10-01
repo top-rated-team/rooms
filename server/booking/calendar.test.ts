@@ -215,7 +215,7 @@ describe("postBooking", () => {
     const start = body.start as { dateTime: string; timeZone: string };
     assert.match(start.dateTime, /Z$/);
     assert.equal(start.timeZone, TZ);
-    assert.deepEqual(body.attendees, [{ email: "ada@example.com" }]);
+    assert.deepEqual(body.attendees, [{ email: "ada@example.com" }, { email: "dan@top-rated.team", responseStatus: "accepted" }], "the owner is on the guest list, already yes");
     assert.equal(typeof body.description, "string");
     assert.equal(String(body.description).includes(HOST_LINKEDIN_LINE), true);
     assert.equal(String(body.description).includes("Ada:"), false);
@@ -271,7 +271,7 @@ describe("postBooking", () => {
     if (!result.body.booked) return;
     assert.equal(result.body.invited, true);
     assert.match(postUrls[0] ?? "", /sendUpdates=all/);
-    assert.deepEqual(posts[0]?.attendees, [{ email: "ada@example.com" }]);
+    assert.deepEqual(posts[0]?.attendees, [{ email: "ada@example.com" }, { email: "dan@top-rated.team", responseStatus: "accepted" }]);
     assert.equal(result.body.whatsapp.url.includes("420774654822"), false);
   });
 

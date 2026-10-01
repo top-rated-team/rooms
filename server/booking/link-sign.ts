@@ -38,19 +38,28 @@ export function linkSigningOn(): boolean {
   return secret() !== null;
 }
 
-/** The signature for an address, or null when this deployment has nothing to sign with. */
-export function signAddress(email: string): string | null {
+/**
+ * The signature for an address, or null when this deployment has nothing to
+ * sign with. With guests — more people the owner asked to invite when this
+ * address books — it covers them too, in no particular order, so a link
+ * edited to name someone else verifies for the address alone and invites
+ * nobody more. Without guests it is exactly what it always was, so every
+ * link already sent still books.
+ */
+export function signAddress(email: string, guests: string[] = []): string | null {
   const key = secret();
   const address = email.trim().toLowerCase();
   if (!key || !address) return null;
+  const others = [...new Set(guests.map((guest) => guest.trim().toLowerCase()).filter(Boolean))].sort();
+  const payload = others.length > 0 ? `${address}\nguests:${others.join(",")}` : address;
   const derived = createHmac("sha256", key).update(LABEL).digest();
-  return createHmac("sha256", derived).update(address, "utf8").digest("base64url").slice(0, SIG_CHARS);
+  return createHmac("sha256", derived).update(payload, "utf8").digest("base64url").slice(0, SIG_CHARS);
 }
 
 /** Constant-time, and false for anything malformed rather than throwing. */
-export function addressSigned(email: string | undefined, sig: unknown): boolean {
+export function addressSigned(email: string | undefined, sig: unknown, guests: string[] = []): boolean {
   if (!email || typeof sig !== "string" || sig.length !== SIG_CHARS) return false;
-  const expected = signAddress(email);
+  const expected = signAddress(email, guests);
   if (!expected) return false;
   const a = Buffer.from(expected, "utf8");
   const b = Buffer.from(sig, "utf8");

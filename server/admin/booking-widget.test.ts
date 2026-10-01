@@ -15,6 +15,8 @@ import { AddressInfo } from "node:net";
 import { after, afterEach, before, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 
+import { signAddress } from "../booking/link-sign";
+
 import express from "express";
 
 import { ROOM_SESSION_COOKIE, emailProviderId, resetRoomAccountForTests, signInOrAttach } from "../room-account";
@@ -185,7 +187,7 @@ describe("GET /api/admin/booking-widget", () => {
     assert.equal(body.zone, "America/New_York");
     assert.deepEqual(body.workHours, { from: "10:00", to: "20:00" });
     const html = String(body.html);
-    assert.match(html, /Eastern Time \(New York, GMT-[45]\)/);
+    assert.match(html, /Eastern Time \(New York, E[DS]T\)/);
     /* 10:00 to 19:30 in Bratislava is 04:00 to 13:30 in New York, six hours behind. */
     const days = body.days as { date: string; slots: string[] }[];
     assert.ok(days[0]!.slots.every((time) => time >= "03:00" && time <= "14:30"), JSON.stringify(days[0]));
@@ -204,6 +206,20 @@ describe("GET /api/admin/booking-widget", () => {
     assert.doesNotMatch(String(body.html), /only:|We email you a link/, "no footer line: the block goes to that one person");
     assert.ok(links.slice(0, -1).every((href) => href.includes("&amp;instant=1&amp;")), "each time books in one click");
     assert.ok(!links.at(-1)!.includes("instant=1"), "Other times opens the picker");
+  });
+
+  it("puts the guests the owner names into every link, signed with the address, and says who is invited", async () => {
+    const token = await operatorToken();
+    const { body } = await get(
+      `/api/admin/booking-widget?recipient=${encodeURIComponent("ada@example.com")}&guests=${encodeURIComponent("Bea <bea@example.com>, ada@example.com, cy@example.org")}`,
+      token,
+    );
+    assert.deepEqual(body.guests, ["bea@example.com", "cy@example.org"], "the recipient is not their own guest");
+    assert.equal(body.host, "dan@top-rated.team");
+    const links = [...String(body.html).matchAll(/href="([^"]*)"/g)].map((m) => m[1]!.replace(/&amp;/g, "&"));
+    assert.ok(links.every((href) => href.includes("&guests=bea%40example.com,cy%40example.org&sig=")), links[0]);
+    const sig = /sig=([A-Za-z0-9_-]+)/.exec(links[0]!)![1];
+    assert.equal(sig, signAddress("ada@example.com", ["bea@example.com", "cy@example.org"]));
   });
 
   it("does not sign a merge tag: the address it stands for is not known here", async () => {

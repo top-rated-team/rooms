@@ -16,7 +16,7 @@
 import type { BookingDay, BookingSlotsResponse } from "./api";
 import { bookLinkUrl, widgetRecipient } from "./booking-link";
 import { replyAddress, replyMailto } from "./booking-reply";
-import { isTimeZone, offsetLabel, wallClockIn, wallClockToInstant, zonePhrase } from "./time-zones";
+import { isTimeZone, offsetLabel, wallClockIn, wallClockToInstant, zoneAbbreviation, zonePhrase } from "./time-zones";
 
 export type BookingWidgetShow = "times" | "days";
 
@@ -38,6 +38,12 @@ export interface BookingWidgetOptions {
    * instead of being confirmed from a link we email.
    */
   recipientSig?: string;
+  /**
+   * More people the owner wants on the call when the recipient books. They
+   * ride in every link and the signature covers them, so only a signed
+   * block invites them.
+   */
+  guests?: string[];
   /** Who the call is with, for the heading. */
   hostName: string;
   /**
@@ -218,6 +224,7 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
       recipient: options.recipient,
       sig: options.recipientSig,
       instant: signed && Boolean(input.time),
+      ...(signed && options.guests?.length ? { guests: options.guests } : {}),
     });
   const minutes = options.slots.slotMinutes;
   const heading = `Book a ${minutes}-minute call with ${options.hostName}`;
@@ -233,7 +240,7 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
   const intro = `${introLead}${zoneText}${introTail}`;
   const introHtml = `${escapeHtml(introLead)}<strong style="color:${INK};font-weight:600;">${escapeHtml(zoneText)}</strong>${escapeHtml(introTail)}`;
   const dayLabel = (day: WidgetDay) =>
-    `${widgetDayLabel(day.date)}${oneOffset || !day.times[0] ? "" : ` · ${offsetLabel(zone, day.times[0].ms)}`}`;
+    `${widgetDayLabel(day.date)}${oneOffset || !day.times[0] ? "" : ` · ${zoneAbbreviation(zone, day.times[0].ms)}`}`;
   const imageSrc = (time: WidgetTime) => {
     const hhmm = (value: string) => value.replace(":", "");
     const base = `${options.baseUrl.replace(/\/+$/, "")}/api/booking/slot/${time.at.date}/${hhmm(time.at.time)}.png`;

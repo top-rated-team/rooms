@@ -4,6 +4,10 @@
  * company they work for.
  *
  * In order, stopping at the first answer:
+ *   0. A website in what was typed — a URL, a bare domain, or an address at
+ *      a company's own domain: the address the site prints, usually in its
+ *      footer (site-location.ts). Small organisations are on no map and in
+ *      no encyclopaedia, but almost all of them say where they are.
  *   1. A place or country named exactly: "Prague", "Czechia", "Chicago".
  *   2. Wikidata, for a company: the first result that has a headquarters
  *      (P159) — whose coordinates are the answer — or is itself a place
@@ -20,22 +24,22 @@
  * request a second, which an owner typing on one page does not approach.
  */
 
-import tzLookup from "@photostructure/tz-lookup";
+import { zoneCity } from "@shared/time-zones";
 
-import { isTimeZone, zoneCity } from "@shared/time-zones";
+import { geocodeToZone, getJson, zoneAt } from "./geo";
+import { siteFromQuery, zoneFromSite, type Resolve } from "./site-location";
 
 export interface ZoneLookupHit {
   zone: string;
   /** What was found, for the page to name: "Mladá Boleslav, Czechia". */
   place: string;
-  source: "place name" | "Wikidata" | "OpenStreetMap";
+  source: "website" | "place name" | "Wikidata" | "OpenStreetMap";
+  /** The website it was read from, when it was. */
+  site?: string;
 }
 
 const WIKIDATA_API = "https://www.wikidata.org/w/api.php";
-const NOMINATIM_SEARCH = "https://nominatim.openstreetmap.org/search";
-const REQUEST_MS = 6_000;
 const KEEP_MS = 24 * 60 * 60_000;
-const USER_AGENT = "top-rated.team booking widget (https://top-rated.team)";
 
 const answers = new Map<string, { at: number; hit: ZoneLookupHit | null }>();
 
@@ -174,29 +178,6 @@ export function zoneFromPlaceName(query: string): ZoneLookupHit | null {
   return country ? { zone: country, place, source: "place name" } : null;
 }
 
-function zoneAt(lat: number, lon: number): string | null {
-  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
-  try {
-    const zone = tzLookup(lat, lon);
-    return zone && isTimeZone(zone) ? zone : null;
-  } catch {
-    return null;
-  }
-}
-
-async function getJson(url: string, fetchImpl: typeof fetch): Promise<unknown> {
-  try {
-    const res = await fetchImpl(url, {
-      headers: { Accept: "application/json", "User-Agent": USER_AGENT },
-      signal: AbortSignal.timeout(REQUEST_MS),
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as unknown;
-  } catch {
-    return null;
-  }
-}
-
 function record(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
 }
@@ -270,23 +251,15 @@ async function fromWikidata(query: string, fetchImpl: typeof fetch): Promise<Zon
 }
 
 async function fromNominatim(query: string, fetchImpl: typeof fetch): Promise<ZoneLookupHit | null> {
-  const params = new URLSearchParams({ q: query, format: "jsonv2", limit: "1", "accept-language": "en" });
-  const rows = await getJson(`${NOMINATIM_SEARCH}?${params}`, fetchImpl);
-  const first = record(Array.isArray(rows) ? rows[0] : null);
-  if (!first) return null;
-  const zone = zoneAt(Number(first.lat), Number(first.lon));
-  if (!zone) return null;
-  const name = typeof first.display_name === "string" ? first.display_name : query;
-  /* The full address is long; the last three parts say where. */
-  const place = name.split(",").map((part) => part.trim()).filter(Boolean).slice(-3).join(", ");
-  return { zone, place, source: "OpenStreetMap" };
+  const placed = await geocodeToZone(query, fetchImpl);
+  return placed ? { ...placed, source: "OpenStreetMap" } : null;
 }
 
 export async function lookUpZone(
   raw: string,
-  opts: { fetchImpl?: typeof fetch; now?: number } = {},
+  opts: { fetchImpl?: typeof fetch; now?: number; resolve?: Resolve } = {},
 ): Promise<ZoneLookupHit | null> {
-  const query = raw.trim().replace(/\s+/g, " ").slice(0, 120);
+  const query = raw.trim().replace(/\s+/g, " ").slice(0, 200);
   if (query.length < 2) return null;
   const key = normalise(query);
   const now = opts.now ?? Date.now();
@@ -294,8 +267,21 @@ export async function lookUpZone(
   if (kept && now - kept.at < KEEP_MS) return kept.hit;
 
   const fetchImpl = opts.fetchImpl ?? fetch;
-  const hit = zoneFromPlaceName(query) ?? (await fromWikidata(query, fetchImpl)) ?? (await fromNominatim(query, fetchImpl));
+  const hit = await lookUp(query, fetchImpl, opts.resolve);
   if (answers.size > 500) answers.clear();
   answers.set(key, { at: now, hit });
   return hit;
+}
+
+async function lookUp(query: string, fetchImpl: typeof fetch, resolve?: Resolve): Promise<ZoneLookupHit | null> {
+  /* The website first: what a company says about itself beats a name match. */
+  const site = siteFromQuery(query);
+  if (site) {
+    const found = await zoneFromSite(site.host, { fetchImpl, ...(resolve ? { resolve } : {}) });
+    if (found) return { zone: found.zone, place: found.place, source: "website", site: found.site };
+  }
+  /* Then the rest of what was typed: "(Back2Basics Outdoor Ministries Inc)". */
+  const rest = (site ? query.replace(site.matched, " ") : query).replace(/[()[\]]/g, " ").replace(/\s+/g, " ").trim();
+  if (rest.length < 2) return null;
+  return zoneFromPlaceName(rest) ?? (await fromWikidata(rest, fetchImpl)) ?? (await fromNominatim(rest, fetchImpl));
 }
