@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ACTION, ACTION_QUIET, DISPLAY, META, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
 import { useTheme } from "@/hooks/use-theme";
-import type { AdminBookingWidgetResponse, ZoneLookupResponse } from "@shared/api";
+import type { AdminBookingWidgetResponse } from "@shared/api";
 import { bookingGuests, widgetRecipient } from "@shared/booking-link";
 import { WIDGET_MAX_DAYS, WIDGET_MAX_TIMES_PER_DAY, type BookingWidgetShow } from "@shared/booking-widget";
-import { guessZoneFromAddress, isFreeMailDomain, isTimeZone, zoneGroupFor, zoneGroups, zonePhrase, type ZoneGroup } from "@shared/time-zones";
+import { WhereTheyAre, type KnownPlace, type WhereTheyAreProps } from "@/components/admin/WhereTheyAre";
+import { guessZoneFromAddress, isTimeZone } from "@shared/time-zones";
 
 /**
  * The booking times as a block for an email — /admin/booking-widget.
@@ -25,50 +26,45 @@ type LoadState =
   /* forKey: the options and recipient this block was made for. */
   | { kind: "ok"; data: AdminBookingWidgetResponse; forKey: string };
 
-function optionsKey(show: BookingWidgetShow, days: number, perDay: number, recipient: string, tz: string, guests: string): string {
-  return JSON.stringify([show, days, perDay, recipient.trim(), tz, guests.trim()]);
+function optionsKey(show: BookingWidgetShow, days: number, perDay: number, recipient: string, tz: string, place: string, guests: string): string {
+  return JSON.stringify([show, days, perDay, recipient.trim(), tz, place, guests.trim()]);
 }
 
-/* The zone set for an address, kept in this browser so the next block for
-   the same person starts on it. A convenience only: nothing else reads it. */
+/* Where each person is — zone and town — kept in this browser so the next
+   block for the same person starts there. A convenience only: nothing else
+   reads it. Older entries hold only a zone. */
 const ZONES_KEY = "booking-widget-zones";
 
-function readRememberedZones(): Record<string, string> {
+function readRememberedZones(): Record<string, KnownPlace> {
   try {
     const parsed = JSON.parse(window.localStorage.getItem(ZONES_KEY) ?? "{}") as unknown;
     if (!parsed || typeof parsed !== "object") return {};
-    return Object.fromEntries(
-      Object.entries(parsed as Record<string, unknown>).filter(
-        (entry): entry is [string, string] => typeof entry[1] === "string" && isTimeZone(entry[1]),
-      ),
-    );
+    const out: Record<string, KnownPlace> = {};
+    for (const [address, value] of Object.entries(parsed as Record<string, unknown>)) {
+      if (typeof value === "string" && isTimeZone(value)) out[address] = { zone: value };
+      else if (value && typeof value === "object" && isTimeZone(String((value as KnownPlace).zone))) {
+        const row = value as KnownPlace;
+        out[address] = {
+          zone: row.zone,
+          ...(typeof row.place === "string" && row.place.trim() ? { place: row.place.trim().slice(0, 60) } : {}),
+          ...(typeof row.how === "string" ? { how: row.how.slice(0, 120) } : {}),
+        };
+      }
+    }
+    return out;
   } catch {
     return {};
   }
 }
 
-function rememberZone(address: string, zone: string): Record<string, string> {
-  const next = { ...readRememberedZones(), [address]: zone };
+function rememberZone(address: string, known: KnownPlace): Record<string, KnownPlace> {
+  const next = { ...readRememberedZones(), [address]: known };
   try {
     window.localStorage.setItem(ZONES_KEY, JSON.stringify(next));
   } catch {
     /* Private window or storage off: the pick still holds for this page. */
   }
   return next;
-}
-
-type ZoneSource = "remembered" | "guessed" | "calendar";
-
-/* Every zone this browser knows, as one entry per clock (shared/time-zones.ts). */
-function zoneOptions(extra: string[]): ZoneGroup[] {
-  const intl = Intl as typeof Intl & { supportedValuesOf?: (key: "timeZone") => string[] };
-  let zones: string[] = [];
-  try {
-    zones = intl.supportedValuesOf?.("timeZone") ?? [];
-  } catch {
-    zones = [];
-  }
-  return zoneGroups([...zones, ...extra.filter((zone) => zone && isTimeZone(zone)), "UTC"]);
 }
 
 const FIELD =
@@ -139,26 +135,25 @@ export default function AdminBookingWidget() {
   const [reads, setReads] = useState(0);
   const [copied, setCopied] = useState<string | null>(null);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /* The recipient's zone: picked here, set before for this address, guessed
-     from a one-clock country's domain, or else the calendar's own. */
-  const [remembered, setRemembered] = useState<Record<string, string>>(() => readRememberedZones());
-  /* Their company or town, looked up as a zone (server/booking/zone-lookup.ts). */
-  const [company, setCompany] = useState("");
-  const [lookup, setLookup] = useState<{ phase: "idle" | "looking" } | { phase: "done"; line: string; found: boolean }>({ phase: "idle" });
+  /* Where the recipient is: picked or found here, set before for this
+     address, guessed from a one-clock country's domain, or else our own. */
+  const [remembered, setRemembered] = useState<Record<string, KnownPlace>>(() => readRememberedZones());
   const [calendarZone, setCalendarZone] = useState("");
-  const zoneFor = (address: string): { zone: string; source: ZoneSource; domain?: string } => {
+  const zoneFor = (address: string): WhereTheyAreProps["known"] => {
     const typedAddress = widgetRecipient(address);
     const key = typedAddress.kind === "address" ? typedAddress.value.toLowerCase() : "";
-    if (key && remembered[key]) return { zone: remembered[key]!, source: "remembered" };
+    const kept = key ? remembered[key] : undefined;
+    if (kept) return { ...kept, source: "remembered" };
     const guess = key ? guessZoneFromAddress(key) : null;
     if (guess) return { zone: guess.zone, source: "guessed", domain: guess.domain };
-    return { zone: calendarZone, source: "calendar" };
+    return { zone: calendarZone, source: "own" };
   };
-  /* What goes to the server: nothing for the calendar's zone, which is its default. */
+  /* What goes to the server: nothing for our own zone, which is its default. */
   const tzFor = (address: string) => {
     const found = zoneFor(address);
-    return found.source === "calendar" ? "" : found.zone;
+    return found.source === "own" ? "" : found.zone;
   };
+  const placeFor = (address: string) => (tzFor(address) ? (zoneFor(address).place ?? "") : "");
 
   useEffect(() => {
     const previous = document.title;
@@ -181,26 +176,6 @@ export default function AdminBookingWidget() {
     return () => clearTimeout(timer);
   }, [recipient, guestsText]);
 
-  /* A new person: what was found for the last one is not theirs. */
-  const addressKey = widgetRecipient(recipient).kind === "address" ? recipient.trim().toLowerCase() : "";
-  useEffect(() => {
-    setCompany("");
-    setLookup({ phase: "idle" });
-  }, [addressKey]);
-
-  /* AN ADDRESS AT A COMPANY'S OWN DOMAIN NAMES ITS WEBSITE, and the website
-     usually prints where it is: looked up once typing stops, when nothing
-     else says where they are. Not for gmail.com and the like. */
-  useEffect(() => {
-    const typedAsked = widgetRecipient(asked);
-    if (typedAsked.kind !== "address") return;
-    const address = typedAsked.value.toLowerCase();
-    const domain = address.slice(address.lastIndexOf("@") + 1);
-    if (!domain || isFreeMailDomain(domain) || remembered[address] || guessZoneFromAddress(address)) return;
-    void lookUpZoneFor(address, domain, true);
-    /* Once per address typed; a zone remembered from it stops the next. */
-  }, [asked]);
-
   /* KEPT IN STEP WITH THE CALENDAR while the page is open: read again when the
      owner comes back to the tab — usually from the calendar itself — and every
      two minutes while it is in front of him. */
@@ -221,7 +196,8 @@ export default function AdminBookingWidget() {
   useEffect(() => {
     const ac = new AbortController();
     const tz = tzFor(asked);
-    const query = new URLSearchParams({ show, days: String(days), perDay: String(perDay), recipient: asked, tz, guests: askedGuests });
+    const place = placeFor(asked);
+    const query = new URLSearchParams({ show, days: String(days), perDay: String(perDay), recipient: asked, tz, place, guests: askedGuests });
     void (async () => {
       try {
         const res = await fetch(`/api/admin/booking-widget?${query.toString()}`, {
@@ -244,7 +220,7 @@ export default function AdminBookingWidget() {
           return;
         }
         if (typeof payload.timezone === "string") setCalendarZone(payload.timezone);
-        setState({ kind: "ok", data: payload, forKey: optionsKey(show, days, perDay, asked, tz, askedGuests) });
+        setState({ kind: "ok", data: payload, forKey: optionsKey(show, days, perDay, asked, tz, place, askedGuests) });
       } catch (error) {
         if (ac.signal.aborted) return;
         setState({ kind: "failed", line: error instanceof Error ? error.message : "The booking times could not be loaded." });
@@ -277,52 +253,8 @@ export default function AdminBookingWidget() {
      is the previous one — and a Copy pressed in that moment sent an email
      whose links carried no address, while the page looked finished. Copying
      waits until the block is the one for what is in the boxes. */
-  const fresh = state.kind === "ok" && state.forKey === optionsKey(show, days, perDay, recipient, tzFor(recipient), guestsText);
+  const fresh = state.kind === "ok" && state.forKey === optionsKey(show, days, perDay, recipient, tzFor(recipient), placeFor(recipient), guestsText);
   const shownZone = zoneFor(recipient);
-  const effectiveZone = shownZone.zone || (state.kind === "ok" ? state.data.zone : "");
-  const zoneChoices = useMemo(() => zoneOptions([calendarZone]), [calendarZone]);
-  /* A zone set some other way — guessed, found, remembered — shows as the
-     entry for its clock; picking an entry stores that entry's zone. */
-  const pickedEntry = effectiveZone ? zoneGroupFor(effectiveZone, zoneChoices)?.zone ?? "" : "";
-  /* What a lookup found, said the way it was found. */
-  function foundLine(body: Extract<ZoneLookupResponse, { found: true }>): string {
-    const where = body.source === "website" && body.site ? `on ${body.site}` : `(${body.source})`;
-    return `Found ${body.place} ${where}: ${zonePhrase(body.zone, Date.now())}. Kept for this address.`;
-  }
-
-  async function lookUpZoneFor(address: string, query: string, quiet: boolean) {
-    setLookup({ phase: "looking" });
-    try {
-      const res = await fetch(`/api/admin/zone-lookup?${new URLSearchParams({ q: query })}`, {
-        headers: { Accept: "application/json" },
-        credentials: "same-origin",
-      });
-      const body = (await res.json().catch(() => ({ found: false }))) as ZoneLookupResponse & { error?: string };
-      if (!res.ok) {
-        setLookup(quiet ? { phase: "idle" } : { phase: "done", found: false, line: body.error?.trim() || "The zone could not be looked up just now." });
-        return;
-      }
-      if (!body.found || !isTimeZone(body.zone)) {
-        setLookup(
-          quiet
-            ? { phase: "idle" }
-            : { phase: "done", found: false, line: `Nothing found for “${query}”. Pick their zone from the list.` },
-        );
-        return;
-      }
-      setRemembered(rememberZone(address, body.zone));
-      setLookup({ phase: "done", found: true, line: foundLine(body) });
-    } catch {
-      setLookup(quiet ? { phase: "idle" } : { phase: "done", found: false, line: "The zone could not be looked up just now." });
-    }
-  }
-
-  async function findZone() {
-    const query = company.trim();
-    if (!query || typed.kind !== "address" || lookup.phase === "looking") return;
-    await lookUpZoneFor(typed.value.toLowerCase(), query, false);
-  }
-
   /* What the links carry, said from the server's answer, not from the box. */
   const carriedGuests = fresh && state.kind === "ok" ? (state.data.guests ?? []) : [];
   const host = state.kind === "ok" ? (state.data.host ?? null) : null;
@@ -338,14 +270,6 @@ export default function AdminBookingWidget() {
           : carriedGuests.length > 0
             ? `When ${typed.value} books, Google also invites ${carriedGuests.join(", ")}.`
             : "Updating the block for these guests.";
-  const zoneNote =
-    typed.kind !== "address"
-      ? "Put the address in first: the zone is kept for that person."
-      : shownZone.source === "remembered"
-        ? "The zone you set for this address. Every time in the email is shown on this clock, and the zone is named."
-        : shownZone.source === "guessed"
-          ? `Guessed from the ${shownZone.domain} address. Change it if they are elsewhere: every time in the email is shown on this clock.`
-          : "Nothing in the address says where they are, so this is your own zone. Pick theirs, or find it from their website or company below: every time in the email is shown on their clock, and the zone is named.";
   const carried = state.kind === "ok" ? state.data.recipient : null;
   /* THE ADDRESS IS REQUIRED, and has to be signed: that is what lets one
      click book the call. Without it there is nothing to copy. */
@@ -507,87 +431,16 @@ export default function AdminBookingWidget() {
                 </span>
               </label>
               {show === "times" ? (
-                <label className="block sm:col-span-3">
-                  <span className={`${META} mb-[var(--s1)] block`}>Recipient's time zone</span>
-                  <select
-                    className={FIELD}
-                    value={pickedEntry}
-                    disabled={typed.kind !== "address" || !effectiveZone}
-                    onChange={(event) => {
-                      if (typed.kind !== "address") return;
-                      setRemembered(rememberZone(typed.value.toLowerCase(), event.target.value));
-                    }}
-                    data-testid="select-widget-zone"
-                  >
-                    {/* The clocks most calls are on first, then every other, west to east. */}
-                    <optgroup label="Most used">
-                      {zoneChoices
-                        .filter((option) => option.common)
-                        .map((option) => (
-                          <option key={option.zone} value={option.zone}>
-                            {option.label}
-                          </option>
-                        ))}
-                    </optgroup>
-                    <optgroup label="All other time zones">
-                      {zoneChoices
-                        .filter((option) => !option.common)
-                        .map((option) => (
-                          <option key={option.zone} value={option.zone}>
-                            {option.label}
-                          </option>
-                        ))}
-                    </optgroup>
-                  </select>
-                  <span className="mt-1.5 block text-xs text-muted-foreground" data-testid="text-widget-zone">
-                    {zoneNote}
-                  </span>
-                </label>
-              ) : null}
-              {show === "times" ? (
-                <div className="block sm:col-span-3">
-                  <label htmlFor="widget-company" className={`${META} mb-[var(--s1)] block`}>
-                    Their website, company or town
-                  </label>
-                  <div className="flex items-end gap-[var(--s2)]">
-                    <input
-                      id="widget-company"
-                      className={FIELD}
-                      value={company}
-                      onChange={(event) => setCompany(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          event.preventDefault();
-                          void findZone();
-                        }
-                      }}
-                      placeholder="e.g. back2basicsadventures.org, Škoda Auto, or Chicago"
-                      disabled={typed.kind !== "address"}
-                      spellCheck={false}
-                      data-testid="input-widget-company"
-                    />
-                    <button
-                      type="button"
-                      className={ACTION_QUIET}
-                      onClick={() => void findZone()}
-                      disabled={typed.kind !== "address" || !company.trim() || lookup.phase === "looking"}
-                      data-testid="button-widget-find-zone"
-                    >
-                      {lookup.phase === "looking" ? "Looking" : "Find"}
-                    </button>
-                  </div>
-                  <span
-                    className={`mt-1.5 block text-xs ${lookup.phase === "done" && !lookup.found ? "text-destructive" : "text-muted-foreground"}`}
-                    aria-live="polite"
-                    data-testid="text-widget-company"
-                  >
-                    {lookup.phase === "done"
-                      ? lookup.line
-                      : lookup.phase === "looking"
-                        ? "Looking up where they are."
-                        : "Optional. For a gmail.com or other address that says nothing: the website in their signature (its address is read), their company, or their town sets the zone above."}
-                  </span>
-                </div>
+                <WhereTheyAre
+                  address={typed.kind === "address" ? typed.value.toLowerCase() : null}
+                  known={{ ...shownZone, zone: shownZone.zone || (state.kind === "ok" ? state.data.zone : "") }}
+                  onChoose={(choice) => {
+                    if (typed.kind !== "address") return;
+                    setRemembered(rememberZone(typed.value.toLowerCase(), choice));
+                  }}
+                  labelClassName={`${META} mb-[var(--s1)] block`}
+                  fieldClassName={FIELD}
+                />
               ) : (
                 <p className="text-xs text-muted-foreground sm:col-span-3" data-testid="text-widget-zone">
                   Days only: the page that opens lists the times, on your clock, and names the zone.

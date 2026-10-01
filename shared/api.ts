@@ -516,8 +516,13 @@ export interface AdminBookingWidgetResponse {
 
 /** GET /api/admin/zone-lookup?q= — a company or place, as a time zone. */
 export type ZoneLookupResponse =
-  | { found: true; zone: string; place: string; source: "website" | "place name" | "Wikidata" | "OpenStreetMap"; site?: string }
+  | { found: true; zone: string; place: string; source: "website" | "place name" | "Wikidata" | "OpenStreetMap"; site?: string; city?: string }
   | { found: false };
+
+/** GET /api/admin/city-search?q= — towns that start with what was typed, each with its own clock. */
+export interface CitySearchResponse {
+  cities: { place: string; label: string; zone: string }[];
+}
 
 export interface BookingConflictResponse {
   error: string;

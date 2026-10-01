@@ -89,6 +89,7 @@ import {
   WHATSAPP_INBOUND_PATH,
 } from "./whatsapp";
 import { WORK_END_HOUR, WORK_START_HOUR, getBookingSlots, invalidateSlotsCache, parseSlotsQuery } from "./booking/slots";
+import { searchCities } from "./booking/city-search";
 import { lookUpZone } from "./booking/zone-lookup";
 import { calendarId as bookingCalendarId } from "./booking/gcal";
 import {
@@ -1809,6 +1810,24 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
+  /* Towns that start with what the owner typed, each with its own clock
+     (server/booking/city-search.ts): the widget page's "Where they are". */
+  app.get(
+    "/api/admin/city-search",
+    roomAccessOpenLimit,
+    route(async (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+      const gate = await requireDeploymentOperator(req);
+      if (!gate.ok) {
+        res.status(gate.status).json({ error: gate.error });
+        return;
+      }
+      const q = typeof req.query.q === "string" ? req.query.q.slice(0, 80) : "";
+      res.json({ cities: searchCities(q, 8).map(({ place, label, zone }) => ({ place, label, zone })) });
+    }),
+  );
+
   /* The recipient's company or town, as the zone to show them times in
      (server/booking/zone-lookup.ts). Operator only: it asks outside services. */
   app.get(
@@ -1878,6 +1897,10 @@ export function registerRoutes(app: Express): void {
         liveImages: true,
         /* The recipient's zone, as the owner set it; the builder ignores one that is not a zone. */
         ...(typeof query.tz === "string" && query.tz.trim() ? { viewerZone: query.tz.trim() } : {}),
+        /* And their town in it, named in the email: plain words, short. */
+        ...(typeof query.place === "string" && query.place.trim()
+          ? { viewerPlace: query.place.replace(/[<>"\u0000-\u001f]/g, "").trim().slice(0, 60) }
+          : {}),
       });
       const hour = (h: number) => `${String(h).padStart(2, "0")}:00`;
       res.json({

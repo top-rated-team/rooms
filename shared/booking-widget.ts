@@ -68,6 +68,8 @@ export interface BookingWidgetOptions {
    * the page that opens shows the times, and names its zone.
    */
   viewerZone?: string;
+  /** The recipient's own town in that zone, named instead of the zone's capital: "Smalltown, PA". */
+  viewerPlace?: string;
 }
 
 export interface BookingWidget {
@@ -234,7 +236,8 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
      for some of them. */
   const shown = chosen.flatMap((day) => day.times.map((time) => time.ms));
   const oneOffset = new Set(shown.map((ms) => offsetLabel(zone, ms))).size <= 1;
-  const zoneText = oneOffset ? zonePhrase(zone, shown[0] ?? Date.now()) : zonePhrase(zone);
+  const place = zone === options.viewerZone ? options.viewerPlace?.trim() || undefined : undefined;
+  const zoneText = oneOffset ? zonePhrase(zone, shown[0] ?? Date.now(), place) : zonePhrase(zone, undefined, place);
   const introLead = options.show === "times" ? "Pick a time. Times are " : "Pick a day, then a time on it. Times are ";
   const introTail = live ? ". A time crossed out has been taken since this email was sent." : ".";
   const intro = `${introLead}${zoneText}${introTail}`;

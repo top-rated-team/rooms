@@ -98,6 +98,12 @@ describe("buildBookingWidget", () => {
     assert.match(widget.text, /^ {2}03:00 {2}https:\/\/top-rated\.team\/book\?date=2026-10-02&time=09:00&confirm=email$/m);
   });
 
+  it("names the reader's own town in their zone, when the owner knows it", () => {
+    const widget = buildBookingWidget({ ...BASE, show: "times", days: 1, timesPerDay: 2, viewerZone: "America/New_York", viewerPlace: "Smalltown, PA" });
+    assert.match(widget.html, /Times are <strong[^>]*>Eastern Time \(Smalltown, PA, EDT\)<\/strong>/);
+    assert.match(widget.text, /Times are Eastern Time \(Smalltown, PA, EDT\)\./);
+  });
+
   it("moves a time past the reader's midnight onto the reader's next day", () => {
     const widget = buildBookingWidget({ ...BASE, show: "times", days: 3, timesPerDay: 16, viewerZone: "Asia/Tokyo" });
     /* Bratislava is seven hours behind Tokyo: 16:30 on the 2nd is 23:30, and 14:00 on the 5th is 21:00. */
