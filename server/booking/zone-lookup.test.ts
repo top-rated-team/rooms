@@ -65,7 +65,9 @@ describe("zoneFromPlaceName", () => {
 describe("lookUpZone", () => {
   it("names a place without asking anyone", async () => {
     const web = fakeWeb({});
-    assert.deepEqual(await lookUpZone("Prague", { fetchImpl: web.fetchImpl }), { zone: "Europe/Prague", place: "Prague", source: "place name" });
+    assert.deepEqual(await lookUpZone("Prague", { fetchImpl: web.fetchImpl }), { zone: "Europe/Prague", place: "Prague, Czechia", source: "place name", city: "Prague" });
+    /* A town of its own, with its own clock, not the state's: El Paso keeps Mountain time. */
+    assert.deepEqual(await lookUpZone("El Paso, TX", { fetchImpl: web.fetchImpl }), { zone: "America/Denver", place: "El Paso, TX, United States", source: "place name", city: "El Paso, TX" });
     assert.equal(web.asked.length, 0);
   });
 
@@ -82,21 +84,26 @@ describe("lookUpZone", () => {
       zone: "America/Los_Angeles",
       place: "Apple Inc., Cupertino",
       source: "Wikidata",
+      city: "Cupertino, CA",
     });
     assert.ok(web.asked.every((row) => row.agent?.includes("top-rated.team")), "the client is named");
   });
 
-  it("asks OpenStreetMap what Wikidata does not know, and 'Paris, Texas' is in Texas", async () => {
+  it("knows 'Paris, Texas' is in Texas, and asks OpenStreetMap what neither list nor Wikidata knows", async () => {
     const web = fakeWeb({
       nominatim: {
-        "Paris, Texas": [{ lat: "33.6609", lon: "-95.5555", display_name: "Paris, Lamar County, Texas, United States" }],
+        "Lamar County Courthouse": [{ lat: "33.6609", lon: "-95.5555", display_name: "Paris, Lamar County, Texas, United States" }],
       },
     });
     assert.deepEqual(await lookUpZone("Paris, Texas", { fetchImpl: web.fetchImpl }), {
       zone: "America/Chicago",
-      place: "Lamar County, Texas, United States",
-      source: "OpenStreetMap",
+      place: "Paris, TX, United States",
+      source: "place name",
+      city: "Paris, TX",
     });
+    /* Something the town list does not have goes to OpenStreetMap, and is named for its town. */
+    const placed = await lookUpZone("Lamar County Courthouse", { fetchImpl: web.fetchImpl });
+    assert.deepEqual(placed, { zone: "America/Chicago", place: "Lamar County, Texas, United States", source: "OpenStreetMap", city: "Paris, TX" });
   });
 
   it("says nothing was found, and does not ask twice", async () => {

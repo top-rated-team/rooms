@@ -42,15 +42,20 @@ function record(value: unknown): Record<string, unknown> | null {
 }
 
 /** A place's name as a zone, with the name OpenStreetMap gave it. */
-export async function geocodeToZone(query: string, fetchImpl: typeof fetch): Promise<{ zone: string; place: string } | null> {
+export async function geocodeToZone(
+  query: string,
+  fetchImpl: typeof fetch,
+): Promise<{ zone: string; place: string; lat: number; lon: number } | null> {
   const params = new URLSearchParams({ q: query, format: "jsonv2", limit: "1", "accept-language": "en" });
   const rows = await getJson(`${NOMINATIM_SEARCH}?${params}`, fetchImpl);
   const first = record(Array.isArray(rows) ? rows[0] : null);
   if (!first) return null;
-  const zone = zoneAt(Number(first.lat), Number(first.lon));
+  const lat = Number(first.lat);
+  const lon = Number(first.lon);
+  const zone = zoneAt(lat, lon);
   if (!zone) return null;
   const name = typeof first.display_name === "string" ? first.display_name : query;
   /* The full address is long; the last three parts say where. */
   const place = name.split(",").map((part) => part.trim()).filter(Boolean).slice(-3).join(", ");
-  return { zone, place };
+  return { zone, place, lat, lon };
 }

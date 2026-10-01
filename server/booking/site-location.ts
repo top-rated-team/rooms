@@ -27,6 +27,7 @@ import net from "node:net";
 
 import { guessZoneFromAddress, isFreeMailDomain, isTimeZone } from "@shared/time-zones";
 
+import { US_STATE_NAMES, nearestCity } from "./city-search";
 import { LOOKUP_USER_AGENT, geocodeToZone, zoneAt } from "./geo";
 
 export { isFreeMailDomain };
@@ -35,6 +36,8 @@ export interface SiteHit {
   zone: string;
   /** What was found, for the page to name: "Smalltown, PA 17000". */
   place: string;
+  /** The town, as the email names it: "Smalltown, PA". */
+  city?: string;
   /** The site it was read from: "back2basicsadventures.org". */
   site: string;
 }
@@ -172,8 +175,8 @@ export async function fetchPage(raw: string, opts: { fetchImpl: typeof fetch; re
 
 export type SiteClue =
   | { kind: "point"; lat: number; lon: number; place: string }
-  | { kind: "address"; text: string }
-  | { kind: "zone"; zone: string; place: string };
+  | { kind: "address"; text: string; city?: string }
+  | { kind: "zone"; zone: string; place: string; city?: string };
 
 function decodeEntities(text: string): string {
   return text
@@ -324,16 +327,6 @@ const US_STATE_ZONES: Record<string, string> = {
   WY: "America/Denver", PR: "America/Puerto_Rico",
 };
 const US_TWO_CLOCKS = new Set(["AK", "FL", "ID", "IN", "KS", "KY", "MI", "NE", "ND", "OR", "SD", "TN", "TX"]);
-const US_STATE_NAMES: Record<string, string> = {
-  alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA", colorado: "CO", connecticut: "CT",
-  delaware: "DE", florida: "FL", georgia: "GA", hawaii: "HI", idaho: "ID", illinois: "IL", indiana: "IN", iowa: "IA",
-  kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD", massachusetts: "MA", michigan: "MI",
-  minnesota: "MN", mississippi: "MS", missouri: "MO", montana: "MT", nebraska: "NE", nevada: "NV",
-  "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY", "north carolina": "NC",
-  "north dakota": "ND", ohio: "OH", oklahoma: "OK", oregon: "OR", pennsylvania: "PA", "rhode island": "RI",
-  "south carolina": "SC", "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT", vermont: "VT",
-  virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI", wyoming: "WY",
-};
 const CA_PROVINCE_ZONES: Record<string, string> = {
   AB: "America/Edmonton", BC: "America/Vancouver", MB: "America/Winnipeg", NB: "America/Moncton", NL: "America/St_Johns",
   NS: "America/Halifax", NT: "America/Yellowknife", NU: "America/Iqaluit", ON: "America/Toronto", PE: "America/Halifax",
@@ -347,30 +340,30 @@ const AU_STATE_ZONES: Record<string, string> = {
 const CITY = "([A-Z][A-Za-z.'’-]*(?: [A-Z][A-Za-z.'’-]*){0,3})";
 
 /** A street address in the page's words, nearest the end (the footer) first. */
-export function textAddresses(words: string): { text: string; zone: string | null; twoClocks: boolean }[] {
-  const found: { at: number; text: string; zone: string | null; twoClocks: boolean }[] = [];
+export function textAddresses(words: string): { text: string; city: string; zone: string | null; twoClocks: boolean }[] {
+  const found: { at: number; text: string; city: string; zone: string | null; twoClocks: boolean }[] = [];
   const us = new RegExp(`${CITY},?\\s+(${Object.keys(US_STATE_ZONES).join("|")})\\.?,?\\s+(\\d{5})(?:-\\d{4})?\\b`, "g");
   for (const m of words.matchAll(us)) {
     const state = m[2]!;
-    found.push({ at: m.index ?? 0, text: `${m[1]}, ${state} ${m[3]}`, zone: US_STATE_ZONES[state]!, twoClocks: US_TWO_CLOCKS.has(state) });
+    found.push({ at: m.index ?? 0, text: `${m[1]}, ${state} ${m[3]}`, city: `${m[1]}, ${state}`, zone: US_STATE_ZONES[state]!, twoClocks: US_TWO_CLOCKS.has(state) });
   }
   const usLong = new RegExp(`${CITY},\\s*(${Object.keys(US_STATE_NAMES).map((name) => name.replace(/ /g, "\\s")).join("|")})\\b,?\\s*(\\d{5})?`, "gi");
   for (const m of words.matchAll(usLong)) {
     const state = US_STATE_NAMES[m[2]!.toLowerCase().replace(/\s+/g, " ")];
     if (!state || !/^[A-Z]/.test(m[1]!)) continue;
-    found.push({ at: m.index ?? 0, text: `${m[1]}, ${state}${m[3] ? ` ${m[3]}` : ""}`, zone: US_STATE_ZONES[state]!, twoClocks: US_TWO_CLOCKS.has(state) });
+    found.push({ at: m.index ?? 0, text: `${m[1]}, ${state}${m[3] ? ` ${m[3]}` : ""}`, city: `${m[1]}, ${state}`, zone: US_STATE_ZONES[state]!, twoClocks: US_TWO_CLOCKS.has(state) });
   }
   const ca = new RegExp(`${CITY},?\\s+(${Object.keys(CA_PROVINCE_ZONES).join("|")})\\.?,?\\s+([A-Z]\\d[A-Z])\\s?(\\d[A-Z]\\d)\\b`, "g");
   for (const m of words.matchAll(ca)) {
     const province = m[2]!;
-    found.push({ at: m.index ?? 0, text: `${m[1]}, ${province} ${m[3]} ${m[4]}`, zone: CA_PROVINCE_ZONES[province]!, twoClocks: ["BC", "ON", "QC", "NL", "NU", "SK"].includes(province) });
+    found.push({ at: m.index ?? 0, text: `${m[1]}, ${province} ${m[3]} ${m[4]}`, city: `${m[1]}, ${province}`, zone: CA_PROVINCE_ZONES[province]!, twoClocks: ["BC", "ON", "QC", "NL", "NU", "SK"].includes(province) });
   }
   const au = new RegExp(`${CITY},?\\s+(${Object.keys(AU_STATE_ZONES).join("|")})\\s+(\\d{4})\\b`, "g");
   for (const m of words.matchAll(au)) {
     const state = m[2]!;
-    found.push({ at: m.index ?? 0, text: `${m[1]} ${state} ${m[3]}`, zone: AU_STATE_ZONES[state]!, twoClocks: false });
+    found.push({ at: m.index ?? 0, text: `${m[1]} ${state} ${m[3]}`, city: `${m[1]}, ${state}`, zone: AU_STATE_ZONES[state]!, twoClocks: false });
   }
-  return found.sort((a, b) => b.at - a.at).map(({ text, zone, twoClocks }) => ({ text, zone, twoClocks }));
+  return found.sort((a, b) => b.at - a.at).map(({ text, city, zone, twoClocks }) => ({ text, city, zone, twoClocks }));
 }
 
 /* Calling codes of countries that keep one clock. */
@@ -411,12 +404,14 @@ export function siteClues(html: string): SiteClue[] {
   const points = [...schemaClues(html).filter((clue) => clue.kind === "point"), ...metaClues(html).filter((clue) => clue.kind === "point"), ...mapClues(html).filter((clue) => clue.kind === "point")];
   const named = [...schemaClues(html), ...metaClues(html), ...mapClues(html)].filter((clue) => clue.kind === "address");
   const local: SiteClue[] = addresses.map((row) =>
-    row.zone && !row.twoClocks ? { kind: "zone", zone: row.zone, place: row.text } : { kind: "address", text: row.text },
+    row.zone && !row.twoClocks
+      ? { kind: "zone", zone: row.zone, place: row.text, city: row.city }
+      : { kind: "address", text: row.text, city: row.city },
   );
   /* A text address in a two-clock state still has a fallback: the clock most of that state keeps. */
   const fallbacks: SiteClue[] = addresses
     .filter((row) => row.zone && row.twoClocks)
-    .map((row) => ({ kind: "zone", zone: row.zone!, place: row.text }));
+    .map((row) => ({ kind: "zone", zone: row.zone!, place: row.text, city: row.city }));
   return [...points, ...named, ...local, ...phoneClues(html), ...fallbacks];
 }
 
@@ -429,21 +424,26 @@ async function answer(clues: SiteClue[], site: string, fetchImpl: typeof fetch):
   for (const clue of clues) {
     if (clue.kind === "point") {
       const zone = zoneAt(clue.lat, clue.lon);
-      if (zone) return { zone, place: clue.place || "the map on the site", site };
+      /* The pin's own town, not the zone's capital. */
+      const town = nearestCity(clue.lat, clue.lon);
+      if (zone) return { zone, place: town?.label ?? (clue.place || "the map on the site"), ...(town ? { city: town.place } : {}), site };
       continue;
     }
     if (clue.kind === "zone") {
-      if (isTimeZone(clue.zone)) return { zone: clue.zone, place: clue.place, site };
+      if (isTimeZone(clue.zone)) return { zone: clue.zone, place: clue.place, ...(clue.city ? { city: clue.city } : {}), site };
       continue;
     }
     /* A state that keeps one clock needs no map. */
     const local = textAddresses(clue.text).find((row) => row.zone && !row.twoClocks);
-    if (local?.zone) return { zone: local.zone, place: clue.text, site };
+    if (local?.zone) return { zone: local.zone, place: clue.text, city: local.city, site };
     /* At most two addresses are put on the map: Nominatim asks for one request a second. */
     if (geocoded >= 2) continue;
     geocoded += 1;
     const placed = await geocodeToZone(clue.text, fetchImpl);
-    if (placed) return { zone: placed.zone, place: clue.text, site };
+    if (placed) {
+      const town = nearestCity(placed.lat, placed.lon)?.place ?? clue.city;
+      return { zone: placed.zone, place: clue.text, ...(town ? { city: town } : {}), site };
+    }
   }
   return null;
 }

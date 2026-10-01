@@ -102,30 +102,27 @@ the email is read opens the popup with a line saying so and what is free.
 
 ### The recipient's clock
 
-Nothing in an email address says where its owner is, so the widget page asks:
-Recipient's time zone, defaulting to the zone set before for that address
-(kept in the operator's browser), else a guess from a country domain whose
-country keeps one clock (`.de`, `.cz`, `.in`; never `.com`, `.us`, `.au`,
-`.ru`, or `.co` and `.io`, which are bought for their letters), else the
-site's own zone, Prague (`shared/time-zones.ts`). An address at a company's own
-domain has its website read at once; for one that says nothing (gmail.com),
-"Their website, company or town" takes the site from the signature, a
-company or a place. `GET /api/admin/zone-lookup?q=` (`zone-lookup.ts`): a
-website in the text first — `site-location.ts` reads the address the site
-prints (schema.org geo or PostalAddress, geo meta tags, a Google Maps embed
-or link, a US, Canadian or Australian address in the footer, a `tel:`
-country code, the country domain), fetching only public hosts on standard
-ports, at most 1.5 MB and four redirects, each checked again — then a place
-or one-clock country named outright, Wikidata's headquarters for a company,
-and OpenStreetMap's Nominatim. Coordinates become a zone through
-`@photostructure/tz-lookup`. What it found is named on the page and kept for
-that address.
-
-The zone list is one entry per clock — zones with the same January and July
-offsets — named as the clock is called where it is kept ("Eastern Time (EDT)
-— New York, Toronto"; a GMT offset only for a clock with no name of its
-own), the clocks most calls are on first, west to east (`zoneGroups`). `GET /api/admin/booking-widget?tz=`
-passes it on. The block regroups the free times by the recipient's own days,
+Nothing in an email address says where its owner is, so the widget page asks
+"Where they are" — one field. Typing a town offers towns from
+`city-search.ts` (GeoNames' 135,000 towns of a thousand people or more, CC BY
+4.0, via the all-the-cities package, read once into flat arrays): each comes
+with its own clock from its coordinates, so El Paso is on Mountain time and
+Phoenix on its own. Typing a website or a company instead ("Find …") asks
+`GET /api/admin/zone-lookup?q=` (`zone-lookup.ts`): a website in the text first
+— `site-location.ts` reads the address the site prints (schema.org geo or
+PostalAddress, geo meta tags, a Google Maps embed or link, a US, Canadian or
+Australian address in the footer, a `tel:` country code, the country domain),
+fetching only public hosts on standard ports, at most 1.5 MB and four
+redirects, each checked again — then a town from the list, a one-clock
+country, Wikidata's headquarters for a company, and OpenStreetMap's
+Nominatim. Whatever is found is named for its town (`nearestCity` for a point
+on the map). An address at a company's own domain is looked up as it is
+typed. Before anything is known: the place set before for that address (kept
+in the operator's browser), a guess from a one-clock country's domain, or the
+site's own zone, Prague. The town is named in the email: "Eastern Time
+(Smalltown, PA, EDT)".
+`GET /api/admin/booking-widget?tz=&place=`
+passes zone and town on. The block regroups the free times by the recipient's own days,
 shows each on their clock and names the zone — "Eastern Time (New York,
 GMT-4)", with each day's offset instead where the block spans a change of
 clocks. Every link still carries the calendar's date and time, which is what

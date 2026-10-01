@@ -78,7 +78,7 @@ describe("zoneFromSite", () => {
       ),
     });
     const hit = await zoneFromSite("back2basicsadventures.org", { fetchImpl: web.fetchImpl, resolve: PUBLIC });
-    assert.deepEqual(hit, { zone: "America/New_York", place: "Smalltown, PA 17000", site: "back2basicsadventures.org" });
+    assert.deepEqual(hit, { zone: "America/New_York", place: "Smalltown, PA 17000", city: "Smalltown, PA", site: "back2basicsadventures.org" });
     assert.ok(web.asked.every((url) => !url.includes("nominatim")), "no map asked");
   });
 
@@ -112,7 +112,7 @@ describe("zoneFromSite", () => {
       "https://www.shelter.org/contact": html(`<main><address>77 Bark Ave, Portland, ME 04101</address></main>`),
     });
     const hit = await zoneFromSite("shelter.org", { fetchImpl: web.fetchImpl, resolve: PUBLIC });
-    assert.deepEqual(hit, { zone: "America/New_York", place: "Portland, ME 04101", site: "shelter.org" });
+    assert.deepEqual(hit, { zone: "America/New_York", place: "Portland, ME 04101", city: "Portland, ME", site: "shelter.org" });
   });
 
   it("reads a telephone's country, then the site's own country domain", async () => {
@@ -159,6 +159,7 @@ describe("lookUpZone with a website in it", () => {
       place: "Smalltown, PA 17000",
       source: "website",
       site: "back2basicsadventures.org",
+      city: "Smalltown, PA",
     });
   });
 });

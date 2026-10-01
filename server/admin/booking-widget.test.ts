@@ -140,11 +140,24 @@ describe("GET /api/admin/booking-widget", () => {
     assert.equal((await get("/api/admin/booking-widget")).status, 401);
   });
 
+  it("names the recipient's town in the email, and finds towns for the operator alone", async () => {
+    const token = await operatorToken();
+    const { body } = await get(
+      `/api/admin/booking-widget?recipient=${encodeURIComponent("ada@example.com")}&tz=${encodeURIComponent("America/New_York")}&place=${encodeURIComponent("Smalltown, PA <b>")}`,
+      token,
+    );
+    assert.match(String(body.html), /Eastern Time \(Smalltown, PA b, E[DS]T\)/, "plain words only");
+    const towns = await get(`/api/admin/city-search?q=${encodeURIComponent("Mechanicsburg")}`, token);
+    assert.equal(towns.status, 200);
+    assert.deepEqual((towns.body.cities as { place: string }[]).map((city) => city.place), ["Mechanicsburg, PA", "Mechanicsburg, OH"]);
+    assert.equal((await get(`/api/admin/city-search?q=Prague`)).status, 401);
+  });
+
   it("looks a place up as a zone for the operator, and for nobody else", async () => {
     const token = await operatorToken();
     const { status, body } = await get(`/api/admin/zone-lookup?q=${encodeURIComponent("Brno, Czechia")}`, token);
     assert.equal(status, 200);
-    assert.deepEqual(body, { found: true, zone: "Europe/Prague", place: "Brno, Czechia", source: "place name" });
+    assert.deepEqual(body, { found: true, zone: "Europe/Prague", place: "Brno, Czechia", source: "place name", city: "Brno" });
     assert.equal((await get(`/api/admin/zone-lookup?q=Prague`)).status, 401);
   });
 

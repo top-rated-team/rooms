@@ -27,6 +27,7 @@
 import { zoneCity } from "@shared/time-zones";
 
 import { geocodeToZone, getJson, zoneAt } from "./geo";
+import { nearestCity, searchCities } from "./city-search";
 import { siteFromQuery, zoneFromSite, type Resolve } from "./site-location";
 
 export interface ZoneLookupHit {
@@ -36,6 +37,8 @@ export interface ZoneLookupHit {
   source: "website" | "place name" | "Wikidata" | "OpenStreetMap";
   /** The website it was read from, when it was. */
   site?: string;
+  /** The town, as the email names it: "Smalltown, PA". */
+  city?: string;
 }
 
 const WIKIDATA_API = "https://www.wikidata.org/w/api.php";
@@ -240,19 +243,28 @@ async function fromWikidata(query: string, fetchImpl: typeof fetch): Promise<Zon
       const place = (await entities([hq], fetchImpl))[hq];
       const at = coordinates(claimsOf(place));
       const zone = at ? zoneAt(at.lat, at.lon) : null;
-      if (zone) return { zone, place: [label(entity), label(place)].filter(Boolean).join(", "), source: "Wikidata" };
+      /* The headquarters' own name; with its state where the town list agrees it is that town. */
+      const near = at ? nearestCity(at.lat, at.lon) : null;
+      const hqName = label(place);
+      const town = near && hqName && normalise(near.place.split(",")[0]!) === normalise(hqName) ? near.place : hqName || near?.place;
+      if (zone) {
+        return { zone, place: [label(entity), hqName].filter(Boolean).join(", "), source: "Wikidata", ...(town ? { city: town } : {}) };
+      }
       continue;
     }
     const at = coordinates(claims);
     const zone = at ? zoneAt(at.lat, at.lon) : null;
-    if (zone) return { zone, place: label(entity) || query, source: "Wikidata" };
+    const town = at ? nearestCity(at.lat, at.lon)?.place : undefined;
+    if (zone) return { zone, place: label(entity) || query, source: "Wikidata", ...(town ? { city: town } : {}) };
   }
   return null;
 }
 
 async function fromNominatim(query: string, fetchImpl: typeof fetch): Promise<ZoneLookupHit | null> {
   const placed = await geocodeToZone(query, fetchImpl);
-  return placed ? { ...placed, source: "OpenStreetMap" } : null;
+  if (!placed) return null;
+  const town = nearestCity(placed.lat, placed.lon);
+  return { zone: placed.zone, place: placed.place, source: "OpenStreetMap", ...(town ? { city: town.place } : {}) };
 }
 
 export async function lookUpZone(
@@ -278,10 +290,15 @@ async function lookUp(query: string, fetchImpl: typeof fetch, resolve?: Resolve)
   const site = siteFromQuery(query);
   if (site) {
     const found = await zoneFromSite(site.host, { fetchImpl, ...(resolve ? { resolve } : {}) });
-    if (found) return { zone: found.zone, place: found.place, source: "website", site: found.site };
+    if (found) return { zone: found.zone, place: found.place, source: "website", site: found.site, ...(found.city ? { city: found.city } : {}) };
   }
   /* Then the rest of what was typed: "(Back2Basics Outdoor Ministries Inc)". */
   const rest = (site ? query.replace(site.matched, " ") : query).replace(/[()[\]]/g, " ").replace(/\s+/g, " ").trim();
   if (rest.length < 2) return null;
+  /* A town named outright: the list knows it, and its own clock. */
+  const town = searchCities(rest, 1)[0];
+  if (town && normalise(town.place.split(",")[0]!) === normalise(rest.split(",")[0]!)) {
+    return { zone: town.zone, place: town.label, source: "place name", city: town.place };
+  }
   return zoneFromPlaceName(rest) ?? (await fromWikidata(rest, fetchImpl)) ?? (await fromNominatim(rest, fetchImpl));
 }
