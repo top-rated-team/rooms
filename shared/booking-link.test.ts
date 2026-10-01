@@ -14,6 +14,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  bookingGuests,
   bookLinkTarget,
   bookLinkUrl,
   bookingLinkEmail,
@@ -112,6 +113,7 @@ describe("parseBookLinkHash", () => {
       confirmation: null,
       sig: null,
       instant: false,
+      guests: [],
     });
     assert.deepEqual(parseBookLinkHash("#book&email=dan%2Bads%40example.com&date=2026-10-02&time=09:30&confirm=email"), {
       email: "dan+ads@example.com",
@@ -121,6 +123,7 @@ describe("parseBookLinkHash", () => {
       confirmation: null,
       sig: null,
       instant: false,
+      guests: [],
     });
   });
 
@@ -147,7 +150,7 @@ describe("parseBookLinkHash", () => {
   });
 
   it("reads back exactly what formatBookLinkHash writes", () => {
-    const link = { email: "a+b@example.com", date: "2026-10-02", time: "16:30", confirmByEmail: true, confirmation: null, sig: null, instant: false };
+    const link = { email: "a+b@example.com", date: "2026-10-02", time: "16:30", confirmByEmail: true, confirmation: null, sig: null, instant: false, guests: ["bea@example.com", "cy+ops@example.org"] };
     assert.deepEqual(parseBookLinkHash(`#${formatBookLinkHash(link)}`), link);
   });
 });
@@ -161,6 +164,22 @@ describe("a signed address", () => {
     const target = bookLinkTarget(url.search);
     assert.doesNotMatch(target.slice(0, target.indexOf("#")), /sig=/, "never in the visible query");
     assert.equal(parseBookLinkHash(target.slice(target.indexOf("#")))?.sig, SIG);
+  });
+
+  it("carries the guests the owner named beside the address, through /book, and only with an address", () => {
+    const url = new URL(
+      bookLinkUrl("https://top-rated.team", { date: "2026-10-02", time: "09:30", confirmByEmail: true, recipient: "ada@example.com", sig: SIG, guests: ["bea@example.com", "cy+ops@example.org"] }),
+    );
+    assert.match(url.search, /&email=ada%40example\.com&guests=bea%40example\.com,cy%2Bops%40example\.org&sig=/);
+    const target = bookLinkTarget(url.search);
+    assert.deepEqual(parseBookLinkHash(target.slice(target.indexOf("#")))?.guests, ["bea@example.com", "cy+ops@example.org"]);
+    assert.ok(!bookLinkUrl("https://top-rated.team", { recipient: "{{email}}", guests: ["bea@example.com"] }).includes("guests"), "a merge tag carries none");
+    assert.deepEqual(parseBookLinkHash("#book&guests=bea%40example.com")?.guests, [], "no address, no guests");
+  });
+
+  it("reads guests the way the owner types them, once each, at most ten", () => {
+    assert.deepEqual(bookingGuests("Bea <bea@example.com>; cy@example.org,  bea@EXAMPLE.com nonsense"), ["bea@example.com", "cy@example.org"]);
+    assert.equal(bookingGuests(Array.from({ length: 14 }, (_, i) => `p${i}@example.com`).join(",")).length, 10);
   });
 
   it("asks for one-click booking only with a time to book", () => {
@@ -241,6 +260,7 @@ describe("bookLinkUrl", () => {
       confirmation: null,
       sig: null,
       instant: false,
+      guests: [],
     });
   });
 });

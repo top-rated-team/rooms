@@ -7,6 +7,7 @@ import {
   bookSlot,
   bookingLink,
   bookingLinkEmail,
+  bookingLinkGuestsFor,
   bookingLinkSigFor,
   bookingTopic,
   confirmEmailHold,
@@ -51,7 +52,7 @@ import type {
 } from "@shared/api";
 import { BOOKING_LINKEDIN_SESSION_QUERY } from "@shared/api";
 import { BOOKING_EMAIL_RE as EMAIL_RE } from "@shared/booking-link";
-import { isTimeZone, offsetLabel, zoneOffsetMinutes, zonePhrase } from "@shared/time-zones";
+import { isTimeZone, zoneAbbreviation, zoneOffsetMinutes, zonePhrase } from "@shared/time-zones";
 import { isHouseHost } from "@shared/operator";
 
 import { BookingQr } from "./BookingQr";
@@ -287,13 +288,13 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
          fetches every link books nothing. */
       const instant = bookingLink();
       if (instant?.instant && instant.date && instant.time && instant.email && instant.sig && !drivenByAProgram()) {
-        const { date: day, time: at, email: address, sig } = instant;
+        const { date: day, time: at, email: address, sig, guests } = instant;
         forgetBookingLinkPick();
         /* No clock here: the link carries the calendar's time, and the email
            may have shown it on the reader's. The confirmation says both. */
         setPhase({ kind: "booking-now", startsLabel: "Booking the time you clicked." });
         setLoading(false);
-        const result = await bookSlot({ date: day, time: at, email: address, confirmByEmail: true, sig });
+        const result = await bookSlot({ date: day, time: at, email: address, confirmByEmail: true, sig, guests });
         if (cancelled) return;
         if (result.ok && "booked" in result) {
           if (result.booked.whatsapp.code) rememberBookingPointer(result.booked.whatsapp.code);
@@ -589,7 +590,14 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
     if (trimmed) {
       setSending(true);
       try {
-        const result = await bookSlot({ date, time, email: trimmed, confirmByEmail: confirmsByEmail(), sig: bookingLinkSigFor(trimmed) });
+        const result = await bookSlot({
+          date,
+          time,
+          email: trimmed,
+          confirmByEmail: confirmsByEmail(),
+          sig: bookingLinkSigFor(trimmed),
+          guests: bookingLinkGuestsFor(trimmed),
+        });
         if (!result.ok && result.conflict) {
           applyDays(result.days);
           setFormError(result.error);
@@ -1636,7 +1644,7 @@ function descriptionFor(
     /* The picker lists the calendar's clock; say so, and the visitor's own where it is not the same. */
     const mine = visitorTimeZone();
     const yours =
-      mine && zoneOffsetMinutes(mine, now) !== zoneOffsetMinutes(timezone, now) ? `; your clock is ${offsetLabel(mine, now)}` : "";
+      mine && zoneOffsetMinutes(mine, now) !== zoneOffsetMinutes(timezone, now) ? `; your clock is ${zoneAbbreviation(mine, now)}` : "";
     return `${slots.slotMinutes} minutes. Times are ${zonePhrase(timezone, now)}${yours}.`;
   }
   return "Pick a time that is free.";

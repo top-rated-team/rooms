@@ -107,13 +107,24 @@ Recipient's time zone, defaulting to the zone set before for that address
 (kept in the operator's browser), else a guess from a country domain whose
 country keeps one clock (`.de`, `.cz`, `.in`; never `.com`, `.us`, `.au`,
 `.ru`, or `.co` and `.io`, which are bought for their letters), else the
-site's own zone, Prague (`shared/time-zones.ts`). For an address that says
-nothing (gmail.com), "Their company or town" asks
-`GET /api/admin/zone-lookup?q=` (`zone-lookup.ts`): a place or one-clock
-country named outright, else Wikidata's headquarters for a company, else
-OpenStreetMap's Nominatim; coordinates become a zone through
+site's own zone, Prague (`shared/time-zones.ts`). An address at a company's own
+domain has its website read at once; for one that says nothing (gmail.com),
+"Their website, company or town" takes the site from the signature, a
+company or a place. `GET /api/admin/zone-lookup?q=` (`zone-lookup.ts`): a
+website in the text first — `site-location.ts` reads the address the site
+prints (schema.org geo or PostalAddress, geo meta tags, a Google Maps embed
+or link, a US, Canadian or Australian address in the footer, a `tel:`
+country code, the country domain), fetching only public hosts on standard
+ports, at most 1.5 MB and four redirects, each checked again — then a place
+or one-clock country named outright, Wikidata's headquarters for a company,
+and OpenStreetMap's Nominatim. Coordinates become a zone through
 `@photostructure/tz-lookup`. What it found is named on the page and kept for
-that address. `GET /api/admin/booking-widget?tz=`
+that address.
+
+The zone list is one entry per clock — zones with the same January and July
+offsets — named as the clock is called where it is kept ("Eastern Time (EDT)
+— New York, Toronto"; a GMT offset only for a clock with no name of its
+own), the clocks most calls are on first, west to east (`zoneGroups`). `GET /api/admin/booking-widget?tz=`
 passes it on. The block regroups the free times by the recipient's own days,
 shows each on their clock and names the zone — "Eastern Time (New York,
 GMT-4)", with each day's offset instead where the block spans a change of
@@ -241,3 +252,17 @@ instead (`client/src/lib/operator-shortcut.ts`, asking
 the server never sees it, so a bare `/book` is served as the page itself
 rather than redirected: browsers drop an empty `#` across a 302. `/book` with
 anything after it still hops to `/#book&…`.
+
+## Who is on the call
+
+Every event that invites anyone also invites the owner, already accepted:
+`BOOKING_HOST_EMAIL`, else `GOOGLE_CALENDAR_ID` when it is a person's address,
+else `OPERATOR_EMAIL` (`bookingHostEmail`). An event with no guest — the
+WhatsApp route — still names nobody, because naming the organiser alone mails
+him an invitation to his own event.
+
+"Also invite" on the widget page names more people for the call. They ride
+in every link of the block (`guests=`), and the recipient's signature covers
+them (`signAddress(address, guests)`), so a link edited to invite someone
+else books for the address alone and invites nobody more. A link signed
+without guests verifies exactly as before.

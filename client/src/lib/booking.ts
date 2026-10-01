@@ -30,7 +30,7 @@ import { BOOKING_LINKEDIN_SESSION_QUERY, BOOKING_VISITOR_CALENDAR_QUERY } from "
 import type { VisitorCalendarView } from "@shared/api";
 import { parseBookLinkHash, type BookLink } from "@shared/booking-link";
 import { DOORS } from "@shared/doors";
-import { isTimeZone, wallClockIn, zoneCity, zoneOffsetMinutes } from "@shared/time-zones";
+import { isTimeZone, wallClockIn, zoneAbbreviation, zoneCity, zoneOffsetMinutes } from "@shared/time-zones";
 
 export const SLOT_DAYS = 14;
 export const CONFIRMED_POLL_MS = 2_500;
@@ -296,6 +296,12 @@ export function bookingLinkSigFor(email: string): string | undefined {
   return email.trim().toLowerCase() === link.email.toLowerCase() ? link.sig : undefined;
 }
 
+/** The guests the link named with that signature — only for the address it was made for. */
+export function bookingLinkGuestsFor(email: string): string[] {
+  if (!bookingLinkSigFor(email)) return [];
+  return link?.guests ?? [];
+}
+
 /** Once the popup has acted on it: a confirmation link is used once, and a picked time once. */
 export function forgetBookingLinkPick(): void {
   if (link) link = { ...link, date: null, time: null, confirmation: null, instant: false };
@@ -379,6 +385,7 @@ export function buildBookBody(input: {
   topic?: string;
   confirmByEmail?: boolean;
   sig?: string;
+  guests?: string[];
 }): CreateBookingRequest {
   const email = input.email?.trim();
   const body: CreateBookingRequest = {
@@ -390,6 +397,7 @@ export function buildBookBody(input: {
   if (email) body.email = email;
   if (input.confirmByEmail) body.confirm = "email";
   if (email && input.sig) body.sig = input.sig;
+  if (email && input.sig && input.guests?.length) body.guests = input.guests;
   return body;
 }
 
@@ -554,8 +562,9 @@ export function formatSlotDay(date: string): string {
   return weekdayHeading(date);
 }
 
+/* "Thursday 1 October at 10:30 EDT": the clock by the name it has there. */
 function whenIn(startsAt: string, timeZone: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
+  const day = new Intl.DateTimeFormat("en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -563,8 +572,8 @@ function whenIn(startsAt: string, timeZone: string): string {
     minute: "2-digit",
     hour12: false,
     timeZone,
-    timeZoneName: "short",
   }).format(new Date(startsAt));
+  return `${day} ${zoneAbbreviation(timeZone, Date.parse(startsAt))}`;
 }
 
 /** The zone this browser keeps its clock in, or null where it does not say. */
@@ -581,18 +590,14 @@ export function visitorTimeZone(): string | null {
  * When the call is, on the visitor's own clock: the one an email block made
  * for their zone showed them. Where that is not the calendar's clock, the
  * calendar's time follows, because the picker lists times on it:
- * "Thursday 1 October at 10:30 GMT-4 (16:30 CEST in Bratislava)".
+ * "Thursday 1 October at 10:30 EDT (16:30 CEST in Prague)".
  */
 export function formatBookedWhen(startsAt: string, calendarZone: string, viewerZone: string | null = visitorTimeZone()): string {
   const ms = Date.parse(startsAt);
   if (!viewerZone || !Number.isFinite(ms) || !isTimeZone(calendarZone)) return whenIn(startsAt, calendarZone);
   const here = whenIn(startsAt, viewerZone);
   if (zoneOffsetMinutes(viewerZone, ms) === zoneOffsetMinutes(calendarZone, ms)) return here;
-  const short =
-    new Intl.DateTimeFormat("en-GB", { timeZone: calendarZone, timeZoneName: "short" })
-      .formatToParts(new Date(ms))
-      .find((part) => part.type === "timeZoneName")?.value ?? calendarZone;
-  return `${here} (${wallClockIn(calendarZone, ms).time} ${short} in ${zoneCity(calendarZone)})`;
+  return `${here} (${wallClockIn(calendarZone, ms).time} ${zoneAbbreviation(calendarZone, ms)} in ${zoneCity(calendarZone)})`;
 }
 
 async function readJson(res: Response): Promise<unknown> {
@@ -683,6 +688,7 @@ export async function bookSlot(input: {
   email?: string;
   confirmByEmail?: boolean;
   sig?: string;
+  guests?: string[];
 }): Promise<BookResult> {
   let res: Response;
   try {

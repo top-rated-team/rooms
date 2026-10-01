@@ -101,7 +101,7 @@ import {
   visitorCalendarCookieOptions,
   visitorCalendarView,
 } from "./booking/freebusy";
-import { postBooking, changeBooking, cancelBooking, getExistingBooking } from "./booking/calendar";
+import { bookingHostEmail, postBooking, changeBooking, cancelBooking, getExistingBooking } from "./booking/calendar";
 import { confirmEmailHold, emailHoldStatus, getBookingConfirmed, installBookingInbound } from "./booking/confirm";
 import { emailConfirmation } from "./booking/confirm-email";
 import { handleInboundEmail } from "./booking/reply-to-book";
@@ -125,7 +125,7 @@ import { resolveDistPath } from "./vite";
 import fs from "node:fs";
 import path from "node:path";
 import { isAdGrantHost } from "@shared/adgrant-site";
-import { bookLinkTarget, formatBookLinkHash, widgetRecipient } from "@shared/booking-link";
+import { bookLinkTarget, bookingGuests, formatBookLinkHash, widgetRecipient } from "@shared/booking-link";
 import { buildBookingWidget, type BookingWidgetShow } from "@shared/booking-widget";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
 import { isSignInOnlyLink, openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage, bindRoomAddressForToken } from "./room-access";
@@ -1857,7 +1857,14 @@ export function registerRoutes(app: Express): void {
          never an email to write: reply to book's addresses are still answered
          for blocks already sent, but no new block makes them. */
       const recipient = widgetRecipient(typeof query.recipient === "string" ? query.recipient : "");
-      const recipientSig = recipient.kind === "address" ? (signAddress(recipient.value) ?? undefined) : undefined;
+      /* More people for the call: only with an address, never the address itself, signed with it. */
+      const guests =
+        recipient.kind === "address"
+          ? bookingGuests(typeof query.guests === "string" ? query.guests : "").filter(
+              (guest) => guest.toLowerCase() !== recipient.value.toLowerCase(),
+            )
+          : [];
+      const recipientSig = recipient.kind === "address" ? (signAddress(recipient.value, guests) ?? undefined) : undefined;
       const widget = buildBookingWidget({
         baseUrl: process.env.PUBLIC_BASE_URL?.trim() || `${req.protocol}://${req.get("host") ?? "localhost"}`,
         slots: slots.body,
@@ -1866,6 +1873,7 @@ export function registerRoutes(app: Express): void {
         timesPerDay: number(query.perDay, 6),
         recipient: typeof query.recipient === "string" ? query.recipient : "",
         ...(recipientSig ? { recipientSig } : {}),
+        ...(recipientSig && guests.length > 0 ? { guests } : {}),
         hostName: (contract.displayName ?? contract.legalName).trim(),
         liveImages: true,
         /* The recipient's zone, as the owner set it; the builder ignores one that is not a zone. */
@@ -1876,6 +1884,8 @@ export function registerRoutes(app: Express): void {
         html: widget.html,
         text: widget.text,
         recipient: recipient.kind === "address" ? { ...recipient, signed: Boolean(recipientSig) } : recipient,
+        guests: recipientSig ? guests : [],
+        host: bookingHostEmail(),
         calendar: { id: bookingCalendarId(), readAt },
         timezone: slots.body.timezone,
         zone: widget.zone,

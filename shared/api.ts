@@ -396,6 +396,11 @@ export interface CreateBookingRequest {
    * a valid one books at once instead of sending a confirmation link.
    */
   sig?: string;
+  /**
+   * More people to invite, as the owner named them on the widget page. Read
+   * only when `sig` covers them with `email`; otherwise ignored.
+   */
+  guests?: string[];
   name: string;
   topic: string;
   /**
@@ -491,6 +496,10 @@ export interface AdminBookingWidgetResponse {
   text: string;
   /** What every link in `html` carries, so the page can say it rather than hope. */
   recipient: BookingWidgetRecipient;
+  /** The more people invited when the recipient books, as the links carry them. */
+  guests: string[];
+  /** The owner's own address, invited to every call that invites anyone. */
+  host: string | null;
   /** The calendar the times were read from (GOOGLE_CALENDAR_ID), and when. */
   calendar: { id: string; readAt: string };
   /** The calendar's zone, which the times are read in. */
@@ -507,7 +516,7 @@ export interface AdminBookingWidgetResponse {
 
 /** GET /api/admin/zone-lookup?q= — a company or place, as a time zone. */
 export type ZoneLookupResponse =
-  | { found: true; zone: string; place: string; source: "place name" | "Wikidata" | "OpenStreetMap" }
+  | { found: true; zone: string; place: string; source: "website" | "place name" | "Wikidata" | "OpenStreetMap"; site?: string }
   | { found: false };
 
 export interface BookingConflictResponse {

@@ -122,7 +122,7 @@ describe("reply to book", () => {
     const result = await handleInboundEmail(webhook("em_1"), { fetchImpl: fake.fetchImpl, now: NOW });
     assert.deepEqual(result, { status: 200, outcome: "booked" });
     assert.equal(fake.events.length, 1);
-    assert.deepEqual(fake.events[0]!.attendees, [{ email: "ada+calls@example.com" }]);
+    assert.deepEqual(fake.events[0]!.attendees, [{ email: "ada+calls@example.com" }, { email: "dan@top-rated.team", responseStatus: "accepted" }]);
     assert.deepEqual((fake.events[0]!.start as { dateTime: string }).dateTime, "2026-09-10T12:00:00.000Z");
     assert.equal(fake.replies.length, 1);
     const reply = fake.replies[0]!;
@@ -141,7 +141,7 @@ describe("reply to book", () => {
 
     fake.received.set("em_2", { from: "ada@example.com", to: ["call-2026-09-10-1100@book.top-rated.team"] });
     await handleInboundEmail(webhook("em_2", { from: "mallory@example.com", to: [SLOT_TO] }), { fetchImpl: fake.fetchImpl, now: NOW });
-    assert.deepEqual(fake.events[0]!.attendees, [{ email: "ada@example.com" }]);
+    assert.deepEqual(fake.events[0]!.attendees, [{ email: "ada@example.com" }, { email: "dan@top-rated.team", responseStatus: "accepted" }]);
     assert.equal((fake.events[0]!.start as { dateTime: string }).dateTime, "2026-09-10T09:00:00.000Z", "the slot Resend says it was sent to");
   });
 

@@ -3,9 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ACTION, ACTION_QUIET, DISPLAY, META, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
 import { useTheme } from "@/hooks/use-theme";
 import type { AdminBookingWidgetResponse, ZoneLookupResponse } from "@shared/api";
-import { widgetRecipient } from "@shared/booking-link";
+import { bookingGuests, widgetRecipient } from "@shared/booking-link";
 import { WIDGET_MAX_DAYS, WIDGET_MAX_TIMES_PER_DAY, type BookingWidgetShow } from "@shared/booking-widget";
-import { guessZoneFromAddress, isTimeZone, offsetLabel, zoneCity, zonePhrase } from "@shared/time-zones";
+import { guessZoneFromAddress, isFreeMailDomain, isTimeZone, zoneGroupFor, zoneGroups, zonePhrase, type ZoneGroup } from "@shared/time-zones";
 
 /**
  * The booking times as a block for an email — /admin/booking-widget.
@@ -25,8 +25,8 @@ type LoadState =
   /* forKey: the options and recipient this block was made for. */
   | { kind: "ok"; data: AdminBookingWidgetResponse; forKey: string };
 
-function optionsKey(show: BookingWidgetShow, days: number, perDay: number, recipient: string, tz: string): string {
-  return JSON.stringify([show, days, perDay, recipient.trim(), tz]);
+function optionsKey(show: BookingWidgetShow, days: number, perDay: number, recipient: string, tz: string, guests: string): string {
+  return JSON.stringify([show, days, perDay, recipient.trim(), tz, guests.trim()]);
 }
 
 /* The zone set for an address, kept in this browser so the next block for
@@ -59,7 +59,8 @@ function rememberZone(address: string, zone: string): Record<string, string> {
 
 type ZoneSource = "remembered" | "guessed" | "calendar";
 
-function zoneOptions(extra: string[]): { value: string; label: string }[] {
+/* Every zone this browser knows, as one entry per clock (shared/time-zones.ts). */
+function zoneOptions(extra: string[]): ZoneGroup[] {
   const intl = Intl as typeof Intl & { supportedValuesOf?: (key: "timeZone") => string[] };
   let zones: string[] = [];
   try {
@@ -67,14 +68,7 @@ function zoneOptions(extra: string[]): { value: string; label: string }[] {
   } catch {
     zones = [];
   }
-  const all = [...new Set([...zones, ...extra.filter((zone) => zone && isTimeZone(zone)), "UTC"])];
-  const now = Date.now();
-  return all
-    .map((zone) => {
-      const region = zone.includes("/") ? zone.split("/")[0]!.replace(/_/g, " ") : "";
-      return { value: zone, label: `${zoneCity(zone)}${region ? ` — ${region}` : ""} (${offsetLabel(zone, now)})` };
-    })
-    .sort((a, b) => a.label.localeCompare(b.label));
+  return zoneGroups([...zones, ...extra.filter((zone) => zone && isTimeZone(zone)), "UTC"]);
 }
 
 const FIELD =
@@ -137,6 +131,9 @@ export default function AdminBookingWidget() {
   const [recipient, setRecipient] = useState("");
   /* The address box asks the server only once typing stops. */
   const [asked, setAsked] = useState("");
+  /* More people for the call, invited when the recipient books; asked for with the address. */
+  const [guestsText, setGuestsText] = useState("");
+  const [askedGuests, setAskedGuests] = useState("");
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   /* Bumped to read the calendar again with the same options. */
   const [reads, setReads] = useState(0);
@@ -177,9 +174,12 @@ export default function AdminBookingWidget() {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => setAsked(recipient.trim()), 400);
+    const timer = setTimeout(() => {
+      setAsked(recipient.trim());
+      setAskedGuests(guestsText.trim());
+    }, 400);
     return () => clearTimeout(timer);
-  }, [recipient]);
+  }, [recipient, guestsText]);
 
   /* A new person: what was found for the last one is not theirs. */
   const addressKey = widgetRecipient(recipient).kind === "address" ? recipient.trim().toLowerCase() : "";
@@ -187,6 +187,19 @@ export default function AdminBookingWidget() {
     setCompany("");
     setLookup({ phase: "idle" });
   }, [addressKey]);
+
+  /* AN ADDRESS AT A COMPANY'S OWN DOMAIN NAMES ITS WEBSITE, and the website
+     usually prints where it is: looked up once typing stops, when nothing
+     else says where they are. Not for gmail.com and the like. */
+  useEffect(() => {
+    const typedAsked = widgetRecipient(asked);
+    if (typedAsked.kind !== "address") return;
+    const address = typedAsked.value.toLowerCase();
+    const domain = address.slice(address.lastIndexOf("@") + 1);
+    if (!domain || isFreeMailDomain(domain) || remembered[address] || guessZoneFromAddress(address)) return;
+    void lookUpZoneFor(address, domain, true);
+    /* Once per address typed; a zone remembered from it stops the next. */
+  }, [asked]);
 
   /* KEPT IN STEP WITH THE CALENDAR while the page is open: read again when the
      owner comes back to the tab — usually from the calendar itself — and every
@@ -208,7 +221,7 @@ export default function AdminBookingWidget() {
   useEffect(() => {
     const ac = new AbortController();
     const tz = tzFor(asked);
-    const query = new URLSearchParams({ show, days: String(days), perDay: String(perDay), recipient: asked, tz });
+    const query = new URLSearchParams({ show, days: String(days), perDay: String(perDay), recipient: asked, tz, guests: askedGuests });
     void (async () => {
       try {
         const res = await fetch(`/api/admin/booking-widget?${query.toString()}`, {
@@ -231,7 +244,7 @@ export default function AdminBookingWidget() {
           return;
         }
         if (typeof payload.timezone === "string") setCalendarZone(payload.timezone);
-        setState({ kind: "ok", data: payload, forKey: optionsKey(show, days, perDay, asked, tz) });
+        setState({ kind: "ok", data: payload, forKey: optionsKey(show, days, perDay, asked, tz, askedGuests) });
       } catch (error) {
         if (ac.signal.aborted) return;
         setState({ kind: "failed", line: error instanceof Error ? error.message : "The booking times could not be loaded." });
@@ -239,7 +252,7 @@ export default function AdminBookingWidget() {
     })();
     return () => ac.abort();
     /* tzFor reads `remembered`: a zone picked for this address asks again. */
-  }, [show, days, perDay, asked, reads, remembered]);
+  }, [show, days, perDay, asked, askedGuests, reads, remembered]);
 
   function flash(label: string) {
     setCopied(label);
@@ -264,14 +277,20 @@ export default function AdminBookingWidget() {
      is the previous one — and a Copy pressed in that moment sent an email
      whose links carried no address, while the page looked finished. Copying
      waits until the block is the one for what is in the boxes. */
-  const fresh = state.kind === "ok" && state.forKey === optionsKey(show, days, perDay, recipient, tzFor(recipient));
+  const fresh = state.kind === "ok" && state.forKey === optionsKey(show, days, perDay, recipient, tzFor(recipient), guestsText);
   const shownZone = zoneFor(recipient);
   const effectiveZone = shownZone.zone || (state.kind === "ok" ? state.data.zone : "");
-  const zoneChoices = useMemo(() => zoneOptions([calendarZone, effectiveZone]), [calendarZone, effectiveZone]);
-  async function findZone() {
-    const query = company.trim();
-    if (!query || typed.kind !== "address" || lookup.phase === "looking") return;
-    const address = typed.value.toLowerCase();
+  const zoneChoices = useMemo(() => zoneOptions([calendarZone]), [calendarZone]);
+  /* A zone set some other way — guessed, found, remembered — shows as the
+     entry for its clock; picking an entry stores that entry's zone. */
+  const pickedEntry = effectiveZone ? zoneGroupFor(effectiveZone, zoneChoices)?.zone ?? "" : "";
+  /* What a lookup found, said the way it was found. */
+  function foundLine(body: Extract<ZoneLookupResponse, { found: true }>): string {
+    const where = body.source === "website" && body.site ? `on ${body.site}` : `(${body.source})`;
+    return `Found ${body.place} ${where}: ${zonePhrase(body.zone, Date.now())}. Kept for this address.`;
+  }
+
+  async function lookUpZoneFor(address: string, query: string, quiet: boolean) {
     setLookup({ phase: "looking" });
     try {
       const res = await fetch(`/api/admin/zone-lookup?${new URLSearchParams({ q: query })}`, {
@@ -280,24 +299,45 @@ export default function AdminBookingWidget() {
       });
       const body = (await res.json().catch(() => ({ found: false }))) as ZoneLookupResponse & { error?: string };
       if (!res.ok) {
-        setLookup({ phase: "done", found: false, line: body.error?.trim() || "The zone could not be looked up just now." });
+        setLookup(quiet ? { phase: "idle" } : { phase: "done", found: false, line: body.error?.trim() || "The zone could not be looked up just now." });
         return;
       }
       if (!body.found || !isTimeZone(body.zone)) {
-        setLookup({ phase: "done", found: false, line: `Nothing found for “${query}”. Pick their zone from the list.` });
+        setLookup(
+          quiet
+            ? { phase: "idle" }
+            : { phase: "done", found: false, line: `Nothing found for “${query}”. Pick their zone from the list.` },
+        );
         return;
       }
       setRemembered(rememberZone(address, body.zone));
-      setLookup({
-        phase: "done",
-        found: true,
-        line: `Found ${body.place} (${body.source}): ${zonePhrase(body.zone, Date.now())}. Kept for this address.`,
-      });
+      setLookup({ phase: "done", found: true, line: foundLine(body) });
     } catch {
-      setLookup({ phase: "done", found: false, line: "The zone could not be looked up just now." });
+      setLookup(quiet ? { phase: "idle" } : { phase: "done", found: false, line: "The zone could not be looked up just now." });
     }
   }
 
+  async function findZone() {
+    const query = company.trim();
+    if (!query || typed.kind !== "address" || lookup.phase === "looking") return;
+    await lookUpZoneFor(typed.value.toLowerCase(), query, false);
+  }
+
+  /* What the links carry, said from the server's answer, not from the box. */
+  const carriedGuests = fresh && state.kind === "ok" ? (state.data.guests ?? []) : [];
+  const host = state.kind === "ok" ? (state.data.host ?? null) : null;
+  const hostLine = host ? ` (${host})` : "";
+  const typedGuests = bookingGuests(guestsText);
+  const guestsNote =
+    typed.kind !== "address"
+      ? "Put the recipient's address in first."
+      : guestsText.trim() === ""
+        ? `Optional. More people for the call, who Google invites with them once they book. You are invited to every call${hostLine}.`
+        : typedGuests.length === 0
+          ? "Not an address. Separate several with commas."
+          : carriedGuests.length > 0
+            ? `When ${typed.value} books, Google also invites ${carriedGuests.join(", ")}.`
+            : "Updating the block for these guests.";
   const zoneNote =
     typed.kind !== "address"
       ? "Put the address in first: the zone is kept for that person."
@@ -305,7 +345,7 @@ export default function AdminBookingWidget() {
         ? "The zone you set for this address. Every time in the email is shown on this clock, and the zone is named."
         : shownZone.source === "guessed"
           ? `Guessed from the ${shownZone.domain} address. Change it if they are elsewhere: every time in the email is shown on this clock.`
-          : "Nothing in the address says where they are, so this is your own zone. Pick theirs, or find it from their company below: every time in the email is shown on their clock, and the zone is named.";
+          : "Nothing in the address says where they are, so this is your own zone. Pick theirs, or find it from their website or company below: every time in the email is shown on their clock, and the zone is named.";
   const carried = state.kind === "ok" ? state.data.recipient : null;
   /* THE ADDRESS IS REQUIRED, and has to be signed: that is what lets one
      click book the call. Without it there is nothing to copy. */
@@ -451,12 +491,27 @@ export default function AdminBookingWidget() {
                   click books; later clicks are shown that booking and cannot change or cancel it.
                 </span>
               </label>
+              <label className="block sm:col-span-3">
+                <span className={`${META} mb-[var(--s1)] block`}>Also invite</span>
+                <input
+                  className={FIELD}
+                  value={guestsText}
+                  onChange={(event) => setGuestsText(event.target.value)}
+                  placeholder="colleague@their-company.com, partner@example.com"
+                  disabled={typed.kind !== "address"}
+                  spellCheck={false}
+                  data-testid="input-widget-guests"
+                />
+                <span className="mt-1.5 block text-xs text-muted-foreground" data-testid="text-widget-guests">
+                  {guestsNote}
+                </span>
+              </label>
               {show === "times" ? (
                 <label className="block sm:col-span-3">
                   <span className={`${META} mb-[var(--s1)] block`}>Recipient's time zone</span>
                   <select
                     className={FIELD}
-                    value={effectiveZone}
+                    value={pickedEntry}
                     disabled={typed.kind !== "address" || !effectiveZone}
                     onChange={(event) => {
                       if (typed.kind !== "address") return;
@@ -464,11 +519,25 @@ export default function AdminBookingWidget() {
                     }}
                     data-testid="select-widget-zone"
                   >
-                    {zoneChoices.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
+                    {/* The clocks most calls are on first, then every other, west to east. */}
+                    <optgroup label="Most used">
+                      {zoneChoices
+                        .filter((option) => option.common)
+                        .map((option) => (
+                          <option key={option.zone} value={option.zone}>
+                            {option.label}
+                          </option>
+                        ))}
+                    </optgroup>
+                    <optgroup label="All other time zones">
+                      {zoneChoices
+                        .filter((option) => !option.common)
+                        .map((option) => (
+                          <option key={option.zone} value={option.zone}>
+                            {option.label}
+                          </option>
+                        ))}
+                    </optgroup>
                   </select>
                   <span className="mt-1.5 block text-xs text-muted-foreground" data-testid="text-widget-zone">
                     {zoneNote}
@@ -478,7 +547,7 @@ export default function AdminBookingWidget() {
               {show === "times" ? (
                 <div className="block sm:col-span-3">
                   <label htmlFor="widget-company" className={`${META} mb-[var(--s1)] block`}>
-                    Their company or town
+                    Their website, company or town
                   </label>
                   <div className="flex items-end gap-[var(--s2)]">
                     <input
@@ -492,7 +561,7 @@ export default function AdminBookingWidget() {
                           void findZone();
                         }
                       }}
-                      placeholder="e.g. Škoda Auto, or Chicago Animal Care and Control"
+                      placeholder="e.g. back2basicsadventures.org, Škoda Auto, or Chicago"
                       disabled={typed.kind !== "address"}
                       spellCheck={false}
                       data-testid="input-widget-company"
@@ -514,7 +583,9 @@ export default function AdminBookingWidget() {
                   >
                     {lookup.phase === "done"
                       ? lookup.line
-                      : "Optional. For a gmail.com or other address that says nothing: their company, or where they are, sets the zone above."}
+                      : lookup.phase === "looking"
+                        ? "Looking up where they are."
+                        : "Optional. For a gmail.com or other address that says nothing: the website in their signature (its address is read), their company, or their town sets the zone above."}
                   </span>
                 </div>
               ) : (

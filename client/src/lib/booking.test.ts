@@ -292,6 +292,7 @@ describe("the /book hop", () => {
       confirmation: null,
       sig: null,
       instant: false,
+      guests: [],
     });
     forgetBookingLinkPick();
     assert.deepEqual(bookingLink(), {
@@ -302,6 +303,7 @@ describe("the /book hop", () => {
       confirmation: null,
       sig: null,
       instant: false,
+      guests: [],
     }, "the address and the email step stay for the page; the picked time does not");
   });
 
@@ -425,7 +427,7 @@ describe("formatBookedWhen", () => {
   it("says the time on the visitor's clock, and the calendar's beside it where they differ", () => {
     assert.equal(
       formatBookedWhen(AT, "Europe/Bratislava", "America/New_York"),
-      "Thursday 1 October at 10:30 GMT-4 (16:30 CEST in Bratislava)",
+      "Thursday 1 October at 10:30 EDT (16:30 CEST in Bratislava)",
     );
   });
 

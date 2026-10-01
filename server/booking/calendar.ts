@@ -35,6 +35,7 @@ import type {
   ExistingBookingResponse,
   HoldBookingResponse,
 } from "@shared/api";
+import { bookingGuests } from "@shared/booking-link";
 import { sendMessage } from "../whatsapp";
 import {
   available as gcalAvailable,
@@ -142,16 +143,52 @@ export function parseCreateBooking(body: unknown): CreateBookingRequest | null {
   if (emailRaw) parsed.email = emailRaw;
   if (record.confirm === "email") parsed.confirm = "email";
   if (typeof record.sig === "string" && record.sig.trim()) parsed.sig = record.sig.trim();
+  const guests = bookingGuests(Array.isArray(record.guests) ? record.guests.filter((g): g is string => typeof g === "string") : typeof record.guests === "string" ? record.guests : []);
+  if (guests.length > 0) parsed.guests = guests;
   return parsed;
 }
 
-function attendeesFor(email: string | undefined): {
+/**
+ * The owner's own address, invited to every call that invites anyone: he
+ * asked to be on the guest list, not only to find the event in a calendar.
+ * BOOKING_HOST_EMAIL, else the calendar's id when it is a person's address
+ * (dan@top-rated.team), else OPERATOR_EMAIL.
+ */
+export function bookingHostEmail(): string | null {
+  const candidates = [
+    process.env.BOOKING_HOST_EMAIL,
+    process.env.GOOGLE_CALENDAR_ID,
+    process.env.OPERATOR_EMAIL?.split(",")[0],
+  ];
+  for (const raw of candidates) {
+    const value = raw?.trim() ?? "";
+    if (EMAIL_RE.test(value) && !/calendar\.google\.com$/i.test(value)) return value;
+  }
+  return null;
+}
+
+function attendeesFor(
+  email: string | undefined,
+  guests: string[] = [],
+): {
   invited: boolean;
-  attendees: { email: string }[];
+  attendees: { email: string; responseStatus?: "accepted" }[];
   notify: boolean;
 } {
   if (email && EMAIL_RE.test(email)) {
-    return { invited: true, attendees: [{ email }], notify: true };
+    const host = bookingHostEmail();
+    const taken = new Set([email.toLowerCase(), host?.toLowerCase() ?? ""]);
+    const others = guests.filter((guest) => EMAIL_RE.test(guest) && !taken.has(guest.toLowerCase()));
+    return {
+      invited: true,
+      attendees: [
+        { email },
+        ...others.map((guest) => ({ email: guest })),
+        /* Already yes: he is not asked to answer an invitation to his own call. */
+        ...(host && host.toLowerCase() !== email.toLowerCase() ? [{ email: host, responseStatus: "accepted" as const }] : []),
+      ],
+      notify: true,
+    };
   }
   /*
    * `attendees: []` IS accepted. Probed against the real tenant on 2026-09-09:
@@ -190,11 +227,13 @@ export async function createBookingEvent(
     name: string;
     topic: string;
     email?: string;
+    /** More people to invite with `email`, already checked against the link's signature. */
+    guests?: string[];
     visitorProfile?: { name: string; url: string };
   },
   fetchImpl: typeof fetch,
 ): Promise<{ ok: true; eventId: string; meetUrl: string | null; invited: boolean } | { ok: false; error: string }> {
-  const { invited, attendees, notify } = attendeesFor(input.email);
+  const { invited, attendees, notify } = attendeesFor(input.email, input.guests);
   const description = bookingEventDescription({ topic: input.topic, visitorProfile: input.visitorProfile });
   const created = await createGcalEvent(
     {
@@ -242,7 +281,11 @@ export async function postBooking(
      went to that inbox, so opening it proved what a confirmation letter
      would. The owner asked for exactly this — a click books — so it books at
      once, with Google's invite. */
-  const signedForAddress = input.confirm === "email" && addressSigned(input.email, input.sig);
+  /* The guests count only where the signature covers them with the address;
+     a link edited to name someone else still books, for the address alone. */
+  const guestsSigned = Boolean(input.guests?.length) && addressSigned(input.email, input.sig, input.guests);
+  const signedForAddress = input.confirm === "email" && (guestsSigned || addressSigned(input.email, input.sig));
+  const guests = signedForAddress && guestsSigned ? (input.guests ?? []) : [];
   /* ONE CALL PER SIGNED BLOCK, and only the click that made it can change it.
      Every link in one email is the same for everyone who got that email — the
      Cc line, a forward — and nothing tells us who clicked. So once the
@@ -360,6 +403,7 @@ export async function postBooking(
       name: input.name,
       topic: input.topic,
       email: input.email,
+      ...(guests.length > 0 ? { guests } : {}),
     },
     fetchImpl,
   );

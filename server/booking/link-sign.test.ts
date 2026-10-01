@@ -41,6 +41,18 @@ describe("signAddress and addressSigned", () => {
     assert.equal(addressSigned("ada+calls@example.com", `${sig!.slice(0, -1)}A` === sig ? `${sig!.slice(0, -1)}B` : `${sig!.slice(0, -1)}A`), false);
   });
 
+  it("cover the guests named with the address, in any order, and leave a link without guests as it was", () => {
+    process.env.LEAD_INBOX_KEY = "inbox-key-for-tests";
+    const plain = signAddress("ada@example.com")!;
+    const withGuests = signAddress("ada@example.com", ["cy@example.org", "Bea@example.com"])!;
+    assert.notEqual(withGuests, plain);
+    assert.equal(signAddress("ada@example.com", []), plain, "no guests: the signature every sent link carries");
+    assert.equal(addressSigned("ada@example.com", withGuests, ["bea@example.com", "cy@example.org"]), true);
+    assert.equal(addressSigned("ada@example.com", withGuests, ["bea@example.com", "mallory@example.net"]), false);
+    assert.equal(addressSigned("ada@example.com", withGuests), false, "the guests are part of what was signed");
+    assert.equal(addressSigned("ada@example.com", plain, ["mallory@example.net"]), false, "guests added to a link are not signed");
+  });
+
   it("treat anything malformed as not signed, without throwing", () => {
     process.env.LEAD_INBOX_KEY = "inbox-key-for-tests";
     for (const sig of [undefined, null, 42, "", "short", "x".repeat(40)]) {

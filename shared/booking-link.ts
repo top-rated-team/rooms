@@ -58,6 +58,38 @@ export interface BookLink {
    * with a signature; see BookingDialog.
    */
   instant: boolean;
+  /**
+   * More people to invite when `email` books, as the owner typed them on the
+   * widget page. Covered by `sig` with the address, so a link edited to name
+   * someone else invites nobody.
+   */
+  guests: string[];
+}
+
+/** At most this many more people on one call. */
+export const MAX_BOOKING_GUESTS = 10;
+
+/**
+ * The extra guests in what was typed or carried: addresses split on commas,
+ * semicolons or spaces, each cleaned like the recipient's, each once, in
+ * the order given.
+ */
+export function bookingGuests(value: string | string[] | null | undefined): string[] {
+  const parts = Array.isArray(value) ? value : (value ?? "").split(/[\s,;]+/);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const part of parts) {
+    const address = bookingLinkEmail(typeof part === "string" ? part : "");
+    if (!address || seen.has(address.toLowerCase())) continue;
+    seen.add(address.toLowerCase());
+    out.push(address);
+    if (out.length >= MAX_BOOKING_GUESTS) break;
+  }
+  return out;
+}
+
+function guestsParam(guests: string[]): string {
+  return `guests=${guests.map((guest) => encodeURIComponent(guest)).join(",")}`;
 }
 
 const EMPTY: BookLink = {
@@ -68,6 +100,7 @@ const EMPTY: BookLink = {
   confirmation: null,
   sig: null,
   instant: false,
+  guests: [],
 };
 
 /**
@@ -141,6 +174,8 @@ export function formatBookLinkHash(link: Partial<BookLink>): string {
   const date = calendarDate(link.date ?? null);
   const time = date ? wallClock(link.time ?? null) : null;
   if (email) parts.push(`email=${encodeURIComponent(email)}`);
+  const guests = email ? bookingGuests(link.guests ?? []) : [];
+  if (guests.length > 0) parts.push(guestsParam(guests));
   if (email && link.sig && SIG_RE.test(link.sig)) parts.push(`sig=${link.sig}`);
   if (date) parts.push(`date=${date}`);
   if (time) parts.push(`time=${time}`);
@@ -178,6 +213,10 @@ export function bookLinkTarget(rawQuery: string): string {
     }
     if (key === "instant") {
       link.instant = decode(value).trim() === "1";
+      continue;
+    }
+    if (key === "guests") {
+      link.guests = bookingGuests(decode(value));
       continue;
     }
     if (key === "sig") {
@@ -224,9 +263,13 @@ export function parseBookLinkHash(hash: string): BookLink | null {
     else if (key === "confirmation" && TOKEN_RE.test(text)) link.confirmation ??= text;
     else if (key === "sig" && SIG_RE.test(text)) link.sig ??= text;
     else if (key === "instant") link.instant = text.trim() === "1";
+    else if (key === "guests") link.guests = bookingGuests(text);
   }
   if (!link.date) link.time = null;
-  if (!link.email) link.sig = null;
+  if (!link.email) {
+    link.sig = null;
+    link.guests = [];
+  }
   if (!link.time) link.instant = false;
   return link;
 }
@@ -255,7 +298,16 @@ export function widgetRecipient(value: string | null | undefined): BookingWidget
  */
 export function bookLinkUrl(
   base: string,
-  input: { recipient?: string; date?: string; time?: string; confirmByEmail?: boolean; sig?: string; instant?: boolean },
+  input: {
+    recipient?: string;
+    date?: string;
+    time?: string;
+    confirmByEmail?: boolean;
+    sig?: string;
+    instant?: boolean;
+    /** More people to invite, signed with the address; only with an address. */
+    guests?: string[];
+  },
 ): string {
   const params: string[] = [];
   const date = calendarDate(input.date ?? null);
@@ -268,6 +320,8 @@ export function bookLinkUrl(
   if (recipient.kind === "tag") params.push(`email=${recipient.value}`);
   else if (recipient.kind === "address") {
     params.push(`email=${encodeURIComponent(recipient.value)}`);
+    const guests = bookingGuests(input.guests ?? []);
+    if (guests.length > 0) params.push(guestsParam(guests));
     if (input.sig && SIG_RE.test(input.sig)) params.push(`sig=${input.sig}`);
   }
   return `${base.replace(/\/+$/, "")}/book${params.length > 0 ? `?${params.join("&")}` : ""}`;
