@@ -140,10 +140,36 @@ describe("GET /api/admin/booking-widget", () => {
     assert.equal((await get("/api/admin/booking-widget")).status, 401);
   });
 
+  it("makes a block worked out when the email is opened, by default: rows and times the server draws, links it resolves", async () => {
+    const token = await operatorToken();
+    const { status, body } = await get(`/api/admin/booking-widget?recipient=${encodeURIComponent("ada@example.com")}&days=3&perDay=4`, token);
+    assert.equal(status, 200, JSON.stringify(body));
+    assert.equal(body.frame, "live");
+    const html = String(body.html);
+    const links = [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1]!.replace(/&amp;/g, "&"));
+    const timeLinks = links.filter((href) => href.includes("/book/live?"));
+    assert.equal(timeLinks.length, 12, "three rows of four times");
+    assert.match(timeLinks[0]!, /\/book\/live\?r=0&t=1000&c=1000,1300,1630,1930&confirm=email&email=ada%40example\.com&sig=/);
+    assert.ok(!timeLinks.some((href) => href.includes("instant=1")), "a live time is never booked by the click alone");
+    assert.match(html, /\/api\/booking\/live\/2\/weekday\.png\?c=1000,1300,1630,1930&amp;tz=Europe%2FPrague/);
+    assert.match(html, /These are the nearest free times whenever this email is opened/);
+  });
+
+  it("starts a fixed block from the day asked for", async () => {
+    const token = await operatorToken();
+    const day = new Date(Date.now() + 9 * 86_400_000);
+    while (day.getUTCDay() === 0 || day.getUTCDay() === 6) day.setUTCDate(day.getUTCDate() + 1);
+    const from = day.toISOString().slice(0, 10);
+    const { body } = await get(`/api/admin/booking-widget?frame=fixed&from=${from}&days=2`, token);
+    assert.equal(body.frame, "fixed");
+    assert.equal(body.from, from);
+    assert.ok((body.days as { date: string }[]).every((row) => row.date >= from), JSON.stringify(body.days));
+  });
+
   it("names the recipient's town in the email, and finds towns for the operator alone", async () => {
     const token = await operatorToken();
     const { body } = await get(
-      `/api/admin/booking-widget?recipient=${encodeURIComponent("ada@example.com")}&tz=${encodeURIComponent("America/New_York")}&place=${encodeURIComponent("Smalltown, PA <b>")}`,
+      `/api/admin/booking-widget?frame=fixed&recipient=${encodeURIComponent("ada@example.com")}&tz=${encodeURIComponent("America/New_York")}&place=${encodeURIComponent("Smalltown, PA <b>")}`,
       token,
     );
     assert.match(String(body.html), /Eastern Time \(Smalltown, PA b, E[DS]T\)/, "plain words only");
@@ -173,7 +199,7 @@ describe("GET /api/admin/booking-widget", () => {
     process.env.RESEND_API_KEY = "re_test";
     process.env.LEAD_EMAIL_FROM = "contact@top-rated.team";
     const token = await operatorToken();
-    const { status, body } = await get(`/api/admin/booking-widget?show=times&days=2&perDay=3&recipient=${encodeURIComponent("{{email}}")}`, token);
+    const { status, body } = await get(`/api/admin/booking-widget?frame=fixed&show=times&days=2&perDay=3&recipient=${encodeURIComponent("{{email}}")}`, token);
     assert.equal(status, 200, JSON.stringify(body));
     assert.equal(body.timezone, "Europe/Prague");
     const days = body.days as { date: string; slots: string[] }[];
@@ -192,7 +218,7 @@ describe("GET /api/admin/booking-widget", () => {
   it("shows the times on the recipient's clock when a zone is given, and says the working hours", async () => {
     const token = await operatorToken();
     const { status, body } = await get(
-      `/api/admin/booking-widget?recipient=${encodeURIComponent("ada@example.com")}&tz=${encodeURIComponent("America/New_York")}&days=1&perDay=16`,
+      `/api/admin/booking-widget?frame=fixed&recipient=${encodeURIComponent("ada@example.com")}&tz=${encodeURIComponent("America/New_York")}&days=1&perDay=16`,
       token,
     );
     assert.equal(status, 200, JSON.stringify(body));
@@ -206,13 +232,13 @@ describe("GET /api/admin/booking-widget", () => {
     assert.ok(days[0]!.slots.every((time) => time >= "03:00" && time <= "14:30"), JSON.stringify(days[0]));
     assert.match(html, /\/api\/booking\/slot\/\d{4}-\d{2}-\d{2}\/\d{4}\.png\?label=\d{4}/);
 
-    const wrong = await get(`/api/admin/booking-widget?recipient=ada%40example.com&tz=Mars%2FBase`, token);
+    const wrong = await get(`/api/admin/booking-widget?frame=fixed&recipient=ada%40example.com&tz=Mars%2FBase`, token);
     assert.equal(wrong.body.zone, "Europe/Prague", "a zone that is not one is the site's own");
   });
 
   it("puts a To field's address into every link, and says so", async () => {
     const token = await operatorToken();
-    const { body } = await get(`/api/admin/booking-widget?recipient=${encodeURIComponent("Ada <ada+ads@example.com>")}`, token);
+    const { body } = await get(`/api/admin/booking-widget?frame=fixed&recipient=${encodeURIComponent("Ada <ada+ads@example.com>")}`, token);
     assert.deepEqual(body.recipient, { kind: "address", value: "ada+ads@example.com", signed: true });
     const links = [...String(body.html).matchAll(/href="([^"]*)"/g)].map((m) => m[1]!);
     assert.ok(links.length > 1 && links.every((href) => /&amp;email=ada%2Bads%40example\.com&amp;sig=[A-Za-z0-9_-]{22}$/.test(href)), links[0]);
@@ -224,7 +250,7 @@ describe("GET /api/admin/booking-widget", () => {
   it("puts the guests the owner names into every link, signed with the address, and says who is invited", async () => {
     const token = await operatorToken();
     const { body } = await get(
-      `/api/admin/booking-widget?recipient=${encodeURIComponent("ada@example.com")}&guests=${encodeURIComponent("Bea <bea@example.com>, ada@example.com, cy@example.org")}`,
+      `/api/admin/booking-widget?frame=fixed&recipient=${encodeURIComponent("ada@example.com")}&guests=${encodeURIComponent("Bea <bea@example.com>, ada@example.com, cy@example.org")}`,
       token,
     );
     assert.deepEqual(body.guests, ["bea@example.com", "cy@example.org"], "the recipient is not their own guest");
@@ -237,14 +263,14 @@ describe("GET /api/admin/booking-widget", () => {
 
   it("does not sign a merge tag: the address it stands for is not known here", async () => {
     const token = await operatorToken();
-    const tagged = await get(`/api/admin/booking-widget?recipient=${encodeURIComponent("{{email}}")}`, token);
+    const tagged = await get(`/api/admin/booking-widget?frame=fixed&recipient=${encodeURIComponent("{{email}}")}`, token);
     assert.ok(!String(tagged.body.html).includes("sig="));
     assert.match(String(tagged.body.html), /We email you a link to confirm it/);
   });
 
   it("reads the calendar afresh every time, and names the calendar it read", async () => {
     const token = await operatorToken();
-    const first = await get("/api/admin/booking-widget?show=times&days=1&perDay=16", token);
+    const first = await get("/api/admin/booking-widget?frame=fixed&show=times&days=1&perDay=16", token);
     const calendar = first.body.calendar as { id: string; readAt: string };
     assert.equal(calendar.id, CALENDAR_ID);
     assert.ok(Math.abs(Date.parse(calendar.readAt) - Date.now()) < 60_000);
@@ -259,7 +285,7 @@ describe("GET /api/admin/booking-widget", () => {
       .find((part) => part.type === "timeZoneName")!.value.replace("GMT", "") || "+00:00";
     const start = new Date(`${day.date}T${time}:00${offset}`);
     busy = [{ start: start.toISOString(), end: new Date(start.getTime() + 30 * 60_000).toISOString() }];
-    const second = await get("/api/admin/booking-widget?show=times&days=1&perDay=16", token);
+    const second = await get("/api/admin/booking-widget?frame=fixed&show=times&days=1&perDay=16", token);
     const [again] = second.body.days as { date: string; slots: string[] }[];
     assert.ok(!(again?.date === day.date && again.slots.includes(time)), `${day.date} ${time} is busy now and must not be offered`);
   });
@@ -268,7 +294,7 @@ describe("GET /api/admin/booking-widget", () => {
     const token = await operatorToken();
     process.env.RESEND_API_KEY = "re_test";
     process.env.BOOKING_INBOX_DOMAIN = "book.top-rated.team";
-    const { body } = await get(`/api/admin/booking-widget?show=times&days=1&perDay=2&recipient=${encodeURIComponent("ada@example.com")}`, token);
+    const { body } = await get(`/api/admin/booking-widget?frame=fixed&show=times&days=1&perDay=2&recipient=${encodeURIComponent("ada@example.com")}`, token);
     const links = [...String(body.html).matchAll(/href="([^"]*)"/g)].map((m) => m[1]!);
     assert.ok(links.every((href) => href.startsWith("https://top-rated.team/book?")), links.join("\n"));
     assert.ok(!("replyToBook" in body));
@@ -276,7 +302,7 @@ describe("GET /api/admin/booking-widget", () => {
 
   it("says when a time picked from the block would not be confirmed by email", async () => {
     const token = await operatorToken();
-    const { body } = await get("/api/admin/booking-widget?show=days", token);
+    const { body } = await get("/api/admin/booking-widget?frame=fixed&show=days", token);
     assert.deepEqual(body.emailConfirmation, { on: false, line: EMAIL_CONFIRM_NO_MAIL_LINE });
   });
 });

@@ -506,6 +506,10 @@ export interface AdminBookingWidgetResponse {
   timezone: string;
   /** The zone the block shows its times in: the recipient's where one was given. */
   zone: string;
+  /** "live": the days are worked out when the email is opened. "fixed": the days of `days`. */
+  frame: "live" | "fixed";
+  /** The first day a fixed block was asked to start from, or null for the nearest. */
+  from: string | null;
   /** Working hours on weekdays, on the calendar's clock: "10:00"–"20:00". */
   workHours: { from: string; to: string };
   /** What the block offers, on `zone`'s clock. */

@@ -88,8 +88,9 @@ import {
   inboundSecretHeader,
   WHATSAPP_INBOUND_PATH,
 } from "./whatsapp";
-import { WORK_END_HOUR, WORK_START_HOUR, getBookingSlots, invalidateSlotsCache, parseSlotsQuery } from "./booking/slots";
+import { WORK_END_HOUR, WORK_START_HOUR, getBookingSlots, invalidateSlotsCache, parseSlotsQuery, workingTimes } from "./booking/slots";
 import { searchCities } from "./booking/city-search";
+import { liveColumns, livePicture, liveTarget } from "./booking/live-block";
 import { lookUpZone } from "./booking/zone-lookup";
 import { calendarId as bookingCalendarId } from "./booking/gcal";
 import {
@@ -863,6 +864,39 @@ export function registerRoutes(app: Express): void {
     }
     res.redirect(302, bookLinkTarget(query));
   });
+  /*
+   * A time clicked in a block worked out when the email is opened: "row 1,
+   * 10:00" becomes the day row 1 stands for now (server/booking/live-block.ts),
+   * and the popup opens on that time with the address filled in — never booked
+   * by the click alone, because the pictures the reader saw may be days old.
+   * Everything else in the link (the address, its guests, its signature) is
+   * passed on as it came.
+   */
+  const liveLinkLimit = rateLimit({ windowMs: 60_000, max: 120, message: "Too many requests. Wait a moment." });
+  app.get("/book/live", liveLinkLimit, (req, res, next) => {
+    if (isAdGrantHost(req.hostname)) {
+      next();
+      return;
+    }
+    void (async () => {
+      const at = req.originalUrl.indexOf("?");
+      const raw = at < 0 ? "" : req.originalUrl.slice(at + 1);
+      const ours = new Set(["r", "t", "c", "instant", "date", "time"]);
+      const rest = raw.split("&").filter((part) => part && !ours.has(part.split("=")[0]!.toLowerCase()));
+      const query = req.query as Record<string, unknown>;
+      const columns = liveColumns(typeof query.c === "string" ? query.c : "");
+      const time = typeof query.t === "string" && /^\d{4}$/.test(query.t) ? `${query.t.slice(0, 2)}:${query.t.slice(2)}` : "";
+      const target = await liveTarget({ row: Number(query.r), time, columns });
+      const picked = [
+        ...(target.date ? [`date=${target.date}`] : []),
+        ...(target.time ? [`time=${target.time}`] : []),
+      ];
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+      res.redirect(302, bookLinkTarget([...picked, ...rest].join("&")));
+    })().catch(next);
+  });
+
   /*
    * The link in the letter that confirms a time picked inside an email
    * (server/booking/confirm-email.ts). It confirms nothing by being opened —
@@ -1863,12 +1897,18 @@ export function registerRoutes(app: Express): void {
          a minute-old answer can offer the meeting he booked a moment ago. */
       invalidateSlotsCache();
       const readAt = new Date().toISOString();
-      const slots = await getBookingSlots("", 14);
+      const query = req.query as Record<string, unknown>;
+      /* LIVE IS THE DEFAULT: the days are the nearest free ones whenever the
+         email is opened. Fixed dates start from the day asked for, or today. */
+      const frame: "live" | "fixed" = query.frame === "fixed" ? "fixed" : "live";
+      const fromRaw = typeof query.from === "string" ? query.from.trim() : "";
+      const today = new Date().toISOString().slice(0, 10);
+      const from = frame === "fixed" && isSlotDate(fromRaw) && fromRaw > today ? fromRaw : "";
+      const slots = await getBookingSlots(from, 14);
       if (!slots.ok) {
         res.status(slots.status).json({ error: slots.error });
         return;
       }
-      const query = req.query as Record<string, unknown>;
       const show: BookingWidgetShow = query.show === "days" ? "days" : "times";
       const number = (value: unknown, fallback: number) => (typeof value === "string" && value.trim() ? Number(value) : fallback);
       const contract = DOOR_BY_ID[DEFAULT_DOOR_ID].contract;
@@ -1895,6 +1935,8 @@ export function registerRoutes(app: Express): void {
         ...(recipientSig && guests.length > 0 ? { guests } : {}),
         hostName: (contract.displayName ?? contract.legalName).trim(),
         liveImages: true,
+        frame,
+        workingTimes: workingTimes(),
         /* The recipient's zone, as the owner set it; the builder ignores one that is not a zone. */
         ...(typeof query.tz === "string" && query.tz.trim() ? { viewerZone: query.tz.trim() } : {}),
         /* And their town in it, named in the email: plain words, short. */
@@ -1912,6 +1954,8 @@ export function registerRoutes(app: Express): void {
         calendar: { id: bookingCalendarId(), readAt },
         timezone: slots.body.timezone,
         zone: widget.zone,
+        frame: show === "times" ? frame : "fixed",
+        from: from || null,
         workHours: { from: hour(WORK_START_HOUR), to: hour(WORK_END_HOUR) },
         days: widget.days,
         emailConfirmation: emailConfirmation(),
@@ -2380,6 +2424,37 @@ export function registerRoutes(app: Express): void {
       const image = slotImage(label, state);
       if (!image) {
         res.status(404).json({ error: "No such time." });
+        return;
+      }
+      res.setHeader("Content-Type", "image/png");
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+      res.status(200).end(image);
+    }),
+  );
+
+  /*
+   * The block worked out when the email is opened (server/booking/live-block.ts):
+   * row N's weekday, its date, or one of its times, as the calendar stands
+   * now. Never cached, like the slot pictures above.
+   */
+  app.get(
+    "/api/booking/live/:row/:file",
+    slotImageLimit,
+    route(async (req, res) => {
+      const row = Number(String(req.params.row ?? ""));
+      const file = String(req.params.file ?? "");
+      const query = req.query as Record<string, unknown>;
+      const columns = liveColumns(typeof query.c === "string" ? query.c : "");
+      const readerZone = typeof query.tz === "string" ? query.tz : "";
+      const label = typeof query.label === "string" ? slotImageTime(`${query.label}.png`) ?? undefined : undefined;
+      const image = Number.isInteger(row) && columns.length > 0
+        ? await livePicture({ row, file, columns, readerZone, ...(label ? { label } : {}) })
+        : null;
+      if (!image) {
+        res.status(404).json({ error: "No such picture." });
         return;
       }
       res.setHeader("Content-Type", "image/png");

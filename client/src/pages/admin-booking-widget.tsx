@@ -26,8 +26,18 @@ type LoadState =
   /* forKey: the options and recipient this block was made for. */
   | { kind: "ok"; data: AdminBookingWidgetResponse; forKey: string };
 
-function optionsKey(show: BookingWidgetShow, days: number, perDay: number, recipient: string, tz: string, place: string, guests: string): string {
-  return JSON.stringify([show, days, perDay, recipient.trim(), tz, place, guests.trim()]);
+function optionsKey(
+  show: BookingWidgetShow,
+  frame: string,
+  from: string,
+  days: number,
+  perDay: number,
+  recipient: string,
+  tz: string,
+  place: string,
+  guests: string,
+): string {
+  return JSON.stringify([show, frame, from, days, perDay, recipient.trim(), tz, place, guests.trim()]);
 }
 
 /* Where each person is — zone and town — kept in this browser so the next
@@ -122,6 +132,10 @@ export default function AdminBookingWidget() {
   const { resolvedTheme, setTheme } = useTheme();
   const nextTheme = resolvedTheme === "dark" ? "light" : "dark";
   const [show, setShow] = useState<BookingWidgetShow>("times");
+  /* Which days: the nearest free ones whenever the email is opened (the
+     default), or fixed dates from a day of the owner's choosing. */
+  const [frame, setFrame] = useState<"live" | "fixed">("live");
+  const [from, setFrom] = useState("");
   const [days, setDays] = useState(5);
   const [perDay, setPerDay] = useState(6);
   const [recipient, setRecipient] = useState("");
@@ -197,7 +211,18 @@ export default function AdminBookingWidget() {
     const ac = new AbortController();
     const tz = tzFor(asked);
     const place = placeFor(asked);
-    const query = new URLSearchParams({ show, days: String(days), perDay: String(perDay), recipient: asked, tz, place, guests: askedGuests });
+    const shownFrame = show === "times" ? frame : "fixed";
+    const query = new URLSearchParams({
+      show,
+      frame: shownFrame,
+      ...(shownFrame === "fixed" && from ? { from } : {}),
+      days: String(days),
+      perDay: String(perDay),
+      recipient: asked,
+      tz,
+      place,
+      guests: askedGuests,
+    });
     void (async () => {
       try {
         const res = await fetch(`/api/admin/booking-widget?${query.toString()}`, {
@@ -220,7 +245,7 @@ export default function AdminBookingWidget() {
           return;
         }
         if (typeof payload.timezone === "string") setCalendarZone(payload.timezone);
-        setState({ kind: "ok", data: payload, forKey: optionsKey(show, days, perDay, asked, tz, place, askedGuests) });
+        setState({ kind: "ok", data: payload, forKey: optionsKey(show, shownFrame, from, days, perDay, asked, tz, place, askedGuests) });
       } catch (error) {
         if (ac.signal.aborted) return;
         setState({ kind: "failed", line: error instanceof Error ? error.message : "The booking times could not be loaded." });
@@ -228,7 +253,7 @@ export default function AdminBookingWidget() {
     })();
     return () => ac.abort();
     /* tzFor reads `remembered`: a zone picked for this address asks again. */
-  }, [show, days, perDay, asked, askedGuests, reads, remembered]);
+  }, [show, frame, from, days, perDay, asked, askedGuests, reads, remembered]);
 
   function flash(label: string) {
     setCopied(label);
@@ -253,7 +278,7 @@ export default function AdminBookingWidget() {
      is the previous one — and a Copy pressed in that moment sent an email
      whose links carried no address, while the page looked finished. Copying
      waits until the block is the one for what is in the boxes. */
-  const fresh = state.kind === "ok" && state.forKey === optionsKey(show, days, perDay, recipient, tzFor(recipient), placeFor(recipient), guestsText);
+  const fresh = state.kind === "ok" && state.forKey === optionsKey(show, show === "times" ? frame : "fixed", from, days, perDay, recipient, tzFor(recipient), placeFor(recipient), guestsText);
   const shownZone = zoneFor(recipient);
   /* What the links carry, said from the server's answer, not from the box. */
   const carriedGuests = fresh && state.kind === "ok" ? (state.data.guests ?? []) : [];
@@ -280,7 +305,9 @@ export default function AdminBookingWidget() {
       : carried.kind === "address"
         ? carried.signed
           ? show === "times"
-            ? `Every time books the call for ${carried.value} in one click: the page that opens shows the confirmation, with Change and Cancel, and Google sends the invite.`
+            ? frame === "live"
+              ? `Every time opens on the site for ${carried.value}, address filled in: one press of Book books it, and Google sends the invite. The days are the nearest free ones whenever the email is opened.`
+              : `Every time books the call for ${carried.value} in one click: the page that opens shows the confirmation, with Change and Cancel, and Google sends the invite.`
             : `Every day opens the times for ${carried.value}, and pressing Book books the call at once, with Google's invite.`
           : `The address cannot be signed: this deployment has none of BOOKING_LINK_SECRET, LEAD_INBOX_KEY or ROOM_HASH_PEPPER. Set one in Render to make blocks that book in one click.`
         : "Put the address you are sending these times to in Recipient. The block can be copied once it has one.";
@@ -370,6 +397,43 @@ export default function AdminBookingWidget() {
                     </label>
                   ))}
                 </div>
+              </fieldset>
+              <fieldset className="sm:col-span-3">
+                <legend className={`${META} mb-[var(--s1)]`}>Which days</legend>
+                <div className="flex flex-wrap gap-x-[var(--s3)] gap-y-[var(--s1)]">
+                  {(["live", "fixed"] as const).map((value) => (
+                    <label key={value} className={`${READ} flex items-center gap-[var(--s1)]`}>
+                      <input
+                        type="radio"
+                        name="frame"
+                        value={value}
+                        checked={(show === "times" ? frame : "fixed") === value}
+                        disabled={show === "days" && value === "live"}
+                        onChange={() => setFrame(value)}
+                        data-testid={`radio-widget-frame-${value}`}
+                      />
+                      {value === "live" ? "Nearest when the email is opened" : "Fixed dates"}
+                    </label>
+                  ))}
+                </div>
+                <span className="mt-1.5 block text-xs text-muted-foreground" data-testid="text-widget-frame">
+                  {show === "times" && frame === "live"
+                    ? "The days work themselves out each time the email is opened: always the nearest free ones, however late it is read. A click opens that time on the site, where one press books it — the pictures a mail app shows can be days old, so the real date is confirmed there."
+                    : "These exact days, free as they are now; a time taken since shows crossed out. One click books."}
+                </span>
+                {show === "days" || frame === "fixed" ? (
+                  <label className="mt-[var(--s2)] block max-w-[14rem]">
+                    <span className={`${META} mb-[var(--s1)] block`}>From</span>
+                    <input
+                      type="date"
+                      className={FIELD}
+                      value={from || new Date().toISOString().slice(0, 10)}
+                      min={new Date().toISOString().slice(0, 10)}
+                      onChange={(event) => setFrom(event.target.value > new Date().toISOString().slice(0, 10) ? event.target.value : "")}
+                      data-testid="input-widget-from"
+                    />
+                  </label>
+                ) : null}
               </fieldset>
               <label className="block">
                 <span className={`${META} mb-[var(--s1)] block`}>Days</span>

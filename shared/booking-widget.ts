@@ -70,6 +70,16 @@ export interface BookingWidgetOptions {
   viewerZone?: string;
   /** The recipient's own town in that zone, named instead of the zone's capital: "Smalltown, PA". */
   viewerPlace?: string;
+  /**
+   * "live": the days are worked out each time the email is opened — row 1 is
+   * whatever the nearest free day is then (server/booking/live-block.ts), and
+   * a click opens that time on the site to be booked with one press. "fixed"
+   * (what `slots` holds): the days as they are now, and one click books.
+   * Live needs `workingTimes` and is for "times" only.
+   */
+  frame?: "live" | "fixed";
+  /** Every slot start of a working day on the calendar's clock, for a live block's columns. */
+  workingTimes?: string[];
 }
 
 export interface BookingWidget {
@@ -209,6 +219,7 @@ function button(href: string, label: string): string {
 }
 
 export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget {
+  if (options.frame === "live" && options.show === "times" && options.workingTimes?.length) return buildLiveBlock(options);
   const calendarZone = options.slots.timezone;
   /* Days only keeps the calendar's days: the page that opens lists the times. */
   const zone =
@@ -324,6 +335,112 @@ export function buildBookingWidget(options: BookingWidgetOptions): BookingWidget
     html,
     text,
     days: chosen.map((day) => ({ date: day.date, slots: day.times.map((time) => time.label) })),
+    zone,
+  };
+}
+
+/**
+ * A block whose days are worked out when the email is opened. Its rows are
+ * places in a queue (row 0: the nearest day with a free time among these
+ * times), its columns fixed times of the working day; every heading and every
+ * time is a picture the server draws as the calendar stands when it is asked
+ * for, and every link says "row, time" for the server to work out when it is
+ * clicked. The alt texts are the block as it stands now, for a reader who sees
+ * no pictures.
+ */
+function buildLiveBlock(options: BookingWidgetOptions): BookingWidget {
+  const calendarZone = options.slots.timezone;
+  const zone = options.viewerZone && isTimeZone(options.viewerZone) ? options.viewerZone : calendarZone;
+  const base = options.baseUrl.replace(/\/+$/, "");
+  const columns = spreadTimes(options.workingTimes ?? [], clamp(options.timesPerDay, 1, WIDGET_MAX_TIMES_PER_DAY));
+  const rows = clamp(options.days, 1, WIDGET_MAX_DAYS);
+  const hhmm = (time: string) => time.replace(":", "");
+  const cols = columns.map(hhmm).join(",");
+  const zoneQuery = `&tz=${encodeURIComponent(zone)}`;
+  const recipient = widgetRecipient(options.recipient);
+  const signed = Boolean(options.recipientSig) && recipient.kind === "address";
+  /* The address, its guests and its signature, as every /book link carries them. */
+  const carried = bookLinkUrl(base, {
+    confirmByEmail: true,
+    recipient: options.recipient,
+    sig: options.recipientSig,
+    ...(signed && options.guests?.length ? { guests: options.guests } : {}),
+  });
+  const carriedQuery = carried.includes("?") ? carried.slice(carried.indexOf("?") + 1) : "";
+  const liveLink = (row: number, time: string) => `${base}/book/live?r=${row}&t=${hhmm(time)}&c=${cols}${carriedQuery ? `&${carriedQuery}` : ""}`;
+
+  /* The block as it stands now: for the alt texts, the text version, and the page. */
+  const nowDays = options.slots.days.filter((day) => day.slots.some((time) => columns.includes(time))).slice(0, rows);
+  const local = (date: string, time: string) => {
+    const ms = wallClockToInstant(date, time, calendarZone);
+    return ms == null ? null : { ...wallClockIn(zone, ms), ms };
+  };
+  const today = nowDays[0]?.date ?? new Date().toISOString().slice(0, 10);
+  const firstMs = local(today, columns[0] ?? "10:00")?.ms ?? Date.now();
+  const place = zone === options.viewerZone ? options.viewerPlace?.trim() || undefined : undefined;
+  const zoneText = zonePhrase(zone, firstMs, place);
+  const minutes = options.slots.slotMinutes;
+  const heading = `Book a ${minutes}-minute call with ${options.hostName}`;
+  const introLead = "Pick a time. Times are ";
+  const introTail = ". These are the nearest free times whenever this email is opened; a time crossed out has just been taken.";
+  const intro = `${introLead}${zoneText}${introTail}`;
+  const introHtml = `${escapeHtml(introLead)}<strong style="color:${INK};font-weight:600;">${escapeHtml(zoneText)}</strong>${escapeHtml(introTail)}`;
+  const footLine = "A time opens on our site with your address filled in: press Book there to confirm it.";
+  const other = bookLinkUrl(base, {
+    confirmByEmail: true,
+    recipient: options.recipient,
+    sig: options.recipientSig,
+    ...(signed && options.guests?.length ? { guests: options.guests } : {}),
+  });
+
+  const rowsHtml = Array.from({ length: rows }, (_, row) => {
+    const day = nowDays[row];
+    const labelNow = (time: string) => (day ? local(day.date, time)?.time : local(today, time)?.time) ?? time;
+    const headAlt = day ? widgetDayLabel(local(day.date, columns[0]!)?.date ?? day.date) : "";
+    const headingHtml =
+      `<img src="${escapeHtml(`${base}/api/booking/live/${row}/weekday.png?c=${cols}${zoneQuery}`)}" width="34" height="16" alt="${escapeHtml(headAlt)}" ` +
+      `style="display:inline-block;vertical-align:top;width:34px;height:16px;border:0;outline:none;font-family:${SANS};font-size:12px;color:${MUTED};">` +
+      `<img src="${escapeHtml(`${base}/api/booking/live/${row}/date.png?c=${cols}${zoneQuery}`)}" width="60" height="16" alt="" ` +
+      `style="display:inline-block;vertical-align:top;width:60px;height:16px;border:0;outline:none;">`;
+    const times = columns
+      .map((time) => {
+        const label = labelNow(time);
+        const src = `${base}/api/booking/live/${row}/${hhmm(time)}.png?c=${cols}${zoneQuery}&label=${hhmm(label)}`;
+        return imageButton(liveLink(row, time), src, label);
+      })
+      .join("");
+    return (
+      `<tr><td style="padding:10px 0 0 0;line-height:16px;">${headingHtml}</td></tr>` +
+      `<tr><td style="padding:6px 0 0 0;">${times}</td></tr>`
+    );
+  }).join("");
+
+  const html =
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:560px;border-collapse:separate;">` +
+    `<tr><td style="padding:20px 22px;background:${PAPER};border:1px solid ${RULE};border-radius:8px;">` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">` +
+    `<tr><td style="font-family:${SANS};font-size:17px;line-height:22px;font-weight:600;color:${INK};">${escapeHtml(heading)}</td></tr>` +
+    `<tr><td style="padding:6px 0 4px 0;font-family:${SERIF};font-size:15px;line-height:22px;color:${MUTED};">${introHtml}</td></tr>` +
+    rowsHtml +
+    `<tr><td style="padding:12px 0 0 0;font-family:${SERIF};font-size:14px;line-height:20px;color:${MUTED};">` +
+    `${escapeHtml(footLine)} <a href="${escapeHtml(other)}" target="_blank" style="color:${ACCENT};text-decoration:underline;">Other times</a></td></tr>` +
+    `</table></td></tr></table>`;
+
+  const textRows = nowDays.map((day, row) =>
+    [
+      widgetDayLabel(local(day.date, columns[0]!)?.date ?? day.date),
+      ...columns.map((time) => `  ${local(day.date, time)?.time ?? time}  ${liveLink(row, time)}`),
+    ].join("\n"),
+  );
+  const text = [heading, intro, "", ...(textRows.length > 0 ? textRows : ["No free times in the next days."]), "", `Other times: ${other}`, footLine].join("\n");
+
+  return {
+    html,
+    text,
+    days: nowDays.map((day) => ({
+      date: local(day.date, columns[0]!)?.date ?? day.date,
+      slots: columns.map((time) => local(day.date, time)?.time ?? time),
+    })),
     zone,
   };
 }

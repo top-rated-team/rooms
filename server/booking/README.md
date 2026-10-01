@@ -100,6 +100,26 @@ recipient's address or a mail tool's merge tag (`{{email}}`, `*|EMAIL|*`) last.
 The times are the ones free when the block is made. A time gone by the time
 the email is read opens the popup with a line saying so and what is free.
 
+### Which days: nearest when opened, or fixed
+
+"Nearest when the email is opened" is the default (`frame=live`). The block's
+rows are places in a queue — row 0 is the nearest day with a free time among
+the block's own times, then the next — counted again whenever a picture is
+asked for (`live-block.ts`): each heading is two pictures, the weekday and
+"1 OCT" (`client/public/booking-days`, `scripts/build-day-images.mjs`), each
+time the free or taken picture on the reader's clock, from
+`/api/booking/live/<row>/<weekday|date|HHMM>.png?c=<times>&tz=`. A click,
+`/book/live?r=&t=&c=…`, works the row out again and opens the popup on that
+time with the address filled in, for one press of Book: a mail client may
+have fetched the pictures days earlier (Apple Mail fetches them on arrival),
+so the day seen and the day clicked can differ, and only the page can show
+the real one. The alt texts and the text version are the block as it stood
+when made.
+
+"Fixed dates" (`frame=fixed`, `from=`) lists the days free from that date, or
+from today; every link names its date and time, so one click books.
+"Days only" is always fixed.
+
 ### The recipient's clock
 
 Nothing in an email address says where its owner is, so the widget page asks
