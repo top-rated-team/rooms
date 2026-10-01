@@ -98,6 +98,32 @@ describe("buildBookingWidget", () => {
     assert.match(widget.text, /^ {2}03:00 {2}https:\/\/top-rated\.team\/book\?date=2026-10-02&time=09:00&confirm=email$/m);
   });
 
+  it("makes a block worked out when it is opened: places in a queue, drawn and resolved by the server", () => {
+    const grid = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
+    const widget = buildBookingWidget({
+      ...BASE,
+      show: "times",
+      days: 2,
+      timesPerDay: 3,
+      frame: "live",
+      workingTimes: grid,
+      liveImages: true,
+      recipient: "ada@example.com",
+      recipientSig: "AbCdEfGhIjKlMnOpQrStUv",
+      viewerZone: "America/New_York",
+    });
+    const links = hrefs(widget.html);
+    assert.equal(links.length, 7, "two rows of three, and Other times");
+    assert.equal(links[0], "https://top-rated.team/book/live?r=0&t=0900&c=0900,1300,1600&confirm=email&email=ada%40example.com&sig=AbCdEfGhIjKlMnOpQrStUv");
+    assert.ok(links.slice(0, 6).every((href) => !href.includes("instant")));
+    assert.match(widget.html, /src="https:\/\/top-rated\.team\/api\/booking\/live\/1\/weekday\.png\?c=0900,1300,1600&amp;tz=America%2FNew_York" width="34" height="16" alt="Tue 6 Oct"/);
+    /* As it stands now, for a reader with no pictures: 09:00 in Bratislava is 03:00 in New York. */
+    assert.match(widget.html, /\/api\/booking\/live\/0\/0900\.png\?c=0900,1300,1600&amp;tz=America%2FNew_York&amp;label=0300" width="64" height="34" alt="03:00"/);
+    assert.match(widget.html, /nearest free times whenever this email is opened/);
+    assert.match(widget.text, /^ {2}03:00 {2}https:\/\/top-rated\.team\/book\/live\?r=0&t=0900&/m);
+    assert.deepEqual(widget.days.map((day) => day.date), ["2026-10-02", "2026-10-06"], "the 5th has none of these times free");
+  });
+
   it("names the reader's own town in their zone, when the owner knows it", () => {
     const widget = buildBookingWidget({ ...BASE, show: "times", days: 1, timesPerDay: 2, viewerZone: "America/New_York", viewerPlace: "Smalltown, PA" });
     assert.match(widget.html, /Times are <strong[^>]*>Eastern Time \(Smalltown, PA, EDT\)<\/strong>/);

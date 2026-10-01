@@ -187,6 +187,11 @@ function slotTimes(): string[] {
 
 const SLOT_GRID = slotTimes();
 
+/** Every slot start of a working day, on the calendar's clock: "10:00" … "19:30". */
+export function workingTimes(): string[] {
+  return [...SLOT_GRID];
+}
+
 /**
  * Slot grid from busy ranges. freeBusy.query already expands recurrence and
  * treats all-day events as ranges, so the the hosted connector traps — {date} with no
