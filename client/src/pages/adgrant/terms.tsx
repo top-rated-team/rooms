@@ -5,8 +5,10 @@ import { DISPLAY, LINK, META, PAGE, READ } from "@/components/site/doors/quiet";
 import { thisLegalFacts, useLoginWays } from "@/pages/adgrant/catalogue";
 import { Meta } from "@/components/adgrant/Meta";
 import { sectionPath } from "@/components/adgrant/links";
+import { ADGRANT_SITE_NAME, ON_ADGRANT_APP_HOST } from "@/components/adgrant/mount";
+import { PublicSiteLine } from "@/components/adgrant/PublicSiteLine";
 
-const UPDATED = "13 September 2026";
+const UPDATED = "23 October 2026";
 
 function Out({ href, children }: { href: string; children: string }) {
   const internal = href.startsWith("/");
@@ -43,7 +45,7 @@ export function Terms() {
     <>
       <Meta
         title="Terms — AdGrant.AI"
-        description="Who you are contracting with on adgrant.ai, what is free, how a structure is produced, what the AI agents are and are not, and how either side stops."
+        description={`Who you are contracting with on ${ADGRANT_SITE_NAME}, what is free, how a structure is produced, what the AI agents are and are not, and how either side stops.`}
       />
       <section className={`${PAGE} pt-[var(--s5)]`}>
         <div className="max-w-[68ch]">
@@ -52,11 +54,13 @@ export function Terms() {
           <p className={`${META} mt-[var(--s2)]`}>Last updated {UPDATED}</p>
           <div className={`mt-[var(--s3)] space-y-[var(--s2)] ${READ}`}>
             <P>
-              These terms cover adgrant.ai: the website, the rooms it opens, the AI agents that answer in them, and
+              These terms cover {ADGRANT_SITE_NAME}: the website, the rooms it opens, the AI agents that answer in
+              them, and
               {facts.generatesStructure
                 ? " a Google Ad Grant structure produced from a nonprofit's website."
                 : " the work agreed through any of the three."}
             </P>
+            {ON_ADGRANT_APP_HOST ? <PublicSiteLine /> : null}
             <Muted>
               You are contracting with {facts.legalName}. {facts.entity} Nothing on this page changes what a specific
               written quote or statement of work says; where the two differ, the quote wins.

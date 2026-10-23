@@ -6,7 +6,10 @@ forks top-rated.team, and a partner who forks adgrant.ai, both go through
 room prints is left to a page to remember.
 
 AdGrant.AI is the first in-house fork: the same doors, rooms, agents and
-sign-in, re-pointed at what each service does for a nonprofit. A live
+sign-in, re-pointed at what each service does for a nonprofit. Since 23
+October 2026 the public site at adgrant.ai is the product's own application
+again, and this process answers as AdGrant.AI on app.adgrant.ai — the terms a
+room prints are that address's (`docs/ADGRANT-REPLIT.md`). A live
 white-label request already exists against adgrant.ai, so a fork of that
 fork has to be a resolved case, not a surprise.
 
@@ -19,8 +22,8 @@ fork has to be a resolved case, not a surprise.
 | Kind | reference house | second in-house house |
 | Trading name (`displayName`) | Top-Rated Team | AdGrant.AI |
 | Legal name | Top-Rated Team (Danylo Burykin SZČO) | the same — AdGrant.AI is a product, not a second registered person |
-| Terms | `https://top-rated.team/terms` | `https://adgrant.ai/terms` |
-| Privacy | `https://top-rated.team/privacy` | `https://adgrant.ai/privacy` |
+| Terms | `https://top-rated.team/terms` | `https://app.adgrant.ai/terms` |
+| Privacy | `https://top-rated.team/privacy` | `https://app.adgrant.ai/privacy` |
 | Contact | `contact@top-rated.team` | the same address, labelled for AdGrant.AI |
 | Face | the Top-Rated Team chrome | AdGrant.AI's own mark, menu and footer |
 | Catalogue | `DOORS` | `adgrantCatalogue()` — every row, including the ones hidden for the LinkedIn review, with copy rewritten for a nonprofit |
@@ -75,14 +78,14 @@ Two hops, or one config with `base: "adgrant-ai"`. Both must agree.
 
 1. Clone `DOORS` as the AdGrant in-house catalogue: every service, hidden
    ones included, copy re-pointed at a nonprofit, contracts carrying
-   AdGrant.AI's trading name and `https://adgrant.ai/terms`.
+   AdGrant.AI's trading name and `https://app.adgrant.ai/terms`.
 2. Apply the partner's operator on that catalogue. The house legal name
    is now read off the inner catalogue, so white-label replaces *that*
    house, not a name that is no longer on the row.
 
 | Mode | Legal name | Terms | Contact | Agents | Room footer |
 |---|---|---|---|---|---|
-| **named** | Top-Rated Team (Danylo Burykin SZČO) — the same company, because AdGrant.AI is not a second registered person | AdGrant.AI's, `https://adgrant.ai/terms` | AdGrant.AI's contact label, the same address | the AdGrant clone's agents and starters — what the service does for a nonprofit | that legal name, AdGrant terms, AdGrant invoice line |
+| **named** | Top-Rated Team (Danylo Burykin SZČO) — the same company, because AdGrant.AI is not a second registered person | AdGrant.AI's, `https://app.adgrant.ai/terms` | AdGrant.AI's contact label, the same address | the AdGrant clone's agents and starters — what the service does for a nonprofit | that legal name, AdGrant terms, AdGrant invoice line |
 | **white-label** | the partner's registered name | the partner's, or "none yet" | the partner's, or none | the AdGrant clone's agents, now naming the partner where the row named the house | the partner's legal name, terms, invoice line and contact |
 | **unchanged** | the other company already on the row (Maksymenko, today) | theirs, or "none yet" | theirs, or none | none of ours | that other company |
 
@@ -118,8 +121,10 @@ too; until they do, the handoff is in the parcel report.
 
 ## What must not change
 
-- adgrant.ai answers at the root with its own head, icon and card.
-- top-rated.team/adgrant keeps 301ing to adgrant.ai.
+- An AdGrant host this process serves answers at the root with its own head,
+  icon and card.
+- top-rated.team/adgrant keeps 301ing: the library to adgrant.ai, the rest to
+  app.adgrant.ai (`adgrantMovedOrigin` in `server/adgrant/site.ts`).
 - `resolveCatalogue(DOORS)` with no operator and no AdGrant house is
   `DOORS`, the same array.
 - The 27 library pages, the generator, the templates, the sitemap and

@@ -48,7 +48,7 @@ describe("the second house identity is the same company, a different face", () =
     assert.equal(HOUSE_FROM_OPERATOR.legalName, ADGRANT_IDENTITY.legalName);
     assert.equal(ADGRANT_IDENTITY.legalName, HOUSE_LEGAL_NAME);
     assert.equal(ADGRANT_IDENTITY.displayName, "AdGrant.AI");
-    assert.equal(ADGRANT_IDENTITY.termsUrl, "https://adgrant.ai/terms");
+    assert.equal(ADGRANT_IDENTITY.termsUrl, "https://app.adgrant.ai/terms");
     assert.notEqual(ADGRANT_IDENTITY.termsUrl, DOOR_BY_ID["chatgpt-ads"].contract.termsUrl);
   });
 });
@@ -119,7 +119,7 @@ describe("the AdGrant in-house clone", () => {
     assert.ok(ours && partnerRow);
     assert.equal(ours.contract.displayName, "AdGrant.AI");
     assert.equal(ours.contract.legalName, HOUSE_LEGAL_NAME);
-    assert.equal(ours.contract.termsUrl, "https://adgrant.ai/terms");
+    assert.equal(ours.contract.termsUrl, "https://app.adgrant.ai/terms");
     assert.equal(partnerRow.contract.legalName, "Maksymenko LinkedIn Growth");
     assert.equal(partnerRow.contract.termsUrl, null);
   });
@@ -161,7 +161,7 @@ describe("a fork of a fork", () => {
     const row = asRows(resolveCatalogue(DOORS, config)).find((entry) => entry.id === "google-ads");
     assert.ok(row);
     assert.equal(row.contract.legalName, HOUSE_LEGAL_NAME);
-    assert.equal(row.contract.termsUrl, "https://adgrant.ai/terms");
+    assert.equal(row.contract.termsUrl, "https://app.adgrant.ai/terms");
     assert.equal(row.contract.displayName, "AdGrant.AI");
     assert.equal(row.tier, "grey");
     assert.equal(row.priceTier, "partner");
@@ -208,7 +208,7 @@ describe("legal facts a fork's privacy and terms are filled from", () => {
     const facts = catalogueLegalFacts(rows, ADGRANT_IDENTITY);
     assert.equal(facts.legalName, HOUSE_LEGAL_NAME);
     assert.equal(facts.displayName, "AdGrant.AI");
-    assert.equal(facts.termsUrl, "https://adgrant.ai/terms");
+    assert.equal(facts.termsUrl, "https://app.adgrant.ai/terms");
     /* THE DEFAULT IS NONE, and that is the point of the argument. Which ways
        in a deployment has cannot be read off the catalogue — LinkedIn depends
        on an app and on the address its redirect returns to, WhatsApp on the

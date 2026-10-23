@@ -1,4 +1,4 @@
-import { adgrantMountFor } from "@shared/adgrant-site";
+import { adgrantMountFor, adgrantSiteNameFor, isAdGrantAppHost } from "@shared/adgrant-site";
 
 /**
  * Where this front is mounted, for THIS host.
@@ -16,5 +16,20 @@ import { adgrantMountFor } from "@shared/adgrant-site";
  * point at "/" — on top-rated.team that is the other product's home.
  */
 export const ADGRANT_MOUNT = adgrantMountFor(
+  typeof window === "undefined" ? undefined : window.location.hostname,
+);
+
+/**
+ * The address this tree is being read on, by name — adgrant.ai, or
+ * app.adgrant.ai once the public site is served by the product's own
+ * application. The terms and privacy pages say what they cover with it, so
+ * neither claims a site this process does not run.
+ */
+export const ADGRANT_SITE_NAME = adgrantSiteNameFor(
+  typeof window === "undefined" ? undefined : window.location.hostname,
+);
+
+/** True on the app's address, where the public site is somebody else's process. */
+export const ON_ADGRANT_APP_HOST = isAdGrantAppHost(
   typeof window === "undefined" ? undefined : window.location.hostname,
 );

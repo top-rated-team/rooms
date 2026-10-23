@@ -42,6 +42,10 @@ export const HOUSE_HOSTS = [
      `adgrantCatalogue` in shared/doors.ts. */
   "adgrant.ai",
   "www.adgrant.ai",
+  /* And the address its rooms, agents and sign-in answer on once adgrant.ai
+     itself is served by the product's own application. Every entry of
+     ADGRANT_HOSTS in shared/adgrant-site.ts has to be here, and a test says so. */
+  "app.adgrant.ai",
 ] as const;
 
 /**
