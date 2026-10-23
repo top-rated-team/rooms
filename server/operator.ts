@@ -6,6 +6,7 @@
  * that goes on the wire, including an error, may include that key.
  */
 
+import { timingSafeEqual } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import type { NextFunction, Request, Response } from "express";
@@ -104,6 +105,61 @@ function sendJson(res: Response, status: number, body: unknown, secrets: readonl
 
 function sendError(res: Response, status: number, message: string, secrets: readonly string[] = []): void {
   sendJson(res, status, { error: redactSecrets(message, secrets) }, secrets);
+}
+
+/**
+ * WHO MAY SAVE A CONFIG. Saving one re-brands every page this process serves
+ * and, with `useOwnKey`, swaps the model key every answer is paid with — the
+ * key a room's conversation is sent under. It was open to anyone who could
+ * reach PUT /api/operator. Two rules now, and both fail closed:
+ *
+ * 1. NEVER ON A HOUSE HOST. top-rated.team and adgrant.ai are the reference
+ *    deployment, and the catalogue is forbidden to change there. Nobody saves
+ *    a config on them, with or without a token.
+ * 2. ON A FORK, ONLY WITH THE DEPLOYMENT'S SET-UP TOKEN. Whoever runs the host
+ *    sets OPERATOR_SETUP_TOKEN there and types it on /setup. Without it there
+ *    is no first-come window in which a stranger names themselves the
+ *    operator, and no way to overwrite a partner's config afterwards. A host
+ *    with no token, or one too short to resist guessing, saves nothing.
+ *
+ * The house rule is checked first and does not depend on the token, so a
+ * Host header that lies about being a fork still needs a token the house
+ * never sets.
+ */
+export const OPERATOR_SETUP_TOKEN_HEADER = "x-operator-setup-token";
+export const OPERATOR_SETUP_TOKEN_MIN = 16;
+
+export const OPERATOR_HOUSE_REFUSED_LINE =
+  "This is Top-Rated Team's own deployment, and it takes no operator config from anyone. A config is for a copy of this site running on your own domain.";
+export const OPERATOR_TOKEN_MISSING_LINE =
+  `Saving is switched off until this deployment has a set-up token. Set OPERATOR_SETUP_TOKEN on the host to a random value of at least ${OPERATOR_SETUP_TOKEN_MIN} characters, restart it, and enter the same value here.`;
+export const OPERATOR_TOKEN_WRONG_LINE =
+  "That is not this deployment's set-up token. It is the value of OPERATOR_SETUP_TOKEN on the host this runs on.";
+
+function configuredSetupToken(): string | null {
+  const token = process.env.OPERATOR_SETUP_TOKEN?.trim() ?? "";
+  return token.length >= OPERATOR_SETUP_TOKEN_MIN ? token : null;
+}
+
+function tokenMatches(expected: string, provided: string | undefined): boolean {
+  if (!provided) return false;
+  const a = Buffer.from(expected);
+  const b = Buffer.from(provided);
+  /* timingSafeEqual throws on unequal lengths, and a throw here would be a
+     500 that says more than a refusal does. */
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+
+/** Why this request may not save a config, or null when it may. */
+export function operatorWriteRefusal(req: Request): { status: 401 | 403; error: string } | null {
+  if (isHouseHost(req.hostname)) return { status: 403, error: OPERATOR_HOUSE_REFUSED_LINE };
+  const expected = configuredSetupToken();
+  if (!expected) return { status: 403, error: OPERATOR_TOKEN_MISSING_LINE };
+  if (!tokenMatches(expected, req.get(OPERATOR_SETUP_TOKEN_HEADER)?.trim())) {
+    return { status: 401, error: OPERATOR_TOKEN_WRONG_LINE };
+  }
+  return null;
 }
 
 function skipGate(req: Request): boolean {
@@ -225,6 +281,12 @@ export async function writeOperator(req: Request, res: Response): Promise<void> 
   const previous = readStored();
   const incomingKey = typeof req.body?.model?.apiKey === "string" ? req.body.model.apiKey : undefined;
   const secrets = secretsInPlay(previous, incomingKey);
+
+  const refused = operatorWriteRefusal(req);
+  if (refused) {
+    sendError(res, refused.status, refused.error, secrets);
+    return;
+  }
 
   try {
     const write = parseOperatorWrite(req.body);

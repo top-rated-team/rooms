@@ -25,10 +25,21 @@ import express from "express";
 import { resolveCatalogue } from "@shared/catalogue";
 import { DOOR_BY_ID, DOORS } from "@shared/doors";
 import { parseOperatorWrite } from "@shared/operator";
-import { operatorConfig, resetOperatorForTests, restoreOperatorDefaultsForTests, seededCatalogue } from "./operator";
+import {
+  OPERATOR_HOUSE_REFUSED_LINE,
+  OPERATOR_SETUP_TOKEN_HEADER,
+  OPERATOR_TOKEN_MISSING_LINE,
+  OPERATOR_TOKEN_WRONG_LINE,
+  operatorConfig,
+  resetOperatorForTests,
+  restoreOperatorDefaultsForTests,
+  seededCatalogue,
+} from "./operator";
+import { operatorEmailsForHost } from "./admin/people";
 
 const FORK_HOST = "agency.example";
 const SECRET_KEY = "sk-test-never-return-this-key-9f3c";
+const SETUP_TOKEN = "test-setup-token-5b1e7a90c2d4";
 
 const NORTHWIND = {
   displayName: "Northwind Agency",
@@ -99,13 +110,51 @@ function getAsHost(origin: string, pathname: string, host: string): Promise<{ st
   });
 }
 
+/**
+ * A PUT that arrives with the Host it claims. fetch() drops a Host header
+ * without saying so, which is how every "fork" save in this file used to
+ * land on 127.0.0.1 — a house host — and pass.
+ */
+function putAsHost(
+  origin: string,
+  host: string,
+  body: string,
+  token: string | null = SETUP_TOKEN,
+): Promise<{ status: number; text(): Promise<string>; json(): Promise<unknown> }> {
+  const url = new URL("/api/operator", origin);
+  const headers: Record<string, string> = { host, "content-type": "application/json" };
+  if (token !== null) headers[OPERATOR_SETUP_TOKEN_HEADER] = token;
+  return new Promise((resolve, reject) => {
+    const req = httpRequest(
+      { hostname: url.hostname, port: url.port, path: url.pathname, method: "PUT", headers },
+      (res) => {
+        let text = "";
+        res.setEncoding("utf8");
+        res.on("data", (chunk) => (text += chunk));
+        res.on("end", () =>
+          resolve({
+            status: res.statusCode ?? 0,
+            text: async () => text,
+            json: async () => JSON.parse(text) as unknown,
+          }),
+        );
+      },
+    );
+    req.on("error", reject);
+    req.end(body);
+  });
+}
+
 describe("operator setup", () => {
   let origin = "";
   let close: (() => Promise<void>) | undefined;
   let tmpDir = "";
   let file = "";
 
+  const tokenAtStart = process.env.OPERATOR_SETUP_TOKEN;
+
   before(async () => {
+    process.env.OPERATOR_SETUP_TOKEN = SETUP_TOKEN;
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "operator-"));
     file = path.join(tmpDir, "operator.json");
     resetOperatorForTests({ file });
@@ -116,6 +165,8 @@ describe("operator setup", () => {
 
   after(async () => {
     await close?.();
+    if (tokenAtStart === undefined) delete process.env.OPERATOR_SETUP_TOKEN;
+    else process.env.OPERATOR_SETUP_TOKEN = tokenAtStart;
     restoreOperatorDefaultsForTests();
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
@@ -149,16 +200,86 @@ describe("operator setup", () => {
     });
   });
 
+  describe("who may save a config", () => {
+    /* A saved config re-brands every page and, with its own key, decides
+       which OpenAI account every answer goes through. */
+    const HOUSE = [
+      "top-rated.team",
+      "www.top-rated.team",
+      "ai.top-rated.team",
+      "adgrant.ai",
+      "www.adgrant.ai",
+      "app.adgrant.ai",
+      "127.0.0.1",
+      "top-rated-team.onrender.com",
+    ];
+
+    function nothingWritten(): void {
+      assert.equal(fs.existsSync(file), false, "a refused save left a file");
+      assert.equal(operatorConfig(), null, "a refused save is being read as the config");
+    }
+
+    it("refuses every house host, even with the right token, and changes nothing", async () => {
+      const keyBefore = process.env.OPENAI_API_KEY;
+      for (const host of HOUSE) {
+        const res = await putAsHost(origin, host, JSON.stringify(validBody()));
+        assert.equal(res.status, 403, host);
+        const text = await res.text();
+        assert.equal((JSON.parse(text) as { error: string }).error, OPERATOR_HOUSE_REFUSED_LINE, host);
+        assert.equal(text.includes(SECRET_KEY), false, `${host} echoed the key`);
+        nothingWritten();
+        assert.equal(process.env.OPENAI_API_KEY, keyBefore, `${host} swapped the model key`);
+      }
+    });
+
+    it("refuses a fork with no token, or the wrong one, and changes nothing", async () => {
+      for (const token of [null, "", "wrong", `${SETUP_TOKEN}x`, SETUP_TOKEN.toUpperCase()]) {
+        const res = await putAsHost(origin, FORK_HOST, JSON.stringify(validBody()), token);
+        assert.equal(res.status, 401, `token ${JSON.stringify(token)}`);
+        const text = await res.text();
+        assert.equal((JSON.parse(text) as { error: string }).error, OPERATOR_TOKEN_WRONG_LINE);
+        assert.equal(text.includes(SECRET_KEY), false);
+        nothingWritten();
+      }
+    });
+
+    it("saves nothing on a fork whose host has no token, or one too short to resist guessing", async () => {
+      for (const configured of [undefined, "", "short-token"]) {
+        if (configured === undefined) delete process.env.OPERATOR_SETUP_TOKEN;
+        else process.env.OPERATOR_SETUP_TOKEN = configured;
+        try {
+          const res = await putAsHost(origin, FORK_HOST, JSON.stringify(validBody()), configured ?? "anything");
+          assert.equal(res.status, 403, `host token ${JSON.stringify(configured)}`);
+          assert.equal(((await res.json()) as { error: string }).error, OPERATOR_TOKEN_MISSING_LINE);
+          nothingWritten();
+        } finally {
+          process.env.OPERATOR_SETUP_TOKEN = SETUP_TOKEN;
+        }
+      }
+    });
+
+    it("saves on a fork with the host's token", async () => {
+      const res = await putAsHost(origin, FORK_HOST, JSON.stringify(validBody()));
+      assert.equal(res.status, 200);
+      assert.equal(operatorConfig()?.identity.legalName, NORTHWIND.legalName);
+    });
+
+    it("lets a fork's contact open that fork's /admin, and never the house's", async () => {
+      const res = await putAsHost(origin, FORK_HOST, JSON.stringify(validBody()));
+      assert.equal(res.status, 200);
+      assert.ok(operatorEmailsForHost(FORK_HOST).includes(NORTHWIND.contact));
+      for (const host of HOUSE) {
+        assert.equal(operatorEmailsForHost(host).includes(NORTHWIND.contact), false, host);
+      }
+    });
+  });
+
   describe("a config missing a legal name is rejected", () => {
     it("answers with a sentence a person can act on", async () => {
       const body = validBody({
         identity: { ...NORTHWIND, legalName: "   " },
       });
-      const res = await fetch(`${origin}/api/operator`, {
-        method: "PUT",
-        headers: { "content-type": "application/json", ...forkHeaders() },
-        body: JSON.stringify(body),
-      });
+      const res = await putAsHost(origin, FORK_HOST, JSON.stringify(body));
       assert.equal(res.status, 400);
       const payload = (await res.json()) as { error: string };
       assert.match(payload.error, /registered name/i);
@@ -168,11 +289,7 @@ describe("operator setup", () => {
 
   describe("the model key is never returned", () => {
     it("is absent from a successful save and from a later read", async () => {
-      const saved = await fetch(`${origin}/api/operator`, {
-        method: "PUT",
-        headers: { "content-type": "application/json", Host: FORK_HOST },
-        body: JSON.stringify(validBody()),
-      });
+      const saved = await putAsHost(origin, FORK_HOST, JSON.stringify(validBody()));
       assert.equal(saved.status, 200);
       const savedText = await saved.text();
       assert.equal(savedText.includes(SECRET_KEY), false);
@@ -192,16 +309,12 @@ describe("operator setup", () => {
     });
 
     it("is absent from an error, even when the rejected body carried one", async () => {
-      const res = await fetch(`${origin}/api/operator`, {
-        method: "PUT",
-        headers: { "content-type": "application/json", Host: FORK_HOST },
-        body: JSON.stringify(
+      const res = await putAsHost(origin, FORK_HOST, JSON.stringify(
           validBody({
             identity: { ...NORTHWIND, legalName: "" },
             model: { useOwnKey: true, apiKey: SECRET_KEY },
           }),
-        ),
-      });
+        ));
       assert.equal(res.status, 400);
       const text = await res.text();
       assert.equal(text.includes(SECRET_KEY), false);
@@ -216,11 +329,7 @@ describe("operator setup", () => {
           setup: { price: "from 4 000 Kč", buys: "One conversion-tracking setup." },
         },
       });
-      const res = await fetch(`${origin}/api/operator`, {
-        method: "PUT",
-        headers: { "content-type": "application/json", Host: FORK_HOST },
-        body: JSON.stringify(body),
-      });
+      const res = await putAsHost(origin, FORK_HOST, JSON.stringify(body));
       assert.equal(res.status, 200);
       const payload = (await res.json()) as {
         identity: typeof NORTHWIND;
@@ -250,11 +359,7 @@ describe("operator setup", () => {
     });
 
     it("turns /setup into /partner once it exists", async () => {
-      const saved = await fetch(`${origin}/api/operator`, {
-        method: "PUT",
-        headers: { "content-type": "application/json", Host: FORK_HOST },
-        body: JSON.stringify(validBody()),
-      });
+      const saved = await putAsHost(origin, FORK_HOST, JSON.stringify(validBody()));
       assert.equal(saved.status, 200);
 
       const res = await fetch(`${origin}/setup`, { headers: forkHeaders(), redirect: "manual" });
@@ -269,15 +374,11 @@ describe("operator setup", () => {
          offered to an operator at all and the key is dropped before the
          answerability check ever sees it. Both outcomes are correct; what
          must stay true is that saving cannot turn a hidden row on. */
-      const res = await fetch(`${origin}/api/operator`, {
-        method: "PUT",
-        headers: { "content-type": "application/json", Host: FORK_HOST },
-        body: JSON.stringify(
+      const res = await putAsHost(origin, FORK_HOST, JSON.stringify(
           validBody({
             services: { "linkedin-automation": { mode: "white-label", offered: true } },
           }),
-        ),
-      });
+        ));
       assert.equal(res.status, 200);
       const saved = (await res.json()) as { services?: Record<string, unknown> };
       assert.equal(saved.services?.["linkedin-automation"], undefined);

@@ -94,8 +94,13 @@ export function operatorEmailsForHost(host: string): string[] {
   const explicit = parseAddress(process.env.OPERATOR_EMAIL);
   if (explicit) found.add(explicit);
 
-  const contact = parseAddress(operatorConfig()?.identity.contact ?? null);
-  if (contact) found.add(contact);
+  /* A fork's own contact, and only a fork's. On a house host a saved config is
+     never the owner's word — saving one there was open to anyone until the
+     write gate in server/operator.ts — so its address must not open /admin. */
+  if (!isHouseHost(host)) {
+    const contact = parseAddress(operatorConfig()?.identity.contact ?? null);
+    if (contact) found.add(contact);
+  }
 
   if (isHouseHost(host)) {
     for (const part of (process.env.LEAD_NOTIFY_EMAIL ?? "").split(",")) {
