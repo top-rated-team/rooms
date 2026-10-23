@@ -16,24 +16,20 @@ import Setup from "@/pages/setup";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
 
-/* The landing page is paid traffic and bounces on latency, so the workspace —
- * chat, websocket client, markdown renderer — is a separate chunk it never
- * downloads. Only /w/:token pays for it.
- *
- * /services and /services/:slug are not lazy: they are Header, Footer, DoorCard, the
+/* /services and /services/:slug are not lazy: they are Header, Footer, DoorCard, the
  * panel and the door table, and the doors table is what the panel already
- * reads. Splitting them would buy nothing and cost a round trip. Neither one
- * imports anything out of @/pages/workspace or @/components/workspace, so a
- * visitor choosing a door still never downloads the room. */
-const Workspace = lazy(() => import("@/pages/workspace"));
-const AdGrantApp = lazy(() => import("@/pages/adgrant"));
+ * reads. Splitting them would buy nothing and cost a round trip.
+ *
+ * There is no room page: rooms are MakeHybrid's Hybrid Rooms now, and the
+ * server sends /rooms and every /w/ address there before this app loads
+ * (server/rooms-moved.ts). */const AdGrantApp = lazy(() => import("@/pages/adgrant"));
 const Admin = lazy(() => import("@/pages/admin"));
 const AdminBookingWidget = lazy(() => import("@/pages/admin-booking-widget"));
 
 function RouteFallback() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <p className="text-sm text-muted-foreground">Opening workspace…</p>
+      <p className="text-sm text-muted-foreground">Opening…</p>
     </div>
   );
 }
@@ -101,9 +97,6 @@ export default function App() {
         {/* Every door answers here. Which one, and whether it has a panel at
             all, is read out of the row — see shared/doors.ts. */}
         <Route path="/services/:slug" component={Door} />
-        <Route path="/w/:token" component={Workspace} />
-        {/* /w with nothing after it: the rooms this browser remembers. */}
-        <Route path="/w" component={Workspace} />
         {/* /setup and /partner are one page: the form, then the same form as the cabinet. */}
         {/* The two legal addresses. Both answered 200 with a 404 page for
             months, which is what a single-page shell does with an address it

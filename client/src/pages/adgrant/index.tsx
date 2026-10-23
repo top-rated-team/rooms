@@ -1,4 +1,3 @@
-import { Suspense, lazy } from "react";
 import { Route, Switch } from "wouter";
 
 import { Home } from "@/components/adgrant/Home";
@@ -16,16 +15,6 @@ import Privacy from "@/pages/adgrant/privacy";
 import Services from "@/pages/adgrant/services";
 import Terms from "@/pages/adgrant/terms";
 import { STATS } from "@shared/adgrant";
-
-const Workspace = lazy(() => import("@/pages/workspace"));
-
-function WorkspaceFallback() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <p className="type-note text-muted-foreground">Opening workspace…</p>
-    </div>
-  );
-}
 
 /* ---------------------------------------------------------------------------
  * ADGRANT.AI'S TREE, IN THIS APPLICATION.
@@ -101,19 +90,8 @@ function Pages() {
 export function AdGrantApp() {
   return (
     <Switch>
-      {/* Rooms live at /w on this host too. App.tsx does not mount them when
-          the process is answering as adgrant.ai, and this parcel cannot edit
-          that file, so the route has to live here. */}
-      <Route path="/w/:token">
-        <Suspense fallback={<WorkspaceFallback />}>
-          <Workspace />
-        </Suspense>
-      </Route>
-      <Route path="/w">
-        <Suspense fallback={<WorkspaceFallback />}>
-          <Workspace />
-        </Suspense>
-      </Route>
+      {/* No /w here any more: the server sends every room address on to the
+          rooms' new home (server/rooms-moved.ts) before this page loads. */}
       <Route>
         <Pages />
       </Route>

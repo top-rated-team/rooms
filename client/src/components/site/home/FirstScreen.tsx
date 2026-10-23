@@ -19,7 +19,7 @@ import { Fragment, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 
 import { BOOK_A_CALL_URL, PROOF } from "@shared/roster";
-import { RoomMenu } from "@/components/site/RoomMenu";
+import { RoomsLink } from "@/components/site/RoomsLink";
 import { isCoarsePointer } from "@/components/WhatsAppQr";
 import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBooking } from "@/hooks/use-booking";
@@ -452,7 +452,7 @@ export function FirstScreen() {
             label breaks in the middle. A line that runs 116px off the edge is
             not the one line the owner asked for either. */}
         <div className="mt-[var(--s3)] flex flex-wrap items-baseline gap-x-[var(--s2)] gap-y-[var(--s1)] whitespace-nowrap [font-size:clamp(0.66rem,3vw,0.76rem)!important] sm:flex-nowrap sm:gap-x-[var(--s3)]">
-          <RoomMenu className={ACTION_LOUD} testId="button-home-open-a-room" />
+          <RoomsLink className={ACTION_LOUD} testId="button-home-open-a-room" />
           <a
             href={BOOK_A_CALL_URL}
             target="_blank"

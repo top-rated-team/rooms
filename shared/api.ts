@@ -63,13 +63,7 @@ export type ClientEvent =
 
 export type AskEvent =
   | { type: "delta"; delta: string }
-  /**
-   * `receipt` is an HMAC of the answer text, proving this server wrote it. Hand
-   * it back with the text when keeping the conversation and the room shows the
-   * exchange instead of re-asking; see server/answer-receipt.ts for why the
-   * text alone is not enough.
-   */
-  | { type: "done"; citations?: Citation[]; receipt?: string }
+  | { type: "done"; citations?: Citation[] }
   | { type: "error"; message: string };
 
 export interface KbStatus {

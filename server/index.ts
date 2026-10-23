@@ -2,7 +2,6 @@ import { createServer } from "node:http";
 import express, { type NextFunction, type Request, type Response } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic, setupVite } from "./vite";
-import { attachWs } from "./ws";
 import { storageMode } from "./storage";
 import { llmReady } from "./ai/agentRuntime";
 import { kbStatus, loadKb } from "./ai/kb";
@@ -53,8 +52,6 @@ async function main(): Promise<void> {
   }
 
   app.use(errorHandler);
-
-  attachWs(server);
 
   const port = Number(process.env.PORT ?? 5000);
   server.on("error", (error: NodeJS.ErrnoException) => {

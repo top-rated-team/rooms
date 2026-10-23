@@ -15,11 +15,9 @@ import { Meta } from "@/components/adgrant/Meta";
 import { Missing } from "@/components/adgrant/Missing";
 import { leafPath, sectionPath } from "@/components/adgrant/links";
 import { SECTION_BY_SEGMENT } from "@/components/adgrant/sections";
-import { thisDoor } from "@/pages/adgrant/catalogue";
 import { ApiError, apiRequest } from "@/lib/apiRequest";
 
 const SECTION = SECTION_BY_SEGMENT.templates;
-const GRANT_DOOR = thisDoor("ad-grants");
 const BY_SLUG: Record<string, AdGrantTemplate> = Object.fromEntries(
   TEMPLATES.map((template) => [template.slug, template]),
 );
@@ -251,12 +249,12 @@ export function TemplatePage() {
         <p className={`mt-[var(--s2)] max-w-[46ch] ${READ_MUTED}`}>{ADGRANT_TEMPLATE_FILES_ROOM_LINE}</p>
 
         <div className="mt-[var(--s4)]" data-testid="block-adgrant-template-signin">
+          {/* Sign-in for the files, and back to this page once signed in. */}
           <RoomMenu
             className={ACTION}
-            doorId={GRANT_DOOR?.id}
-            agentId={GRANT_DOOR?.firstAgentId}
             testId="button-adgrant-template-room"
             layout="inline"
+            returnTo={typeof window === "undefined" ? undefined : window.location.pathname}
           />
         </div>
 

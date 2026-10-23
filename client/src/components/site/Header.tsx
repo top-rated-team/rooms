@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 
 import { useTheme } from "@/hooks/use-theme";
-import { RoomMenu } from "@/components/site/RoomMenu";
+import { RoomsLink } from "@/components/site/RoomsLink";
 
 /* ---------------------------------------------------------------------------
  * THE MASTHEAD
@@ -176,7 +176,7 @@ export function Header() {
           <Link href="/services/white-label" data-testid="link-nav-white-label" className={LINK}>
             White label
           </Link>
-          <RoomMenu className={LINK} testId="button-nav-open-a-room" />
+          <RoomsLink className={LINK} testId="button-nav-open-a-room" />
           {/*
             THE THEME IS THE ONE ITEM IN SENTENCE CASE, on the owner's
             instruction, and the distinction it draws is real: the six items
@@ -230,7 +230,7 @@ export function Header() {
           <Link href="/services/white-label" onClick={close} data-testid="link-menu-white-label" className={LINK}>
             White label
           </Link>
-                    <RoomMenu className={`${LINK} text-left`} testId="button-menu-open-a-room" layout="inline" />
+                    <RoomsLink className={`${LINK} text-left`} testId="button-menu-open-a-room" />
           <button
             type="button"
             onClick={() => {

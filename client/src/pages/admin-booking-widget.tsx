@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { ACTION, ACTION_QUIET, DISPLAY, META, PAGE, READ, READ_MUTED } from "@/components/site/doors/quiet";
+import { RoomMenu } from "@/components/site/RoomMenu";
 import { useTheme } from "@/hooks/use-theme";
 import type { AdminBookingWidgetResponse } from "@shared/api";
 import { bookingGuests, widgetRecipient } from "@shared/booking-link";
@@ -190,6 +191,13 @@ export default function AdminBookingWidget() {
     return () => clearTimeout(timer);
   }, [recipient, guestsText]);
 
+  /* A sign-in finished on this page (WhatsApp, which never leaves it): ask again. */
+  useEffect(() => {
+    const again = () => setReads((n) => n + 1);
+    window.addEventListener("room-session", again);
+    return () => window.removeEventListener("room-session", again);
+  }, []);
+
   /* KEPT IN STEP WITH THE CALENDAR while the page is open: read again when the
      owner comes back to the tab — usually from the calendar itself — and every
      two minutes while it is in front of him. */
@@ -349,17 +357,23 @@ export default function AdminBookingWidget() {
             <p className={READ} role="alert" data-testid="text-widget-refused">
               {state.line}
             </p>
-            {/* The way in, on the page where the wall is. The operator is
-                whoever signs in with the address in OPERATOR_EMAIL (on a
-                house host also LEAD_NOTIFY_EMAIL) or the LinkedIn account in
-                OPERATOR_LINKEDIN_SUB — see server/admin/people.ts. */}
+            {/* The way in, on the page where the wall is: the site's own pages
+                carry no sign-in any more, since rooms moved to MakeHybrid. The
+                operator is whoever signs in with the address in OPERATOR_EMAIL
+                (on a house host also LEAD_NOTIFY_EMAIL) or the LinkedIn account
+                in OPERATOR_LINKEDIN_SUB — see server/admin/people.ts. A sign-in
+                comes back to this page (lib/signin-return.ts). */}
+            <div className="mt-[var(--s3)]">
+              <RoomMenu
+                className={ACTION_QUIET}
+                testId="button-widget-sign-in"
+                signInOnly
+                returnTo="/admin/booking-widget"
+              />
+            </div>
             {!state.signedIn ? (
               <p className={`${READ_MUTED} mt-[var(--s3)] max-w-[40rem]`}>
-                Sign in on the{" "}
-                <a href="/" className="underline underline-offset-2 hover:text-foreground">
-                  front page
-                </a>{" "}
-                (Sign in, at the top, then LinkedIn), and open this page again.
+                Sign in with LinkedIn or a link to the operator's email, and this page opens.
               </p>
             ) : null}
             {state.youAre.length > 0 ? (

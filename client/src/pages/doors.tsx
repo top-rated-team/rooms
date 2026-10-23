@@ -7,7 +7,7 @@ import { ACTION_QUIET, DISPLAY, LINK, META, PAGE, READ, READ_MUTED } from "@/com
 import Footer from "@/components/site/Footer";
 import GatedOffers, { LISTED_DOORS, PUBLIC_DOORS, countWord } from "@/components/site/GatedOffers";
 import Header from "@/components/site/Header";
-import { RoomMenu } from "@/components/site/RoomMenu";
+import { RoomsLink } from "@/components/site/RoomsLink";
 
 /* How many doors a stranger reads, written out. Derived rather than typed, so
  * moving a door behind the email step — a tier change in shared/doors.ts — does
@@ -116,7 +116,7 @@ export function Doors() {
               signup — the link in your browser is the whole account.
             </p>
             <div className="mt-[var(--s3)]">
-              <RoomMenu className={ACTION_QUIET} testId="button-doors-open-room" />
+              <RoomsLink className={ACTION_QUIET} testId="button-doors-open-room" />
             </div>
           </div>
         </section>

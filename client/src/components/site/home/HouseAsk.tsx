@@ -1,12 +1,13 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 
-import type { AskEvent, CreateWorkspaceResponse, KbStatus } from "@shared/api";
+import type { AskEvent, KbStatus } from "@shared/api";
 import type { Citation } from "@shared/schema";
 import { BOOK_A_CALL_URL } from "@shared/roster";
-import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
-import { ANSWERING_DOORS, roomSource, shortName } from "@/components/site/home/doorText";
+import { DOOR_BY_ID } from "@shared/doors";
+import { ANSWERING_DOORS, shortName } from "@/components/site/home/doorText";
 import { useBooking } from "@/hooks/use-booking";
+import { RoomsLink } from "@/components/site/RoomsLink";
 
 const importAnswerMarkdown = () => import("@/components/site/AnswerMarkdown");
 const AnswerMarkdown = lazy(importAnswerMarkdown);
@@ -38,9 +39,6 @@ const CONNECTING_LABEL = "Connecting to the agent.";
 const RATE_LIMITED = "Too many questions from this address for the moment. Give it a minute, or talk to a person below.";
 const UNREACHABLE = "The agent could not be reached. The people below are still available.";
 const OFFLINE = "Network error, so nothing was sent. The people below are still available.";
-const ROOM_RATE_LIMITED = "That is a lot of rooms from one address. Give it a minute, or ask the question here instead.";
-const ROOM_FAILED = "The room could not be opened. The answer above is unaffected — ask again here, or write to us.";
-const ROOM_OFFLINE = "Network error, so no room was opened. The answer above is unaffected.";
 
 const EXAMPLES = ANSWERING_DOORS.slice(0, 3).map((door) => door.starters[0]).filter(Boolean);
 
@@ -53,7 +51,6 @@ function hostOf(url: string): string {
 }
 
 export function HouseAsk() {
-  const [, navigate] = useLocation();
   const booking = useBooking();
 
   const [kbState, setKbState] = useState<KbState>("loading");
@@ -62,13 +59,10 @@ export function HouseAsk() {
   const [route, setRoute] = useState<RouteResult | null>(null);
   const [answer, setAnswer] = useState("");
   const [citations, setCitations] = useState<Citation[]>([]);
-  const [receipt, setReceipt] = useState<string | null>(null);
   const [status, setStatus] = useState<AskStatus>("idle");
   const [stage, setStage] = useState(CONNECTING_LABEL);
   const [error, setError] = useState<string | null>(null);
   const [routing, setRouting] = useState(false);
-  const [opening, setOpening] = useState(false);
-  const [roomError, setRoomError] = useState<string | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -97,66 +91,13 @@ export function HouseAsk() {
   }, [answer, status]);
 
   const routedDoorId = route?.kind === "door" ? route.doorId : null;
-  const routedAgentId = route?.kind === "door" ? route.agentId : null;
   const routedDoor = routedDoorId ? DOOR_BY_ID[routedDoorId] : undefined;
-
-  /**
-   * Open a room. `carry` says whether the conversation on screen comes with it.
-   *
-   * IT NO LONGER NEEDS A ROUTED DOOR, and that is the whole change. It used to
-   * return immediately unless a question had already been asked and routed,
-   * which made asking the toll for getting in — the owner: "нет по прежнему на
-   * єтой секции именно кнопку войти в комнату, без того чтобі сначала играться
-   * с чат ботом и вопросами". He is right, and it was the wrong way round in a
-   * second way too: the room is the part of this that nobody else sells, so
-   * putting a chat bot in front of it hid the product behind the demo.
-   *
-   * With no door routed it opens on the default agent — the server resolves
-   * that from DEFAULT_AGENT_ID when agentId is absent — and the room's own
-   * roster is editable from inside, so arriving on a default costs nothing.
-   * `entered` records which way somebody came in, because "opened a room
-   * without asking anything" and "kept an answer" are different intents and
-   * the lead inbox should not have to guess.
-   */
-  const openRoom = useCallback(async (options?: { carry?: boolean }) => {
-    const carry = options?.carry ?? false;
-    if (carry && !routedDoor) return;
-
-    setOpening(true);
-    setRoomError(null);
-    try {
-      const res = await fetch("/api/workspaces", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          agentId: carry ? (routedAgentId ?? undefined) : undefined,
-          firstMessage: carry ? (asked ?? undefined) : undefined,
-          firstAnswer: carry && receipt && answer && status === "done" ? { body: answer, receipt } : undefined,
-          source: {
-            ...roomSource(routedDoor?.id ?? DEFAULT_DOOR_ID),
-            entered: carry ? "kept" : "direct",
-          },
-        }),
-      });
-      if (!res.ok) {
-        setRoomError(res.status === 429 ? ROOM_RATE_LIMITED : ROOM_FAILED);
-        return;
-      }
-      const state = (await res.json()) as CreateWorkspaceResponse;
-      navigate(`/w/${state.workspace.token}`);
-    } catch {
-      setRoomError(ROOM_OFFLINE);
-    } finally {
-      setOpening(false);
-    }
-  }, [answer, asked, navigate, receipt, routedAgentId, routedDoor, status]);
 
   const streamAsk = useCallback(async (text: string, agentId: string) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
     setAnswer("");
-    setReceipt(null);
     setCitations([]);
     setError(null);
     setStatus("streaming");
@@ -207,7 +148,6 @@ export function HouseAsk() {
             setAnswer((prev) => prev + event.delta);
           } else if (event.type === "done") {
             setCitations(event.citations ?? []);
-            setReceipt(event.receipt ?? null);
             setStatus("done");
             finished = true;
           } else if (event.type === "error") {
@@ -238,10 +178,8 @@ export function HouseAsk() {
       setAsked(text);
       setQuestion("");
       setAnswer("");
-      setReceipt(null);
       setCitations([]);
       setError(null);
-      setRoomError(null);
       setStatus("idle");
       setRoute(null);
       setRouting(true);
@@ -287,10 +225,8 @@ export function HouseAsk() {
     setAsked(null);
     setRoute(null);
     setAnswer("");
-    setReceipt(null);
     setCitations([]);
     setError(null);
-    setRoomError(null);
     setStatus("idle");
     setRouting(false);
     textareaRef.current?.focus();
@@ -510,62 +446,28 @@ export function HouseAsk() {
             </div>
           </div>
 
-          {hasThread && route?.kind === "door" && route.agentId ? (
-            <p className="type-note mt-[var(--s3)] text-muted-foreground" data-testid="text-house-ask-keep">
-              <span className="font-medium text-foreground">Nothing is saved yet.</span> Close this tab and it is gone.{" "}
-              <button
-                type="button"
-                data-testid="button-house-ask-keep"
-                onClick={() => void openRoom({ carry: true })}
-                disabled={opening}
-                className="draw draw-on font-medium text-foreground disabled:opacity-50"
-              >
-                Keep this conversation
-              </button>{" "}
-              and it becomes a room instead: an address of its own, the question already in it, and somewhere to put a
-              person.
-            </p>
-          ) : (
-            <p className="type-note mt-[var(--s3)] text-muted-foreground">
-              Nothing is saved. Close this tab and it is gone.
-            </p>
-          )}
+          <p className="type-note mt-[var(--s3)] text-muted-foreground">
+            Nothing is saved. Close this tab and it is gone.
+          </p>
 
           {/*
-            THE DOOR THAT IS NOT A QUESTION.
-            
-            This block is on the page unconditionally, and it is the second half
-            of the same correction as openRoom above: the sentence that used to
-            sit here said a conversation "can become a room after you ask",
-            which told a reader the only way in was through the chat. It is not,
-            and it never was — the API takes no question.
-            
-            It is a border and a heading rather than a link in a paragraph
-            because it is the more valuable of the two actions in this section.
-            The panel demonstrates; the room is the thing being sold.
+            THE DOOR THAT IS NOT A QUESTION, unconditionally on the page: the
+            way in to a room was never through the chat. Rooms are not this
+            site's any more (shared/rooms-moved.ts) — they have their own
+            address and their own sign-in — so this is a link, and the sentence
+            says only what a room there is.
           */}
           <div className="mt-[var(--s4)] border-t border-border pt-[var(--s3)]">
             <p className="type-body m-0 font-display font-medium">Or go straight in.</p>
             <p className="type-body mt-[var(--s2)]">
-              A room of your own with no question first: its own address, an agent and our people already in it, and
-              the work written out as a checklist. No signup — the link in your browser is the account.
+              A room is where a team and its AI agents work in one conversation, and where we work with you once we
+              start, with messages going both ways to WhatsApp, Slack, ChatWoot and ClickUp. Rooms have their own sign-in.
             </p>
-            <button
-              type="button"
-              data-testid="button-house-open-room"
-              onClick={() => void openRoom()}
-              disabled={opening}
-              className="mt-[var(--s3)] border-b border-primary pb-[var(--s1)] type-meta font-medium text-primary hover:border-foreground hover:text-foreground disabled:opacity-50"
-            >
-              {opening ? "Opening a room…" : "Open a room"}
-            </button>
+            <RoomsLink
+              testId="button-house-open-room"
+              className="mt-[var(--s3)] inline-block border-b border-primary pb-[var(--s1)] type-meta font-medium text-primary no-underline hover:border-foreground hover:text-foreground"
+            />
           </div>
-
-          {roomError ? (
-            <p role="alert" className="type-note mt-[var(--s1)] text-destructive">
-              {roomError}
-            </p>
-          ) : null}
         </div>
       </div>
     </section>

@@ -7,8 +7,8 @@
  * shared/pricing.ts and shared/cases.ts — no arithmetic, no ranges, no
  * rewriting. Questions go through server/spend.ts the same way /api/ask does,
  * including the two claims (this address, then the panel as a whole). Rooms
- * are opened with storage.createWorkspace, which is what POST /api/workspaces
- * calls, so the seed, the door stamp and the token shape stay the same.
+ * are not opened here any more: they are MakeHybrid's Hybrid Rooms, with their
+ * own address and sign-in (shared/rooms-moved.ts), and the instructions say so.
  */
 
 import type { Request } from "express";
@@ -18,7 +18,7 @@ import { CASES } from "@shared/cases";
 import { DOOR_BY_ID, DOOR_TIERS, DOORS, type DoorDef } from "@shared/doors";
 import { PRICES } from "@shared/pricing";
 import { AGENT_BY_ID, DEFAULT_AGENT_ID, type AgentDef } from "@shared/roster";
-import { askSchema, createWorkspaceSchema, type Citation } from "@shared/schema";
+import { askSchema, type Citation } from "@shared/schema";
 
 import { llmReady, streamAgentAnswer } from "../ai/agentRuntime";
 import {
@@ -28,7 +28,6 @@ import {
   claimAgentTurn,
   recordTurnCost,
 } from "../spend";
-import { storage } from "../storage";
 
 export const CONNECTOR_VIA = "connector";
 
@@ -61,24 +60,6 @@ export interface AskSuccess {
   citations?: Citation[];
   error?: string;
 }
-
-export interface RoomCreated {
-  url: string;
-}
-
-const createRoomSchema = createWorkspaceSchema
-  .pick({
-    name: true,
-    visitorName: true,
-    visitorEmail: true,
-    visitorCompany: true,
-    visitorWebsite: true,
-  })
-  .extend({
-    doorId: z.string().max(64).optional(),
-  });
-
-export type CreateRoomInput = z.infer<typeof createRoomSchema>;
 
 function publicService(door: DoorDef): ServiceRow {
   const tier = DOOR_TIERS[door.tier];
@@ -215,46 +196,6 @@ export async function askQuestion(
     return { status: 200, payload: { error } };
   }
   return { status: 200, payload };
-}
-
-/**
- * Opens a room the same way the site does: storage.createWorkspace. The
- * response is only the address the invited person needs. The token, the
- * members, the messages and the rest of the workspace state stay off this
- * surface — a room address is a bearer credential, and listing one anywhere
- * else is how it leaks.
- */
-export async function createRoom(
-  req: Request,
-  body: unknown,
-): Promise<{ status: number; payload: RoomCreated | ConnectorError }> {
-  const parsed = createRoomSchema.safeParse(body ?? {});
-  if (!parsed.success) {
-    return { status: 400, payload: { error: describeZod(parsed.error) } };
-  }
-
-  const doorId = parsed.data.doorId;
-  /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete this filter when the application is answered. */
-  if (doorId && !publishedDoor(doorId)) {
-    return { status: 400, payload: { error: `Unknown door: ${doorId}` } };
-  }
-
-  const source: Record<string, string> = { via: CONNECTOR_VIA };
-  if (doorId) source.door = doorId;
-
-  const created = await storage.createWorkspace({
-    name: parsed.data.name,
-    visitorName: parsed.data.visitorName,
-    visitorEmail: parsed.data.visitorEmail,
-    visitorCompany: parsed.data.visitorCompany,
-    visitorWebsite: parsed.data.visitorWebsite,
-    source,
-  });
-
-  return {
-    status: 201,
-    payload: { url: `${publicBaseUrl(req)}/w/${created.token}` },
-  };
 }
 
 function describeZod(error: z.ZodError): string {

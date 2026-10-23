@@ -1,6 +1,5 @@
 import { lazy, Suspense, useState } from "react";
 import { useRoute, Link } from "wouter";
-import { RoomMenu } from "@/components/site/RoomMenu";
 
 import { DEFAULT_DOOR_ID, DOOR_BY_ID, DOOR_BY_SLUG, type DoorContract, type DoorDef } from "@shared/doors";
 import { GITHUB_URL } from "@shared/roster";

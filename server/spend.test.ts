@@ -1,8 +1,5 @@
-import { readFileSync } from "node:fs";
 import { beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
-
-import { postMessageSchema } from "@shared/schema";
 
 import { costUsd, priceFor } from "./ai/usage";
 import { AGENT_BY_ID } from "@shared/roster";
@@ -15,13 +12,11 @@ import {
   ceilingForAgent,
   claimAgentTurn,
   claimGuardedTurn,
-  guardAgentTurn,
   monthlyBudgetUsd,
   recordTurnCost,
   resetSpendLedgerForTests,
   type RoomRef,
 } from "./spend";
-import { storage } from "./storage";
 
 /**
  * Three bounds on what a room can spend, and the reason there are three: each
@@ -196,29 +191,6 @@ describe("two messages arriving together", () => {
     const burst = Array.from({ length: 20 }, () => claimAgentTurn("ws_burst", T0));
     assert.equal(burst.filter((claim) => claim.ok).length, 0, "the hour was already full when all twenty arrived");
   });
-
-  it("holds through guardAgentTurn, which is what the route actually calls", async () => {
-    const created = await storage.createWorkspace({ name: "Spend limits" });
-    const room: RoomRef = {
-      token: created.token,
-      workspaceId: created.workspace.id,
-      channelId: created.channels[0].id,
-      agentId: "chatgpt-ads",
-    };
-
-    // Fired in one tick with no `await` between them, exactly as two messages
-    // landing in the same tick would reach runAgentReply.
-    const attempts = MAX_TURNS_PER_HOUR + 12;
-    const allowed = await Promise.all(Array.from({ length: attempts }, () => guardAgentTurn(room)));
-
-    assert.equal(allowed.filter(Boolean).length, MAX_TURNS_PER_HOUR);
-
-    // Every refused turn leaves the room a message saying so, rather than
-    // silence the visitor would read as a broken agent.
-    const state = await storage.getWorkspaceByToken(created.token);
-    const stopped = (state?.messages ?? []).filter((message) => message.meta?.stopped === "turn_rate");
-    assert.equal(stopped.length, attempts - MAX_TURNS_PER_HOUR);
-  });
 });
 
 describe("what a turn costs", () => {
@@ -328,76 +300,6 @@ describe("what the room is told when a turn is stopped", () => {
   });
 });
 
-/**
- * The invariant the brief asked about, checked before it was tested.
- *
- * "An agent cannot trigger another agent's reply" holds here BY CONSTRUCTION,
- * not by a rule. There is no check anywhere that inspects an author and declines:
- * `resolveAgent` is called from exactly one place, POST
- * /api/workspaces/:token/messages, and that route hard-codes the author as the
- * visitor. Agent messages are written straight to storage by runAgentReply and
- * never travel back through the route that decides who answers. So there is no
- * path from a server-authored message to a reply, and nothing to enforce.
- *
- * These cases therefore test the construction rather than a rule that does not
- * exist. If one of them goes red, the invariant has not been broken by itself —
- * it has stopped being structural, and the bounds above become the only thing
- * standing between two agents and a four-dollar hour.
- */
-describe("an agent cannot start another agent's reply", () => {
-  const routes = readFileSync(new URL("./routes.ts", import.meta.url), "utf8");
-
-  it("gives an API caller no way to author a message as anything but a visitor", () => {
-    // Runtime, not a text match: zod strips what it does not declare, so this is
-    // the contract itself refusing rather than a convention.
-    const parsed = postMessageSchema.parse({
-      channelId: "c1",
-      body: "@google-ads what do you think?",
-      authorKind: "agent",
-      authorKey: "agent:chatgpt-ads",
-    });
-
-    assert.ok(!("authorKind" in parsed));
-    assert.ok(!("authorKey" in parsed));
-  });
-
-  it("decides who answers without being told who asked", () => {
-    const signature = /function resolveAgent\(([^)]*)\)/.exec(routes)?.[1] ?? "";
-    assert.ok(signature.length > 0, "resolveAgent has moved or been renamed — re-read this file's header");
-    assert.ok(
-      !/author/i.test(signature),
-      `resolveAgent now takes an author (${signature.trim()}), so the invariant is no longer structural`,
-    );
-  });
-
-  it("posts an agent's answer straight to storage, never back through the route that picks an agent", () => {
-    const reply = routes.slice(routes.indexOf("async function runAgentReply"), routes.indexOf("function kickOffAgentReply"));
-    assert.ok(reply.length > 0, "runAgentReply has moved or been renamed");
-    assert.ok(!reply.includes("resolveAgent"), "an agent's own reply now reaches the code that picks an agent to answer");
-  });
-});
-
-describe("where the guard sits", () => {
-  const routes = readFileSync(new URL("./routes.ts", import.meta.url), "utf8");
-  const reply = routes.slice(routes.indexOf("async function runAgentReply"), routes.indexOf("function kickOffAgentReply"));
-
-  it("takes the turn before the model is called, not after", () => {
-    const guard = reply.indexOf("guardAgentTurn");
-    const model = reply.indexOf("streamAgentAnswer(");
-    assert.ok(guard >= 0, "the spend guard is not in runAgentReply");
-    assert.ok(model >= 0, "the model call is not in runAgentReply");
-    // Counting after the call would bill the turn that was supposed to be refused.
-    assert.ok(guard < model, "the spend guard runs after the model call, so the count cannot stop anything");
-  });
-
-  it("counts a turn only where a key exists to spend against", () => {
-    // The no-key branch returns before the guard: a deployment with no
-    // OPENAI_API_KEY answers honestly and spends nothing, so it must not burn a
-    // room's hour doing it.
-    assert.ok(reply.indexOf("llmReady()") < reply.indexOf("guardAgentTurn"));
-  });
-});
-
 describe("a per-agent ceiling, claimed before the room's", () => {
   const DEV = "google-ads-dev";
 
@@ -473,27 +375,6 @@ describe("a per-agent ceiling, claimed before the room's", () => {
       true,
       "another agent in the same room is not silenced",
     );
-  });
-
-  it("holds through guardAgentTurn for a capped agent, and still posts the stop", async () => {
-    const created = await storage.createWorkspace({ name: "Dev agent spend" });
-    const ceiling = ceilingForAgent(DEV);
-    assert.ok(ceiling);
-    const room: RoomRef = {
-      token: created.token,
-      workspaceId: created.workspace.id,
-      channelId: created.channels[0].id,
-      agentId: DEV,
-    };
-
-    const attempts = ceiling.maxTurnsPerHour + 6;
-    const allowed = await Promise.all(Array.from({ length: attempts }, () => guardAgentTurn(room)));
-    assert.equal(allowed.filter(Boolean).length, ceiling.maxTurnsPerHour);
-
-    const state = await storage.getWorkspaceByToken(created.token);
-    const stopped = (state?.messages ?? []).filter((message) => message.meta?.stopped === "turn_rate");
-    assert.equal(stopped.length, attempts - ceiling.maxTurnsPerHour);
-    assert.match(stopped[0]?.body ?? "", /This agent has answered/);
   });
 
   it("keeps the house voice on the agent-bound sentences too", () => {

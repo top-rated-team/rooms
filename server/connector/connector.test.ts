@@ -24,7 +24,7 @@ import { PRICES } from "@shared/pricing";
 import { AGENT_BY_ID } from "@shared/roster";
 
 import { ASK_LEDGER_KEY, askBudgetUsd, claimAgentTurn, recordTurnCost, resetSpendLedgerForTests } from "../spend";
-import { askQuestion, createRoom, listCases, listPrices, listServices } from "./handlers";
+import { askQuestion, listCases, listPrices, listServices } from "./handlers";
 import { mcpToolNames, originAllowed } from "./mcp";
 import { openApiOperationIds } from "./openapi";
 
@@ -83,7 +83,6 @@ describe("one implementation, two front doors", () => {
     assert.deepEqual(openApiOperationIds().sort(), mcpToolNames().sort());
     assert.deepEqual(openApiOperationIds().sort(), [
       "ask_question",
-      "create_room",
       "list_cases",
       "list_prices",
       "list_services",
@@ -132,39 +131,7 @@ describe("ask goes through the spend guard", () => {
   });
 });
 
-describe("a room response is an address, not a workspace", () => {
-  it("returns only url, and that url is the room's address", async () => {
-    const previous = process.env.PUBLIC_BASE_URL;
-    process.env.PUBLIC_BASE_URL = "https://ai.top-rated.team";
-    try {
-      const result = await createRoom(fakeReq(), { visitorName: "Ada", doorId: "google-ads" });
-      assert.equal(result.status, 201);
-      assert.deepEqual(Object.keys(result.payload).sort(), ["url"]);
-      if ("url" in result.payload) {
-        assert.match(result.payload.url, /^https:\/\/ai\.top-rated\.team\/w\/[A-Za-z0-9_-]+$/);
-      }
-      assert.ok(!("token" in result.payload));
-      assert.ok(!("members" in result.payload));
-      assert.ok(!("messages" in result.payload));
-      assert.ok(!("workspace" in result.payload));
-    } finally {
-      if (previous === undefined) delete process.env.PUBLIC_BASE_URL;
-      else process.env.PUBLIC_BASE_URL = previous;
-    }
-  });
-
-  it("rejects a door that does not exist", async () => {
-    const result = await createRoom(fakeReq(), { doorId: "not-a-door" });
-    assert.equal(result.status, 400);
-    assert.ok("error" in result.payload);
-  });
-
-  /* HIDDEN WHILE THE LINKEDIN APPLICATION IS UNDER REVIEW. Delete these two cases when the application is answered. */
-  it("rejects a hidden door as unknown", async () => {
-    const result = await createRoom(fakeReq(), { doorId: "linkedin-automation" });
-    assert.equal(result.status, 400);
-    assert.deepEqual(result.payload, { error: "Unknown door: linkedin-automation" });
-  });
+describe("a hidden agent is not one the connector answers as", () => {
 
   it("rejects a hidden agent as unknown", async () => {
     const result = await askQuestion(fakeReq(), { question: "What can be automated?", agentId: "linkedin-dev" });
@@ -221,7 +188,6 @@ describe("the HTTP mounts and the MCP front door", () => {
       "/api/connector/prices",
       "/api/connector/cases",
       "/api/connector/ask",
-      "/api/connector/rooms",
     ]) {
       assert.ok(spec.paths[path], `OpenAPI is missing ${path}`);
     }
@@ -257,19 +223,6 @@ describe("the HTTP mounts and the MCP front door", () => {
       const res = await fetch(`${origin}${path}`);
       assert.equal(res.status, 404, `${path} should not be a collection`);
     }
-  });
-
-  it("opens a room over HTTP and returns only the address", async () => {
-    const res = await fetch(`${origin}/api/connector/rooms`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ visitorName: "Ada", doorId: "chatgpt-ads" }),
-    });
-    assert.equal(res.status, 201);
-    const body = (await res.json()) as Record<string, unknown>;
-    assert.deepEqual(Object.keys(body).sort(), ["url"]);
-    assert.equal(typeof body.url, "string");
-    assert.match(String(body.url), /\/w\/[A-Za-z0-9_-]+$/);
   });
 
   it("initializes as MCP and lists the same tools", async () => {

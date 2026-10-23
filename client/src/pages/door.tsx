@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState, lazy, Suspense } from "react";
-import { Link, Redirect, useLocation, useRoute } from "wouter";
+import { Link, Redirect, useRoute } from "wouter";
 
-import type { CreateWorkspaceResponse } from "@shared/api";
 import {
   DEFAULT_DOOR_ID,
   DOOR_BY_ID,
@@ -32,14 +31,11 @@ import Footer from "@/components/site/Footer";
  * decision rather than making a second one. */
 import { isPublicDoor } from "@/components/site/GatedOffers";
 import Header from "@/components/site/Header";
-import KeepStrip from "@/components/site/KeepStrip";
-import { RoomMenu } from "@/components/site/RoomMenu";
+import { RoomsLink } from "@/components/site/RoomsLink";
 import TalkToUs from "@/components/site/TalkToUs";
 import { DoorCases } from "@/components/site/Cases";
 import { DoorPrice } from "@/components/site/Ladder";
-import { collectSource } from "@/components/site/LeadDialog";
 
-import { usePanelState, type CreateRoomResult } from "@/hooks/use-panel-state";
 import NotFound from "@/pages/not-found";
 
 /**
@@ -85,7 +81,6 @@ function contactHref(contact: string): string {
  *   above that footer.
  */
 function DoorPage({ door }: { door: DoorDef }) {
-  const [, navigate] = useLocation();
   const tier = DOOR_TIERS[door.tier];
   const agent = doorAgent(door);
   const Body = doorBody(door.id);
@@ -151,72 +146,6 @@ function DoorPage({ door }: { door: DoorDef }) {
     window.scrollTo(0, 0);
   }, [door.id]);
 
-  /**
-   * Mints the room and deliberately does not navigate — the same contract the
-   * home page's panel has, and for the same reason: "Kept. This conversation
-   * now has an address" is only true if the address is on screen before the
-   * page moves. The one caller that does navigate is openRoom below, which has
-   * no address to show because there is no conversation yet.
-   *
-   * collectSource() reads the door off the path, which resolves correctly from
-   * /services/<slug> because that is what the row's `path` says. The door is
-   * stamped again here anyway: this page already knows which row it rendered,
-   * and a room carrying the wrong door prints the wrong company in its footer.
-   */
-  const createRoom = useCallback(
-    async (firstMessage?: string): Promise<CreateRoomResult> => {
-      try {
-        const res = await fetch("/api/workspaces", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            agentId: door.firstAgentId ?? undefined,
-            firstMessage,
-            source: { ...collectSource(), door: door.id },
-          }),
-        });
-        if (!res.ok) {
-          return {
-            ok: false,
-            error:
-              res.status === 429
-                ? "That is a lot of workspaces from one address. Give it a minute, or book a call."
-                : "The workspace could not be created. Book a call and we will pick it up from there.",
-          };
-        }
-        const state = (await res.json()) as CreateWorkspaceResponse;
-        return {
-          ok: true,
-          room: {
-            url: state.url,
-            workspaceId: state.workspace.id,
-            path: `/w/${state.workspace.token}`,
-          },
-        };
-      } catch {
-        return {
-          ok: false,
-          error: "Network error creating the workspace. Book a call and we will pick it up from there.",
-        };
-      }
-    },
-    [door],
-  );
-
-  const panel = usePanelState({ createRoom });
-
-  /**
-   * The panel's own "Start a workspace" button is a deliberate press, so it is
-   * trigger (c) and goes through the same Keep flow as everything else.
-   */
-  const keepFromPanel = useCallback(
-    async (opts?: { agentId?: string; firstMessage?: string }): Promise<string | null> => {
-      await panel.keep(opts?.firstMessage);
-      return null;
-    },
-    [panel],
-  );
-
   /** The panel is the fastest free answer on the page, so the action puts the cursor in it. */
   const askInPanel = useCallback(() => {
     const field = document.getElementById("ask-question");
@@ -228,33 +157,16 @@ function DoorPage({ door }: { door: DoorDef }) {
 
   /* ------------------------- the way through to a room -------------------
    *
-   * The room is the product and it had no visible entrance: it existed only
-   * as the far end of the Keep flow, so somebody who read the page without
-   * typing anything never found out it was there. This is the entrance —
-   * one line of text at the bottom of the page, under the sentence that
-   * explains what a room is, in the quietest thing on the page that is still
-   * a link. It is deliberately not a second button beside the first: the
-   * page's one action is asking, and this is where a person who has finished
-   * reading goes next.
-   *
-   * It mints through the same createRoom as the Keep flow, so the room is
-   * stamped with this door and its footer names this door's company. It is
-   * only offered where a panel is open — a room opened from a door with no
-   * agent is an empty room, and on the partner's door it would be one of our
-   * rooms wearing their name.
+   * Rooms are MakeHybrid's Hybrid Rooms now, under our name and with their own
+   * sign-in (shared/rooms-moved.ts), so the entrance is a link to them. It is
+   * still only offered where a panel is open: on the partner's door a room of
+   * ours would be wearing their name.
    */
   const booking = useBooking();
 
   const roomMenu = (where: "hero" | "panel" | "close") => (
-    <RoomMenu
-      className={where === "hero" ? ACTION : ACTION_QUIET}
-      doorId={door.id}
-      agentId={door.firstAgentId}
-      testId={`button-door-open-room-${where}`}
-    />
+    <RoomsLink className={where === "hero" ? ACTION : ACTION_QUIET} testId={`button-door-open-room-${where}`} />
   );
-
-  const room = panel.stage === "kept" ? panel.room : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -389,75 +301,15 @@ function DoorPage({ door }: { door: DoorDef }) {
             <div>
               {panelIsOpen ? (
                 <div className={PANEL_CHROME}>
-                  <AskWidget
-                    door={door}
-                    onStartWorkspace={keepFromPanel}
-                    onVisitorMessage={panel.noteVisitorMessage}
-                    onAskedForAPerson={panel.noteAskedForAPerson}
-                  />
+                  <AskWidget door={door} />
 
-                  <div aria-live="polite" className="mt-[var(--s4)] border-t border-border pt-[var(--s2)]">
-                    {room ? (
-                      <KeepStrip url={room.url} workspaceId={room.workspaceId} onOpen={() => navigate(room.path)} />
-                    ) : (
-                      <div
-                        data-testid="row-panel-keep"
-                        // Which of the four fired, readable in the DOM: the
-                        // rule is meant to be checked rather than trusted.
-                        data-trigger={panel.trigger ?? undefined}
-                      >
-                        {panel.stage === "asking" ? (
-                          <div className="motion-safe:animate-fade-in-up">
-                            <p className={READ} data-testid="text-panel-question">
-                              That is yours, so this is worth keeping. Keep it, or stay anonymous?
-                            </p>
-                            <div className="mt-[var(--s2)] flex flex-wrap items-baseline gap-[var(--s3)]">
-                              <button
-                                type="button"
-                                data-testid="button-panel-keep-it"
-                                className={ACTION}
-                                onClick={() => void panel.keep()}
-                                disabled={panel.keeping}
-                              >
-                                {panel.keeping ? "Keeping…" : "Keep it"}
-                              </button>
-                              <button
-                                type="button"
-                                data-testid="button-panel-stay-anonymous"
-                                className={ACTION_QUIET}
-                                onClick={panel.stayAnonymous}
-                              >
-                                No, stay anonymous
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex flex-wrap items-baseline justify-between gap-x-[var(--s3)] gap-y-[var(--s1)]">
-                            <p className={META_PLAIN} data-testid="text-panel-promise">
-                              <span className="text-foreground">Nothing is saved yet.</span> Close this tab and it is
-                              gone.
-                            </p>
-                            {panel.messageCount > 0 ? (
-                              <button
-                                type="button"
-                                data-testid="button-panel-keep-this"
-                                className={ACTION_QUIET}
-                                onClick={() => void panel.keep()}
-                                disabled={panel.keeping}
-                              >
-                                {panel.keeping ? "Keeping…" : "Keep this"}
-                              </button>
-                            ) : null}
-                          </div>
-                        )}
-
-                        {panel.error ? (
-                          <p role="alert" className="type-note mt-[var(--s2)] text-destructive">
-                            {panel.error}
-                          </p>
-                        ) : null}
-                      </div>
-                    )}
+                  {/* Nothing here is kept: the panel is free and forgets. A
+                      conversation worth keeping goes in a room, which is a link
+                      away, beside the panel on the left. */}
+                  <div className="mt-[var(--s4)] border-t border-border pt-[var(--s2)]">
+                    <p className={META_PLAIN} data-testid="text-panel-promise">
+                      <span className="text-foreground">Nothing is saved.</span> Close this tab and it is gone.
+                    </p>
                   </div>
 
                   {/*

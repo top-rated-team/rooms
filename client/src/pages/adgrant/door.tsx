@@ -89,12 +89,7 @@ export function Door() {
             </p>
             {panelIsOpen ? (
               <div className="mt-[var(--s4)] flex flex-wrap items-baseline gap-x-[var(--s2)] gap-y-[var(--s1)] whitespace-nowrap [font-size:clamp(0.66rem,3vw,0.76rem)!important] sm:flex-nowrap sm:gap-x-[var(--s3)]">
-                <RoomMenu
-                  className={ACTION}
-                  doorId={door.id}
-                  agentId={door.firstAgentId}
-                  testId="button-adgrant-door-open-room"
-                />
+                <RoomMenu className={ACTION} testId="button-adgrant-door-open-room" />
                 <button type="button" data-testid="button-adgrant-door-ask" className={ACTION} onClick={askInPanel}>
                   Ask AI agent
                 </button>
@@ -115,12 +110,7 @@ export function Door() {
                   fix.
                 </p>
                 <div className="mt-[var(--s3)]">
-                  <RoomMenu
-                    className={ACTION}
-                    doorId={door.id}
-                    agentId={door.firstAgentId}
-                    testId="button-adgrant-door-panel-open-room"
-                  />
+                  <RoomMenu className={ACTION} testId="button-adgrant-door-panel-open-room" />
                 </div>
               </>
             ) : (

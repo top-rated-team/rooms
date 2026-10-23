@@ -45,35 +45,19 @@ function sourcesUnder(dir: string, extensions: string[]): string[] {
   return out;
 }
 
-describe("every room component is mounted by something", () => {
-  const components = sourcesUnder("client/src/components/workspace", [".tsx"]);
-  const everythingElse = [
-    ...sourcesUnder("client/src", [".tsx", ".ts"]),
-  ].filter((path) => !path.endsWith("/room-style.ts"));
-
-  for (const path of components) {
-    const name = path.split("/").pop()!.replace(/\.tsx$/, "");
-    it(`${name} is imported somewhere`, () => {
-      const importers = everythingElse.filter((other) => other !== path && read(other).includes(`workspace/${name}`));
-      assert.ok(
-        importers.length > 0,
-        `client/src/components/workspace/${name}.tsx is imported by nothing. Either mount it or delete it — a component nobody can open is not a feature.`,
-      );
-    });
-  }
-});
-
+/*
+ * The rooms, their components, seats, billing and bridges used to be listed
+ * here. They are MakeHybrid's Hybrid Rooms now (shared/rooms-moved.ts), and
+ * what has to be reachable is the way to them.
+ */
 describe("every server feature has a door", () => {
   const routes = read("server/routes.ts");
 
   /* Modules that hold a feature's rules. Each one must be reachable from the
      file that answers HTTP, directly or through a module it imports. */
   const features: { module: string; why: string }[] = [
-    { module: "./seats", why: "admitting somebody else's agent" },
-    { module: "./billing/consent", why: "whether two agents may answer each other" },
-    { module: "./billing/http", why: "putting a card on a room" },
-    { module: "./bridge", why: "connecting a room to WhatsApp, Slack or ChatWoot" },
-    { module: "./spend", why: "the per-room spending guard" },
+    { module: "./spend", why: "the spending guard on the free panel" },
+    { module: "./rooms-moved", why: "sending /rooms and every old room address to the rooms' new home" },
   ];
 
   for (const feature of features) {
@@ -84,34 +68,24 @@ describe("every server feature has a door", () => {
       );
     });
   }
+
+  it("the redirect is registered, not only imported", () => {
+    assert.ok(routes.includes("registerRoomsMoved(app)"), "server/routes.ts imports the rooms redirect and never mounts it");
+  });
 });
 
-describe("the endpoints a room's controls call exist", () => {
-  const routes = read("server/routes.ts");
-  const page = read("client/src/pages/workspace.tsx");
-  const panels = [
-    "client/src/components/workspace/AgentExchangePanel.tsx",
-    "client/src/components/workspace/BridgePanel.tsx",
-  ].map(read);
-  const client = [page, ...panels].join("\n");
+describe("nothing on the site still opens a room of its own", () => {
+  const client = sourcesUnder("client/src", [".tsx", ".ts"]).map((path) => ({ path, text: read(path) }));
 
-  const paths = [
-    "/api/workspaces/:token/seats",
-    "/api/workspaces/:token/billing",
-    "/api/workspaces/:token/billing/card",
-    "/api/workspaces/:token/billing/agent-exchange",
-    "/api/workspaces/:token/bridges",
-  ];
+  it("no page asks this server for a new room, except AdGrant.AI's generator", () => {
+    const callers = client
+      .filter(({ text }) => /fetch\(\s*["'`]\/api\/workspaces["'`]/.test(text))
+      .map(({ path }) => path);
+    assert.deepEqual(callers, ["client/src/components/adgrant/Conversation.tsx"]);
+  });
 
-  for (const path of paths) {
-    it(`${path} is served`, () => {
-      assert.ok(routes.includes(`"${path}"`), `${path} is called from the room but not served.`);
-    });
-  }
-
-  it("the room calls the ones it draws controls for", () => {
-    assert.ok(client.includes("/seats"), "nothing in the room asks for its admitted agents");
-    assert.ok(client.includes("/billing"), "nothing in the room asks what it may spend");
-    assert.ok(client.includes("/bridges"), "nothing in the room asks where it is connected");
+  it("no page links to a room address of its own", () => {
+    const linkers = client.filter(({ text }) => /["'`]\/w\/\$\{/.test(text)).map(({ path }) => path);
+    assert.deepEqual(linkers, []);
   });
 });
