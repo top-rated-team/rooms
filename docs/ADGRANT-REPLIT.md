@@ -24,10 +24,13 @@ pointing the apex back at Render undoes the whole move with a DNS change.
 
 ## The order, and why it is this order
 
-The pull request that carries this file links the terms and the old service
-pages to app.adgrant.ai. **Merge it only once app.adgrant.ai answers**,
-otherwise those links point at nothing. Everything else in it is inert until a
-request arrives on that name.
+Until the pull request that carries this file is deployed, this process
+does not know the name app.adgrant.ai. It would treat it as somebody else's
+fork of this site and send every visitor to the partner set-up form. So the
+name is added on Render first, the pull request is merged next, and only then
+does DNS send anyone to it. Between the merge and the DNS record, the terms
+link in a room and the moved service pages point at a name that does not
+resolve yet — minutes, and a dead link rather than a wrong page.
 
 ### 1. A day before
 
@@ -37,32 +40,38 @@ request arrives on that name.
   the rollback.
 - Lower the TTL on both to 300 seconds.
 
-### 2. app.adgrant.ai on Render
+### 2. Add the name on Render, and only the name
 
-1. Render → service `srv-daeq2bv40ujc7389ao4g` → Settings → Custom Domains →
-   add **`app.adgrant.ai`**.
-2. At the registrar: a **CNAME** for `app` pointing at the service's
-   `*.onrender.com` hostname. On Cloudflare, DNS only (grey cloud) until Render
-   says Verified.
-3. Wait for Verified and the certificate.
+Render → service `srv-daeq2bv40ujc7389ao4g` → Settings → Custom Domains →
+**Add Custom Domain** → `app.adgrant.ai`. Nothing else changes on Render: no
+environment variable, `PUBLIC_BASE_URL` stays as it is, and adgrant.ai stays
+on the list. Render then shows the DNS record it wants. Note it, and do not
+create it yet.
 
 ### 3. Merge the pull request
 
-Render deploys `main`. Then, on `https://app.adgrant.ai`:
+Render deploys `main`. Wait for the deploy to go live.
 
-- `/` is the AdGrant.AI home, with the Ad Grants agent and the generator.
-- `/robots.txt` says `Disallow: /`.
-- `/terms` says "These terms cover app.adgrant.ai" and the line about the
-  public site being a separate application.
+### 4. The DNS record
 
-### 4. LinkedIn
+1. At the DNS provider for adgrant.ai: the **CNAME** Render showed — name
+   `app`, value the service's `*.onrender.com` hostname, exactly as Render
+   prints it. On Cloudflare, DNS only (grey cloud) until Render says Verified.
+2. Back on Render, **Verify**, and wait for Verified and the certificate.
+3. On `https://app.adgrant.ai`:
+   - `/` is the AdGrant.AI home, with the Ad Grants agent and the generator.
+   - `/robots.txt` says `Disallow: /`.
+   - `/terms` says "These terms cover app.adgrant.ai" and the line about the
+     public site being a separate application.
+
+### 5. LinkedIn
 
 In the LinkedIn app the rooms already use, add
 `https://app.adgrant.ai/api/room-login/linkedin/callback` to **Authorized
 redirect URLs**. Leave the adgrant.ai one in place until the rollback window
 has passed.
 
-### 5. The Replit app
+### 6. The Replit app
 
 Four changes, before its domain is attached.
 
@@ -140,7 +149,7 @@ people that "prices and terms are published" on adgrant.ai, and its home page
 quotes management of one Ad Grant account at $99 a month. Either the Replit
 app publishes both, or MakeHybrid's copy changes in the same week.
 
-### 6. The domain
+### 7. The domain
 
 1. Replit → the deployment → Settings → link a custom domain:
    **`adgrant.ai`**, then **`www.adgrant.ai`**. Replit shows the records for
@@ -150,7 +159,7 @@ app publishes both, or MakeHybrid's copy changes in the same week.
 3. When Replit says Verified and `https://adgrant.ai/` is the Replit app,
    remove adgrant.ai and www.adgrant.ai from Render's Custom Domains.
 
-### 7. Check
+### 8. Check
 
 - `https://adgrant.ai/` is the Replit app, and a library page opens on it.
 - An old `https://adgrant.ai/w/<token>` opens that room on app.adgrant.ai.
