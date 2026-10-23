@@ -6,7 +6,7 @@
  * that goes on the wire, including an error, may include that key.
  */
 
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import type { NextFunction, Request, Response } from "express";
@@ -68,7 +68,15 @@ function applyModelKey(stored: StoredOperator | null): void {
   }
 }
 
+/**
+ * A saved config counts only where the host has a set-up token, which the
+ * house never sets. So a file that reached a house disk some other way —
+ * saved before the write gate below existed, or by a later mistake —
+ * re-brands nothing and swaps no key. A fork that unsets its token goes back
+ * to /setup with its file kept, and setting the token again brings it back.
+ */
 function readStored(): StoredOperator | null {
+  if (!configuredSetupToken()) return null;
   try {
     const raw = fs.readFileSync(configPath, "utf8");
     const parsed = JSON.parse(raw) as StoredOperator;
@@ -124,7 +132,9 @@ function sendError(res: Response, status: number, message: string, secrets: read
  *
  * The house rule is checked first and does not depend on the token, so a
  * Host header that lies about being a fork still needs a token the house
- * never sets.
+ * never sets. It reads every name the request carries, not only
+ * req.hostname, which follows X-Forwarded-Host under `trust proxy`: one of
+ * ours anywhere, a name it cannot read, or no name at all is refused as ours.
  */
 export const OPERATOR_SETUP_TOKEN_HEADER = "x-operator-setup-token";
 export const OPERATOR_SETUP_TOKEN_MIN = 16;
@@ -143,17 +153,40 @@ function configuredSetupToken(): string | null {
 
 function tokenMatches(expected: string, provided: string | undefined): boolean {
   if (!provided) return false;
-  const a = Buffer.from(expected);
-  const b = Buffer.from(provided);
-  /* timingSafeEqual throws on unequal lengths, and a throw here would be a
-     500 that says more than a refusal does. */
-  if (a.length !== b.length) return false;
+  /* Compared as digests: always the same length, so timingSafeEqual cannot
+     throw, and the token's length does not show in how long a refusal takes. */
+  const a = createHash("sha256").update(expected).digest();
+  const b = createHash("sha256").update(provided).digest();
   return timingSafeEqual(a, b);
 }
 
+/**
+ * Every name this request was addressed to: req.hostname, the Host header,
+ * and each name in X-Forwarded-Host and Forwarded. Whether the platform in
+ * front replaces a caller's X-Forwarded-Host or passes it on cannot be seen
+ * from here, so none of them is trusted alone.
+ */
+function requestHostnames(req: Request): string[] {
+  const names: string[] = [];
+  if (req.hostname) names.push(req.hostname);
+  for (const value of [req.headers.host, req.headers["x-forwarded-host"]].flat()) {
+    if (value) names.push(...value.split(","));
+  }
+  for (const match of (req.headers.forwarded ?? "").matchAll(/host="?([^";,\s]+)/gi)) {
+    names.push(match[1]);
+  }
+  return names.map((name) => name.trim()).filter(Boolean);
+}
+
+/** host, host:port or [v6]:port. Anything else is a name this cannot say is not ours. */
+const PLAIN_HOST = /^(\[[0-9a-f:.]+\]|[a-z0-9.-]+)(:\d+)?$/i;
+
 /** Why this request may not save a config, or null when it may. */
 export function operatorWriteRefusal(req: Request): { status: 401 | 403; error: string } | null {
-  if (isHouseHost(req.hostname)) return { status: 403, error: OPERATOR_HOUSE_REFUSED_LINE };
+  const hosts = requestHostnames(req);
+  if (hosts.length === 0 || hosts.some((host) => !PLAIN_HOST.test(host) || isHouseHost(host))) {
+    return { status: 403, error: OPERATOR_HOUSE_REFUSED_LINE };
+  }
   const expected = configuredSetupToken();
   if (!expected) return { status: 403, error: OPERATOR_TOKEN_MISSING_LINE };
   if (!tokenMatches(expected, req.get(OPERATOR_SETUP_TOKEN_HEADER)?.trim())) {

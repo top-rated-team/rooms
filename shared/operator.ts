@@ -144,7 +144,8 @@ export function hostnameOf(value: string): string {
 
 /** True of this company's own hosts, including any subdomain of top-rated.team. */
 export function isHouseHost(hostOrUrl: string): boolean {
-  const host = hostnameOf(hostOrUrl);
+  /* "top-rated.team." is the same name as "top-rated.team" to DNS, so it is ours too. */
+  const host = hostnameOf(hostOrUrl).replace(/\.+$/, "");
   if (!host) return false;
   if ((HOUSE_HOSTS as readonly string[]).includes(host)) return true;
   if (host.endsWith(".top-rated.team")) return true;

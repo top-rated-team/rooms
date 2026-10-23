@@ -10,6 +10,9 @@
  * 3. The model key is never returned in a response body or an error.
  * 4. A saved config is the one partner-catalogue reads — it round-trips through
  *    the resolver.
+ *
+ * And who may save one, and when a file on disk counts: "who may save a
+ * config" and "a config file on a host with no set-up token" below.
  */
 
 import { createServer, request as httpRequest, type Server } from "node:http";
@@ -120,9 +123,10 @@ function putAsHost(
   host: string,
   body: string,
   token: string | null = SETUP_TOKEN,
+  extra: Record<string, string> = {},
 ): Promise<{ status: number; text(): Promise<string>; json(): Promise<unknown> }> {
   const url = new URL("/api/operator", origin);
-  const headers: Record<string, string> = { host, "content-type": "application/json" };
+  const headers: Record<string, string> = { host, "content-type": "application/json", ...extra };
   if (token !== null) headers[OPERATOR_SETUP_TOKEN_HEADER] = token;
   return new Promise((resolve, reject) => {
     const req = httpRequest(
@@ -232,6 +236,38 @@ describe("operator setup", () => {
       }
     });
 
+    it("refuses our hosts however they are spelled", async () => {
+      for (const host of ["TOP-RATED.TEAM", "top-rated.team.", "top-rated.team:443", "app.adgrant.ai.", "staging.top-rated.team"]) {
+        const res = await putAsHost(origin, host, JSON.stringify(validBody()));
+        assert.equal(res.status, 403, host);
+        nothingWritten();
+      }
+    });
+
+    it("refuses one of ours arriving beside a fork's name, in any header", async () => {
+      /* req.hostname follows X-Forwarded-Host under trust proxy, so a check of
+         req.hostname alone would read the first two of these as a fork. */
+      const mixed: Array<[string, Record<string, string>]> = [
+        ["top-rated.team", { "x-forwarded-host": FORK_HOST }],
+        [FORK_HOST, { "x-forwarded-host": "ai.top-rated.team" }],
+        [FORK_HOST, { "x-forwarded-host": `${FORK_HOST}, adgrant.ai` }],
+        [FORK_HOST, { forwarded: 'for=203.0.113.9;host="top-rated.team"' }],
+      ];
+      for (const [host, extra] of mixed) {
+        const res = await putAsHost(origin, host, JSON.stringify(validBody()), SETUP_TOKEN, extra);
+        assert.equal(res.status, 403, `${host} with ${JSON.stringify(extra)}`);
+        nothingWritten();
+      }
+    });
+
+    it("refuses a host it cannot read rather than guessing it is a fork", async () => {
+      for (const host of ["::1", "top-rated.team@agency.example"]) {
+        const res = await putAsHost(origin, host, JSON.stringify(validBody()));
+        assert.equal(res.status, 403, host);
+        nothingWritten();
+      }
+    });
+
     it("refuses a fork with no token, or the wrong one, and changes nothing", async () => {
       for (const token of [null, "", "wrong", `${SETUP_TOKEN}x`, SETUP_TOKEN.toUpperCase()]) {
         const res = await putAsHost(origin, FORK_HOST, JSON.stringify(validBody()), token);
@@ -271,6 +307,42 @@ describe("operator setup", () => {
       for (const host of HOUSE) {
         assert.equal(operatorEmailsForHost(host).includes(NORTHWIND.contact), false, host);
       }
+    });
+  });
+
+  describe("a config file on a host with no set-up token", () => {
+    it("is not read: no re-brand, no model key, no operator address", async () => {
+      const hostKey = process.env.OPENAI_API_KEY;
+      const diskKey = "sk-test-key-left-on-disk-7c21e0";
+      const diskContact = "someone@intruder.example";
+      fs.writeFileSync(
+        file,
+        JSON.stringify({
+          identity: { ...NORTHWIND, contact: diskContact },
+          services: { "google-ads": { mode: "white-label", offered: true } },
+          origin: "https://rooms.northwind.example",
+          model: { useOwnKey: true },
+          apiKey: diskKey,
+        }),
+      );
+      delete process.env.OPERATOR_SETUP_TOKEN;
+      try {
+        assert.equal(operatorConfig(), null);
+        assert.equal(process.env.OPENAI_API_KEY, hostKey);
+        const seeded = seededCatalogue() as Array<(typeof DOORS)[number]>;
+        assert.notEqual(seeded.find((door) => door.id === "google-ads")?.contract.legalName, NORTHWIND.legalName);
+        assert.equal(operatorEmailsForHost(FORK_HOST).includes(diskContact), false);
+
+        const read = await fetch(`${origin}/api/operator`);
+        assert.equal(((await read.json()) as { configured: boolean }).configured, false);
+        assert.equal(process.env.OPENAI_API_KEY, hostKey);
+      } finally {
+        process.env.OPERATOR_SETUP_TOKEN = SETUP_TOKEN;
+      }
+
+      /* The token is the switch, not the file: a fork's owner who sets it gets their config back. */
+      assert.equal(operatorConfig()?.identity.legalName, NORTHWIND.legalName);
+      assert.equal(process.env.OPENAI_API_KEY, diskKey);
     });
   });
 
