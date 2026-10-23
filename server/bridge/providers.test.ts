@@ -326,3 +326,112 @@ describe("a visitor's own message", () => {
     assert.match(calls[0], /Jane Client · Guest\\nTyped in the room\./);
   });
 });
+
+describe("a room's own Slack or ClickUp secret", () => {
+  const ROOM_SLACK_SECRET = "room-own-slack-signing-secret";
+  const ROOM_CLICKUP_SECRET = "room-own-clickup-webhook-secret";
+
+  it("checks a room's Slack events with its own secret, and with nothing else", async () => {
+    const own = await openRoom("Own Slack app room");
+    const shared = await openRoom("Deployment Slack app room");
+    await connectOrDisconnectBridge(own.token, {
+      action: "connect",
+      kind: "slack",
+      target: "C0OWNAPP001",
+      secret: SLACK_HOOK,
+      inboundSecret: ROOM_SLACK_SECRET,
+    });
+    await connectSlack(shared.token, "C0DEPLOY001");
+
+    const deploymentSigned = fromSlack(slackMessage("C0OWNAPP001", "signed with the deployment's"));
+    assert.deepEqual(await acceptBridgeInbound(deploymentSigned.raw, deploymentSigned.auth), {
+      accepted: false,
+      reason: "unauthorized",
+    });
+    const ownSigned = fromSlack(slackMessage("C0OWNAPP001", "signed with the room's own"), ROOM_SLACK_SECRET);
+    assert.deepEqual(await acceptBridgeInbound(ownSigned.raw, ownSigned.auth), { accepted: true, handled: true });
+
+    /* Another room's secret is no key to a room that uses the deployment's. */
+    const crossSigned = fromSlack(slackMessage("C0DEPLOY001", "signed with the other room's"), ROOM_SLACK_SECRET);
+    assert.deepEqual(await acceptBridgeInbound(crossSigned.raw, crossSigned.auth), { accepted: false, reason: "unauthorized" });
+    const sharedSigned = fromSlack(slackMessage("C0DEPLOY001", "signed with the deployment's"));
+    assert.deepEqual(await acceptBridgeInbound(sharedSigned.raw, sharedSigned.auth), { accepted: true, handled: true });
+
+    assert.equal((await bridgedMessages(own.token, "slack")).length, 1);
+    assert.equal((await bridgedMessages(shared.token, "slack")).length, 1);
+  });
+
+  it("answers the handshake of a room's own Slack app with no deployment secret set", async () => {
+    delete process.env.SLACK_SIGNING_SECRET;
+    const room = await openRoom("Own Slack handshake room");
+    await connectOrDisconnectBridge(room.token, {
+      action: "connect",
+      kind: "slack",
+      target: "C0OWNHAND01",
+      secret: SLACK_HOOK,
+      inboundSecret: ROOM_SLACK_SECRET,
+    });
+    const handshake = fromSlack({ type: "url_verification", challenge: "own-app-challenge" }, ROOM_SLACK_SECRET);
+    assert.deepEqual(await acceptBridgeInbound(handshake.raw, handshake.auth), {
+      accepted: true,
+      handled: false,
+      challenge: "own-app-challenge",
+    });
+  });
+
+  it("checks a room's ClickUp deliveries with its own webhook secret, and with nothing else", async () => {
+    const room = await openRoom("Own ClickUp webhook room");
+    await connectOrDisconnectBridge(room.token, {
+      action: "connect",
+      kind: "clickup",
+      target: "task-own",
+      secret: "pk_test",
+      inboundSecret: ROOM_CLICKUP_SECRET,
+    });
+
+    const deploymentSigned = fromClickUp(clickUpComment("task-own", "signed with the deployment's", "c-own-1"));
+    assert.deepEqual(await acceptBridgeInbound(deploymentSigned.raw, deploymentSigned.auth), {
+      accepted: false,
+      reason: "unauthorized",
+    });
+    const ownSigned = fromClickUp(clickUpComment("task-own", "signed with the room's own", "c-own-2"), ROOM_CLICKUP_SECRET);
+    assert.deepEqual(await acceptBridgeInbound(ownSigned.raw, ownSigned.auth), { accepted: true, handled: true });
+    assert.equal((await bridgedMessages(room.token, "clickup")).length, 1);
+  });
+
+  it("stops using a room's own secret once it reconnects without one", async () => {
+    const room = await openRoom("Reconnected ClickUp room");
+    const connect = (inboundSecret?: string) =>
+      connectOrDisconnectBridge(room.token, { action: "connect", kind: "clickup", target: "task-again", secret: "pk_test", inboundSecret });
+    await connect(ROOM_CLICKUP_SECRET);
+    assert.equal(storedBridgeForTests(room.workspaceId, "clickup")?.inboundSecret, ROOM_CLICKUP_SECRET);
+
+    await connect();
+    assert.equal(storedBridgeForTests(room.workspaceId, "clickup")?.inboundSecret, null);
+    const oldSigned = fromClickUp(clickUpComment("task-again", "old secret", "c-again-1"), ROOM_CLICKUP_SECRET);
+    assert.deepEqual(await acceptBridgeInbound(oldSigned.raw, oldSigned.auth), { accepted: false, reason: "unauthorized" });
+    const deploymentSigned = fromClickUp(clickUpComment("task-again", "deployment secret", "c-again-2"));
+    assert.deepEqual(await acceptBridgeInbound(deploymentSigned.raw, deploymentSigned.auth), { accepted: true, handled: true });
+  });
+
+  it("is never kept for WhatsApp or ChatWoot, and never shown to the room", async () => {
+    const room = await openRoom("No inbound secret room");
+    const connected = await connectOrDisconnectBridge(room.token, {
+      action: "connect",
+      kind: "whatsapp",
+      target: "15551234567@c.us",
+      inboundSecret: "ignored",
+    });
+    assert.equal(storedBridgeForTests(room.workspaceId, "whatsapp")?.inboundSecret, null);
+    assert.equal(JSON.stringify(connected).includes("ignored"), false);
+
+    const slack = await connectOrDisconnectBridge(room.token, {
+      action: "connect",
+      kind: "slack",
+      target: "C0PUBLIC001",
+      secret: SLACK_HOOK,
+      inboundSecret: ROOM_SLACK_SECRET,
+    });
+    assert.equal(JSON.stringify(slack).includes(ROOM_SLACK_SECRET), false);
+  });
+});

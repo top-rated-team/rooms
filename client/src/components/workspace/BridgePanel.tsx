@@ -69,6 +69,7 @@ export function BridgePanel({ token, canManage = false, className }: BridgePanel
   const [target, setTarget] = useState("");
   const [targetLabel, setTargetLabel] = useState("");
   const [secret, setSecret] = useState("");
+  const [inboundSecret, setInboundSecret] = useState("");
   const [accountId, setAccountId] = useState("");
   const [inboxIdentifier, setInboxIdentifier] = useState("");
   const [baseUrl, setBaseUrl] = useState("");
@@ -114,6 +115,7 @@ export function BridgePanel({ token, canManage = false, className }: BridgePanel
     setTarget("");
     setTargetLabel("");
     setSecret("");
+    setInboundSecret("");
     setAccountId("");
     setInboxIdentifier("");
     setBaseUrl("");
@@ -158,6 +160,7 @@ export function BridgePanel({ token, canManage = false, className }: BridgePanel
       if (target.trim()) body.target = target.trim();
       if (targetLabel.trim()) body.targetLabel = targetLabel.trim();
       if (secret.trim()) body.secret = secret.trim();
+      if ((kind === "slack" || kind === "clickup") && inboundSecret.trim()) body.inboundSecret = inboundSecret.trim();
       if (accountId.trim()) body.accountId = accountId.trim();
       if (inboxIdentifier.trim()) body.inboxIdentifier = inboxIdentifier.trim();
       if (baseUrl.trim()) body.baseUrl = baseUrl.trim();
@@ -417,6 +420,27 @@ export function BridgePanel({ token, canManage = false, className }: BridgePanel
                                 "mt-1 w-full border-b border-border bg-transparent pb-1 text-foreground outline-none placeholder:text-muted-foreground",
                               )}
                               autoComplete="off"
+                            />
+                          </label>
+                        ) : null}
+                        {row.kind === "slack" || row.kind === "clickup" ? (
+                          <label className="mt-2 block">
+                            <span className={cn(META, "text-muted-foreground")}>
+                              {row.kind === "slack"
+                                ? "Signing secret of your own Slack app, if you made one. Leave it empty when ours is installed in your Slack."
+                                : "The secret ClickUp gave you when you created the webhook for this task. Leave it empty when we set the webhook up."}
+                            </span>
+                            <input
+                              type="password"
+                              value={inboundSecret}
+                              onChange={(event) => setInboundSecret(event.target.value)}
+                              className={cn(
+                                CHROME,
+                                FOCUS,
+                                "mt-1 w-full border-b border-border bg-transparent pb-1 text-foreground outline-none placeholder:text-muted-foreground",
+                              )}
+                              autoComplete="off"
+                              data-testid={`input-bridge-inbound-secret-${row.kind}`}
                             />
                           </label>
                         ) : null}

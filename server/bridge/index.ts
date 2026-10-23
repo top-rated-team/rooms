@@ -19,7 +19,7 @@ import { z } from "zod";
 import type { BridgeKind, RoomBridge } from "@shared/api";
 import { AGENT_BY_ID, AGENTS, VISIBLE_AGENTS } from "@shared/roster";
 import type { Member, MemberKind, Message, MessageMeta } from "@shared/schema";
-import { roomBridges } from "@shared/schema-bridges";
+import { roomBridgeSecrets, roomBridges } from "@shared/schema-bridges";
 import { and, eq } from "drizzle-orm";
 import { getDb, hasDb } from "../db";
 import { llmReady, streamAgentAnswer } from "../ai/agentRuntime";
@@ -42,7 +42,7 @@ import {
 import { isChatwootEcho, parseChatwootInbound, sendChatwootText } from "./chatwoot";
 import { ensureChatwootInboxConversation, sendChatwootInboxText } from "./inbox";
 import { isWhatsAppGroup, parseWahaInbound, sendWahaText } from "./waha";
-import { clickUpSignatureOk, sharedWebhookSecretOk, slackSignatureOk } from "./signatures";
+import { clickUpSignatureOk, secretsFrom, sharedWebhookSecretOk, slackSignatureOk } from "./signatures";
 
 const SEND_MS = 5_000;
 
@@ -68,6 +68,8 @@ export const connectBridgeSchema = z.object({
   inboxIdentifier: z.string().min(1).max(200).optional(),
   baseUrl: z.string().min(1).max(300).optional(),
   channelId: z.string().min(1).max(80).optional(),
+  /** Slack and ClickUp only: the secret this room's own app or webhook signs with. */
+  inboundSecret: z.string().min(1).max(500).optional(),
   senderMap: z
     .array(
       z.object({
@@ -96,6 +98,8 @@ interface StoredBridge {
   channelId: string | null;
   senderMap: Map<string, string>;
   connectedAt: string;
+  /** Slack or ClickUp: what inbound for this room is checked with, when the room brought its own. */
+  inboundSecret: string | null;
 }
 
 const byWorkspace = new Map<string, Map<BridgeKind, StoredBridge>>();
@@ -179,6 +183,7 @@ export async function hydrateBridges(): Promise<void> {
           channelId: row.channelId,
           senderMap: senderMapFromJson(row.senderMap),
           connectedAt: iso(row.connectedAt),
+          inboundSecret: null,
         };
         const map = bridgesOf(stored.workspaceId);
         if (!map.has(stored.kind)) {
@@ -192,6 +197,7 @@ export async function hydrateBridges(): Promise<void> {
           `[bridge] ${unrouted} Slack connection(s) were saved before the channel id was kept. They still send to Slack, but nothing from Slack reaches them until they are reconnected with the channel id.`,
         );
       }
+      await hydrateInboundSecrets(db);
     } catch (error) {
       console.error(
         "[bridge] room_bridges is not readable. Connections stay in memory and vanish on restart until DATABASE_URL is set and `npm run db:push` creates the table.",
@@ -243,6 +249,51 @@ async function persistBridge(stored: StoredBridge): Promise<void> {
   }
 }
 
+/* A room's own inbound secret lives in room_bridge_secrets, apart from the
+   connection, so that table being missing (before `npm run db:push`) or
+   unreadable costs only these secrets and never a connection. Without its row
+   a room is checked with the deployment's secret, as it was before. */
+
+const INBOUND_SECRETS_UNREADABLE =
+  "[bridge] room_bridge_secrets is not readable, so a room's own Slack or ClickUp secret is kept in this process only and inbound is checked with SLACK_SIGNING_SECRET and CLICKUP_WEBHOOK_SECRET until `npm run db:push` creates it.";
+
+function carriesInboundSecret(kind: BridgeKind): kind is "slack" | "clickup" {
+  return kind === "slack" || kind === "clickup";
+}
+
+async function hydrateInboundSecrets(db: NonNullable<ReturnType<typeof getDb>>): Promise<void> {
+  try {
+    const rows = await db.select().from(roomBridgeSecrets);
+    for (const row of rows) {
+      const stored = byWorkspace.get(row.workspaceId)?.get(row.kind);
+      if (stored) stored.inboundSecret = row.inboundSecret;
+    }
+  } catch (error) {
+    console.error(INBOUND_SECRETS_UNREADABLE, error instanceof Error ? error.message : error);
+  }
+}
+
+async function persistInboundSecret(stored: StoredBridge): Promise<void> {
+  if (!carriesInboundSecret(stored.kind) || !hasDb()) return;
+  const db = getDb();
+  if (!db) return;
+  const key = and(eq(roomBridgeSecrets.workspaceId, stored.workspaceId), eq(roomBridgeSecrets.kind, stored.kind));
+  try {
+    if (!stored.inboundSecret) {
+      /* Reconnected without one: the old secret must not keep checking. */
+      await db.delete(roomBridgeSecrets).where(key);
+      return;
+    }
+    const values = { workspaceId: stored.workspaceId, kind: stored.kind, inboundSecret: stored.inboundSecret };
+    await db
+      .insert(roomBridgeSecrets)
+      .values(values)
+      .onConflictDoUpdate({ target: [roomBridgeSecrets.workspaceId, roomBridgeSecrets.kind], set: values });
+  } catch (error) {
+    console.error(INBOUND_SECRETS_UNREADABLE, error instanceof Error ? error.message : error);
+  }
+}
+
 async function forgetBridge(workspaceId: string, kind: BridgeKind): Promise<void> {
   if (!hasDb()) return;
   const db = getDb();
@@ -256,6 +307,14 @@ async function forgetBridge(workspaceId: string, kind: BridgeKind): Promise<void
       "[bridge] could not delete a connection row.",
       error instanceof Error ? error.message : error,
     );
+  }
+  if (!carriesInboundSecret(kind)) return;
+  try {
+    await db
+      .delete(roomBridgeSecrets)
+      .where(and(eq(roomBridgeSecrets.workspaceId, workspaceId), eq(roomBridgeSecrets.kind, kind)));
+  } catch (error) {
+    console.error(INBOUND_SECRETS_UNREADABLE, error instanceof Error ? error.message : error);
   }
 }
 
@@ -467,11 +526,13 @@ export async function connectOrDisconnectBridge(
     channelId: input.channelId?.trim() ?? null,
     senderMap,
     connectedAt: new Date().toISOString(),
+    inboundSecret: carriesInboundSecret(input.kind) ? input.inboundSecret?.trim() || null : null,
   };
 
   map.set(input.kind, stored);
   rememberIndexes(stored);
   await persistBridge(stored);
+  await persistInboundSecret(stored);
 
   return { ok: true, bridges: [...map.values()].map(toPublic) };
 }
@@ -602,6 +663,7 @@ export async function acceptBridgeInbound(
       rawBody: proof.rawBody,
       timestamp: proof.slackTimestamp,
       signature: proof.slackSignature,
+      secrets: slackSecretsFor(raw),
     });
     if (!ok) return { accepted: false, reason: "unauthorized" };
     return acceptSlackInbound(raw, deps);
@@ -610,12 +672,46 @@ export async function acceptBridgeInbound(
   if (sharedWebhookSecretOk(proof.webhookSecret)) return acceptSharedSecretInbound(raw, deps);
 
   if (proof.clickUpSignature !== undefined) {
-    const ok = clickUpSignatureOk({ rawBody: proof.rawBody, signature: proof.clickUpSignature });
+    const ok = clickUpSignatureOk({
+      rawBody: proof.rawBody,
+      signature: proof.clickUpSignature,
+      secrets: clickUpSecretsFor(raw),
+    });
     if (!ok) return { accepted: false, reason: "unauthorized" };
     return acceptClickUpInbound(raw, deps);
   }
 
   return { accepted: false, reason: "unauthorized" };
+}
+
+/*
+ * Which secrets may sign this body. The body is read before it is trusted, but
+ * only to choose the key: a room that brought its own secret is checked with
+ * that one and nothing else, so neither the deployment's secret nor another
+ * room's can write into it. Any other body is checked with the deployment's.
+ *
+ * Slack's handshake names no channel, and arrives when somebody points their
+ * own app at us, so any secret we hold may answer it. It writes nothing.
+ */
+function ownInboundSecret(kind: "slack" | "clickup", workspaceId: string | undefined): string | null {
+  return workspaceId ? byWorkspace.get(workspaceId)?.get(kind)?.inboundSecret ?? null : null;
+}
+
+function slackSecretsFor(raw: unknown): string[] {
+  const deployment = secretsFrom(process.env.SLACK_SIGNING_SECRET);
+  if (slackChallenge(raw) !== null) {
+    const rooms = [...byWorkspace.values()].map((map) => map.get("slack")?.inboundSecret).filter((value): value is string => Boolean(value));
+    return [...deployment, ...rooms];
+  }
+  const channel = parseSlackInbound(raw, { all: true })?.channel;
+  const own = ownInboundSecret("slack", channel ? bySlackTarget.get(channel) : undefined);
+  return own ? [own] : deployment;
+}
+
+function clickUpSecretsFor(raw: unknown): string[] {
+  const taskId = clickUpTaskId(raw);
+  const own = ownInboundSecret("clickup", taskId ? byClickUpTarget.get(taskId) : undefined);
+  return own ? [own] : secretsFrom(process.env.CLICKUP_WEBHOOK_SECRET);
 }
 
 async function acceptSharedSecretInbound(raw: unknown, deps: BridgeAgentDeps): Promise<InboundResult> {
@@ -730,14 +826,19 @@ function slackChallenge(raw: unknown): string | null {
    bot, and none of it is a message for the room. */
 const SLACK_PERSON_SUBTYPES = new Set(["thread_broadcast", "file_share", "me_message"]);
 
-function parseSlackInbound(raw: unknown): { channel: string; user: string | null; body: string } | null {
+/** `all` reads the channel of any event, bot or notice, to pick its key. */
+function parseSlackInbound(
+  raw: unknown,
+  { all = false }: { all?: boolean } = {},
+): { channel: string; user: string | null; body: string } | null {
   if (raw === null || typeof raw !== "object") return null;
   const root = raw as Record<string, unknown>;
   const event = root.event !== null && typeof root.event === "object" ? (root.event as Record<string, unknown>) : root;
-  if (event.bot_id) return null;
-  if (typeof event.subtype === "string" && !SLACK_PERSON_SUBTYPES.has(event.subtype)) return null;
   const channel = typeof event.channel === "string" ? event.channel : typeof root.channel_id === "string" ? root.channel_id : null;
   const text = typeof event.text === "string" ? event.text : typeof root.text === "string" ? root.text : null;
+  if (all) return channel ? { channel, user: null, body: text ?? "" } : null;
+  if (event.bot_id) return null;
+  if (typeof event.subtype === "string" && !SLACK_PERSON_SUBTYPES.has(event.subtype)) return null;
   if (!channel || text === null) return null;
   const user = typeof event.user === "string" ? event.user : typeof root.user_id === "string" ? root.user_id : null;
   return { channel, user, body: text };
@@ -750,6 +851,17 @@ interface ClickUpInbound {
   body: string;
 }
 
+function clickUpTaskId(raw: unknown): string | null {
+  if (raw === null || typeof raw !== "object") return null;
+  const root = raw as Record<string, unknown>;
+  const payload = root.payload !== null && typeof root.payload === "object" ? (root.payload as Record<string, unknown>) : root;
+  return (
+    (typeof payload.id === "string" && payload.id) ||
+    (typeof root.task_id === "string" && root.task_id) ||
+    null
+  );
+}
+
 function parseClickUpInbound(raw: unknown): ClickUpInbound | null {
   if (raw === null || typeof raw !== "object") return null;
   const root = raw as Record<string, unknown>;
@@ -757,10 +869,7 @@ function parseClickUpInbound(raw: unknown): ClickUpInbound | null {
      and would land in the room a second time. Only a new comment crosses. */
   if (typeof root.event === "string" && root.event !== "taskCommentPosted") return null;
   const payload = root.payload !== null && typeof root.payload === "object" ? (root.payload as Record<string, unknown>) : root;
-  const taskId =
-    (typeof payload.id === "string" && payload.id) ||
-    (typeof root.task_id === "string" && root.task_id) ||
-    null;
+  const taskId = clickUpTaskId(raw);
   const history = Array.isArray(payload.history_items) ? payload.history_items : Array.isArray(root.history_items) ? root.history_items : [];
   const comment = history.find((item) => {
     if (item === null || typeof item !== "object") return false;
