@@ -79,6 +79,7 @@ export default function Setup() {
   const [origin, setOrigin] = useState(defaultOrigin);
   const [useOwnKey, setUseOwnKey] = useState(true);
   const [apiKey, setApiKey] = useState("");
+  const [setupToken, setSetupToken] = useState("");
   const [hasKey, setHasKey] = useState(false);
   const [services, setServices] = useState<Record<string, OperatorService>>(() => defaultServices());
   const [doors, setDoors] = useState<OperatorPublic["doors"]>([]);
@@ -183,7 +184,10 @@ export default function Setup() {
       };
       const res = await fetch("/api/operator", {
         method: "PUT",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...(setupToken.trim() ? { "x-operator-setup-token": setupToken.trim() } : {}),
+        },
         body: JSON.stringify(body),
       });
       const text = await res.text();
@@ -488,6 +492,27 @@ export default function Setup() {
                 offer those rows as referral.
               </p>
             ) : null}
+          </section>
+
+          <section>
+            <h2 className={`${READ} m-0 font-display font-medium`}>Set-up token</h2>
+            <p className={`${META_PLAIN} mt-[var(--s2)]`}>
+              The value of OPERATOR_SETUP_TOKEN on the host this deployment runs on. Saving needs it
+              every time, so only whoever runs the host can change what this site says. It is sent
+              with the save and not kept in this browser.
+            </p>
+            <label className="mt-[var(--s3)] flex flex-col gap-[var(--s1)]">
+              <span className={META}>Token</span>
+              <input
+                className={FIELD}
+                type="password"
+                value={setupToken}
+                onChange={(event) => setSetupToken(event.target.value)}
+                autoComplete="off"
+                required
+                data-testid="input-setup-token"
+              />
+            </label>
           </section>
 
           {error ? (

@@ -23,7 +23,10 @@ import { ADGRANT_ORIGIN } from "@shared/adgrant-site";
 export const ADGRANT_TITLE = "AdGrant.AI — a Google Ad Grant structure from the nonprofit's website";
 export const ADGRANT_DESCRIPTION =
   "Give a nonprofit's website and get a Google Ad Grant account structure back: campaigns, ad groups, keywords, ads and extensions, with a Google Ads Editor file. Built on what was measured across thousands of Ad Grant accounts. Nothing is written into a Google Ads account.";
-const ADGRANT_IMAGE = `${ADGRANT_ORIGIN}/assets/adgrant-social.png`;
+/* A card image has to be an absolute address. It is built from the origin the
+   page was served on, because this process serves it on every AdGrant host it
+   answers and adgrant.ai may be served by another application. */
+const adgrantImage = (origin: string) => `${origin}/assets/adgrant-social.png`;
 const ADGRANT_ICON = "/assets/adgrant-logo.png";
 
 interface Swap {
@@ -33,7 +36,7 @@ interface Swap {
   all?: boolean;
 }
 
-function swaps(): Swap[] {
+function swaps(origin: string): Swap[] {
   return [
     {
       from: "<title>Top-Rated Team — hire a hybrid team for your business</title>",
@@ -53,11 +56,11 @@ function swaps(): Swap[] {
     },
     {
       from: '<meta property="og:image" content="https://top-rated.team/assets/social.png" />',
-      to: `<meta property="og:image" content="${ADGRANT_IMAGE}" />`,
+      to: `<meta property="og:image" content="${adgrantImage(origin)}" />`,
     },
     {
       from: '<meta name="twitter:image" content="https://top-rated.team/assets/social.png" />',
-      to: `<meta name="twitter:image" content="${ADGRANT_IMAGE}" />`,
+      to: `<meta name="twitter:image" content="${adgrantImage(origin)}" />`,
     },
     /* The same sentence is the title three times over — the tag, og and
        twitter — so this one is replaced everywhere it appears. */
@@ -75,10 +78,11 @@ export interface RewrittenHead {
   missed: string[];
 }
 
-export function rewriteHead(html: string): RewrittenHead {
+/** `origin` is the AdGrant host the page is served on, scheme included. */
+export function rewriteHead(html: string, origin: string = ADGRANT_ORIGIN): RewrittenHead {
   let out = html;
   const missed: string[] = [];
-  for (const swap of swaps()) {
+  for (const swap of swaps(origin.replace(/\/+$/, ""))) {
     if (!out.includes(swap.from)) {
       missed.push(swap.from.slice(0, 60));
       continue;

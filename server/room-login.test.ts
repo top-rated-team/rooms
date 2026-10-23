@@ -128,6 +128,17 @@ describe("roomLoginAvailability", () => {
       "www is the same registered address, not a second one",
     );
 
+    /* The app's address is a third registered return, not a fall-back: once
+       adgrant.ai is the product's own application, a room on app.adgrant.ai
+       has to finish signing in on app.adgrant.ai. */
+    const onApp = startRoomLoginLinkedIn("app.adgrant.ai");
+    assert.equal(onApp.ok, true);
+    if (!onApp.ok) return;
+    assert.equal(
+      new URL(onApp.url).searchParams.get("redirect_uri"),
+      "https://app.adgrant.ai/api/room-login/linkedin/callback",
+    );
+
     /* A host that is not ours is never built into a redirect_uri: it falls
        back to the configured address. */
     const forged = startRoomLoginLinkedIn("evil.example");
@@ -140,7 +151,7 @@ describe("roomLoginAvailability", () => {
   });
 
   it("offers LinkedIn on both house addresses now that one app serves both", async () => {
-    for (const host of ["ai.top-rated.team", "adgrant.ai", "www.adgrant.ai"]) {
+    for (const host of ["ai.top-rated.team", "adgrant.ai", "www.adgrant.ai", "app.adgrant.ai"]) {
       const availability = await roomLoginAvailability({
         host,
         probe: async () => ({ ok: false, line: "down" }),

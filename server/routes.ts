@@ -65,14 +65,14 @@ import { generateAdGrantStructure, getAdGrantGenerationQuota } from "./adgrant/g
 import { templateSetupFiles } from "./adgrant/templates";
 import { adGrantStats } from "./adgrant/stats";
 import { hydrateBookings } from "./booking/hold";
-import { adgrantRobotsTxt, adgrantSitemapXml } from "./adgrant/site";
+import { adgrantMovedOrigin, adgrantRobotsTxt, adgrantSitemapXml } from "./adgrant/site";
 import { rewriteHead } from "./adgrant/head";
 import { ADGRANT_ORIGIN } from "@shared/adgrant-site";
 import { resolveDistPath } from "./vite";
 import { hybridRoomsUrl, registerRoomsMoved } from "./rooms-moved";
 import fs from "node:fs";
 import path from "node:path";
-import { isAdGrantHost } from "@shared/adgrant-site";
+import { isAdGrantAppHost, isAdGrantHost } from "@shared/adgrant-site";
 import { bookLinkTarget, bookingGuests, formatBookLinkHash, widgetRecipient } from "@shared/booking-link";
 import { buildBookingWidget, type BookingWidgetShow } from "@shared/booking-widget";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
@@ -1763,13 +1763,18 @@ export function registerRoutes(app: Express): void {
 
      Only from our own two names. localhost and the Render address keep
      serving the tree in place, because that is where it is developed and a
-     redirect to production would make it impossible to see a change. */
+     redirect to production would make it impossible to see a change.
+
+     Two destinations since adgrant.ai went back to the product's own
+     application: the library goes to the public site, and what only this
+     process has — services, terms, privacy — goes to the app's address. See
+     adgrantMovedOrigin. */
   const MOVED_FROM = new Set(["top-rated.team", "www.top-rated.team"]);
   app.get(/^\/adgrant(\/.*)?$/, (req, res, next) => {
     if (!MOVED_FROM.has(req.hostname)) return next();
     const rest = req.path.slice("/adgrant".length) || "/";
     const query = req.originalUrl.slice(req.path.length);
-    res.redirect(301, `${ADGRANT_ORIGIN}${rest}${query}`);
+    res.redirect(301, `${adgrantMovedOrigin(rest)}${rest}${query}`);
   });
 
   /* resolveDistPath and not a path of our own: the first version of this
@@ -1796,7 +1801,10 @@ export function registerRoutes(app: Express): void {
     if (!req.accepts("html")) return next();
     const index = adgrantIndexPath();
     if (!index || !fs.existsSync(index)) return next();
-    const { html, missed } = rewriteHead(fs.readFileSync(index, "utf8"));
+    /* The card image from the host that was asked, which is one of ours —
+       isAdGrantHost said so above — and serves the file. A fixed origin would
+       name a host that may be another application by now. */
+    const { html, missed } = rewriteHead(fs.readFileSync(index, "utf8"), `https://${req.hostname.toLowerCase()}`);
     if (missed.length > 0) {
       /* The frozen file changed under us. Serving a head that is half one
          site and half the other would look fine and be wrong, so say so. */
@@ -1810,11 +1818,17 @@ export function registerRoutes(app: Express): void {
      here and ours falls through to client/public untouched. */
   app.get("/robots.txt", (req, res, next) => {
     if (!isAdGrantHost(req.hostname)) return next();
-    res.type("text/plain").send(adgrantRobotsTxt());
+    res.type("text/plain").send(adgrantRobotsTxt(req.hostname));
   });
 
   app.get("/sitemap.xml", (req, res, next) => {
     if (!isAdGrantHost(req.hostname)) return next();
+    /* Not a fall-through on the app's address: what is on disk is
+       top-rated.team's sitemap, and the app asks not to be crawled. */
+    if (isAdGrantAppHost(req.hostname)) {
+      res.status(404).type("text/plain").send(`No sitemap here. The public site's is ${ADGRANT_ORIGIN}/sitemap.xml.\n`);
+      return;
+    }
     res.type("application/xml").send(adgrantSitemapXml());
   });
 
