@@ -294,9 +294,10 @@ describe("a booster is never a room member", () => {
     const origin = `http://127.0.0.1:${port}`;
 
     try {
+      /* Rooms are still opened on AdGrant.AI's hosts (shared/rooms-moved.ts). */
       const created = await fetch(`${origin}/api/workspaces`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Forwarded-Host": "app.adgrant.ai" },
         body: JSON.stringify({ name: "Booster inventory test" }),
       });
       assert.equal(created.status, 201);

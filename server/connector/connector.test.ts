@@ -137,7 +137,7 @@ describe("a room response is an address, not a workspace", () => {
     const previous = process.env.PUBLIC_BASE_URL;
     process.env.PUBLIC_BASE_URL = "https://ai.top-rated.team";
     try {
-      const result = await createRoom(fakeReq(), { visitorName: "Ada", doorId: "google-ads" });
+      const result = await createRoom(fakeReq(), { visitorName: "Ada", doorId: "ad-grants" });
       assert.equal(result.status, 201);
       assert.deepEqual(Object.keys(result.payload).sort(), ["url"]);
       if ("url" in result.payload) {
@@ -150,6 +150,24 @@ describe("a room response is an address, not a workspace", () => {
     } finally {
       if (previous === undefined) delete process.env.PUBLIC_BASE_URL;
       else process.env.PUBLIC_BASE_URL = previous;
+    }
+  });
+
+  /* Top-Rated Team's rooms are MakeHybrid's now (shared/rooms-moved.ts); on
+     its hosts the connector opens AdGrant.AI's rooms only, and says where the
+     rest are. */
+  it("opens no Top-Rated Team room, and says where they are", async () => {
+    const previous = process.env.HYBRID_ROOMS_URL;
+    process.env.HYBRID_ROOMS_URL = "https://rooms.example.org/rooms.html";
+    try {
+      for (const body of [{ doorId: "google-ads" }, {}]) {
+        const result = await createRoom(fakeReq(), body);
+        assert.equal(result.status, 410, JSON.stringify(body));
+        assert.ok("error" in result.payload && result.payload.error.includes("https://rooms.example.org/rooms.html"));
+      }
+    } finally {
+      if (previous === undefined) delete process.env.HYBRID_ROOMS_URL;
+      else process.env.HYBRID_ROOMS_URL = previous;
     }
   });
 
@@ -263,7 +281,7 @@ describe("the HTTP mounts and the MCP front door", () => {
     const res = await fetch(`${origin}/api/connector/rooms`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ visitorName: "Ada", doorId: "chatgpt-ads" }),
+      body: JSON.stringify({ visitorName: "Ada", doorId: "ad-grants" }),
     });
     assert.equal(res.status, 201);
     const body = (await res.json()) as Record<string, unknown>;

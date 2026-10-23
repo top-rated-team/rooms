@@ -162,14 +162,14 @@ export const PRICES: PriceRow[] = [
      *   a gift; it is the model bill moving from us to the client.
      * - "we take no margin" is the true version of "never pay for AI tokens",
      *   which said the opposite of what this row means.
-     * - the last sentence is there because there is NO code in this repository
-     *   that accepts somebody else's key, and every room is metered by
-     *   server/spend.ts regardless of the row. Saying the conversation is
-     *   unmetered here would be the one sentence on this page that the code
-     *   contradicts outright.
+     * - the last sentence says where the key goes. Rooms are MakeHybrid's
+     *   Hybrid Rooms now (shared/rooms-moved.ts), and an agent there runs only
+     *   on the key of the organization whose room it is, within the daily
+     *   limits that organization sets -- so "your own keys" is literally how a
+     *   room of your own works, and nothing here claims it is unmetered.
      */
     condition:
-      "Free on your own Anthropic or OpenAI keys: you pay the model provider directly for every token and we take no margin on them. Rooms on this site are metered while that is being set up, and the keys are arranged with a person rather than on this page.",
+      "Free on your own Anthropic or OpenAI keys: you pay the model provider directly for every token and we take no margin on them. In a room of your own the key is yours, added in the room's settings, with the daily limits you set there.",
     ours: true,
   },
   {

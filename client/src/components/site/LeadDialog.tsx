@@ -6,6 +6,7 @@ import { DEFAULT_DOOR_ID, DOOR_BY_ID, DOORS, type DoorDef } from "@shared/doors"
 import { BOOK_A_CALL_URL, EXPERTS, SERVICES, SERVICE_GROUPS, type ExpertDef } from "@shared/roster";
 import { useBooking } from "@/hooks/use-booking";
 import type { CreateWorkspaceResponse } from "@shared/api";
+import { roomsMovedOn } from "@shared/rooms-moved";
 import { ACTION, ACTION_QUIET } from "@/components/site/doors/quiet";
 
 /*
@@ -246,6 +247,9 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
   }
 
   const door = useMemo(currentDoor, []);
+  /* Top-Rated Team's rooms are MakeHybrid's now (shared/rooms-moved.ts): on its
+     hosts this dialog does not open one. AdGrant.AI's hosts keep theirs. */
+  const roomsHere = typeof window !== "undefined" && !roomsMovedOn(window.location.hostname);
   const answerer = answeredBy(form.intent);
   const sentTo = form.email.trim();
   const title = prefill?.expertName ? `Message ${prefill.expertName}` : "Tell us what you are running";
@@ -299,9 +303,10 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
               ) : null}
               <p className="mt-4 text-sm text-muted-foreground">
                 Nothing else is sent to you — no confirmation, no sequence — so a person's reply is the only thing that
-                comes back, and this form has no address of its own. A workspace does: a shared space with the agents
-                and our team in it, no signup, and the link is the whole account. Open one and you can come back to the
-                same conversation whenever you like.
+                comes back, and this form has no address of its own.
+                {roomsHere
+                  ? " A workspace does: a shared space with the agents and our team in it, no signup, and the link is the whole account. Open one and you can come back to the same conversation whenever you like."
+                  : null}
               </p>
               {door.contract.contact ? (
                 <p className="mt-3 text-xs text-muted-foreground">
@@ -323,17 +328,19 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
                 </p>
               ) : null}
               <div className="mt-6 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  data-testid="button-lead-continue-workspace"
-                  className={BTN_PRIMARY}
-                  onClick={continueInWorkspace}
-                  disabled={continuing}
-                >
-                  {continuing ? <Loader2 className="animate-spin" /> : null}
-                  Continue in a workspace
-                  {continuing ? null : <ArrowRight />}
-                </button>
+                {roomsHere ? (
+                  <button
+                    type="button"
+                    data-testid="button-lead-continue-workspace"
+                    className={BTN_PRIMARY}
+                    onClick={continueInWorkspace}
+                    disabled={continuing}
+                  >
+                    {continuing ? <Loader2 className="animate-spin" /> : null}
+                    Continue in a workspace
+                    {continuing ? null : <ArrowRight />}
+                  </button>
+                ) : null}
                 <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={BTN_SECONDARY} {...booking}>
                   Book a call
                 </a>

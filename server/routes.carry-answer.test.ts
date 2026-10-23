@@ -49,9 +49,11 @@ interface RoomMessage {
 }
 
 async function openRoom(origin: string, body: unknown): Promise<{ status: number; messages: RoomMessage[] }> {
+  /* Rooms are still opened on AdGrant.AI's hosts, where Keep carries the
+     answer in (shared/rooms-moved.ts). */
   const res = await fetch(`${origin}/api/workspaces`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-Forwarded-Host": "app.adgrant.ai" },
     body: JSON.stringify(body),
   });
   if (!res.ok) return { status: res.status, messages: [] };

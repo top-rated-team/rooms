@@ -29,6 +29,8 @@ import {
   recordTurnCost,
 } from "../spend";
 import { storage } from "../storage";
+import { hybridRoomsUrl, isAdGrantRoom } from "../rooms-moved";
+import { roomsMovedOn } from "@shared/rooms-moved";
 
 export const CONNECTOR_VIA = "connector";
 
@@ -241,6 +243,16 @@ export async function createRoom(
 
   const source: Record<string, string> = { via: CONNECTOR_VIA };
   if (doorId) source.door = doorId;
+
+  /* Top-Rated Team's rooms are MakeHybrid's now (shared/rooms-moved.ts); on
+     its hosts the one room still opened here is AdGrant.AI's. The same rule
+     as POST /api/workspaces, and the same answer. */
+  if (roomsMovedOn(req.hostname) && !isAdGrantRoom(source)) {
+    return {
+      status: 410,
+      payload: { error: `Top-Rated Team's rooms have their own address and sign-in now: ${hybridRoomsUrl()}. Send the person there. This tool opens AdGrant.AI rooms only (doorId "ad-grants").` },
+    };
+  }
 
   const created = await storage.createWorkspace({
     name: parsed.data.name,

@@ -13,7 +13,8 @@
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { Router } from "express";
 
-import { askQuestion, createRoom, listCases, listPrices, listServices } from "./handlers";
+import { ROOMS_PATH } from "@shared/rooms-moved";
+import { askQuestion, createRoom, listCases, listPrices, listServices, publicBaseUrl } from "./handlers";
 
 const PROTOCOL = "2025-03-26";
 const SUPPORTED = new Set(["2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"]);
@@ -79,7 +80,7 @@ export const MCP_TOOLS: ToolDef[] = [
   {
     name: "create_room",
     description:
-      "Open a room and return its address. Give that address to the invited person and to nobody else. Pass doorId from list_services so the room carries that service's contract.",
+      "Open an AdGrant.AI room (doorId \"ad-grants\") and return its address. Give that address to the invited person and to nobody else. Top-Rated Team's other rooms are not opened here: they have their own address and sign-in, at /rooms on this site.",
     inputSchema: {
       type: "object",
       additionalProperties: false,
@@ -212,7 +213,7 @@ async function dispatch(
           capabilities: { tools: { listChanged: false } },
           serverInfo: { name: "top-rated-team", version: "1.0.0" },
           instructions:
-            "You can explain Top-Rated Team's services, quote the published prices verbatim, cite the case studies, ask a grounded question, and open a room. Give a room address only to the person being invited.",
+            `You can explain Top-Rated Team's services, quote the published prices verbatim, cite the case studies, ask a grounded question, and open an AdGrant.AI room. Give a room address only to the person being invited. Top-Rated Team's other rooms have their own address and sign-in: send people to ${publicBaseUrl(req)}${ROOMS_PATH}.`,
         },
       };
     }

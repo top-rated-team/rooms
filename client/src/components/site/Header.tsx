@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 
 import { useTheme } from "@/hooks/use-theme";
-import { RoomMenu } from "@/components/site/RoomMenu";
+import { RoomsLink } from "@/components/site/RoomsLink";
 
 /* ---------------------------------------------------------------------------
  * THE MASTHEAD
@@ -40,10 +40,10 @@ import { RoomMenu } from "@/components/site/RoomMenu";
 const LINK = "type-meta draw text-muted-foreground hover:text-foreground";
 
 /*
- * OPEN A ROOM IS BACK IN THIS BAR, as the fused control: the left half returns
- * you to a room this browser remembers, the right half makes one. It is still
- * an offer, and it still sits in the door heroes as well — here it is the way
- * back in from any page, which an address nobody types (/w) was not.
+ * OPEN A ROOM IS IN THIS BAR, as a link and nothing more. Rooms are MakeHybrid's
+ * Hybrid Rooms now, under our name and with their own sign-in
+ * (shared/rooms-moved.ts), so this bar carries no sign-in of its own. It is
+ * still an offer, and it still sits in the door heroes as well.
  */
 
 export function Header() {
@@ -176,7 +176,7 @@ export function Header() {
           <Link href="/services/white-label" data-testid="link-nav-white-label" className={LINK}>
             White label
           </Link>
-          <RoomMenu className={LINK} testId="button-nav-open-a-room" />
+          <RoomsLink className={LINK} testId="button-nav-open-a-room" />
           {/*
             THE THEME IS THE ONE ITEM IN SENTENCE CASE, on the owner's
             instruction, and the distinction it draws is real: the six items
@@ -230,7 +230,7 @@ export function Header() {
           <Link href="/services/white-label" onClick={close} data-testid="link-menu-white-label" className={LINK}>
             White label
           </Link>
-                    <RoomMenu className={`${LINK} text-left`} testId="button-menu-open-a-room" layout="inline" />
+                    <RoomsLink className={`${LINK} text-left`} testId="button-menu-open-a-room" />
           <button
             type="button"
             onClick={() => {

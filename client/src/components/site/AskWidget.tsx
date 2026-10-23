@@ -5,6 +5,7 @@ import type { AskEvent, KbStatus } from "@shared/api";
 import type { Citation } from "@shared/schema";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID, doorAgent, type DoorDef } from "@shared/doors";
 import { BOOK_A_CALL_URL } from "@shared/roster";
+import { OPEN_A_ROOM, ROOMS_PATH } from "@shared/rooms-moved";
 import { useBooking } from "@/hooks/use-booking";
 
 const importAnswerMarkdown = () => import("@/components/site/AnswerMarkdown");
@@ -72,8 +73,13 @@ function hostOf(url: string): string {
 }
 
 export interface AskWidgetProps {
-  /** Creates a workspace seeded with this conversation. Resolves to an error message, or null on success. */
-  onStartWorkspace: (opts?: {
+  /**
+   * Creates a workspace seeded with this conversation. Resolves to an error
+   * message, or null on success. Only AdGrant.AI's panel passes it: Top-Rated
+   * Team's rooms are MakeHybrid's now (shared/rooms-moved.ts), and without it
+   * the way on from an answer is a link to them.
+   */
+  onStartWorkspace?: (opts?: {
     agentId?: string;
     firstMessage?: string;
     firstAnswer?: { body: string; receipt: string };
@@ -290,6 +296,7 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
   }, [agentId, onVisitorMessage, clearWatchdogs]);
 
   async function startWorkspace() {
+    if (!onStartWorkspace) return;
     setStartingWorkspace(true);
     const failure = await onStartWorkspace({
       agentId: agentId ?? undefined,
@@ -522,17 +529,24 @@ export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMess
                 Want it done rather than explained? The agent stops where your own systems start.
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  data-testid="button-ask-start-workspace"
-                  className={BTN_SECONDARY_SM}
-                  onClick={() => void startWorkspace()}
-                  disabled={startingWorkspace}
-                >
-                  {startingWorkspace ? <Loader2 className="animate-spin" /> : null}
-                  Start a workspace
-                  {startingWorkspace ? null : <ArrowRight />}
-                </button>
+                {onStartWorkspace ? (
+                  <button
+                    type="button"
+                    data-testid="button-ask-start-workspace"
+                    className={BTN_SECONDARY_SM}
+                    onClick={() => void startWorkspace()}
+                    disabled={startingWorkspace}
+                  >
+                    {startingWorkspace ? <Loader2 className="animate-spin" /> : null}
+                    Start a workspace
+                    {startingWorkspace ? null : <ArrowRight />}
+                  </button>
+                ) : (
+                  <a href={ROOMS_PATH} data-testid="link-ask-open-room" className={BTN_SECONDARY_SM}>
+                    {OPEN_A_ROOM}
+                    <ArrowRight />
+                  </a>
+                )}
                 {/* Asking for a person from inside the answer is the trigger the
                     design cares about most: they read what the agent could do
                     and decided it was not enough. */}

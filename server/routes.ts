@@ -125,6 +125,8 @@ import { adgrantMovedOrigin, adgrantRobotsTxt, adgrantSitemapXml } from "./adgra
 import { rewriteHead } from "./adgrant/head";
 import { ADGRANT_ORIGIN } from "@shared/adgrant-site";
 import { resolveDistPath } from "./vite";
+import { hybridRoomsUrl, isAdGrantRoom, registerRoomsMoved } from "./rooms-moved";
+import { roomsMovedOn } from "@shared/rooms-moved";
 import fs from "node:fs";
 import path from "node:path";
 import { isAdGrantAppHost, isAdGrantHost } from "@shared/adgrant-site";
@@ -794,6 +796,13 @@ export function registerRoutes(app: Express): void {
     next();
   });
 
+  /*
+   * TOP-RATED TEAM'S ROOMS LIVE ELSEWHERE NOW. On its hosts, /rooms and every
+   * room address this site gave out are sent on to them before anything else
+   * can answer; AdGrant.AI's hosts keep their rooms. See server/rooms-moved.ts.
+   */
+  registerRoomsMoved(app);
+
   app.use(operatorGate);
 
   app.get("/api/operator", route(readOperator));
@@ -953,6 +962,13 @@ export function registerRoutes(app: Express): void {
       /* A room cannot be opened seeded on an agent nobody may reach. Same
          reply as for an unknown one, for the same reason. */
       if (input.agentId && !answerableAgent(input.agentId)) return badRequest(res, `Unknown agent: ${input.agentId}`);
+      /* Top-Rated Team's rooms are MakeHybrid's now (shared/rooms-moved.ts):
+         on its hosts the only room still opened here is AdGrant.AI's, whose
+         rooms stayed. Anybody else is told where rooms are. */
+      if (roomsMovedOn(req.hostname) && !isAdGrantRoom(input.source)) {
+        res.status(410).json({ error: "Rooms have moved.", url: hybridRoomsUrl() });
+        return;
+      }
       const agentId = input.agentId ?? DEFAULT_AGENT_ID;
 
       const created = await storage.createWorkspace({

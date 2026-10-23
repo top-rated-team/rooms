@@ -20,9 +20,10 @@ scripts/build-llms.ts, so neither can drift from what a visitor reads.
   not need their name.
 - The conversation is not saved while that is happening, and the page says so
   under the answer: nothing is saved yet, close the tab and it is gone.
-- A conversation the visitor keeps becomes a room at an address of its own,
-  with our agents and our people in it and no signup — the link in the browser
-  is the whole account.
+- The work itself happens in a room: our people, AI agents and the client in
+  one conversation, with the client's WhatsApp, Slack, ChatWoot or ClickUp
+  connected to it both ways. Rooms have their own address and their own
+  sign-in; /rooms on this site leads there.
 - Five of the seven offers below answer questions today. The remaining two
   have a page and no panel on them yet, and each of those pages says in one
   sentence why.
@@ -436,12 +437,12 @@ and we will have cost you nothing.
 
 #### Scope
 
-Shared room, no signup
+Shared room
 
-Keep the answer and it becomes a room. Your stack, your money event, and the
-checklist of what actually has to happen, in one shared space with our agents
-and our people in it. The link in the address bar is the whole account —
-bookmark it, or send it to your developer.
+Your stack, your money event, and the checklist of what actually has to
+happen, in one shared room with our agents and our people in it — and with the
+WhatsApp group, Slack channel or ClickUp task you already use connected to it
+both ways, so nobody has to move.
 
 #### Implement
 
@@ -544,10 +545,9 @@ next.
 
 ## Not in this file
 
-- Room addresses. A kept conversation lives at /w/<token>, and that token is a
-  bearer credential in the URL: writing one down publishes it. robots.txt
-  disallows /w/, those pages carry noindex, and this file leaves them out for
-  the same reason.
+- Room addresses. Old ones on this site (/w/<token>) lead to where rooms are
+  now, without their token; robots.txt still disallows /w/, and this file
+  leaves them out.
 - The HTTP API. robots.txt disallows /api/ as well, and this file follows it.
 - Prices, budgets, timelines and promised results. No page publishes any of
   them, and the agents are instructed to say that pricing and scope come from

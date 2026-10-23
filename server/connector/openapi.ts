@@ -19,7 +19,7 @@ export function openApiDocument(baseUrl: string) {
       title: "Top-Rated Team",
       version: "1.0.0",
       description:
-        "Read the services Top-Rated Team publishes, the price rows as written, and the case studies. Ask a question that is answered from the same documentation the site's panel uses. Open a room and hand the person the address that comes back. This surface does not list rooms, leads or members, and it does not accept a room token.",
+        "Read the services Top-Rated Team publishes, the price rows as written, and the case studies. Ask a question that is answered from the same documentation the site's panel uses. Open an AdGrant.AI room and hand the person the address that comes back; Top-Rated Team's other rooms have their own address and sign-in, at /rooms on this site. This surface does not list rooms, leads or members, and it does not accept a room token.",
     },
     servers: [{ url: baseUrl }],
     paths: {
@@ -152,9 +152,9 @@ export function openApiDocument(baseUrl: string) {
       "/api/connector/rooms": {
         post: {
           operationId: "create_room",
-          summary: "Open a room and return its address",
+          summary: "Open an AdGrant.AI room and return its address",
           description:
-            "Opens a room the same way the site's Keep step does. The response is only the address. Give that address to the person you are inviting and to nobody else: anyone who has it can enter. Pass doorId so the room carries that service's contract name. Do not call this to look up an existing room — there is no read on this path.",
+            "Opens an AdGrant.AI room (doorId \"ad-grants\") the same way that site's Keep step does. The response is only the address. Give that address to the person you are inviting and to nobody else: anyone who has it can enter. Any other door answers 410 with where Top-Rated Team's rooms are now. Do not call this to look up an existing room — there is no read on this path.",
           "x-openai-isConsequential": true,
           requestBody: {
             required: false,
@@ -219,6 +219,14 @@ export function openApiDocument(baseUrl: string) {
             },
             "400": {
               description: "The body named a door that does not exist, or failed validation.",
+              content: {
+                "application/json": {
+                  schema: { type: "object", additionalProperties: true },
+                },
+              },
+            },
+            "410": {
+              description: "Not an AdGrant.AI room: Top-Rated Team's rooms have their own address and sign-in now, which the error names.",
               content: {
                 "application/json": {
                   schema: { type: "object", additionalProperties: true },

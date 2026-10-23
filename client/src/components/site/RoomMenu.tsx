@@ -19,6 +19,7 @@ import {
 import { isHouseHost } from "@shared/operator";
 import { WhatsAppQr, isCoarsePointer } from "@/components/WhatsAppQr";
 import { useOpenRoom } from "@/hooks/use-open-room";
+import { rememberSignInReturn } from "@/lib/signin-return";
 
 /**
  * The remembered-room list, read the same way the room page reads it.
@@ -191,6 +192,17 @@ export interface RoomMenuProps {
    * Everywhere else it drops below the control.
    */
   layout?: "dropdown" | "inline";
+  /**
+   * Sign in and nothing else: the operator's booking page. Top-Rated Team's
+   * own pages carry no sign-in and no rooms of their own any more
+   * (shared/rooms-moved.ts); this menu is AdGrant.AI's, and the operator's.
+   */
+  signInOnly?: boolean;
+  /**
+   * Where to come back to once signed in. Every way in lands on the front page
+   * (server/room-account.ts); a page that is not the front page names itself here.
+   */
+  returnTo?: string;
 }
 
 type LoginPanelState =
@@ -215,7 +227,7 @@ type EmailFormState =
  * WhatsApp on a house host, or a link to an email. Hovering Sign out offers
  * the other ways in, so they can be attached to this account.
  */
-export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdown" }: RoomMenuProps) {
+export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdown", signInOnly = false, returnTo }: RoomMenuProps) {
   const { open: create, opening, error } = useOpenRoom({ doorId, agentId });
   const [rooms, setRooms] = useState<RememberedRoom[]>(listRememberedRooms);
   const [open, setOpen] = useState(false);
@@ -235,6 +247,11 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
   const loginOpen = login.phase !== "closed";
 
   const refresh = () => setRooms(listRememberedRooms());
+  /* Before any way in is taken: LinkedIn and the email link come back to the
+     front page, and this is how the front page knows to send them on. */
+  const leaving = () => {
+    if (returnTo) rememberSignInReturn(returnTo);
+  };
   const signedIn = session.signedIn;
   const applySession = (next: RoomSession) => {
     setSession(next);
@@ -404,6 +421,7 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
   const onSendEmail = async (event: FormEvent) => {
     event.preventDefault();
     if (emailForm.phase === "sending") return;
+    leaving();
     setEmailForm({ phase: "sending" });
     try {
       const res = await fetch("/api/room-access", {
@@ -468,6 +486,7 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
   };
 
   const onWhatsApp = async () => {
+    leaving();
     setWhatsappLoading(true);
     setWhatsappError(null);
     setWhatsappLine(null);
@@ -596,6 +615,7 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
                 <a
                   href="/api/room-login/linkedin"
                   data-testid={`${testId}-login-linkedin`}
+                  onClick={leaving}
                   className={WAY_LINK}
                 >
                   Sign in with LinkedIn
@@ -829,35 +849,39 @@ export function RoomMenu({ className, doorId, agentId, testId, layout = "dropdow
         >
           {signedIn ? "Sign out" : "Sign in"}
         </button>
-        <span aria-hidden="true" className="text-muted-foreground">
-          |
-        </span>
-        <button
-          type="button"
-          data-testid={testId}
-          aria-haspopup={rooms.length > 0 ? "menu" : undefined}
-          aria-expanded={rooms.length > 0 ? showList : undefined}
-          aria-controls={rooms.length > 0 ? listId : undefined}
-          onMouseEnter={() => {
-            if (isCoarsePointer()) return;
-            const next = listRememberedRooms();
-            setRooms(next);
-            setLogin({ phase: "closed" });
-            if (next.length > 0) setOpen(true);
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "ArrowDown" && rooms.length > 0) {
-              event.preventDefault();
-              refresh();
-              setOpen(true);
-            }
-          }}
-          onClick={() => void create()}
-          disabled={opening}
-          className={`${INNER} disabled:opacity-50`}
-        >
-          {opening ? "Opening a room…" : "Open a room"}
-        </button>
+        {signInOnly ? null : (
+          <>
+            <span aria-hidden="true" className="text-muted-foreground">
+              |
+            </span>
+            <button
+              type="button"
+              data-testid={testId}
+              aria-haspopup={rooms.length > 0 ? "menu" : undefined}
+              aria-expanded={rooms.length > 0 ? showList : undefined}
+              aria-controls={rooms.length > 0 ? listId : undefined}
+              onMouseEnter={() => {
+                if (isCoarsePointer()) return;
+                const next = listRememberedRooms();
+                setRooms(next);
+                setLogin({ phase: "closed" });
+                if (next.length > 0) setOpen(true);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "ArrowDown" && rooms.length > 0) {
+                  event.preventDefault();
+                  refresh();
+                  setOpen(true);
+                }
+              }}
+              onClick={() => void create()}
+              disabled={opening}
+              className={`${INNER} disabled:opacity-50`}
+            >
+              {opening ? "Opening a room…" : "Open a room"}
+            </button>
+          </>
+        )}
         {dropdownPanel}
       </span>
       {layout === "inline" ? (

@@ -1,4 +1,5 @@
 import { openBooking } from "@/lib/booking";
+import { takeSignInReturn } from "@/lib/signin-return";
 
 /**
  * THE OWNER'S SIGNATURE LINKS. https://top-rated.team/# and
@@ -36,6 +37,13 @@ function openBookingSoon(triesLeft = 60): void {
 export function takeOperatorShortcut(): void {
   if (typeof window === "undefined") return;
   const { pathname, search, href, hash } = window.location;
+  /* A sign-in started on the operator's page comes back to the front page;
+     the front page sends it on to where it started (lib/signin-return.ts). */
+  const back = pathname === "/" ? takeSignInReturn(search) : null;
+  if (back) {
+    window.location.replace(back);
+    return;
+  }
   const bareBook = /^\/book\/?$/i.test(pathname);
   if (pathname !== "/" && !bareBook) return;
   const markedForOwner = hash === "" && href.endsWith("#");
