@@ -22,21 +22,23 @@ Three surfaces:
   it used.
 - **`/work`** — the seven doors on one page, each one a row of data rather than a page
   of its own, each carrying the name of the company that will send the invoice.
-- **`/w/:token`** — the no-signup collaborative workspace. Slack's rails, ChatGPT's
-  message column, ClickUp's task panel. A visitor chats with subject-matter AI agents
-  and real experts in the same channels, and the URL is the entire credential.
+- **`/rooms`** — where rooms are. This site no longer runs rooms of its own: they are
+  MakeHybrid's Hybrid Rooms, white-labelled as Top-Rated Team's and run from the
+  operator's MakeHybrid account, with their own design, their own sign-in and the
+  two-way WhatsApp, ChatWoot, Slack and ClickUp connections that used to live here.
+  `/rooms` and every old room address (`/w/:token`) redirect to `HYBRID_ROOMS_URL`;
+  see `shared/rooms-moved.ts`.
 
-The workspace is the product: a shared space for freelancers, experts, clients, teams,
-agencies and AI agents. It is also a separate chunk the doors never download — the
-doors are what pays for it.
+Booking (`server/booking/`, the popup, `/admin/booking-widget`) is this site's and
+stays here. So does AdGrant.AI's generator, which still keeps a per-visitor record
+in the old rooms tables.
 
 ## Stack
 
 React 18 · Vite · TypeScript · Tailwind · Radix / shadcn-ui · wouter · TanStack Query
-· Express · `ws` · Drizzle (Postgres, optional) · OpenAI SDK.
+· Express · Drizzle (Postgres, optional) · OpenAI SDK.
 
-One process serves the API, the WebSocket, and the client (Vite middleware in dev,
-static in prod).
+One process serves the API and the client (Vite middleware in dev, static in prod).
 
 ## Running it
 
@@ -78,9 +80,9 @@ that lies is worse than one that admits what it cannot do.
 
 ```
 client/src/components/site/       door sections + the exact top-rated.team chrome
-client/src/components/workspace/  the Slack/ChatGPT/ClickUp workspace
+shared/rooms-moved.ts             where rooms are now (MakeHybrid Hybrid Rooms, white-labelled)
 client/src/components/ui/         shadcn primitives, retuned to the main site's button recipes
-server/                           express, routes, websocket, storage, notifications
+server/                           express, routes, storage, notifications
 server/ai/                        OpenAI client, retrieval, streaming agent runtime
 shared/                           the doors table, schema, API contract, agent & expert roster, seed playbook
 scripts/build-kb.ts               fetch → chunk → embed the ChatGPT Ads docs
@@ -102,7 +104,7 @@ copy: following it would restore everything that was removed, including "FREE le
 
 ## Security notes
 
-- A workspace token is a bearer credential living in a URL. It is never logged, never
-  sent in an outbound webhook, and `/w/` is disallowed in `robots.txt` and `noindex`.
+- Old room addresses (`/w/<token>`) redirect to the rooms' new home without their token,
+  and `/w/` stays disallowed in `robots.txt`.
 - Agents refuse credentials pasted into chat and say so.
-- Rate limits are applied per IP to workspace creation, lead capture and `/api/ask`.
+- Rate limits are applied per IP to lead capture, `/api/ask` and AdGrant.AI's generator.

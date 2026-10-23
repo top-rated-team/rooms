@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
 import { MAIN_SITE_URL } from "@shared/roster";
+import { ROOMS_PATH } from "@shared/rooms-moved";
 
 const BUTTON_BASE =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium " +
@@ -43,9 +44,11 @@ export default function NotFound() {
               may have gone missing on the way here.
             </p>
             <p className="mt-4 text-muted-foreground">
-              If you were opening a workspace, copy the whole link. Everything after{" "}
-              <code className="font-mono text-sm text-foreground">/w/</code> is what gets you back
-              in, so a link that was cut short lands on this page.
+              If you were looking for a room, rooms have their own address and their own sign-in now:{" "}
+              <a href={ROOMS_PATH} className="underline underline-offset-2 hover:text-foreground" data-testid="link-404-rooms">
+                open a room
+              </a>
+              .
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">

@@ -40,10 +40,10 @@ import { RoomsLink } from "@/components/site/RoomsLink";
 const LINK = "type-meta draw text-muted-foreground hover:text-foreground";
 
 /*
- * OPEN A ROOM IS BACK IN THIS BAR, as the fused control: the left half returns
- * you to a room this browser remembers, the right half makes one. It is still
- * an offer, and it still sits in the door heroes as well — here it is the way
- * back in from any page, which an address nobody types (/w) was not.
+ * OPEN A ROOM IS IN THIS BAR, as a link and nothing more. Rooms are MakeHybrid's
+ * Hybrid Rooms now, under our name and with their own sign-in
+ * (shared/rooms-moved.ts), so this bar carries no sign-in of its own. It is
+ * still an offer, and it still sits in the door heroes as well.
  */
 
 export function Header() {

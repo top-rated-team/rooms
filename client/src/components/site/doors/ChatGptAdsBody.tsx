@@ -103,8 +103,8 @@ const STAGES: Stage[] = [
   },
   {
     title: "Scope",
-    meta: "Shared room, no signup",
-    body: "Keep the answer and it becomes a room. Your stack, your money event, and the checklist of what actually has to happen, in one shared space with our agents and our people in it. The link in the address bar is the whole account — bookmark it, or send it to your developer.",
+    meta: "Shared room",
+    body: "Your stack, your money event, and the checklist of what actually has to happen, in one shared room with our agents and our people in it — and with the WhatsApp group, Slack channel or ClickUp task you already use connected to it both ways, so nobody has to move.",
   },
   {
     title: "Implement",

@@ -278,8 +278,9 @@ const HOW_IT_WORKS = [
       "saved yet, close the tab and it is gone.",
   ),
   bullet(
-    "A conversation the visitor keeps becomes a room at an address of its own, with our agents and our people " +
-      "in it and no signup — the link in the browser is the whole account.",
+    "The work itself happens in a room: our people, AI agents and the client in one conversation, with the " +
+      "client's WhatsApp, Slack, ChatWoot or ClickUp connected to it both ways. Rooms have their own address " +
+      "and their own sign-in; /rooms on this site leads there.",
   ),
   /* Written three ways because the counts move: a door opening is one word in
    * shared/doors.ts, and a sentence that reads correctly at four-of-six and
@@ -309,9 +310,8 @@ const HOW_IT_WORKS = [
  */
 const NOT_HERE = [
   bullet(
-    "Room addresses. A kept conversation lives at /w/<token>, and that token is a bearer credential in the " +
-      "URL: writing one down publishes it. robots.txt disallows /w/, those pages carry noindex, and this file " +
-      "leaves them out for the same reason.",
+    "Room addresses. Old ones on this site (/w/<token>) lead to where rooms are now, without their token; " +
+      "robots.txt still disallows /w/, and this file leaves them out.",
   ),
   bullet("The HTTP API. robots.txt disallows /api/ as well, and this file follows it."),
   bullet(

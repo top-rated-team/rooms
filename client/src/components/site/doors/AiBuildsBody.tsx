@@ -43,13 +43,11 @@ interface Shown {
  */
 const SHOWN: Record<string, Shown> = {
   "top-rated-team": {
-    what: "Several service doors sit in front of one workspace. A visitor asks a question on the door that matches their problem, and when the conversation turns out to be worth keeping it becomes a room at an address of its own, where the client, our people and subject-matter AI agents talk in the same channels. This page is that application. The panel above is it, not a picture of it.",
+    what: "Several service doors in front of one way of working. A visitor asks a question on the door that matches their problem and gets an answer grounded in the platform's own documentation; the work itself happens in a room where the client, our people and AI agents talk together. This page is that application. The panel above is it, not a picture of it.",
     built: [
       "Offers as data, not pages: a row decides which agent opens the conversation, which corpus that agent reads, and whose legal name, terms, invoice line and contact the resulting room prints.",
-      "A no-signup room at /w/:token where the URL is the entire credential — channels, a message column, a task panel, a member rail of people and agents — loaded as a separate JavaScript chunk the door pages never download.",
       "Per-agent grounding with no fallback. An agent retrieves from the one namespace named on it and can reach no other; with no key, no corpus, or nothing matching, it says what it is missing instead of answering from memory.",
-      "Three bounds on what one room may spend on agent answers, checked before the model is called: a count of turns, a clock on one unbroken run, and a monthly budget that warns and then pauses the room. A separate ceiling covers the public panel, which needs no token.",
-      "An answer streamed to a door page is signed by the server that produced it, so text handed back by a browser cannot be passed off as ours.",
+      "Bounds on what the public panel may spend on agent answers, checked before the model is called: per address and for the panel as a whole.",
       "The whole thing runs with an empty .env. No key and the agents say live answers are not configured; no database and storage is in-memory with the same interface. Nothing is faked in either state.",
     ],
   },
