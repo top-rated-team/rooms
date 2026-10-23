@@ -147,6 +147,10 @@ was found. That row now says it is not built.
 
 ## adgrant.ai — the code is done; the domain is yours to point
 
+> **Superseded on 23 October 2026.** adgrant.ai goes back to its own
+> application and this process answers as AdGrant.AI on app.adgrant.ai. The
+> steps are in `docs/ADGRANT-REPLIT.md`; what follows is the September move.
+
 Written 10 September 2026. Everything in this repository is ready: one build
 answers as both sites and decides which it is per request. Nothing here waits
 on another commit.

@@ -5,8 +5,10 @@ import { DISPLAY, LINK, META, PAGE, READ } from "@/components/site/doors/quiet";
 import { thisLegalFacts, useLoginWays } from "@/pages/adgrant/catalogue";
 import { Meta } from "@/components/adgrant/Meta";
 import { sectionPath } from "@/components/adgrant/links";
+import { ADGRANT_SITE_NAME, ON_ADGRANT_APP_HOST } from "@/components/adgrant/mount";
+import { PublicSiteLine } from "@/components/adgrant/PublicSiteLine";
 
-const UPDATED = "13 September 2026";
+const UPDATED = "23 October 2026";
 
 function Out({ href, children }: { href: string; children: string }) {
   const internal = href.startsWith("/");
@@ -56,7 +58,7 @@ export function Privacy() {
     <>
       <Meta
         title="Privacy — AdGrant.AI"
-        description="What adgrant.ai collects, why, who processes it, and how to get it removed. No analytics, no advertising cookies, no tracking pixels."
+        description={`What ${ADGRANT_SITE_NAME} collects, why, who processes it, and how to get it removed. No analytics, no advertising cookies, no tracking pixels.`}
       />
       <section className={`${PAGE} pt-[var(--s5)]`}>
         <div className="max-w-[68ch]">
@@ -65,11 +67,12 @@ export function Privacy() {
           <p className={`${META} mt-[var(--s2)]`}>Last updated {UPDATED}</p>
           <div className={`mt-[var(--s3)] space-y-[var(--s2)] ${READ}`}>
             <P>
-              This is what {facts.displayName} collects when you use adgrant.ai, why we collect it, who else
-              processes it, and how to have it removed. It covers the website, the rooms it opens, the AI agents
-              that answer in them, and — where you ask for one — a Google Ad Grant structure produced from a
+              This is what {facts.displayName} collects when you use {ADGRANT_SITE_NAME}, why we collect it, who
+              else processes it, and how to have it removed. It covers the website, the rooms it opens, the AI
+              agents that answer in them, and — where you ask for one — a Google Ad Grant structure produced from a
               nonprofit&rsquo;s website.
             </P>
+            {ON_ADGRANT_APP_HOST ? <PublicSiteLine /> : null}
             <Muted>
               The controller is {facts.legalName}. {facts.entity}{" "}
               {facts.contact ? (
