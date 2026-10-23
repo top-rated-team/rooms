@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import express, { type NextFunction, type Request, type Response } from "express";
 import { registerRoutes } from "./routes";
+import { keepBridgeRawBody } from "./bridge/signatures";
 import { serveStatic, setupVite } from "./vite";
 import { attachWs } from "./ws";
 import { storageMode } from "./storage";
@@ -32,7 +33,8 @@ async function main(): Promise<void> {
   // letting a caller spoof it by inventing X-Forwarded-For entries.
   app.set("trust proxy", 1);
 
-  app.use(express.json({ limit: BODY_LIMIT }));
+  // Slack and ClickUp sign the bytes of a bridge webhook, so those are kept.
+  app.use(express.json({ limit: BODY_LIMIT, verify: keepBridgeRawBody }));
   app.use(express.urlencoded({ extended: false, limit: BODY_LIMIT }));
   app.use(apiLogger);
   app.use(noindexWorkspaces);

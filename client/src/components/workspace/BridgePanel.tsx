@@ -40,7 +40,11 @@ const CHATWOOT_INBOX =
 const KINDS: { kind: BridgeKind; name: string; targetHint: string }[] = [
   { kind: "whatsapp", name: "WhatsApp", targetHint: "Chat id, for example 15551234567@c.us or a group @g.us" },
   { kind: "chatwoot", name: "ChatWoot", targetHint: "Inbox identifier. This room will open its own conversation." },
-  { kind: "slack", name: "Slack", targetHint: "The name of the one channel this will write into" },
+  {
+    kind: "slack",
+    name: "Slack",
+    targetHint: "Id of the one channel this will write into, for example C0123ABCDEF. It is at the bottom of the channel's details in Slack.",
+  },
   { kind: "clickup", name: "ClickUp", targetHint: "One task id on one list, not the workspace" },
 ];
 

@@ -14,7 +14,6 @@
  * says which of the two is true.
  */
 
-import { timingSafeEqual } from "node:crypto";
 import { clearTimeout, setTimeout } from "node:timers";
 import { z } from "zod";
 import type { BridgeKind, RoomBridge } from "@shared/api";
@@ -43,6 +42,7 @@ import {
 import { isChatwootEcho, parseChatwootInbound, sendChatwootText } from "./chatwoot";
 import { ensureChatwootInboxConversation, sendChatwootInboxText } from "./inbox";
 import { isWhatsAppGroup, parseWahaInbound, sendWahaText } from "./waha";
+import { clickUpSignatureOk, sharedWebhookSecretOk, slackSignatureOk } from "./signatures";
 
 const SEND_MS = 5_000;
 
@@ -106,6 +106,9 @@ const byClickUpTarget = new Map<string, string>();
 const seenInbound = new Map<string, number>();
 
 const SEEN_TTL_MS = 30 * 60_000;
+
+/** A Slack channel id: what an Events API body names a channel by. */
+const SLACK_CHANNEL_ID = /^[CG][A-Z0-9]{6,20}$/;
 
 /* --------------------------- keeping them ---------------------------------
  *
@@ -183,6 +186,12 @@ export async function hydrateBridges(): Promise<void> {
           rememberIndexes(stored);
         }
       }
+      const unrouted = rows.filter((row) => row.kind === "slack" && !SLACK_CHANNEL_ID.test(row.target)).length;
+      if (unrouted > 0) {
+        console.warn(
+          `[bridge] ${unrouted} Slack connection(s) were saved before the channel id was kept. They still send to Slack, but nothing from Slack reaches them until they are reconnected with the channel id.`,
+        );
+      }
     } catch (error) {
       console.error(
         "[bridge] room_bridges is not readable. Connections stay in memory and vanish on restart until DATABASE_URL is set and `npm run db:push` creates the table.",
@@ -257,6 +266,7 @@ export function resetBridgeForTests(): void {
   bySlackTarget.clear();
   byClickUpTarget.clear();
   seenInbound.clear();
+  clickUpSent.length = 0;
   hydrated = false;
   hydrateInFlight = null;
 }
@@ -375,6 +385,15 @@ export async function connectOrDisconnectBridge(
       status: 400,
     };
   }
+  const slackChannel = input.kind === "slack" ? (input.target ?? "").trim().toUpperCase() : "";
+  if (input.kind === "slack" && !SLACK_CHANNEL_ID.test(slackChannel)) {
+    return {
+      ok: false,
+      error:
+        "Slack needs the id of that one channel, which starts with C, for example C0123ABCDEF. In Slack it is at the bottom of the channel's details. A channel name is not enough: what Slack sends back names the channel by its id.",
+      status: 400,
+    };
+  }
   if (input.kind === "clickup" && (!input.target?.trim() || !input.secret?.trim())) {
     return {
       ok: false,
@@ -383,10 +402,7 @@ export async function connectOrDisconnectBridge(
     };
   }
 
-  let target =
-    input.kind === "slack"
-      ? "channel"
-      : (input.target ?? "").trim();
+  let target = input.kind === "slack" ? slackChannel : (input.target ?? "").trim();
   let inboxIdentifier: string | null = chatwootInboxMode ? chatwootInboxIdentifier : null;
   let contactIdentifier: string | null = null;
   let inboxId = input.inboxId?.trim() ?? null;
@@ -460,23 +476,28 @@ export async function connectOrDisconnectBridge(
   return { ok: true, bridges: [...map.values()].map(toPublic) };
 }
 
-function webhookSecretOk(provided: string | undefined): boolean {
-  const expected =
-    process.env.BRIDGE_WEBHOOK_SECRET?.trim() ||
-    process.env.WAHA_WEBHOOK_SECRET?.trim() ||
-    process.env.CHATWOOT_WEBHOOK_SECRET?.trim() ||
-    "";
-  if (!expected) return false;
-  if (!provided) return false;
-  const a = Buffer.from(expected);
-  const b = Buffer.from(provided);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+/**
+ * What an inbound request carried to prove where it came from. WAHA and
+ * ChatWoot echo a shared secret; Slack and ClickUp sign the raw body and can
+ * send no header of ours. See ./signatures.ts.
+ */
+export interface BridgeInboundAuth {
+  /** `X-Webhook-Secret`. */
+  webhookSecret?: string;
+  /** The exact bytes of the request body, which is what Slack and ClickUp sign. */
+  rawBody?: Buffer | string;
+  /** `X-Slack-Signature`. */
+  slackSignature?: string;
+  /** `X-Slack-Request-Timestamp`. */
+  slackTimestamp?: string;
+  /** ClickUp's `X-Signature`. */
+  clickUpSignature?: string;
 }
 
 export type InboundResult =
   | { accepted: false; reason: "unauthorized" }
-  | { accepted: true; handled: boolean };
+  /** `challenge` is Slack's url_verification handshake, to be echoed back. */
+  | { accepted: true; handled: boolean; challenge?: string };
 
 function inboundKey(source: string, parts: string[]): string {
   return `${source}:${parts.join(":")}`;
@@ -559,15 +580,45 @@ export interface BridgeAgentDeps {
  * room with an author taken from the member record, or marked unattributed.
  * An @mention of an agent claims through server/spend.ts before anything is
  * sent to the model.
+ *
+ * Each provider is believed only on its own proof: a Slack body only with a
+ * valid Slack signature, a ClickUp body only with a valid ClickUp signature,
+ * and WAHA and ChatWoot only with the shared secret. The shared secret does
+ * not let a body be read as Slack or ClickUp.
+ *
+ * `auth` may be the bare `X-Webhook-Secret` value, which is all WAHA and
+ * ChatWoot send.
  */
 export async function acceptBridgeInbound(
   raw: unknown,
-  webhookSecret: string | undefined,
+  auth: BridgeInboundAuth | string | undefined,
   deps: BridgeAgentDeps = {},
 ): Promise<InboundResult> {
   await hydrateBridges();
-  if (!webhookSecretOk(webhookSecret)) return { accepted: false, reason: "unauthorized" };
+  const proof: BridgeInboundAuth = typeof auth === "object" && auth !== null ? auth : { webhookSecret: auth };
 
+  if (proof.slackSignature !== undefined) {
+    const ok = slackSignatureOk({
+      rawBody: proof.rawBody,
+      timestamp: proof.slackTimestamp,
+      signature: proof.slackSignature,
+    });
+    if (!ok) return { accepted: false, reason: "unauthorized" };
+    return acceptSlackInbound(raw, deps);
+  }
+
+  if (sharedWebhookSecretOk(proof.webhookSecret)) return acceptSharedSecretInbound(raw, deps);
+
+  if (proof.clickUpSignature !== undefined) {
+    const ok = clickUpSignatureOk({ rawBody: proof.rawBody, signature: proof.clickUpSignature });
+    if (!ok) return { accepted: false, reason: "unauthorized" };
+    return acceptClickUpInbound(raw, deps);
+  }
+
+  return { accepted: false, reason: "unauthorized" };
+}
+
+async function acceptSharedSecretInbound(raw: unknown, deps: BridgeAgentDeps): Promise<InboundResult> {
   const waha = parseWahaInbound(raw);
   if (waha) {
     if (waha.fromMe) return { accepted: true, handled: false };
@@ -612,65 +663,99 @@ export async function acceptBridgeInbound(
     return { accepted: true, handled: true };
   }
 
-  const slack = parseSlackInbound(raw);
-  if (slack) {
-    const slackId = inboundIdFromRaw(raw);
-    if (alreadySeen(inboundKey("slack", [slack.channel, slack.user ?? "", slackId ?? slack.body]))) {
-      return { accepted: true, handled: false };
-    }
-    const workspaceId = bySlackTarget.get(slack.channel) ?? bySlackTarget.get("channel");
-    if (!workspaceId) return { accepted: true, handled: false };
-    await ingestInbound({
-      workspaceId,
-      source: "slack",
-      target: slack.channel,
-      senderId: slack.user,
-      shared: true,
-      body: slack.body,
-      deps,
-    });
-    return { accepted: true, handled: true };
-  }
-
-  const clickup = parseClickUpInbound(raw);
-  if (clickup) {
-    const clickupId = inboundIdFromRaw(raw);
-    if (alreadySeen(inboundKey("clickup", [clickup.taskId, clickup.user ?? "", clickupId ?? clickup.body]))) {
-      return { accepted: true, handled: false };
-    }
-    const workspaceId = byClickUpTarget.get(clickup.taskId);
-    if (!workspaceId) return { accepted: true, handled: false };
-    await ingestInbound({
-      workspaceId,
-      source: "clickup",
-      target: clickup.taskId,
-      senderId: clickup.user,
-      shared: true,
-      body: clickup.body,
-      deps,
-    });
-    return { accepted: true, handled: true };
-  }
-
   return { accepted: true, handled: false };
 }
+
+async function acceptSlackInbound(raw: unknown, deps: BridgeAgentDeps): Promise<InboundResult> {
+  /* Slack will not enable an Events URL until it has seen its challenge come
+     back. The request is signed like any other, so it is checked first. */
+  const challenge = slackChallenge(raw);
+  if (challenge !== null) return { accepted: true, handled: false, challenge };
+
+  const slack = parseSlackInbound(raw);
+  if (!slack) return { accepted: true, handled: false };
+  const slackId = inboundIdFromRaw(raw);
+  if (alreadySeen(inboundKey("slack", [slack.channel, slack.user ?? "", slackId ?? slack.body]))) {
+    return { accepted: true, handled: false };
+  }
+  /* The channel id Slack names, and nothing else. There used to be a fallback
+     here that sent every Slack event to whichever room connected Slack last. */
+  const workspaceId = bySlackTarget.get(slack.channel);
+  if (!workspaceId) return { accepted: true, handled: false };
+  await ingestInbound({
+    workspaceId,
+    source: "slack",
+    target: slack.channel,
+    senderId: slack.user,
+    shared: true,
+    body: slack.body,
+    deps,
+  });
+  return { accepted: true, handled: true };
+}
+
+async function acceptClickUpInbound(raw: unknown, deps: BridgeAgentDeps): Promise<InboundResult> {
+  const clickup = parseClickUpInbound(raw);
+  if (!clickup) return { accepted: true, handled: false };
+  const clickupId = clickup.commentId ?? inboundIdFromRaw(raw);
+  /* Seen first, so a retried delivery of our own comment is still dropped
+     after the echo below has used up its record. */
+  if (alreadySeen(inboundKey("clickup", [clickup.taskId, clickup.user ?? "", clickupId ?? clickup.body]))) {
+    return { accepted: true, handled: false };
+  }
+  if (isClickUpEcho(clickup)) return { accepted: true, handled: false };
+  const workspaceId = byClickUpTarget.get(clickup.taskId);
+  if (!workspaceId) return { accepted: true, handled: false };
+  await ingestInbound({
+    workspaceId,
+    source: "clickup",
+    target: clickup.taskId,
+    senderId: clickup.user,
+    shared: true,
+    body: clickup.body,
+    deps,
+  });
+  return { accepted: true, handled: true };
+}
+
+function slackChallenge(raw: unknown): string | null {
+  if (raw === null || typeof raw !== "object") return null;
+  const root = raw as Record<string, unknown>;
+  if (root.type !== "url_verification") return null;
+  return typeof root.challenge === "string" ? root.challenge : null;
+}
+
+/* A message subtype a person wrote. Every other subtype is Slack talking
+   (somebody joined, a topic changed, a message was edited or deleted) or a
+   bot, and none of it is a message for the room. */
+const SLACK_PERSON_SUBTYPES = new Set(["thread_broadcast", "file_share", "me_message"]);
 
 function parseSlackInbound(raw: unknown): { channel: string; user: string | null; body: string } | null {
   if (raw === null || typeof raw !== "object") return null;
   const root = raw as Record<string, unknown>;
   const event = root.event !== null && typeof root.event === "object" ? (root.event as Record<string, unknown>) : root;
   if (event.bot_id) return null;
+  if (typeof event.subtype === "string" && !SLACK_PERSON_SUBTYPES.has(event.subtype)) return null;
   const channel = typeof event.channel === "string" ? event.channel : typeof root.channel_id === "string" ? root.channel_id : null;
   const text = typeof event.text === "string" ? event.text : typeof root.text === "string" ? root.text : null;
   if (!channel || text === null) return null;
-  if (root.type === "url_verification") return null;
   const user = typeof event.user === "string" ? event.user : typeof root.user_id === "string" ? root.user_id : null;
   return { channel, user, body: text };
 }
 
-function parseClickUpInbound(raw: unknown): { taskId: string; user: string | null; body: string } | null {
+interface ClickUpInbound {
+  taskId: string;
+  commentId: string | null;
+  user: string | null;
+  body: string;
+}
+
+function parseClickUpInbound(raw: unknown): ClickUpInbound | null {
   if (raw === null || typeof raw !== "object") return null;
   const root = raw as Record<string, unknown>;
+  /* An edited comment arrives as its own event with the same history shape,
+     and would land in the room a second time. Only a new comment crosses. */
+  if (typeof root.event === "string" && root.event !== "taskCommentPosted") return null;
   const payload = root.payload !== null && typeof root.payload === "object" ? (root.payload as Record<string, unknown>) : root;
   const taskId =
     (typeof payload.id === "string" && payload.id) ||
@@ -690,7 +775,73 @@ function parseClickUpInbound(raw: unknown): { taskId: string; user: string | nul
   if (!taskId || body === null) return null;
   const userObj = comment?.user !== null && typeof comment?.user === "object" ? (comment.user as Record<string, unknown>) : null;
   const user = typeof userObj?.id === "number" || typeof userObj?.id === "string" ? String(userObj.id) : null;
-  return { taskId, user, body };
+  return { taskId, commentId: pickId(commentObj?.id), user, body };
+}
+
+/* ------------------------- ClickUp's echo -----------------------------------
+ *
+ * WAHA marks our own message fromMe, ChatWoot says who sent it, and Slack puts
+ * a bot_id on what an incoming webhook posted. ClickUp does none of these: the
+ * comment we post is written by the person whose API token we hold, and the
+ * webhook hands it straight back. Without this it lands in the room a second
+ * time and is sent on to every other bridge.
+ *
+ * So every comment is remembered as it goes out, by its text before the send
+ * (the webhook can beat the reply) and by the id ClickUp gives it after. A
+ * comment that comes back matching either is ours. In memory on purpose: an
+ * echo arrives within seconds, and this is not state the room depends on.
+ */
+
+const CLICKUP_ECHO_TTL_MS = 10 * 60_000;
+
+interface ClickUpSent {
+  taskId: string;
+  text: string;
+  commentId: string | null;
+  at: number;
+}
+
+const clickUpSent: ClickUpSent[] = [];
+
+function clickUpText(text: string): string {
+  return text
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .join("\n")
+    .trim();
+}
+
+function pruneClickUpSent(now: number): void {
+  for (let i = clickUpSent.length - 1; i >= 0; i -= 1) {
+    if (now - clickUpSent[i].at > CLICKUP_ECHO_TTL_MS) clickUpSent.splice(i, 1);
+  }
+}
+
+function rememberClickUpSend(taskId: string, text: string): ClickUpSent {
+  const now = Date.now();
+  pruneClickUpSent(now);
+  const sent: ClickUpSent = { taskId, text: clickUpText(text), commentId: null, at: now };
+  clickUpSent.push(sent);
+  return sent;
+}
+
+function forgetClickUpSend(sent: ClickUpSent): void {
+  const index = clickUpSent.indexOf(sent);
+  if (index >= 0) clickUpSent.splice(index, 1);
+}
+
+function isClickUpEcho(inbound: ClickUpInbound): boolean {
+  pruneClickUpSent(Date.now());
+  const text = clickUpText(inbound.body);
+  const index = clickUpSent.findIndex(
+    (sent) =>
+      (inbound.commentId !== null && sent.commentId === inbound.commentId) ||
+      (sent.taskId === inbound.taskId && sent.text === text),
+  );
+  if (index < 0) return false;
+  clickUpSent.splice(index, 1);
+  return true;
 }
 
 async function ingestInbound(args: {
@@ -910,6 +1061,9 @@ async function fanOutMessage(
 
   for (const bridge of stored.values()) {
     if (skipKind && bridge.kind === skipKind) continue;
+    /* A one-to-one WhatsApp chat is the visitor (mapInboundSender reads it that
+       way), so the visitor's own words are not sent back to them. */
+    if (bridge.kind === "whatsapp" && !isWhatsAppGroup(bridge.target) && speaker.kind === "visitor") continue;
     const payload = buildOutboundPayload(speaker, message.body, state.workspace.token, bridge.target);
     if (payloadContainsToken(payload, state.workspace.token)) {
       failures.push(DELIVERY_FAILED[bridge.kind]);
@@ -999,6 +1153,7 @@ async function sendClickUp(
   fetchImpl: typeof fetch,
 ): Promise<{ ok: true } | { ok: false; line: string }> {
   if (!apiToken || !taskId) return { ok: false, line: DELIVERY_FAILED.clickup };
+  const sent = rememberClickUpSend(taskId, text);
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), SEND_MS);
   try {
@@ -1012,9 +1167,14 @@ async function sendClickUp(
       body: JSON.stringify({ comment_text: text }),
       signal: ac.signal,
     });
-    if (!res.ok) return { ok: false, line: DELIVERY_FAILED.clickup };
+    if (!res.ok) {
+      forgetClickUpSend(sent);
+      return { ok: false, line: DELIVERY_FAILED.clickup };
+    }
+    sent.commentId = pickId(((await res.json().catch(() => null)) as { id?: unknown } | null)?.id);
     return { ok: true };
   } catch {
+    forgetClickUpSend(sent);
     return { ok: false, line: DELIVERY_FAILED.clickup };
   } finally {
     clearTimeout(timer);

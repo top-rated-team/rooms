@@ -72,9 +72,20 @@ export function badgeForMember(member: Pick<MemberRef, "memberKey" | "kind">): R
   return "Contractor";
 }
 
+/**
+ * What a visitor is called in their own room until they type a name. It is
+ * true only on their screen, so it never goes out as a name: the room says
+ * "the client" for them in the same place (shared/room-now.ts).
+ */
+const UNNAMED_VISITOR = "You";
+
 export function attributionFor(member: MemberRef): AttributionLine {
   const badge = badgeForMember(member);
-  const displayName = member.displayName.trim() || (badge === "Agent" ? "Agent" : "Someone");
+  const typed = member.displayName.trim();
+  const displayName =
+    badge === "Guest" && (!typed || typed === UNNAMED_VISITOR)
+      ? "The client"
+      : typed || (badge === "Agent" ? "Agent" : "Someone");
   return { displayName, badge, header: `${displayName} · ${badge}` };
 }
 
