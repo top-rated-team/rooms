@@ -20,9 +20,11 @@ import Terms from "@/pages/terms";
  * panel and the door table, and the doors table is what the panel already
  * reads. Splitting them would buy nothing and cost a round trip.
  *
- * There is no room page: rooms are MakeHybrid's Hybrid Rooms now, and the
- * server sends /rooms and every /w/ address there before this app loads
- * (server/rooms-moved.ts). */const AdGrantApp = lazy(() => import("@/pages/adgrant"));
+ * Top-Rated Team's tree has no room page: its rooms are MakeHybrid's Hybrid
+ * Rooms now, and on its hosts the server sends /rooms and every /w/ address
+ * there before this app loads (server/rooms-moved.ts). AdGrant.AI's tree keeps
+ * its own rooms (pages/adgrant), still a chunk the landing page never loads. */
+const AdGrantApp = lazy(() => import("@/pages/adgrant"));
 const Admin = lazy(() => import("@/pages/admin"));
 const AdminBookingWidget = lazy(() => import("@/pages/admin-booking-widget"));
 

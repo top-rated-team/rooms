@@ -1,11 +1,30 @@
 import { clearInterval, clearTimeout, setInterval, setTimeout } from "node:timers";
 import type { Express, Request, RequestHandler, Response } from "express";
 import type { ZodError } from "zod";
-import { askSchema, createWorkspaceSchema, insertLeadSchema, type Citation, type Lead } from "@shared/schema";
+import {
+  askSchema,
+  createChannelSchema,
+  createTaskSchema,
+  createWorkspaceSchema,
+  insertLeadSchema,
+  inviteMemberSchema,
+  postMessageSchema,
+  updateTaskSchema,
+  updateWorkspaceSchema,
+  claimNoteSchema,
+  type Channel,
+  type Citation,
+  type Lead,
+  type Message,
+  type Member,
+  type MessageMeta,
+} from "@shared/schema";
 import type { AskEvent, CreateWorkspaceResponse, WorkspaceState } from "@shared/api";
 import { ADGRANT_TEMPLATE_FILES_UNAUTHORIZED_LINE } from "@shared/api";
-import { DEFAULT_AGENT_ID, answerableAgent } from "@shared/roster";
+import { signAnswer, verifyAnswer } from "./answer-receipt";
+import { AGENTS, AGENT_BY_ID, BOOK_A_CALL_URL, DEFAULT_AGENT_ID, EXPERTS, EXPERT_BY_KEY, VISIBLE_AGENTS, answerableAgent } from "@shared/roster";
 import { storage } from "./storage";
+import { broadcast } from "./ws";
 import {
   deliverLeadRequest,
   inboxHealth,
@@ -22,8 +41,44 @@ import { rateLimit } from "./rateLimit";
 import { llmReady, streamAgentAnswer } from "./ai/agentRuntime";
 import { kbStatus } from "./ai/kb";
 import { routeQuestion } from "./ai/route-question";
-import { ASK_LEDGER_KEY, askBudgetUsd, askLedgerKey, claimAgentTurn, recordTurnCost } from "./spend";
-import { acceptWhatsAppInbound, bindingStateForToken, completeLinkedIn, hydrateIdentityStore, installIdentityInbound, startLinkedIn, startWhatsApp } from "./identity";
+import { ASK_LEDGER_KEY, askBudgetUsd, askLedgerKey, claimAgentTurn, guardAgentTurn, recordTurnCost } from "./spend";
+import { billingFor, countExchangeTurn, mayAgentsAnswerEachOther } from "./billing/consent";
+import {
+  ROOM_TOKEN_IS_NOT_A_SEAT,
+  admitSeat,
+  admitSeatSchema,
+  agentsNamedIn,
+  credentialFromAuthorization,
+  listSeats,
+  mayAgentReplyToAgent,
+  postFromSeat,
+  readSeatThread,
+  revokeSeat,
+  revokeSeatSchema,
+  seatHandlesFor,
+  seatModeSchema,
+  seatPostSchema,
+  setSeatMode,
+} from "./seats";
+import {
+  billingView,
+  cardDoneSchema,
+  cardSetupSchema,
+  exchangeConsentSchema,
+  finishCardSetup,
+  setExchangeConsent,
+  startCardSetup,
+} from "./billing/http";
+import { acceptWhatsAppInbound, bindingStateForToken, claimStateForToken, claimStateForWorkspace, completeLinkedIn, hydrateIdentityStore, installIdentityInbound, saveWhatsAppNote, startLinkedIn, startWhatsApp } from "./identity";
+import { listBoosters } from "./flygen";
+import {
+  acceptBridgeInbound,
+  connectBridgeSchema,
+  connectOrDisconnectBridge,
+  fanOutIfBridged,
+  listBridgesForToken,
+} from "./bridge";
+import { startDigestSchedule } from "./schedule";
 import { connectorMcp, connectorRouter } from "./connector";
 import { operatorGate, readOperator, writeOperator } from "./operator";
 import { ensureInboundWebhooks, INBOUND_AUTH_HEADER, INBOUND_PATH, RETIRED_INBOUND_PATHS } from "./whatsapp/webhooks";
@@ -69,14 +124,15 @@ import { adgrantMovedOrigin, adgrantRobotsTxt, adgrantSitemapXml } from "./adgra
 import { rewriteHead } from "./adgrant/head";
 import { ADGRANT_ORIGIN } from "@shared/adgrant-site";
 import { resolveDistPath } from "./vite";
-import { hybridRoomsUrl, registerRoomsMoved } from "./rooms-moved";
+import { hybridRoomsUrl, isAdGrantRoom, registerRoomsMoved } from "./rooms-moved";
+import { roomsMovedOn } from "@shared/rooms-moved";
 import fs from "node:fs";
 import path from "node:path";
 import { isAdGrantAppHost, isAdGrantHost } from "@shared/adgrant-site";
 import { bookLinkTarget, bookingGuests, formatBookLinkHash, widgetRecipient } from "@shared/booking-link";
 import { buildBookingWidget, type BookingWidgetShow } from "@shared/booking-widget";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID } from "@shared/doors";
-import { isSignInOnlyLink, openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage } from "./room-access";
+import { isSignInOnlyLink, openRoomAccess, roomAccessAvailability, sendRoomAccessLink, spentPage, bindRoomAddressForToken } from "./room-access";
 import {
   completeRoomLoginLinkedIn,
   getRoomLoginWhatsAppConfirmed,
@@ -102,7 +158,23 @@ import {
   sessionCookieOptions,
   whoAmI,
 } from "./room-account";
+import { setAccountEmail } from "./identity-store";
 import { accountIsOperator, listAdminPeople, requireDeploymentOperator } from "./admin/people";
+
+/**
+ * One line of a room's history as an agent sees it.
+ *
+ * `speaker` is present on every line that is NOT this agent's own. It has to
+ * be: the room is a group, and an agent reading it used to see every other
+ * agent's words mapped to `assistant` — that is, as its own earlier turns.
+ * An agent cannot answer another agent, or a person, if it cannot tell which
+ * of them said what, and it will happily contradict "itself" in somebody
+ * else's voice.
+ */
+type Turn = { role: "user" | "assistant"; content: string; speaker?: string };
+
+/** How much of a channel's history an agent is given for context. */
+const MAX_HISTORY_TURNS = 10;
 
 /* ------------------------- /api/ask stream shape -------------------------- */
 /* Everything below belongs to the SSE stream at /api/ask. The numbers are the
@@ -177,6 +249,10 @@ const ASK_DEADLINE_MESSAGE =
 type AskStatusStage = "retrieving" | "slow";
 type AskStreamEvent = AskEvent | { type: "status"; stage: AskStatusStage; message: string };
 
+const LLM_UNAVAILABLE_CHAT = `Live answers are not configured on this deployment: there is no \`OPENAI_API_KEY\` set, so I cannot read the ChatGPT Ads documentation, and I will not guess at an answer about a platform this new.
+
+Everything else here still works. The checklist beside this channel is the real conversion-tracking engagement, step by step, and you can pull a human from the team into this workspace to do it. There is no magic: just expertise, dedicated hours, and a systematic approach.`;
+
 const LLM_UNAVAILABLE_ASK =
   "Live answers are not configured on this deployment — no OPENAI_API_KEY is set, so nothing here will be answered from guesswork. A human on the team can answer the same question today: book a call or ask for the conversion tracking setup.";
 
@@ -226,6 +302,319 @@ async function requireWorkspace(req: Request, res: Response): Promise<WorkspaceS
     return null;
   }
   return state;
+}
+
+/**
+ * The person who may spend this room's money, or null and a 403 already sent.
+ *
+ * Same claim as renaming. `name` is what goes into the record of who agreed,
+ * so a bill can be traced to a person rather than to a room.
+ */
+async function requireRoomOwner(
+  state: WorkspaceState,
+  res: Response,
+  what: string,
+): Promise<{ name: string } | null> {
+  await hydrateIdentityStore();
+  const claim = claimStateForWorkspace(state.workspace.id);
+  if (!claim.canRename || !claim.owner) {
+    res.status(403).json({ error: `This room has no owner yet, so nobody can ${what}.` });
+    return null;
+  }
+  return { name: claim.owner.displayName };
+}
+
+/* -------------------------------- agents ---------------------------------- */
+
+/** Both `@tracking` (the handle) and `conversion-tracking` (the id) resolve. */
+/* VISIBLE_AGENTS and not AGENTS: an @mention is a way to make an agent
+   answer, so a hidden one must not resolve from one. Filtering the composer's
+   menu was not enough — the menu is a convenience and the text is the API. */
+const AGENT_KEYS: Record<string, string> = {};
+for (const agent of VISIBLE_AGENTS) {
+  AGENT_KEYS[agent.handle.toLowerCase()] = agent.id;
+  AGENT_KEYS[agent.id.toLowerCase()] = agent.id;
+}
+
+const MENTION_PATTERN = /@([a-z0-9][a-z0-9-]*)/gi;
+
+function agentFromKey(value: string): string | null {
+  return AGENT_KEYS[value.replace(/^@/, "").replace(/^agent:/, "").toLowerCase()] ?? null;
+}
+
+/**
+ * Who, if anyone, answers this message. An explicit mention wins over the
+ * channel it was posted in, so `@google-ads` in the docs channel reaches the
+ * agent the visitor actually named.
+ */
+function resolveAgent(channel: Channel, body: string, mentions?: string[]): string | null {
+  for (const mention of mentions ?? []) {
+    const id = agentFromKey(mention);
+    if (id) return id;
+  }
+  const named = mentionedAgent(body);
+  if (named) return named;
+  if (channel.kind === "agent" && channel.counterpartKey) return agentFromKey(channel.counterpartKey);
+  return null;
+}
+
+/**
+ * The first agent named in a piece of text, and nothing inferred.
+ *
+ * The hand-off between agents uses THIS and never `resolveAgent`: the channel
+ * fallback would make an agent in its own channel answer its own answer, and
+ * the only thing standing between that and a loop would be the ceiling. An
+ * agent hands the turn on when it names somebody, which is a thing a reader of
+ * the room can see in the text.
+ */
+function mentionedAgent(body: string): string | null {
+  for (const match of body.matchAll(MENTION_PATTERN)) {
+    const id = agentFromKey(match[1]);
+    if (id) return id;
+  }
+  return null;
+}
+
+/**
+ * `selfKey` is the author key of the agent this history is being built FOR.
+ * Only its own lines are `assistant`; everybody else — the visitor, an expert,
+ * another agent — is input, carrying the name they are known by in the room.
+ */
+function buildHistory(
+  messages: Message[],
+  channelId: string,
+  selfKey?: string,
+  members: Member[] = [],
+): Turn[] {
+  const nameOf = new Map(members.map((member) => [member.memberKey, member.displayName]));
+  return messages
+    .filter((message) => message.channelId === channelId && message.authorKind !== "system" && message.body.trim().length > 0)
+    .slice(-MAX_HISTORY_TURNS)
+    .map((message) => {
+      const mine = selfKey !== undefined && message.authorKey === selfKey;
+      if (mine) return { role: "assistant" as const, content: message.body };
+      return {
+        role: "user" as const,
+        content: message.body,
+        speaker: nameOf.get(message.authorKey) ?? speakerFallback(message),
+      };
+    });
+}
+
+/** Test seam: the history an agent is handed, which decides who it thinks it is. */
+export const buildHistoryForTests = buildHistory;
+
+/** A name for somebody the member list does not carry. Never a raw key. */
+function speakerFallback(message: Message): string {
+  if (message.authorKind === "agent") {
+    const id = agentFromKey(message.authorKey);
+    return id ? (AGENT_BY_ID[id]?.name ?? "An agent") : "An agent";
+  }
+  if (message.authorKind === "expert") return "Someone from the team";
+  return "The visitor";
+}
+
+interface AgentReply {
+  token: string;
+  workspaceId: string;
+  channelId: string;
+  agentId: string;
+  question: string;
+  history: Turn[];
+  /**
+   * The agents A PERSON named, in the one message that started this. It is
+   * carried through every hand-off because it is what the loop rule in
+   * server/seats.ts is about: two agents may talk to each other only where
+   * somebody asked them both, and an agent cannot widen that by naming a
+   * third one nobody called for.
+   */
+  namedByPerson?: string[];
+}
+
+/**
+ * Posts the agent's answer into the channel and streams it over the WebSocket.
+ * Runs after the visitor's HTTP request has already been answered, so nothing
+ * in here may throw into the request lifecycle.
+ */
+async function runAgentReply(reply: AgentReply): Promise<void> {
+  const authorKey = `agent:${reply.agentId}`;
+
+  if (!llmReady()) {
+    const honest = await storage.addMessage(reply.workspaceId, {
+      channelId: reply.channelId,
+      authorKey,
+      authorKind: "agent",
+      body: LLM_UNAVAILABLE_CHAT,
+      meta: { error: "llm_not_configured" },
+    });
+    broadcast(reply.token, { type: "message", message: honest });
+    void fanOutIfBridged(reply.token, honest).catch((error: unknown) => {
+      console.error("[bridge] fan-out failed:", error);
+    });
+    return;
+  }
+
+  if (!(await guardAgentTurn(reply))) return;
+
+  const placeholder = await storage.addMessage(reply.workspaceId, {
+    channelId: reply.channelId,
+    authorKey,
+    authorKind: "agent",
+    body: "",
+    meta: { streaming: true },
+  });
+  broadcast(reply.token, { type: "message", message: placeholder });
+
+  let body = "";
+  let citations: Citation[] | undefined;
+  let error: string | undefined;
+
+  try {
+    for await (const chunk of streamAgentAnswer({ agentId: reply.agentId, question: reply.question, history: reply.history })) {
+      if (chunk.error) {
+        error = chunk.error;
+        continue;
+      }
+      if (chunk.citations && chunk.citations.length > 0) citations = chunk.citations;
+      if (chunk.delta) {
+        body += chunk.delta;
+        broadcast(reply.token, { type: "message_delta", id: placeholder.id, channelId: reply.channelId, delta: chunk.delta });
+      }
+      if (chunk.usage) recordTurnCost(reply.workspaceId, reply.agentId, chunk.usage);
+    }
+  } catch (streamError) {
+    console.error("[agent] stream failed:", streamError);
+    error = STREAM_INTERRUPTED;
+  }
+
+  const finalBody = body.trim().length > 0 ? body : error ?? STREAM_INTERRUPTED;
+  const meta: MessageMeta = { streaming: false };
+  if (citations && citations.length > 0) meta.citations = citations;
+  if (error) meta.error = error;
+
+  await storage.updateMessage(placeholder.id, { body: finalBody, meta });
+  broadcast(reply.token, {
+    type: "message_done",
+    id: placeholder.id,
+    channelId: reply.channelId,
+    body: finalBody,
+    citations,
+    error,
+  });
+  void fanOutIfBridged(reply.token, { ...placeholder, body: finalBody, meta }).catch((error: unknown) => {
+    console.error("[bridge] fan-out failed:", error);
+  });
+
+  if (!error && body.trim().length > 0) await handOnToNamedAgent(reply, finalBody);
+}
+
+/*
+ * Which rooms have already been told why two agents did not carry on.
+ *
+ * Deliberately NOT durable, and not the trap that Map usually is here: this
+ * holds no state the room depends on, only the memory of having said one
+ * sentence, so the worst a redeploy can do is say it a second time. The key
+ * carries the consent it was posted under, so agreeing again lets the room
+ * hear the end of the next exchange too.
+ */
+const exchangeNoticed = new Set<string>();
+
+/**
+ * One agent naming another, and whether that may happen.
+ *
+ * The owner's rule: "until the budget runs out" is not a stopping condition.
+ * So this asks server/billing/consent.ts first, and that answers yes only
+ * with a card on the room, a person's consent, and turns left under the
+ * ceiling THEY were shown. Every hand-off spends one of those turns, which is
+ * what makes the exchange end by itself rather than when the money does.
+ */
+async function handOnToNamedAgent(reply: AgentReply, answer: string): Promise<void> {
+  const next = mentionedAgent(answer);
+  if (!next || next === reply.agentId) return;
+
+  /* The scope rule first, because it is not about money: an agent may only
+     hand the turn to an agent the person themselves named. Nothing is said in
+     the room when this refuses — nobody asked for that agent, so a sentence
+     about it would be the room answering a question that was never put. */
+  const scope = mayAgentReplyToAgent({
+    authorKind: "agent",
+    authorKey: `agent:${reply.agentId}`,
+    targetAgentId: next,
+    namedByPerson: reply.namedByPerson ?? [],
+  });
+  if (!scope.ok) return;
+
+  const verdict = await mayAgentsAnswerEachOther(reply.workspaceId);
+  if (!verdict.allowed) {
+    const row = await billingFor(reply.workspaceId);
+    const key = `${reply.channelId}:${verdict.reason}:${row.agentExchangeConsentAt ?? "none"}`;
+    if (exchangeNoticed.has(key)) return;
+    exchangeNoticed.add(key);
+    try {
+      const notice = await storage.addMessage(reply.workspaceId, {
+        channelId: reply.channelId,
+        authorKey: `agent:${next}`,
+        authorKind: "agent",
+        body: verdict.line,
+        meta: { stopped: `agent-exchange:${verdict.reason}` },
+      });
+      broadcast(reply.token, { type: "message", message: notice });
+    } catch (noticeError) {
+      console.error("[billing] could not post the exchange notice:", noticeError);
+    }
+    return;
+  }
+
+  await countExchangeTurn(reply.workspaceId);
+
+  /* Re-read: the answer that raised this turn was written a moment ago, and
+     the agent being handed the turn has to see it. */
+  const state = await storage.getWorkspaceByToken(reply.token);
+  if (!state) return;
+  kickOffAgentReply({
+    token: reply.token,
+    workspaceId: reply.workspaceId,
+    channelId: reply.channelId,
+    agentId: next,
+    question: answer,
+    history: buildHistory(state.messages, reply.channelId, `agent:${next}`, state.members),
+    namedByPerson: reply.namedByPerson,
+  });
+}
+
+/** Fire-and-forget: one failed answer must never take the process down. */
+function kickOffAgentReply(reply: AgentReply): void {
+  void runAgentReply(reply).catch((error: unknown) => {
+    console.error("[agent] reply failed:", error);
+  });
+}
+
+async function ensureAgentSurface(state: WorkspaceState, agentId: string): Promise<Channel> {
+  const counterpartKey = `agent:${agentId}`;
+  const agent = AGENT_BY_ID[agentId];
+
+  if (!state.members.some((member) => member.memberKey === counterpartKey)) {
+    await storage.addMember(state.workspace.id, {
+      memberKey: counterpartKey,
+      kind: "agent",
+      displayName: agent.name,
+      role: agent.title,
+      initials: agent.initials,
+      presence: "online",
+    });
+  }
+
+  const existing = state.channels.find((channel) => channel.kind === "agent" && channel.counterpartKey === counterpartKey);
+  if (existing) return existing;
+
+  return storage.addChannel(state.workspace.id, {
+    name: agent.handle,
+    slug: agent.handle,
+    purpose: agent.title,
+    kind: "agent",
+    counterpartKey,
+    orderIndex: state.channels.length,
+  });
 }
 
 /* -------------------------- asking for a human ---------------------------- */
@@ -303,6 +692,10 @@ function bearerKey(req: Request): string | undefined {
   const header = req.get("authorization");
   if (!header) return undefined;
   return /^Bearer\s+(.+)$/i.exec(header.trim())?.[1];
+}
+
+function homeChannel(state: WorkspaceState): Channel {
+  return state.channels.find((channel) => channel.slug === "conversion-tracking") ?? state.channels[0];
 }
 
 /* -------------------------------- routes ---------------------------------- */
@@ -384,9 +777,28 @@ export function registerRoutes(app: Express): void {
   });
 
   /*
-   * ROOMS LIVE ELSEWHERE NOW. /rooms and every room address this site gave
-   * out (/w/<token>) are sent on to them, before anything else can answer --
-   * see server/rooms-moved.ts. The token does not travel with the redirect.
+   * A ROOM ADDRESS IS A CREDENTIAL, so it does not leave as a Referer.
+   *
+   * This matters now because the booking popup loads Google's scheduling embed
+   * INTO the page, and in a room that page's URL is the whole account. The
+   * modern browser default already sends only the origin cross-origin, so the
+   * token does not travel today — this makes it explicit, because a default is
+   * somebody else's decision and this one is ours. Same reasoning as the lead
+   * inbox further down, which links room addresses and has carried this header
+   * since it was written.
+   *
+   * server/index.ts already sets X-Robots-Tag for the same paths and is frozen,
+   * which is why this sits here rather than beside it.
+   */
+  app.use((req, res, next) => {
+    if (req.path.startsWith("/w/")) res.setHeader("Referrer-Policy", "no-referrer");
+    next();
+  });
+
+  /*
+   * TOP-RATED TEAM'S ROOMS LIVE ELSEWHERE NOW. On its hosts, /rooms and every
+   * room address this site gave out are sent on to them before anything else
+   * can answer; AdGrant.AI's hosts keep their rooms. See server/rooms-moved.ts.
    */
   registerRoomsMoved(app);
 
@@ -513,10 +925,14 @@ export function registerRoutes(app: Express): void {
 
   const createWorkspaceLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many workspaces from this address. Try again later, or book a call." });
   const leadLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: "Too many requests from this address. Try again later." });
+  // Inviting people also raises a lead, so it gets its own budget rather than
+  // eating the contact form's.
+  const inviteLimit = rateLimit({ windowMs: 60 * 60_000, max: 20, message: "Too many requests from this address. Try again later." });
   // Slows a guess at LEAD_INBOX_KEY to something not worth attempting, while
   // leaving the owner enough refreshes to work from.
   const inboxLimit = rateLimit({ windowMs: 60_000, max: 30, message: "Too many requests. Wait a moment." });
   const askLimit = rateLimit({ windowMs: 60_000, max: 20, message: "Too many questions at once. Wait a few seconds and ask again." });
+  const messageLimit = rateLimit({ windowMs: 60_000, max: 60, message: "Slow down a moment — too many messages." });
   const identityLimit = rateLimit({
     windowMs: 60 * 60_000,
     max: 20,
@@ -542,18 +958,17 @@ export function registerRoutes(app: Express): void {
       if (!parsed.success) return badRequest(res, describe(parsed.error));
 
       const input = parsed.data;
-      /*
-       * ONLY ADGRANT.AI'S GENERATOR. Rooms are not this site's any more
-       * (shared/rooms-moved.ts); what is left of them here is the record the
-       * Ad Grant generator keeps for one visitor -- who they are and how many
-       * structures they have had -- which no person ever opens as a room.
-       * Anything else asking for a room is told where rooms are now.
-       */
-      if (input.source?.door !== "ad-grants") {
+      /* A room cannot be opened seeded on an agent nobody may reach. Same
+         reply as for an unknown one, for the same reason. */
+      if (input.agentId && !answerableAgent(input.agentId)) return badRequest(res, `Unknown agent: ${input.agentId}`);
+      /* Top-Rated Team's rooms are MakeHybrid's now (shared/rooms-moved.ts):
+         on its hosts the only room still opened here is AdGrant.AI's, whose
+         rooms stayed. Anybody else is told where rooms are. */
+      if (roomsMovedOn(req.hostname) && !isAdGrantRoom(input.source)) {
         res.status(410).json({ error: "Rooms have moved.", url: hybridRoomsUrl() });
         return;
       }
-      if (input.agentId && !answerableAgent(input.agentId)) return badRequest(res, `Unknown agent: ${input.agentId}`);
+      const agentId = input.agentId ?? DEFAULT_AGENT_ID;
 
       const created = await storage.createWorkspace({
         name: input.name,
@@ -563,18 +978,305 @@ export function registerRoutes(app: Express): void {
         visitorWebsite: input.visitorWebsite,
         source: input.source,
       });
-      const response: CreateWorkspaceResponse = { ...created, url: `${publicBaseUrl(req)}/w/${created.token}` };
+
+      const firstMessage = input.firstMessage?.trim();
+
+      /*
+       * An answer the visitor already read on the door page. Carried so the room
+       * opens with the exchange they had rather than the agent answering the same
+       * question a second time, differently, at our expense.
+       *
+       * The receipt is the whole reason this is allowed. Without it, a POST to
+       * this endpoint could put any words in an agent's mouth in a room at a real
+       * address on this domain — and an agent message in a room reads as the
+       * company speaking. An unsigned or stale body is dropped in silence and the
+       * agent answers as before, which is a working room rather than an error.
+       */
+      const carried = input.firstAnswer;
+      const carriedBody = carried && verifyAnswer(carried.body, carried.receipt) ? carried.body.trim() : null;
+
+      let state: WorkspaceState = created;
+      let reply: AgentReply | null = null;
+
+      if (firstMessage) {
+        // The opening question goes to the agent's own channel so it gets an
+        // answer; the project channel keeps the welcome and the checklist.
+        const channel = await ensureAgentSurface(created, agentId);
+        const history = buildHistory(created.messages, channel.id, `agent:${agentId}`, created.members);
+        await storage.addMessage(created.workspace.id, {
+          channelId: channel.id,
+          authorKey: "visitor",
+          authorKind: "visitor",
+          body: firstMessage,
+        });
+        if (carriedBody) {
+          // The answer they already have. Written as the agent, because the agent
+          // wrote it — the receipt is what proves that — and no reply is started.
+          await storage.addMessage(created.workspace.id, {
+            channelId: channel.id,
+            authorKey: `agent:${agentId}`,
+            authorKind: "agent",
+            body: carriedBody,
+          });
+        }
+
+        state = (await storage.getWorkspaceByToken(created.token)) ?? created;
+
+        if (!carriedBody) {
+          reply = {
+            token: created.token,
+            workspaceId: created.workspace.id,
+            channelId: channel.id,
+            agentId,
+            question: firstMessage,
+            history,
+          };
+        }
+      }
+
+      const response: CreateWorkspaceResponse = { ...state, url: `${publicBaseUrl(req)}/w/${created.token}` };
       res.status(201).json(response);
+
+      if (reply) kickOffAgentReply(reply);
     }),
   );
 
+  app.get(
+    "/api/workspaces/:token",
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      res.json(state);
+    }),
+  );
 
+  app.patch(
+    "/api/workspaces/:token",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      await hydrateIdentityStore();
+      const claim = claimStateForWorkspace(state.workspace.id);
+      if (!claim.canRename) {
+        res.status(403).json({ error: "This room has no owner yet, so its name cannot be changed." });
+        return;
+      }
+      const parsed = updateWorkspaceSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const workspace = await storage.renameWorkspace(state.workspace.id, parsed.data.name);
+      if (!workspace) return notFound(res, "Workspace not found");
+      broadcast(state.workspace.token, { type: "workspace", workspace: { name: workspace.name } });
+      res.json({ name: workspace.name });
+    }),
+  );
 
+  /* ----------------------------- boosters ----------------------------- */
+  /* Read-only inventory of rented accounts. Capacity, not members: this list
+   * is never written into `state.members`. Fetch and display; nothing here
+   * rents, releases, signs in, appeals, retries, or computes a 2FA code. */
 
+  app.get(
+    "/api/workspaces/:token/boosters",
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      res.json(await listBoosters());
+    }),
+  );
 
+  /* ---------------------------- messages ---------------------------- */
 
+  app.post(
+    "/api/workspaces/:token/messages",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
 
+      const parsed = postMessageSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
 
+      const { channelId, body, parentId, mentions } = parsed.data;
+      const channel = state.channels.find((candidate) => candidate.id === channelId);
+      if (!channel) return badRequest(res, "Unknown channel for this workspace");
+
+      const message = await storage.addMessage(state.workspace.id, {
+        channelId,
+        authorKey: "visitor",
+        authorKind: "visitor",
+        body,
+        parentId: parentId ?? null,
+      });
+
+      broadcast(state.workspace.token, { type: "message", message });
+      void storage.touchWorkspace(state.workspace.id).catch((error: unknown) => {
+        console.error("[workspace] touch failed:", error);
+      });
+
+      // The visitor's message is theirs the moment it lands; the agent's answer
+      // arrives over the WebSocket whenever it is ready.
+      res.status(201).json(message);
+
+      const agentId = resolveAgent(channel, body, mentions);
+      if (agentId) {
+        kickOffAgentReply({
+          token: state.workspace.token,
+          workspaceId: state.workspace.id,
+          channelId,
+          agentId,
+          question: body,
+          history: buildHistory(state.messages, channelId, `agent:${agentId}`, state.members),
+          /* Read once, from the person's own words, and carried down every
+             hand-off from here. */
+          namedByPerson: agentsNamedIn(body, mentions, seatHandlesFor(state.workspace.id)),
+        });
+      }
+    }),
+  );
+
+  /* ---------------------------- channels ---------------------------- */
+
+  app.post(
+    "/api/workspaces/:token/channels",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+
+      const parsed = createChannelSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+
+      /* counterpartKey is free text from the client, and "agent:<id>" is how
+         a channel says whom it talks to — so it is another way to seat a
+         hidden agent in a room. Checked here rather than trusted. */
+      const counterpartKey = parsed.data.counterpartKey ?? null;
+      const mentionedAgent = counterpartKey?.startsWith("agent:") ? counterpartKey.slice("agent:".length) : null;
+      if (mentionedAgent && !answerableAgent(mentionedAgent)) {
+        return badRequest(res, `Unknown agent: ${mentionedAgent}`);
+      }
+
+      const channel = await storage.addChannel(state.workspace.id, {
+        name: parsed.data.name,
+        purpose: parsed.data.purpose ?? null,
+        kind: parsed.data.kind,
+        counterpartKey,
+        orderIndex: state.channels.length,
+      });
+
+      broadcast(state.workspace.token, { type: "channel", channel });
+      res.status(201).json(channel);
+    }),
+  );
+
+  /* ------------------------------ tasks ----------------------------- */
+
+  app.post(
+    "/api/workspaces/:token/tasks",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+
+      const parsed = createTaskSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+
+      const task = await storage.addTask(state.workspace.id, {
+        title: parsed.data.title,
+        detail: parsed.data.detail ?? null,
+        status: parsed.data.status,
+        assigneeKey: parsed.data.assigneeKey ?? null,
+        orderIndex: state.tasks.length,
+      });
+
+      broadcast(state.workspace.token, { type: "task", task });
+      res.status(201).json(task);
+    }),
+  );
+
+  app.patch(
+    "/api/workspaces/:token/tasks/:id",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+
+      const existing = state.tasks.find((task) => task.id === req.params.id);
+      if (!existing) return notFound(res, "Task not found");
+
+      const parsed = updateTaskSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+
+      const task = await storage.updateTask(existing.id, parsed.data);
+      if (!task) return notFound(res, "Task not found");
+
+      broadcast(state.workspace.token, { type: "task", task });
+      res.json(task);
+    }),
+  );
+
+  /* ----------------------------- invite ----------------------------- */
+
+  app.post(
+    "/api/workspaces/:token/invite",
+    inviteLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+
+      const parsed = inviteMemberSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+
+      const key = parsed.data.memberKey;
+      const expert = EXPERT_BY_KEY[key] ?? EXPERTS.find((candidate) => candidate.id === key);
+      if (!expert) return badRequest(res, `Unknown expert: ${key}`);
+
+      const alreadyHere = state.members.find((member) => member.memberKey === expert.memberKey);
+      const member =
+        alreadyHere ??
+        (await storage.addMember(state.workspace.id, {
+          memberKey: expert.memberKey,
+          kind: "expert",
+          displayName: expert.name,
+          role: expert.title,
+          initials: expert.initials,
+          presence: "online",
+        }));
+
+      // The hire sheet goes through captureLead, exactly like the landing
+      // form, so there is one inbox. The room's own address travels with it:
+      // a request raised inside a room is unanswerable without it, and the
+      // token is not in the webhook payload — see server/notify.ts.
+      const { lead } = await captureLead({
+        workspaceId: state.workspace.id,
+        workspaceName: state.workspace.name,
+        roomUrl: `${publicBaseUrl(req)}/w/${state.workspace.token}`,
+        name: parsed.data.name ?? state.workspace.visitorName,
+        email: parsed.data.email ?? state.workspace.visitorEmail,
+        company: state.workspace.visitorCompany,
+        website: state.workspace.visitorWebsite,
+        intent: expert.leadsConversionTracking ? "conversion-tracking" : "expert-request",
+        message: parsed.data.note ?? `Asked for ${expert.name} (${expert.title}) in the workspace.`,
+        // The door came in with the visitor and is already on the workspace;
+        // it decides which company the request belongs to.
+        source: { ...(state.workspace.source ?? {}), expert: expert.memberKey, workspace: state.workspace.name },
+      });
+
+      const systemMessage = await storage.addMessage(state.workspace.id, {
+        channelId: homeChannel(state).id,
+        authorKey: "system",
+        authorKind: "system",
+        body: `**${expert.name}** has been asked to join this workspace — ${expert.title}.\n\nThe request is written down and ${expert.name} answers in this channel, usually within one working day. This page is the address: keep the link and come back to it. If it cannot wait, [book a call](${BOOK_A_CALL_URL}).`,
+        meta: { event: "expert_requested", memberKey: expert.memberKey },
+      });
+
+      broadcast(state.workspace.token, { type: "member", member });
+      broadcast(state.workspace.token, { type: "presence", memberKey: member.memberKey, presence: "online" });
+      broadcast(state.workspace.token, { type: "message", message: systemMessage });
+
+      res.status(201).json({ member, lead });
+    }),
+  );
 
   /* ------------------------------ leads ----------------------------- */
 
@@ -792,6 +1494,7 @@ export function registerRoutes(app: Express): void {
 
       try {
         let citations: Citation[] | undefined;
+        let answer = "";
         let waitingForFirst = true;
 
         for (;;) {
@@ -832,10 +1535,16 @@ export function registerRoutes(app: Express): void {
             recordTurnCost(askLedgerKey(askIp), agentId, chunk.usage);
             recordTurnCost(ASK_LEDGER_KEY, agentId, chunk.usage);
           }
-          if (chunk.delta) send({ type: "delta", delta: chunk.delta });
+          if (chunk.delta) {
+            // Kept so the finished answer can be signed. The visitor may hand it
+            // back when keeping the conversation, and the receipt is what lets the
+            // room trust it — see server/answer-receipt.ts.
+            answer += chunk.delta;
+            send({ type: "delta", delta: chunk.delta });
+          }
         }
 
-        if (!expired) send({ type: "done", citations });
+        if (!expired) send({ type: "done", citations, receipt: answer ? signAnswer(answer) : undefined });
       } catch (error) {
         console.error("[ask] stream failed:", error);
         send({ type: "error", message: STREAM_INTERRUPTED });
@@ -892,7 +1601,29 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
+  app.get(
+    "/api/workspaces/:token/claim",
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const claim = await claimStateForToken(state.workspace.token);
+      if (!claim) return notFound(res, "Workspace not found");
+      res.json(claim);
+    }),
+  );
 
+  app.post(
+    "/api/workspaces/:token/claim",
+    identityLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const parsed = claimNoteSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const claim = await saveWhatsAppNote(state.workspace.id, parsed.data.number);
+      res.json(claim);
+    }),
+  );
 
   app.get(
     "/api/workspaces/:token/identity/linkedin",
@@ -1332,19 +2063,292 @@ export function registerRoutes(app: Express): void {
     }),
   );
 
+  app.post(
+    "/api/workspaces/:token/room-address",
+    roomAccessSendLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const result = await bindRoomAddressForToken(state.workspace.token, req.body?.email);
+      if (!result.ok) {
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      /* The room stores a hash of this. If the person typing it is signed in,
+         their own account keeps the readable copy as well — it is theirs, and
+         it is what stops a booking form asking them for it again. */
+      const account = await readSessionAccount(req.headers.cookie);
+      if (account) await setAccountEmail(account.id, String(req.body?.email ?? ""));
+      res.json({ ok: true });
+    }),
+  );
 
+  /* ---------------------- room bridges (WhatsApp, ChatWoot, Slack, ClickUp) ---------------------- */
+  /*
+   * One route to connect or disconnect, and the inbound webhook from the other
+   * hosts. GET is the same path so the panel can tell the truth about what is
+   * connected without a second resource.
+   */
 
+  app.get(
+    "/api/workspaces/:token/bridges",
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const bridges = await listBridgesForToken(state.workspace.token);
+      if (!bridges) return notFound(res, "Workspace not found");
+      res.json(bridges);
+    }),
+  );
 
+  app.post(
+    "/api/workspaces/:token/bridges",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const parsed = connectBridgeSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const result = await connectOrDisconnectBridge(state.workspace.token, parsed.data);
+      if (!result.ok) {
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.json(result.bridges);
+    }),
+  );
 
+  /* -------------------------- admitted agents --------------------------- */
+  /*
+   * Somebody else's agent, in one thread of this room. server/seats.ts had
+   * every rule and no caller — 716 lines nobody in a room could reach. These
+   * are the doors to it.
+   *
+   * TWO CREDENTIALS, AND THEY ARE NOT THE SAME ONE. The owner acts with the
+   * room token, because that is a person in the room talking about the room.
+   * The agent acts with its own secret under the `Seat` scheme, minted once at
+   * admission and never shown again. A room token presented as a seat secret
+   * is refused by name.
+   */
 
+  app.get(
+    "/api/workspaces/:token/seats",
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const listed = await listSeats(state.workspace.token);
+      if (!listed) return notFound(res, "Workspace not found");
+      res.json(listed);
+    }),
+  );
 
+  app.post(
+    "/api/workspaces/:token/seats",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const owner = await requireRoomOwner(state, res, "admit an agent to it");
+      if (!owner) return;
+      const parsed = admitSeatSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const result = await admitSeat(state.workspace.token, parsed.data);
+      if (!result.ok) {
+        res.status(400).json({ error: result.error });
+        return;
+      }
+      /* The one and only time the secret is in a response. It is not stored
+         and cannot be read back — losing it means being re-admitted. */
+      res.status(201).json({ seat: result.seat, credential: result.credential });
+    }),
+  );
 
+  app.post(
+    "/api/workspaces/:token/seats/revoke",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const owner = await requireRoomOwner(state, res, "revoke an agent from it");
+      if (!owner) return;
+      const parsed = revokeSeatSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const result = await revokeSeat(state.workspace.token, parsed.data);
+      if (!result.ok) {
+        res.status(400).json({ error: result.error });
+        return;
+      }
+      res.json(result.seat);
+    }),
+  );
 
+  app.post(
+    "/api/workspaces/:token/seats/:seatId/mode",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const owner = await requireRoomOwner(state, res, "change what an agent may do in it");
+      if (!owner) return;
+      const parsed = seatModeSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const rawSeatId = req.params.seatId;
+      const seatId = Array.isArray(rawSeatId) ? rawSeatId[0] : rawSeatId;
+      const result = await setSeatMode(state.workspace.token, seatId ?? "", parsed.data.mode);
+      if (!result.ok) {
+        res.status(400).json({ error: result.error });
+        return;
+      }
+      res.json(result.seat);
+    }),
+  );
 
+  /* The agent's own two endpoints. `Authorization: Seat <credential>`. */
 
+  app.get(
+    "/api/seat/thread",
+    messageLimit,
+    route(async (req, res) => {
+      const credential = credentialFromAuthorization(req.get("authorization"));
+      if (!credential) {
+        res.status(401).json({ error: ROOM_TOKEN_IS_NOT_A_SEAT });
+        return;
+      }
+      const result = await readSeatThread(credential);
+      if (!result.ok) {
+        res.status(403).json({ error: result.error });
+        return;
+      }
+      res.json({ seat: result.seat, thread: result.thread, channelId: result.channelId, messages: result.messages });
+    }),
+  );
 
+  app.post(
+    "/api/seat/messages",
+    messageLimit,
+    route(async (req, res) => {
+      const credential = credentialFromAuthorization(req.get("authorization"));
+      if (!credential) {
+        res.status(401).json({ error: ROOM_TOKEN_IS_NOT_A_SEAT });
+        return;
+      }
+      const parsed = seatPostSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const result = await postFromSeat(credential, parsed.data.body);
+      if (!result.ok) {
+        res.status(403).json({ error: result.error });
+        return;
+      }
+      res.status(201).json({ seat: result.seat, message: result.message });
+    }),
+  );
 
+  /* ------------------------------- billing ------------------------------- */
+  /*
+   * A card, and a person's yes to agents answering each other. Nothing here
+   * charges anything — server/billing/stripe.ts has no charge call in it.
+   *
+   * Reading is open to whoever holds the room's token, because a room's
+   * members can see the room. Writing is the owner's alone: the claim that
+   * decides who may rename a room is the claim that decides who may put a
+   * card on it, since a room with no owner has nobody who can agree to a bill
+   * on its behalf.
+   */
 
+  app.get(
+    "/api/workspaces/:token/billing",
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      res.json(await billingView(state.workspace.id));
+    }),
+  );
+
+  app.post(
+    "/api/workspaces/:token/billing/card",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const owner = await requireRoomOwner(state, res, "put a card on it");
+      if (!owner) return;
+      const parsed = cardSetupSchema.safeParse(req.body ?? {});
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      /* The room the request came from, on the host it came from. Not
+         PUBLIC_BASE_URL: one process serves two sites, and a room on one of
+         them must not be sent home to the other. */
+      const host = req.get("host") ?? `localhost:${process.env.PORT ?? 5000}`;
+      const result = await startCardSetup({
+        workspaceId: state.workspace.id,
+        ...parsed.data,
+        returnUrl: `${req.protocol}://${host}/w/${state.workspace.token}`,
+      });
+      if (!result.ok) {
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.json(result.body);
+    }),
+  );
+
+  app.post(
+    "/api/workspaces/:token/billing/card/done",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const owner = await requireRoomOwner(state, res, "put a card on it");
+      if (!owner) return;
+      const parsed = cardDoneSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const result = await finishCardSetup({
+        workspaceId: state.workspace.id,
+        checkoutSessionId: parsed.data.checkoutSessionId,
+      });
+      if (!result.ok) {
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.json(result.body);
+    }),
+  );
+
+  app.post(
+    "/api/workspaces/:token/billing/agent-exchange",
+    messageLimit,
+    route(async (req, res) => {
+      const state = await requireWorkspace(req, res);
+      if (!state) return;
+      const owner = await requireRoomOwner(state, res, "agree to agents answering each other");
+      if (!owner) return;
+      const parsed = exchangeConsentSchema.safeParse(req.body);
+      if (!parsed.success) return badRequest(res, describe(parsed.error));
+      const result = await setExchangeConsent({
+        workspaceId: state.workspace.id,
+        agree: parsed.data.agree,
+        turnsShown: parsed.data.turnsShown,
+        by: owner.name,
+      });
+      if (!result.ok) {
+        res.status(result.status).json({ error: result.error });
+        return;
+      }
+      res.json(result.body);
+    }),
+  );
+
+  app.post(
+    "/api/bridge/inbound",
+    identityWebhookLimit,
+    route(async (req, res) => {
+      const result = await acceptBridgeInbound(req.body, req.get("x-webhook-secret") ?? undefined);
+      if (!result.accepted) {
+        res.status(401).json({ error: "Not found" });
+        return;
+      }
+      res.status(200).json({ ok: true });
+    }),
+  );
 
   /* The WhatsApp interface owns inbound parse. WHATSAPP_INBOUND_PATH is the
      address a fork points WAHA at. The retired list stays answerable so a
@@ -1891,6 +2895,8 @@ export function registerRoutes(app: Express): void {
     res.status(404).json({ error: "Not found" });
   });
 
+  // Off unless WEEKLY_DIGEST is set. server/index.ts is frozen, so this is the mount.
+  startDigestSchedule();
   installBookingInbound();
   void ensureInboundWebhooks();
 }

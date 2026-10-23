@@ -114,15 +114,12 @@ describe("POST /api/ask", () => {
 });
 
 describe("POST /api/workspaces", () => {
-  /* The only rooms still opened here are AdGrant.AI's generator records
-     (server/rooms-moved.ts says where the rest went), so that is the door
-     this asks through. */
   it("will not open a room seeded on a hidden agent", async () => {
     for (const agent of HIDDEN_AGENTS) {
       const res = await fetch(`${origin}/api/workspaces`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ agentId: agent.id, source: { door: "ad-grants" } }),
+        body: JSON.stringify({ agentId: agent.id }),
       });
       assert.equal(res.status, 400, `a room was opened on ${agent.id}`);
     }

@@ -19,7 +19,7 @@ export function openApiDocument(baseUrl: string) {
       title: "Top-Rated Team",
       version: "1.0.0",
       description:
-        "Read the services Top-Rated Team publishes, the price rows as written, and the case studies. Ask a question that is answered from the same documentation the site's panel uses. Rooms are not opened here: they have their own address and their own sign-in, at /rooms on this site. This surface does not list rooms, leads or members.",
+        "Read the services Top-Rated Team publishes, the price rows as written, and the case studies. Ask a question that is answered from the same documentation the site's panel uses. Open an AdGrant.AI room and hand the person the address that comes back; Top-Rated Team's other rooms have their own address and sign-in, at /rooms on this site. This surface does not list rooms, leads or members, and it does not accept a room token.",
     },
     servers: [{ url: baseUrl }],
     paths: {
@@ -140,6 +140,101 @@ export function openApiDocument(baseUrl: string) {
             },
             "429": {
               description: "This address has asked too many questions in a minute.",
+              content: {
+                "application/json": {
+                  schema: { type: "object", additionalProperties: true },
+                },
+              },
+            },
+          },
+        },
+      },
+      "/api/connector/rooms": {
+        post: {
+          operationId: "create_room",
+          summary: "Open an AdGrant.AI room and return its address",
+          description:
+            "Opens an AdGrant.AI room (doorId \"ad-grants\") the same way that site's Keep step does. The response is only the address. Give that address to the person you are inviting and to nobody else: anyone who has it can enter. Any other door answers 410 with where Top-Rated Team's rooms are now. Do not call this to look up an existing room — there is no read on this path.",
+          "x-openai-isConsequential": true,
+          requestBody: {
+            required: false,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    visitorName: {
+                      type: "string",
+                      maxLength: 120,
+                      description: "The invited person's name, if they gave one.",
+                    },
+                    visitorEmail: {
+                      type: "string",
+                      format: "email",
+                      maxLength: 200,
+                      description: "The invited person's email, if they gave one.",
+                    },
+                    visitorCompany: {
+                      type: "string",
+                      maxLength: 160,
+                      description: "Their company, if they gave one.",
+                    },
+                    visitorWebsite: {
+                      type: "string",
+                      maxLength: 300,
+                      description: "Their website, if they gave one.",
+                    },
+                    name: {
+                      type: "string",
+                      maxLength: 120,
+                      description: "A name for the room. Optional.",
+                    },
+                    doorId: {
+                      type: "string",
+                      maxLength: 64,
+                      description: "The service this room is for, from list_services.",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "201": {
+              description: "The room's address.",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    required: ["url"],
+                    properties: {
+                      url: {
+                        type: "string",
+                        description: "The address of the room. It is the whole credential.",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            "400": {
+              description: "The body named a door that does not exist, or failed validation.",
+              content: {
+                "application/json": {
+                  schema: { type: "object", additionalProperties: true },
+                },
+              },
+            },
+            "410": {
+              description: "Not an AdGrant.AI room: Top-Rated Team's rooms have their own address and sign-in now, which the error names.",
+              content: {
+                "application/json": {
+                  schema: { type: "object", additionalProperties: true },
+                },
+              },
+            },
+            "429": {
+              description: "This address has opened too many rooms in an hour.",
               content: {
                 "application/json": {
                   schema: { type: "object", additionalProperties: true },

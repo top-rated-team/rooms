@@ -12,7 +12,7 @@ import type { NextFunction, Request, Response } from "express";
 import { Router } from "express";
 
 import { rateLimit } from "../rateLimit";
-import { askQuestion, listCases, listPrices, listServices } from "./handlers";
+import { askQuestion, createRoom, listCases, listPrices, listServices } from "./handlers";
 import { createMcpRouter } from "./mcp";
 import { openApiFor } from "./openapi";
 
@@ -20,6 +20,12 @@ const askLimit = rateLimit({
   windowMs: 60_000,
   max: 20,
   message: "Too many questions at once. Wait a few seconds and ask again.",
+});
+
+const createWorkspaceLimit = rateLimit({
+  windowMs: 60 * 60_000,
+  max: 10,
+  message: "Too many workspaces from this address. Try again later, or book a call.",
 });
 
 function allowCrossOrigin(req: Request, res: Response, next: NextFunction): void {
@@ -63,6 +69,14 @@ connectorRouter.post("/ask", askLimit, (req, res, next) => {
     .catch(next);
 });
 
+connectorRouter.post("/rooms", createWorkspaceLimit, (req, res, next) => {
+  void createRoom(req, req.body)
+    .then((result) => {
+      res.status(result.status).json(result.payload);
+    })
+    .catch(next);
+});
+
 export const connectorMcp = Router();
 connectorMcp.use(allowCrossOrigin);
-connectorMcp.use(createMcpRouter({ ask: askLimit }));
+connectorMcp.use(createMcpRouter({ ask: askLimit, rooms: createWorkspaceLimit }));

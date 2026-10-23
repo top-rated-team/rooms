@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useLocation } from "wouter";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Check, Loader2, X } from "lucide-react";
+import { ArrowRight, Check, Loader2, X } from "lucide-react";
 import { DEFAULT_DOOR_ID, DOOR_BY_ID, DOORS, type DoorDef } from "@shared/doors";
 import { BOOK_A_CALL_URL, EXPERTS, SERVICES, SERVICE_GROUPS, type ExpertDef } from "@shared/roster";
 import { useBooking } from "@/hooks/use-booking";
+import type { CreateWorkspaceResponse } from "@shared/api";
+import { roomsMovedOn } from "@shared/rooms-moved";
 import { ACTION, ACTION_QUIET } from "@/components/site/doors/quiet";
 
 /*
@@ -129,6 +132,7 @@ async function readError(res: Response, fallback: string): Promise<string> {
 export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
   /* The popup rather than a tab, decided once in useBooking. */
   const booking = useBooking();
+  const [, navigate] = useLocation();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -136,6 +140,7 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
   const [sent, setSent] = useState(false);
   /** The server's own id for this request. The visitor's proof it exists. */
   const [reference, setReference] = useState<string | null>(null);
+  const [continuing, setContinuing] = useState(false);
 
   const groups = useMemo(
     () => SERVICE_GROUPS.map((group) => ({ group, items: SERVICES.filter((s) => s.group === group) })),
@@ -155,6 +160,7 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
     setSending(false);
     setSent(false);
     setReference(null);
+    setContinuing(false);
   }, [open, prefill]);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -209,7 +215,41 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
     }
   }
 
+  async function continueInWorkspace() {
+    setContinuing(true);
+    setFormError(null);
+    try {
+      const res = await fetch("/api/workspaces", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agentId: "conversion-tracking",
+          firstMessage: form.message.trim() || undefined,
+          visitorName: form.name.trim() || undefined,
+          visitorEmail: form.email.trim() || undefined,
+          visitorCompany: form.company.trim() || undefined,
+          visitorWebsite: form.website.trim() || undefined,
+          source: collectSource(),
+        }),
+      });
+      if (!res.ok) {
+        setFormError(await readError(res, "The workspace could not be created. We still have your message."));
+        return;
+      }
+      const state = (await res.json()) as CreateWorkspaceResponse;
+      onOpenChange(false);
+      navigate(`/w/${state.workspace.token}`);
+    } catch {
+      setFormError("Network error creating the workspace. We still have your message.");
+    } finally {
+      setContinuing(false);
+    }
+  }
+
   const door = useMemo(currentDoor, []);
+  /* Top-Rated Team's rooms are MakeHybrid's now (shared/rooms-moved.ts): on its
+     hosts this dialog does not open one. AdGrant.AI's hosts keep theirs. */
+  const roomsHere = typeof window !== "undefined" && !roomsMovedOn(window.location.hostname);
   const answerer = answeredBy(form.intent);
   const sentTo = form.email.trim();
   const title = prefill?.expertName ? `Message ${prefill.expertName}` : "Tell us what you are running";
@@ -264,6 +304,9 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
               <p className="mt-4 text-sm text-muted-foreground">
                 Nothing else is sent to you — no confirmation, no sequence — so a person's reply is the only thing that
                 comes back, and this form has no address of its own.
+                {roomsHere
+                  ? " A workspace does: a shared space with the agents and our team in it, no signup, and the link is the whole account. Open one and you can come back to the same conversation whenever you like."
+                  : null}
               </p>
               {door.contract.contact ? (
                 <p className="mt-3 text-xs text-muted-foreground">
@@ -285,7 +328,20 @@ export function LeadDialog({ open, onOpenChange, prefill }: LeadDialogProps) {
                 </p>
               ) : null}
               <div className="mt-6 flex flex-wrap items-center gap-3">
-                <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={BTN_PRIMARY} {...booking}>
+                {roomsHere ? (
+                  <button
+                    type="button"
+                    data-testid="button-lead-continue-workspace"
+                    className={BTN_PRIMARY}
+                    onClick={continueInWorkspace}
+                    disabled={continuing}
+                  >
+                    {continuing ? <Loader2 className="animate-spin" /> : null}
+                    Continue in a workspace
+                    {continuing ? null : <ArrowRight />}
+                  </button>
+                ) : null}
+                <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={BTN_SECONDARY} {...booking}>
                   Book a call
                 </a>
                 <button type="button" className={BTN_GHOST} onClick={() => onOpenChange(false)}>

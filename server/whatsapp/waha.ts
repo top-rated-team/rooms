@@ -1,5 +1,5 @@
 /**
- * The WAHA transport. Send and inbound parse come from ./waha-client.ts
+ * The WAHA transport. Send and inbound parse come from server/bridge/waha.ts
  * — that file already does both, and this one does not grow a second client.
  *
  * Our own number and whether the session is alive are asked of
@@ -9,7 +9,7 @@
 
 import { clearTimeout, setTimeout } from "node:timers";
 
-import { isWhatsAppGroup, parseWahaInbound, sendWahaText } from "./waha-client";
+import { isWhatsAppGroup, parseWahaInbound, sendWahaText } from "../bridge/waha";
 import type { AliveResult, ProbeResult, SendResult } from "./types";
 
 const REQUEST_MS = 5_000;

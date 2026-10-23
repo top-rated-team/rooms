@@ -1,6 +1,6 @@
 import type { AdminPeopleResponse, AdminPerson, AdminPersonBooking, AdminPersonRoom, AdminSignInMethod } from "@shared/api";
 
-import { HEADING, META, META_PLAIN, READ, READ_MUTED } from "@/components/site/doors/quiet";
+import { HEADING, LINK, META, META_PLAIN, READ, READ_MUTED } from "@/components/site/doors/quiet";
 
 function methodLabel(method: AdminSignInMethod): string {
   if (method === "linkedin") return "LinkedIn";
@@ -37,11 +37,9 @@ function RoomRow({ room }: { room: AdminPersonRoom }) {
   const lastActive = formatWhen(room.lastActiveAt);
   return (
     <li className="border-t border-border py-[var(--s2)] first:border-t-0">
-      {/* A name, not a link: room addresses on this site lead to the rooms'
-          new home now (server/rooms-moved.ts), not into this record. */}
-      <p className={READ} data-testid={`text-admin-room-${room.token}`}>
+      <a href={`/w/${room.token}`} className={LINK} data-testid={`link-admin-room-${room.token}`}>
         {room.name || "A room"}
-      </p>
+      </a>
       <p className={`${META_PLAIN} mt-[var(--s1)]`}>
         {opened ? `Opened ${opened}.` : null}
         {opened ? " " : null}

@@ -14,7 +14,7 @@ import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { Router } from "express";
 
 import { ROOMS_PATH } from "@shared/rooms-moved";
-import { askQuestion, listCases, listPrices, listServices, publicBaseUrl } from "./handlers";
+import { askQuestion, createRoom, listCases, listPrices, listServices, publicBaseUrl } from "./handlers";
 
 const PROTOCOL = "2025-03-26";
 const SUPPORTED = new Set(["2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"]);
@@ -77,6 +77,23 @@ export const MCP_TOOLS: ToolDef[] = [
       },
     },
   },
+  {
+    name: "create_room",
+    description:
+      "Open an AdGrant.AI room (doorId \"ad-grants\") and return its address. Give that address to the invited person and to nobody else. Top-Rated Team's other rooms are not opened here: they have their own address and sign-in, at /rooms on this site.",
+    inputSchema: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        visitorName: { type: "string", maxLength: 120 },
+        visitorEmail: { type: "string", maxLength: 200 },
+        visitorCompany: { type: "string", maxLength: 160 },
+        visitorWebsite: { type: "string", maxLength: 300 },
+        name: { type: "string", maxLength: 120 },
+        doorId: { type: "string", maxLength: 64 },
+      },
+    },
+  },
 ];
 
 export function mcpToolNames(): string[] {
@@ -102,7 +119,7 @@ export function originAllowed(req: Request): boolean {
 
 type LimitFn = RequestHandler;
 
-export function createMcpRouter(limits: { ask: LimitFn }): Router {
+export function createMcpRouter(limits: { ask: LimitFn; rooms: LimitFn }): Router {
   const router = Router();
   router.use(rejectBadOrigin);
   router.post("/", (req, res, next) => {
@@ -125,7 +142,7 @@ function rejectBadOrigin(req: Request, res: Response, next: NextFunction): void 
   next();
 }
 
-async function handlePost(req: Request, res: Response, limits: { ask: LimitFn }): Promise<void> {
+async function handlePost(req: Request, res: Response, limits: { ask: LimitFn; rooms: LimitFn }): Promise<void> {
   const body = req.body as unknown;
   if (Array.isArray(body)) {
     if (body.length === 0) {
@@ -172,7 +189,7 @@ async function dispatch(
   req: Request,
   res: Response,
   raw: unknown,
-  limits: { ask: LimitFn },
+  limits: { ask: LimitFn; rooms: LimitFn },
 ): Promise<Record<string, unknown> | null> {
   if (!raw || typeof raw !== "object") return rpcError(null, -32600, "Invalid request");
   const msg = raw as JsonRpcRequest;
@@ -196,7 +213,7 @@ async function dispatch(
           capabilities: { tools: { listChanged: false } },
           serverInfo: { name: "top-rated-team", version: "1.0.0" },
           instructions:
-            `You can explain Top-Rated Team's services, quote the published prices verbatim, cite the case studies and ask a grounded question. Rooms are not opened from here: they have their own address and their own sign-in, at ${publicBaseUrl(req)}${ROOMS_PATH}.`,
+            `You can explain Top-Rated Team's services, quote the published prices verbatim, cite the case studies, ask a grounded question, and open an AdGrant.AI room. Give a room address only to the person being invited. Top-Rated Team's other rooms have their own address and sign-in: send people to ${publicBaseUrl(req)}${ROOMS_PATH}.`,
         },
       };
     }
@@ -221,7 +238,7 @@ async function callTool(
   res: Response,
   name: string,
   args: Record<string, unknown>,
-  limits: { ask: LimitFn },
+  limits: { ask: LimitFn; rooms: LimitFn },
 ): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
   switch (name) {
     case "list_services":
@@ -233,6 +250,11 @@ async function callTool(
     case "ask_question": {
       if (!passedLimit(limits.ask, req, res)) return dummy();
       const result = await askQuestion(req, args);
+      return toolBody(result.payload, result.status >= 400);
+    }
+    case "create_room": {
+      if (!passedLimit(limits.rooms, req, res)) return dummy();
+      const result = await createRoom(req, args);
       return toolBody(result.payload, result.status >= 400);
     }
     default:

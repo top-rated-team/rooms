@@ -26,7 +26,7 @@ import { fileURLToPath } from "node:url";
 
 import express from "express";
 
-import { DEFAULT_HYBRID_ROOMS_URL, ROOMS_PATH } from "@shared/rooms-moved";
+import { DEFAULT_HYBRID_ROOMS_URL, ROOMS_PATH, roomsMovedOn } from "@shared/rooms-moved";
 import { hybridRoomsUrl } from "./rooms-moved";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -64,6 +64,8 @@ beforeEach(() => {
   delete process.env.HYBRID_ROOMS_URL;
 });
 
+const ADGRANT = { "x-forwarded-host": "app.adgrant.ai" };
+
 describe("where the rooms are", () => {
   it("is the white label's own host until HYBRID_ROOMS_URL says otherwise", () => {
     assert.equal(hybridRoomsUrl(), DEFAULT_HYBRID_ROOMS_URL);
@@ -91,9 +93,49 @@ describe("where the rooms are", () => {
       assert.equal(res.headers.get("referrer-policy"), "no-referrer");
     }
   });
+
+  it("sends an old address of one of AdGrant.AI's rooms to that room, on its own host", async () => {
+    const opened = await fetch(`${origin}/api/workspaces`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ source: { door: "ad-grants" } }),
+    });
+    assert.equal(opened.status, 201);
+    const { workspace } = (await opened.json()) as { workspace: { token: string } };
+    const res = await fetch(`${origin}/w/${workspace.token}`, { redirect: "manual" });
+    assert.equal(res.status, 302);
+    assert.equal(res.headers.get("location"), `https://app.adgrant.ai/w/${workspace.token}`);
+  });
+
+  it("leaves AdGrant.AI's hosts alone: their rooms did not move", async () => {
+    for (const path of [ROOMS_PATH, "/w", "/w/tok_anything"]) {
+      const res = await fetch(`${origin}${path}`, { redirect: "manual", headers: ADGRANT });
+      assert.notEqual(res.status, 302, `${path} on app.adgrant.ai was sent away`);
+    }
+  });
 });
 
-describe("nothing opens a room here", () => {
+describe("which hosts the move is on", () => {
+  it("is every host but AdGrant.AI's", () => {
+    for (const host of ["top-rated.team", "www.top-rated.team", "ai.top-rated.team", "localhost", undefined]) {
+      assert.equal(roomsMovedOn(host), true, String(host));
+    }
+    for (const host of ["app.adgrant.ai", "adgrant.ai", "www.adgrant.ai", "APP.ADGRANT.AI"]) {
+      assert.equal(roomsMovedOn(host), false, host);
+    }
+  });
+
+  it("offers AdGrant.AI's panel and contact form a room, and Top-Rated Team's a link", () => {
+    const ask = read("client/src/components/site/AskWidget.tsx");
+    assert.match(ask, /onStartWorkspace \? \(/, "the panel no longer chooses between the room and the link");
+    assert.ok(ask.includes("href={ROOMS_PATH}"));
+    const lead = read("client/src/components/site/LeadDialog.tsx");
+    assert.ok(lead.includes("!roomsMovedOn(window.location.hostname)"), "the contact form opens a room on Top-Rated Team's hosts again");
+    assert.ok(read("client/src/pages/adgrant/DoorChat.tsx").includes("onStartWorkspace={keepFromPanel}"), "AdGrant.AI's panel lost its room");
+  });
+});
+
+describe("nothing on Top-Rated Team's hosts opens a room of its own", () => {
   it("tells a caller asking for a room where rooms are", async () => {
     process.env.HYBRID_ROOMS_URL = "https://rooms.example.org/rooms.html";
     for (const body of [{}, { firstMessage: "Hi" }, { source: { door: "chatgpt-ads" } }]) {
@@ -107,51 +149,35 @@ describe("nothing opens a room here", () => {
     }
   });
 
-  it("still keeps AdGrant.AI's generator record", async () => {
-    const res = await fetch(`${origin}/api/workspaces`, {
+  it("still opens AdGrant.AI's rooms, and any room on AdGrant.AI's own hosts", async () => {
+    const ours = await fetch(`${origin}/api/workspaces`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ source: { door: "ad-grants", entered: "direct" } }),
     });
-    assert.equal(res.status, 201);
-    const body = (await res.json()) as { workspace?: { token?: string } };
-    assert.equal(typeof body.workspace?.token, "string");
+    assert.equal(ours.status, 201);
+    const theirs = await fetch(`${origin}/api/workspaces`, {
+      method: "POST",
+      headers: { "content-type": "application/json", ...ADGRANT },
+      body: JSON.stringify({}),
+    });
+    assert.equal(theirs.status, 201);
   });
 
-  it("serves none of a room's own routes", async () => {
-    for (const [method, path] of [
-      ["GET", "/api/workspaces/tok_anything"],
-      ["POST", "/api/workspaces/tok_anything/messages"],
-      ["POST", "/api/workspaces/tok_anything/invite"],
-      ["GET", "/api/workspaces/tok_anything/bridges"],
-      ["GET", "/api/workspaces/tok_anything/seats"],
-      ["GET", "/api/workspaces/tok_anything/billing"],
-      ["POST", "/api/bridge/inbound"],
-    ] as const) {
-      const res = await fetch(`${origin}${path}`, { method, headers: { "content-type": "application/json" }, body: method === "POST" ? "{}" : undefined });
-      assert.equal(res.status, 404, `${method} ${path}`);
-    }
-  });
-
-  it("tells an AI agent on the connector where rooms are, and gives it no tool to open one", async () => {
+  it("tells an AI agent on the connector where Top-Rated Team's rooms are", async () => {
     const init = await fetch(`${origin}/api/connector/mcp`, {
       method: "POST",
       headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-03-26", capabilities: {} } }),
     });
     const started = (await init.json()) as { result: { instructions: string } };
-    assert.match(started.result.instructions, /Rooms are not opened from here/);
-    assert.ok(started.result.instructions.includes(`${origin}${ROOMS_PATH}`));
-
-    const listed = await fetch(`${origin}/api/connector/mcp`, {
+    assert.ok(started.result.instructions.includes(`${origin}${ROOMS_PATH}`), started.result.instructions);
+    const posted = await fetch(`${origin}/api/connector/rooms`, {
       method: "POST",
-      headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
-      body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list" }),
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ doorId: "chatgpt-ads" }),
     });
-    const tools = (await listed.json()) as { result: { tools: Array<{ name: string }> } };
-    assert.ok(!tools.result.tools.some((tool) => tool.name === "create_room"));
-    const posted = await fetch(`${origin}/api/connector/rooms`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
-    assert.equal(posted.status, 404);
+    assert.equal(posted.status, 410);
   });
 });
 

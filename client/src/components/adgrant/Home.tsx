@@ -106,7 +106,12 @@ export function Home() {
             grant account.
           </p>
           <div className="mt-[var(--s4)] flex flex-wrap items-baseline gap-x-[var(--s2)] gap-y-[var(--s1)] whitespace-nowrap [font-size:clamp(0.66rem,3vw,0.76rem)!important] sm:flex-nowrap sm:gap-x-[var(--s3)]">
-            <RoomMenu className={ACTION_LOUD} testId="button-adgrant-open-a-room" />
+            <RoomMenu
+              className={ACTION_LOUD}
+              doorId={GRANT_DOOR?.id}
+              agentId={GRANT_DOOR?.firstAgentId}
+              testId="button-adgrant-open-a-room"
+            />
           </div>
         </div>
 

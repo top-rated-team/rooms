@@ -26,19 +26,21 @@ Three surfaces:
   MakeHybrid's Hybrid Rooms, white-labelled as Top-Rated Team's and run from the
   operator's MakeHybrid account, with their own design, their own sign-in and the
   two-way WhatsApp, ChatWoot, Slack and ClickUp connections that used to live here.
-  `/rooms` and every old room address (`/w/:token`) redirect to `HYBRID_ROOMS_URL`;
-  see `shared/rooms-moved.ts`.
+  On Top-Rated Team's hosts `/rooms` and every old room address (`/w/:token`)
+  redirect to `HYBRID_ROOMS_URL`; see `shared/rooms-moved.ts`.
 
 Booking (`server/booking/`, the popup, `/admin/booking-widget`) is this site's and
-stays here. So does AdGrant.AI's generator, which still keeps a per-visitor record
-in the old rooms tables.
+stays here. So do AdGrant.AI's rooms: on AdGrant.AI's hosts (app.adgrant.ai) the room
+page, its sign-in and its connections answer exactly as before, and an old
+top-rated.team address of one of its rooms goes to it there.
 
 ## Stack
 
 React 18 · Vite · TypeScript · Tailwind · Radix / shadcn-ui · wouter · TanStack Query
-· Express · Drizzle (Postgres, optional) · OpenAI SDK.
+· Express · `ws` · Drizzle (Postgres, optional) · OpenAI SDK.
 
-One process serves the API and the client (Vite middleware in dev, static in prod).
+One process serves the API, the WebSocket (AdGrant.AI's rooms), and the client (Vite
+middleware in dev, static in prod).
 
 ## Running it
 
@@ -80,9 +82,10 @@ that lies is worse than one that admits what it cannot do.
 
 ```
 client/src/components/site/       door sections + the exact top-rated.team chrome
-shared/rooms-moved.ts             where rooms are now (MakeHybrid Hybrid Rooms, white-labelled)
+client/src/components/workspace/  the room (AdGrant.AI's hosts only)
+shared/rooms-moved.ts             where Top-Rated Team's rooms are now (MakeHybrid, white-labelled)
 client/src/components/ui/         shadcn primitives, retuned to the main site's button recipes
-server/                           express, routes, storage, notifications
+server/                           express, routes, websocket, storage, notifications
 server/ai/                        OpenAI client, retrieval, streaming agent runtime
 shared/                           the doors table, schema, API contract, agent & expert roster, seed playbook
 scripts/build-kb.ts               fetch → chunk → embed the ChatGPT Ads docs
@@ -104,7 +107,9 @@ copy: following it would restore everything that was removed, including "FREE le
 
 ## Security notes
 
-- Old room addresses (`/w/<token>`) redirect to the rooms' new home without their token,
-  and `/w/` stays disallowed in `robots.txt`.
+- A workspace token is a bearer credential living in a URL. It is never logged, never
+  sent in an outbound webhook, and `/w/` is disallowed in `robots.txt` and `noindex`. On
+  Top-Rated Team's hosts an old room address redirects without its token, unless the
+  room is AdGrant.AI's, which it opens on app.adgrant.ai.
 - Agents refuse credentials pasted into chat and say so.
-- Rate limits are applied per IP to lead capture, `/api/ask` and AdGrant.AI's generator.
+- Rate limits are applied per IP to workspace creation, lead capture and `/api/ask`.

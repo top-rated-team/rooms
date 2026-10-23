@@ -37,7 +37,7 @@ describe("reaching for the browser's saved address does not close the menu", () 
       "mouse-leave no longer spares a field being typed in, so hovering the browser's autofill list closes the form again",
     );
     const guard = leave.indexOf("HTMLInputElement");
-    const close = leave.indexOf('setLogin({ phase: "closed" })');
+    const close = leave.indexOf("setOpen(false)");
     assert.ok(guard >= 0 && close >= 0 && guard < close, "the guard runs after the close, so it guards nothing");
   });
 
@@ -49,7 +49,7 @@ describe("reaching for the browser's saved address does not close the menu", () 
     const pointer = handler("const onPointer = (event: PointerEvent)");
     assert.ok(pointer.includes("document.hasFocus()"), "the outside-click handler no longer checks the page is focused");
     const guard = pointer.indexOf("document.hasFocus()");
-    const close = pointer.indexOf('setLogin({ phase: "closed" })');
+    const close = pointer.indexOf("setOpen(false)");
     assert.ok(guard >= 0 && close >= 0 && guard < close, "the guard runs after the close, so it guards nothing");
   });
 

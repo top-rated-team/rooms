@@ -44,6 +44,8 @@
  * happened, never when it will lift.
  */
 
+import { storage } from "./storage";
+import { broadcast } from "./ws";
 import { costUsd, formatUsd, type TokenUsage } from "./ai/usage";
 
 /* -------------------------------- the bounds ------------------------------- */
@@ -301,6 +303,45 @@ export function claimGuardedTurn(room: Pick<RoomRef, "workspaceId" | "agentId">,
     return everyone;
   }
   return claimAgentTurn(room.workspaceId, now);
+}
+
+/**
+ * The one call server/routes.ts makes before starting an answer. True means the
+ * turn is claimed and the model may be called; false means the room has already
+ * been told why it will not be, and the caller stops.
+ *
+ * The claim above is taken before this function's first `await`, so it keeps its
+ * atomicity when reached through here.
+ */
+export async function guardAgentTurn(room: RoomRef): Promise<boolean> {
+  const claim = claimGuardedTurn(room);
+  if (claim.ok) return true;
+  await postStop(room, claim);
+  return false;
+}
+
+/** Runs in a fire-and-forget reply, so a failure here is logged and never thrown. */
+async function postStop(room: RoomRef, claim: Extract<SpendClaim, { ok: false }>): Promise<void> {
+  try {
+    const message = await storage.addMessage(room.workspaceId, {
+      channelId: room.channelId,
+      authorKey: `agent:${room.agentId}`,
+      authorKind: "agent",
+      body: claim.message,
+      /*
+       * Not `meta.error`. client/src/components/workspace/MessageItem.tsx keeps a
+       * closed map of error codes and prints any code it has no copy for straight
+       * to the visitor, so a code from here would put `turn_rate` on the page in
+       * red. That file's own rule is that a body which already explains itself
+       * needs no notice above it, and these bodies explain themselves. `stopped`
+       * is read by nothing on the client and is here for whoever reads the row.
+       */
+      meta: { stopped: claim.stop },
+    });
+    broadcast(room.token, { type: "message", message });
+  } catch (error) {
+    console.error("[spend] could not post the stopped-turn notice:", error);
+  }
 }
 
 /* ----------------------------- the cost event ------------------------------ */

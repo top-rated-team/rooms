@@ -1,8 +1,5 @@
 /**
- * The WAHA client: send a text, and read an inbound webhook body. It was the
- * room bridge's; the rooms and their bridges have moved to MakeHybrid
- * (shared/rooms-moved.ts), and this stays for the WhatsApp transport that
- * booking and sign-in use (./waha.ts).
+ * The two-way WAHA client: send a text, and read an inbound webhook body.
  *
  * WAHA runs on another host. This file talks to it over its HTTP API with
  * `X-Api-Key`, the same env as server/waha.ts (the one-way identity probe).

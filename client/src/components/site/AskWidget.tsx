@@ -74,19 +74,33 @@ function hostOf(url: string): string {
 
 export interface AskWidgetProps {
   /**
-   * Which offer this panel is answering for: the agent that speaks first and
-   * the four questions it opens with. Defaults to the ChatGPT Ads door, whose
-   * starters this component used to carry as a local constant.
+   * Creates a workspace seeded with this conversation. Resolves to an error
+   * message, or null on success. Only AdGrant.AI's panel passes it: Top-Rated
+   * Team's rooms are MakeHybrid's now (shared/rooms-moved.ts), and without it
+   * the way on from an answer is a link to them.
+   */
+  onStartWorkspace?: (opts?: {
+    agentId?: string;
+    firstMessage?: string;
+    firstAnswer?: { body: string; receipt: string };
+  }) => Promise<string | null>;
+  /**
+   * Which offer this panel is answering for: the agent that speaks first, the
+   * four questions it opens with, and the row a kept conversation is stamped
+   * with. Defaults to the ChatGPT Ads door, whose starters this component used
+   * to carry as a local constant.
    */
   door?: DoorDef;
+  /**
+   * Every message the visitor sends. The rule about what that means lives in
+   * use-panel-state.ts, not here.
+   */
+  onVisitorMessage?: (text: string) => void;
+  /** Pressed "Book a call" from inside the conversation: they asked for a person. */
+  onAskedForAPerson?: () => void;
 }
 
-/**
- * The free panel. Nothing in it is saved, and it no longer turns into a room:
- * rooms are MakeHybrid's Hybrid Rooms now (shared/rooms-moved.ts), so the way
- * on from an answer is a link to them, or a call.
- */
-export function AskWidget({ door = DEFAULT_DOOR }: AskWidgetProps) {
+export function AskWidget({ onStartWorkspace, door = DEFAULT_DOOR, onVisitorMessage, onAskedForAPerson }: AskWidgetProps) {
   /* The popup rather than a tab, decided once in useBooking. */
   const booking = useBooking();
   // Which agent speaks first is the door's decision, not this component's.
@@ -102,9 +116,17 @@ export function AskWidget({ door = DEFAULT_DOOR }: AskWidgetProps) {
   const [asked, setAsked] = useState<string | null>(null);
   const [answer, setAnswer] = useState("");
   const [citations, setCitations] = useState<Citation[]>([]);
+  /**
+   * Proof that this server wrote the answer above. Handed back when keeping the
+   * conversation so the room can show this exchange rather than asking the agent
+   * the same question again. Cleared with every new question, so a stale receipt
+   * can never travel with fresh text.
+   */
+  const [receipt, setReceipt] = useState<string | null>(null);
   const [status, setStatus] = useState<AskStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [showAllStarters, setShowAllStarters] = useState(false);
+  const [startingWorkspace, setStartingWorkspace] = useState(false);
   /** The stage the server last reported, in its words. Never a stage we guessed. */
   const [stage, setStage] = useState(CONNECTING_LABEL);
   /** Nothing at all has come down the socket, and it has been long enough to say so. */
@@ -154,6 +176,10 @@ export function AskWidget({ door = DEFAULT_DOOR }: AskWidgetProps) {
   const ask = useCallback(async (raw: string) => {
     const text = raw.trim();
     if (!text) return;
+    // Reported before the request goes out: whether this conversation is worth
+    // keeping is decided in use-panel-state.ts, and it is decided on what the
+    // visitor said, not on what came back.
+    onVisitorMessage?.(text);
     if (!agentId) return;
 
     abortRef.current?.abort();
@@ -163,6 +189,7 @@ export function AskWidget({ door = DEFAULT_DOOR }: AskWidgetProps) {
     setAsked(text);
     setQuestion("");
     setAnswer("");
+    setReceipt(null);
     setCitations([]);
     setError(null);
     setStatus("streaming");
@@ -237,6 +264,7 @@ export function AskWidget({ door = DEFAULT_DOOR }: AskWidgetProps) {
             setAnswer((prev) => prev + event.delta);
           } else if (event.type === "done") {
             setCitations(event.citations ?? []);
+            setReceipt(event.receipt ?? null);
             setStatus("done");
             finished = true;
           } else if (event.type === "error") {
@@ -265,7 +293,22 @@ export function AskWidget({ door = DEFAULT_DOOR }: AskWidgetProps) {
       // disarm the watchdogs the new one just set.
       if (abortRef.current === controller) clearWatchdogs();
     }
-  }, [agentId, clearWatchdogs]);
+  }, [agentId, onVisitorMessage, clearWatchdogs]);
+
+  async function startWorkspace() {
+    if (!onStartWorkspace) return;
+    setStartingWorkspace(true);
+    const failure = await onStartWorkspace({
+      agentId: agentId ?? undefined,
+      firstMessage: asked ?? undefined,
+      // The answer they have just read, so the room opens with it rather than
+      // asking again and possibly saying something else. Only sent whole and
+      // only with its receipt: the server drops anything it did not sign.
+      firstAnswer: receipt && answer && status === "done" ? { body: answer, receipt } : undefined,
+    });
+    setStartingWorkspace(false);
+    if (failure) setError(failure);
+  }
 
   function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -416,6 +459,13 @@ export function AskWidget({ door = DEFAULT_DOOR }: AskWidgetProps) {
                       rel="noopener noreferrer"
                       className={`${BTN_SECONDARY_SM} mt-3`}
                       {...booking}
+                      /* Both, in this order: record that the visitor asked for
+                         a person, then open the popup. Spreading `booking`
+                         alone replaced this handler and lost the signal. */
+                      onClick={(event) => {
+                        onAskedForAPerson?.();
+                        booking.onClick(event);
+                      }}
                     >
                       Book a call
                     </a>
@@ -437,6 +487,10 @@ export function AskWidget({ door = DEFAULT_DOOR }: AskWidgetProps) {
                 rel="noopener noreferrer"
                 className={`${BTN_SECONDARY_SM} mt-3`}
                 {...booking}
+                onClick={(event) => {
+                  onAskedForAPerson?.();
+                  booking.onClick(event);
+                }}
               >
                 Book a call
               </a>
@@ -475,11 +529,38 @@ export function AskWidget({ door = DEFAULT_DOOR }: AskWidgetProps) {
                 Want it done rather than explained? The agent stops where your own systems start.
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <a href={ROOMS_PATH} data-testid="link-ask-open-room" className={BTN_SECONDARY_SM}>
-                  {OPEN_A_ROOM}
-                  <ArrowRight />
-                </a>
-                <a href={BOOK_A_CALL_URL} target="_blank" rel="noopener noreferrer" className={BTN_GHOST_SM} {...booking}>
+                {onStartWorkspace ? (
+                  <button
+                    type="button"
+                    data-testid="button-ask-start-workspace"
+                    className={BTN_SECONDARY_SM}
+                    onClick={() => void startWorkspace()}
+                    disabled={startingWorkspace}
+                  >
+                    {startingWorkspace ? <Loader2 className="animate-spin" /> : null}
+                    Start a workspace
+                    {startingWorkspace ? null : <ArrowRight />}
+                  </button>
+                ) : (
+                  <a href={ROOMS_PATH} data-testid="link-ask-open-room" className={BTN_SECONDARY_SM}>
+                    {OPEN_A_ROOM}
+                    <ArrowRight />
+                  </a>
+                )}
+                {/* Asking for a person from inside the answer is the trigger the
+                    design cares about most: they read what the agent could do
+                    and decided it was not enough. */}
+                <a
+                  href={BOOK_A_CALL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={BTN_GHOST_SM}
+                  {...booking}
+                  onClick={(event) => {
+                    onAskedForAPerson?.();
+                    booking.onClick(event);
+                  }}
+                >
                   Book a call
                 </a>
               </div>
@@ -523,6 +604,7 @@ export function AskWidget({ door = DEFAULT_DOOR }: AskWidgetProps) {
                 onClick={() => {
                   setAsked(null);
                   setAnswer("");
+                  setReceipt(null);
                   setCitations([]);
                   setError(null);
                   setStatus("idle");
