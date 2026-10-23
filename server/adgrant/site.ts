@@ -17,9 +17,9 @@
  */
 
 import { PAGES } from "@shared/adgrant";
-import { ADGRANT_ORIGIN } from "@shared/adgrant-site";
+import { ADGRANT_APP_HOST, ADGRANT_APP_ORIGIN, ADGRANT_ORIGIN, isAdGrantAppHost } from "@shared/adgrant-site";
 
-/** The four section indexes, by the segment their URLs use. */
+/** The section indexes, by the segment their URLs use: the public site's library. */
 const SECTIONS = ["glossary", "case-studies", "tricks", "nonprofits", "templates"] as const;
 
 function escapeXml(value: string): string {
@@ -51,7 +51,27 @@ export function adgrantSitemapXml(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</urlset>\n`;
 }
 
-export function adgrantRobotsTxt(): string {
+/**
+ * robots.txt for one of the AdGrant hosts.
+ *
+ * app.adgrant.ai is an application, not a second copy of the site: the same
+ * library answers there, and adgrant.ai is where it is published. Two hosts
+ * serving the same pages with nothing between them is how both lose, so the
+ * app host asks not to be crawled at all and points at the site that should be.
+ */
+export function adgrantRobotsTxt(host?: string): string {
+  if (isAdGrantAppHost(host)) {
+    return [
+      `# ${ADGRANT_APP_HOST}`,
+      "",
+      "# The rooms, the agents and sign-in for AdGrant.AI. The public site, and",
+      `# its sitemap, are at ${ADGRANT_ORIGIN}.`,
+      "",
+      "User-agent: *",
+      "Disallow: /",
+      "",
+    ].join("\n");
+  }
   return [
     "# adgrant.ai",
     "",
@@ -65,4 +85,21 @@ export function adgrantRobotsTxt(): string {
     `Sitemap: ${ADGRANT_ORIGIN}/sitemap.xml`,
     "",
   ].join("\n");
+}
+
+/**
+ * Where an old top-rated.team/adgrant address goes, given the rest of its path.
+ *
+ * The library and the front door go to the public site, the way they always
+ * have — a link published to /adgrant/glossary/… has been a 301 to
+ * adgrant.ai/glossary/… since the domain first answered, and whatever that
+ * site does with the path, it does for every other link on the web too.
+ * Everything else under /adgrant — the services, the terms, the privacy page —
+ * exists only in this process, so it goes to the app's address, which this
+ * process answers on whoever serves the apex.
+ */
+export function adgrantMovedOrigin(rest: string): string {
+  const segment = rest.split("/")[1] ?? "";
+  if (segment === "" || (SECTIONS as readonly string[]).includes(segment)) return ADGRANT_ORIGIN;
+  return ADGRANT_APP_ORIGIN;
 }

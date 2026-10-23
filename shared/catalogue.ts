@@ -19,7 +19,7 @@
  * which is what keeps ai.top-rated.team as it is.
  */
 
-import { ADGRANT_ORIGIN, adgrantMountFor } from "./adgrant-site";
+import { ADGRANT_APP_ORIGIN, ADGRANT_ORIGIN, adgrantMountFor } from "./adgrant-site";
 import type { DoorContract, DoorDef } from "./doors";
 import { CONTACT_EMAIL, MAIN_SITE_URL } from "./roster";
 
@@ -106,7 +106,10 @@ export const ADGRANT_IDENTITY: OperatorIdentity = {
   legalName: "Top-Rated Team (Danylo Burykin SZČO)",
   entity:
     "The company that runs adgrant.ai, with people in Prague, Madeira, Kyiv, Bratislava and Batumi. AdGrant.AI is its product for nonprofits.",
-  termsUrl: `${ADGRANT_ORIGIN}/terms`,
+  /* The app's address, not the public site's: these are the terms of the rooms
+     and agents this process runs, and adgrant.ai itself is served by the
+     product's own application, whose pages do not describe them. */
+  termsUrl: `${ADGRANT_APP_ORIGIN}/terms`,
   /* AN ADDRESS, NOT A PAGE. This was `${MAIN_SITE_URL}/contact`, and /contact
      301s to the front of the house — so the one link a nonprofit's data
      protection officer is given for an erasure request landed them on another

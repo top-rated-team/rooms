@@ -23,8 +23,19 @@ import assert from "node:assert/strict";
 import express from "express";
 
 import { PAGES } from "@shared/adgrant";
-import { ADGRANT_HOSTS, ADGRANT_ORIGIN, adgrantMountFor, isAdGrantHost } from "@shared/adgrant-site";
-import { adgrantRobotsTxt, adgrantSitemapXml, adgrantUrls } from "./site";
+import {
+  ADGRANT_APP_HOST,
+  ADGRANT_APP_ORIGIN,
+  ADGRANT_HOSTS,
+  ADGRANT_ORIGIN,
+  ADGRANT_SITE_HOSTS,
+  adgrantMountFor,
+  adgrantSiteNameFor,
+  isAdGrantAppHost,
+  isAdGrantHost,
+} from "@shared/adgrant-site";
+import { isHouseHost } from "@shared/operator";
+import { adgrantMovedOrigin, adgrantRobotsTxt, adgrantSitemapXml, adgrantUrls } from "./site";
 import { ADGRANT_DESCRIPTION, ADGRANT_TITLE, rewriteHead } from "./head";
 
 let origin = "";
@@ -95,6 +106,31 @@ describe("which site am I", () => {
     /* A lookalike is not us. */
     assert.equal(isAdGrantHost("adgrant.ai.evil.example"), false);
     assert.equal(isAdGrantHost("notadgrant.ai"), false);
+    assert.equal(isAdGrantHost("app.adgrant.ai.evil.example"), false);
+  });
+
+  it("tells the app's address from the public site's", () => {
+    assert.equal(isAdGrantAppHost(ADGRANT_APP_HOST), true);
+    assert.equal(isAdGrantAppHost("APP.adgrant.ai:443"), true);
+    for (const host of [...ADGRANT_SITE_HOSTS, "top-rated.team", "localhost", undefined]) {
+      assert.equal(isAdGrantAppHost(host), false, `${host} is not the app`);
+    }
+  });
+
+  it("is a house host on every one of its names, so sign-in, WhatsApp and booking treat it as ours", () => {
+    /* Without this the app's address would read as somebody's fork: LinkedIn
+       would fall back to another site, WhatsApp would switch transport, and
+       the white-label check would let our own product be dressed as a partner. */
+    for (const host of ADGRANT_HOSTS) assert.equal(isHouseHost(host), true, `${host} is not a house host`);
+  });
+
+  it("names the host a legal page is read on, and the app's everywhere else", () => {
+    assert.equal(adgrantSiteNameFor("adgrant.ai"), "adgrant.ai");
+    assert.equal(adgrantSiteNameFor("www.adgrant.ai"), "adgrant.ai");
+    assert.equal(adgrantSiteNameFor("app.adgrant.ai"), "app.adgrant.ai");
+    for (const host of ["top-rated.team", "localhost:5000", undefined]) {
+      assert.equal(adgrantSiteNameFor(host), ADGRANT_APP_HOST, String(host));
+    }
   });
 });
 
@@ -151,6 +187,16 @@ describe("the head each site serves", () => {
     assert.ok(!html.includes("top-rated.team/assets/social.png"), "the other site's card survived");
   });
 
+  it("takes the card image from the host it is served on", () => {
+    /* On app.adgrant.ai the public site may be another application, which
+       does not have this file; this process serves it on every AdGrant host. */
+    const source = fs.readFileSync(path.resolve(import.meta.dirname, "..", "..", "client", "index.html"), "utf8");
+    const { html, missed } = rewriteHead(source, ADGRANT_APP_ORIGIN);
+    assert.deepEqual(missed, []);
+    assert.ok(html.includes(`content="${ADGRANT_APP_ORIGIN}/assets/adgrant-social.png"`));
+    assert.ok(!html.includes(`${ADGRANT_ORIGIN}/assets/adgrant-social.png`));
+  });
+
   it("leaves our own head exactly as it was", async () => {
     /* No dist in this harness, so the route falls through — which is the
        assertion: nothing rewrites anything for top-rated.team. */
@@ -166,10 +212,26 @@ describe("the old addresses", () => {
       ["/adgrant/glossary", `${ADGRANT_ORIGIN}/glossary`],
       ["/adgrant/nonprofits/animal-shelters/houston", `${ADGRANT_ORIGIN}/nonprofits/animal-shelters/houston`],
       ["/adgrant/templates?utm_source=x", `${ADGRANT_ORIGIN}/templates?utm_source=x`],
+      /* What only this process has goes to the app's address, because the
+         public site is the product's own application and does not have it. */
+      ["/adgrant/services", `${ADGRANT_APP_ORIGIN}/services`],
+      ["/adgrant/services/ad-grants?x=1", `${ADGRANT_APP_ORIGIN}/services/ad-grants?x=1`],
+      ["/adgrant/terms", `${ADGRANT_APP_ORIGIN}/terms`],
+      ["/adgrant/privacy", `${ADGRANT_APP_ORIGIN}/privacy`],
     ] as const) {
       const res = await asHost(from, "top-rated.team");
       assert.equal(res.status, 301, from);
       assert.equal(res.location, to, from);
+    }
+  });
+
+  it("sends the library and the front door to the site, and nothing else", () => {
+    for (const rest of ["/", "/glossary", "/glossary/x", "/case-studies/x", "/tricks/x", "/nonprofits/a/b", "/templates/x"]) {
+      assert.equal(adgrantMovedOrigin(rest), ADGRANT_ORIGIN, rest);
+    }
+    /* A prefix is not a section: /glossarybad is not the glossary. */
+    for (const rest of ["/services", "/services/ad-grants", "/terms", "/privacy", "/glossarybad"]) {
+      assert.equal(adgrantMovedOrigin(rest), ADGRANT_APP_ORIGIN, rest);
     }
   });
 
@@ -182,11 +244,12 @@ describe("the old addresses", () => {
 });
 
 describe("robots.txt and sitemap.xml by host", () => {
-  it("answers AdGrant's own files on AdGrant's hosts", async () => {
-    for (const host of ADGRANT_HOSTS) {
+  it("answers AdGrant's own files on the public site's hosts", async () => {
+    for (const host of ADGRANT_SITE_HOSTS) {
       const robots = await asHost("/robots.txt", host);
       assert.equal(robots.status, 200);
       assert.match(robots.type, /text\/plain/);
+      assert.equal(robots.body, adgrantRobotsTxt(host));
       assert.equal(robots.body, adgrantRobotsTxt());
       assert.ok(robots.body.includes(`Sitemap: ${ADGRANT_ORIGIN}/sitemap.xml`));
 
@@ -195,6 +258,20 @@ describe("robots.txt and sitemap.xml by host", () => {
       assert.match(sitemap.type, /xml/);
       assert.equal(sitemap.body, adgrantSitemapXml());
     }
+  });
+
+  it("asks not to be crawled on the app's address, and hands it no sitemap", async () => {
+    /* The same library answers there. Crawled, it would be the same pages on
+       two hosts with nothing between them, which is how both lose. */
+    const robots = await asHost("/robots.txt", ADGRANT_APP_HOST);
+    assert.equal(robots.status, 200);
+    assert.match(robots.body, /^User-agent: \*\nDisallow: \/$/m);
+    assert.ok(!robots.body.includes("Sitemap:"), "the app points crawlers at a sitemap");
+
+    /* Not top-rated.team's sitemap off disk, either. */
+    const sitemap = await asHost("/sitemap.xml", ADGRANT_APP_HOST);
+    assert.equal(sitemap.status, 404);
+    assert.ok(!sitemap.body.includes("<urlset"));
   });
 
   it("falls through to the static files on ours", async () => {
