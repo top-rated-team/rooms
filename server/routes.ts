@@ -78,6 +78,7 @@ import {
   fanOutIfBridged,
   listBridgesForToken,
 } from "./bridge";
+import { BRIDGE_INBOUND_PATH, type RawBodyRequest } from "./bridge/signatures";
 import { startDigestSchedule } from "./schedule";
 import { connectorMcp, connectorRouter } from "./connector";
 import { operatorGate, readOperator, writeOperator } from "./operator";
@@ -1112,6 +1113,11 @@ export function registerRoutes(app: Express): void {
       broadcast(state.workspace.token, { type: "message", message });
       void storage.touchWorkspace(state.workspace.id).catch((error: unknown) => {
         console.error("[workspace] touch failed:", error);
+      });
+      /* A person's message crosses the bridges like an agent's does, named
+         from the member record. It started here, so there is no kind to skip. */
+      void fanOutIfBridged(state.workspace.token, message).catch((error: unknown) => {
+        console.error("[bridge] fan-out failed:", error);
       });
 
       // The visitor's message is theirs the moment it lands; the agent's answer
@@ -2338,12 +2344,24 @@ export function registerRoutes(app: Express): void {
   );
 
   app.post(
-    "/api/bridge/inbound",
+    BRIDGE_INBOUND_PATH,
     identityWebhookLimit,
     route(async (req, res) => {
-      const result = await acceptBridgeInbound(req.body, req.get("x-webhook-secret") ?? undefined);
+      const result = await acceptBridgeInbound(req.body, {
+        webhookSecret: req.get("x-webhook-secret") ?? undefined,
+        /* Kept by keepBridgeRawBody in the JSON parser: Slack and ClickUp sign
+           these bytes, not the object they parse into. */
+        rawBody: (req as RawBodyRequest).rawBody,
+        slackSignature: req.get("x-slack-signature") ?? undefined,
+        slackTimestamp: req.get("x-slack-request-timestamp") ?? undefined,
+        clickUpSignature: req.get("x-signature") ?? undefined,
+      });
       if (!result.accepted) {
         res.status(401).json({ error: "Not found" });
+        return;
+      }
+      if (result.challenge !== undefined) {
+        res.status(200).json({ challenge: result.challenge });
         return;
       }
       res.status(200).json({ ok: true });

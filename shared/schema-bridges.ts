@@ -14,13 +14,20 @@ import { pgTable, text, timestamp, index, primaryKey } from "drizzle-orm/pg-core
  * a Map keyed by kind: connecting a second Slack channel to a room replaces
  * the first rather than adding to it.
  *
- * WHAT IS IN `secret`. A ChatWoot access token or a Slack signing secret, as
- * the room's operator pasted it. It cannot be hashed: it is replayed on every
+ * WHAT IS IN `secret`. What this room SENDS with: a ChatWoot access token, a
+ * Slack incoming-webhook URL or a ClickUp API token, as the room's operator
+ * pasted it. It cannot be hashed: it is replayed on every
  * outbound message, so a one-way hash would be a connection that works until
  * the next restart, which is the bug this table exists to fix. It is a
  * third-party credential scoped to one room, given to us to use, and it is
  * never sent to a browser — `toPublic` in server/bridge/index.ts is what a
  * visitor sees, and it carries no secret at all.
+ *
+ * DO NOT ADD A COLUMN HERE without changing how it is read. Drizzle names
+ * every column of this table in each insert and in `select()`, so a column the
+ * database does not have yet fails every connect and the load at boot, and a
+ * failed load is every connected room gone until the next restart. New
+ * per-connection data goes in a table of its own, like the one below.
  */
 export const roomBridges = pgTable(
   "room_bridges",
@@ -50,3 +57,30 @@ export const roomBridges = pgTable(
 );
 
 export type RoomBridgeRow = typeof roomBridges.$inferSelect;
+
+/**
+ * What a room's INBOUND is checked with, when the room brought its own: the
+ * signing secret of its own Slack app, or the secret ClickUp returned for its
+ * own webhook. A room with no row here is checked with the deployment's
+ * SLACK_SIGNING_SECRET or CLICKUP_WEBHOOK_SECRET; a room with a row is checked
+ * with that secret and nothing else.
+ *
+ * It is a secret we must be able to read back, for the reason `secret` above
+ * is: a signature is checked against it on every delivery.
+ *
+ * A TABLE OF ITS OWN, NOT A COLUMN on room_bridges (see the warning there). It
+ * is read and written apart from the connection, so a database `npm run
+ * db:push` has not reached yet loses nothing: every connection still loads,
+ * and rooms are checked with the deployment's secrets until it has.
+ */
+export const roomBridgeSecrets = pgTable(
+  "room_bridge_secrets",
+  {
+    workspaceId: text("workspace_id").notNull(),
+    kind: text("kind").$type<"slack" | "clickup">().notNull(),
+    inboundSecret: text("inbound_secret").notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.workspaceId, t.kind] }),
+  }),
+);
