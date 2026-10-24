@@ -106,10 +106,10 @@ export const ADGRANT_IDENTITY: OperatorIdentity = {
   legalName: "Top-Rated Team (Danylo Burykin SZČO)",
   entity:
     "The company that runs adgrant.ai, with people in Prague, Madeira, Kyiv, Bratislava and Batumi. AdGrant.AI is its product for nonprofits.",
-  /* The app's address, not the public site's: these are the terms of the rooms
-     and agents this process runs, and adgrant.ai itself is served by the
-     product's own application, whose pages do not describe them. */
-  termsUrl: `${ADGRANT_APP_ORIGIN}/terms`,
+  /* AdGrant.AI's white label's own terms, on app.adgrant.ai: its rooms and
+     agents are there now, and adgrant.ai itself is the product's own
+     application, whose pages do not describe them. */
+  termsUrl: `${ADGRANT_APP_ORIGIN}/terms.html`,
   /* AN ADDRESS, NOT A PAGE. This was `${MAIN_SITE_URL}/contact`, and /contact
      301s to the front of the house — so the one link a nonprofit's data
      protection officer is given for an erasure request landed them on another

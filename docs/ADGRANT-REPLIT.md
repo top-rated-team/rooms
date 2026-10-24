@@ -1,130 +1,146 @@
-# adgrant.ai goes back to its own application
+# adgrant.ai goes back to its own application, and app.adgrant.ai is its MakeHybrid white label
 
-Written 23 October 2026. adgrant.ai returns to the application it started as —
-the Replit app with its own content API, generator, LinkedIn login, admin and
-affiliate programme. What that application does not have stays in this
-process and moves to **app.adgrant.ai**: the rooms, the Ad Grants agent and the
-door chat, the three ways in, and the terms and privacy that describe them.
+Updated 24 October 2026.
 
-Nothing is deleted. adgrant.ai stays in `ADGRANT_HOSTS` and `HOUSE_HOSTS`, so
-pointing the apex back at Render undoes the whole move with a DNS change.
+- **adgrant.ai** goes back to the application it started as: the Replit app,
+  with its own content API, generator, LinkedIn login, admin and affiliate
+  programme.
+- **app.adgrant.ai** is AdGrant.AI's white label on MakeHybrid, the way
+  app.top-rated.team is Top-Rated Team's. The whole product appears under
+  AdGrant.AI's name: Hybrid Rooms with their two-way WhatsApp, ChatWoot, Slack
+  and ClickUp channels, the LinkedIn API, MCP, and the agents.
+- **This process** answers on no AdGrant host. It only sends old addresses on.
 
-| | before | after |
-|---|---|---|
-| `adgrant.ai`, `www.adgrant.ai` | this process (Render) | the Replit app |
-| `app.adgrant.ai` | — | this process (Render), answering as AdGrant.AI |
-| rooms, agents, LinkedIn / WhatsApp / email sign-in | adgrant.ai | app.adgrant.ai |
-| AdGrant terms printed in a room, and in a partner's fork of this house | `https://adgrant.ai/terms` | `https://app.adgrant.ai/terms` |
-| `top-rated.team/adgrant/<library>` | 301 → adgrant.ai | 301 → adgrant.ai (unchanged) |
-| `top-rated.team/adgrant/services…`, `/terms`, `/privacy` | 301 → adgrant.ai | 301 → app.adgrant.ai |
-| robots on the AdGrant host this process serves | the library sitemap | app.adgrant.ai: `Disallow: /`, no sitemap |
-| `/api/adgrant/stats` and `npm run adgrant:build` | read adgrant.ai, which was this process | read the Replit app again |
+For one day (23 October) app.adgrant.ai was this process. On 24 October the
+owner moved AdGrant.AI to MakeHybrid like Top-Rated Team. The brand is
+deployed from code in the make-hybrid repository: the `adgrant@1` seed in
+`api/src/complete/brand-seed.ts`, owned by `contact@adgrant.ai`'s
+organization.
+
+Nothing is deleted. adgrant.ai and app.adgrant.ai stay in `ADGRANT_HOSTS` and
+`HOUSE_HOSTS`. If either is pointed back at this service, it answers exactly as
+it did, with no build. That is the rollback.
+
+| | where it goes |
+|---|---|
+| `adgrant.ai`, `www.adgrant.ai` | the Replit app |
+| `app.adgrant.ai` | MakeHybrid (the `makehybrid` Render service), as AdGrant.AI |
+| AdGrant.AI's rooms, agents, sign-in | MakeHybrid, `https://app.adgrant.ai/rooms.html` |
+| an old AdGrant.AI room address, `/w/<token>` | AdGrant.AI's rooms on app.adgrant.ai, without the token, like Top-Rated Team's |
+| a request to open an AdGrant.AI room on a Top-Rated Team host | 410, with `https://app.adgrant.ai/rooms.html` |
+| `top-rated.team/adgrant/<library>` and `/adgrant` | 301 → adgrant.ai, path kept |
+| `top-rated.team/adgrant/terms`, `/privacy` | 301 → app.adgrant.ai `/terms.html`, `/privacy.html` |
+| `top-rated.team/adgrant/services…` and anything else | 301 → `https://app.adgrant.ai/` |
+| AdGrant terms printed in a partner's fork of this house | `https://app.adgrant.ai/terms.html` |
+| `/api/adgrant/stats`, `npm run adgrant:build` | read the Replit app again |
+
+The connector no longer lists `create_room`, because nothing opens a room
+here. Its route still answers old callers with where rooms are
+(`docs/connector.md`).
 
 ---
 
-## The order, and why it is this order
-
-Until the pull request that carries this file is deployed, this process
-does not know the name app.adgrant.ai. It would treat it as somebody else's
-fork of this site and send every visitor to the partner set-up form. So the
-name is added on Render first, the pull request is merged next, and only then
-does DNS send anyone to it. Between the merge and the DNS record, the terms
-link in a room and the moved service pages point at a name that does not
-resolve yet — minutes, and a dead link rather than a wrong page.
+## The order
 
 ### 1. A day before
 
 - Open the Replit app on its own `*.replit.app` address and check it still
   deploys and answers. Its code is not on GitHub, so nothing here can check it.
-- Write down the DNS records adgrant.ai and www.adgrant.ai have now. They are
-  the rollback.
-- Lower the TTL on both to 300 seconds.
+- Write down the DNS records adgrant.ai, www.adgrant.ai and app.adgrant.ai
+  have now. They are the rollback.
+- Lower the TTL on all three to 300 seconds.
 
-### 2. Add the name on Render, and only the name
+### 2. MakeHybrid: the brand, free
 
-Render → service `srv-daeq2bv40ujc7389ao4g` → Settings → Custom Domains →
-**Add Custom Domain** → `app.adgrant.ai`. Nothing else changes on Render: no
-environment variable, `PUBLIC_BASE_URL` stays as it is, and adgrant.ai stays
-on the list. Render then shows the DNS record it wants. Note it, and do not
-create it yet.
+1. Merge the make-hybrid pull request that adds the `adgrant@1` seed. At boot,
+   it sets up the AdGrant.AI brand on `contact@adgrant.ai`'s organization, with
+   the domain `app.adgrant.ai`. Top-Rated Team's brand is not touched.
+2. Render → the **makehybrid** service → Environment → add `contact@adgrant.ai`
+   to `MAKEHYBRID_ADMIN_EMAILS`, comma-separated. Saving redeploys. Sign in
+   once as contact@adgrant.ai. From then on its organization is comped: free,
+   with no limit.
+3. Stripe → Customers → contact@adgrant.ai → its subscription → **Cancel
+   immediately**. A comped organization is never touched by Stripe's webhooks,
+   but Stripe charges a subscription that is still open when its trial ends.
 
-### 3. Merge the pull request
+### 3. app.adgrant.ai moves to MakeHybrid
 
-Render deploys `main`. Wait for the deploy to go live.
+A name can be on only one Render service, so it comes off this one first.
+Nothing links to it yet, so the minutes in between cost nothing.
 
-### 4. The DNS record
+1. Render → the **top-rated-team** service (`srv-daeq2bv40ujc7389ao4g`) →
+   Settings → Custom Domains → delete `app.adgrant.ai`.
+2. Render → the **makehybrid** service → Custom Domains → add `app.adgrant.ai`.
+3. At adgrant.ai's DNS provider, change the `app` record to what the makehybrid
+   service shows. If `BRAND_CNAME_TARGET` is set there, the white-label page on
+   makehybrid.com names the neutral hostname to point at instead
+   (make-hybrid's `RENDER.md`, section 4). On Cloudflare, use DNS only (grey
+   cloud) until Render says Verified.
+4. **Verify** on Render, then open `https://app.adgrant.ai/`. It is AdGrant.AI's
+   name, logo and colour on MakeHybrid. The logo is `https://adgrant.ai/logo.png`,
+   so it shows once the Replit app has the domain (step 6).
 
-1. At the DNS provider for adgrant.ai: the **CNAME** Render showed — name
-   `app`, value the service's `*.onrender.com` hostname, exactly as Render
-   prints it. On Cloudflare, DNS only (grey cloud) until Render says Verified.
-2. Back on Render, **Verify**, and wait for Verified and the certificate.
-3. On `https://app.adgrant.ai`:
-   - `/` is the AdGrant.AI home, with the Ad Grants agent and the generator.
-   - `/robots.txt` says `Disallow: /`.
-   - `/terms` says "These terms cover app.adgrant.ai" and the line about the
-     public site being a separate application.
+### 4. Merge this repository's pull request
 
-### 5. LinkedIn
+It points the old AdGrant.AI addresses at MakeHybrid's pages (the table
+above). Render deploys `main`.
 
-In the LinkedIn app the rooms already use, add
-`https://app.adgrant.ai/api/room-login/linkedin/callback` to **Authorized
-redirect URLs**. Leave the adgrant.ai one in place until the rollback window
-has passed.
-
-### 6. The Replit app
+### 5. The Replit app
 
 Four changes, before its domain is attached.
 
-**a. Keep every room address working.** A room opened on adgrant.ai since
-September has the address `https://adgrant.ai/w/<token>`, and that address is
-the only key to the room. Add this to the Express server, after
-`const app = express()` and before any route, static handler or SPA fallback:
+**a. Old room addresses.** A room opened on adgrant.ai since September has the
+address `https://adgrant.ai/w/<token>`. AdGrant.AI's rooms are on MakeHybrid
+now, and those old rooms are not carried over (their conversations stay in
+this repository's database), so the address opens AdGrant.AI's rooms instead.
+Add this to the Express server, after `const app = express()` and before any
+route, static handler or SPA fallback:
 
 ```js
-// AdGrant.AI's rooms, agents and sign-in are served from app.adgrant.ai.
-// A room address is the only key to the room, so every one handed out on
-// adgrant.ai has to keep opening it.
+// AdGrant.AI's rooms are its white label on app.adgrant.ai now.
 const ADGRANT_APP = "https://app.adgrant.ai";
 app.use((req, res, next) => {
   if (req.method !== "GET" && req.method !== "HEAD") return next();
   const p = req.path;
-  const moved =
-    p === "/w" || p.startsWith("/w/") ||
-    p === "/services" || p.startsWith("/services/");
-  if (!moved) return next();
   res.set("Referrer-Policy", "no-referrer");
-  res.redirect(301, ADGRANT_APP + req.originalUrl);
+  if (p === "/w" || p.startsWith("/w/")) return res.redirect(302, `${ADGRANT_APP}/rooms.html`);
+  if (p === "/services" || p.startsWith("/services/")) return res.redirect(302, `${ADGRANT_APP}/`);
+  next();
 });
 ```
 
-If the app already has a page of its own at `/services`, drop those two
-conditions. If it has no `/terms` or `/privacy` of its own, add
-`p === "/terms" || p === "/privacy"` to `moved` — a nonprofit's data
-protection officer must not land on a 404.
+The token is dropped on purpose: it opened a room in this repository and
+means nothing on MakeHybrid. If the version of this snippet from 23 October is
+already in the app, it sends `/w/<token>` to `app.adgrant.ai/w/<token>`, which
+MakeHybrid also sends to the brand's rooms. Replace it anyway, because its
+`/services` line ends on a 404.
 
-If you change the app through Replit Agent rather than by hand, the same thing
-as a request:
+- If the app already has a page of its own at `/services`, drop that line.
+- If it has no `/terms` or `/privacy` of its own, redirect those to
+  `${ADGRANT_APP}/terms.html` and `${ADGRANT_APP}/privacy.html`. A nonprofit's
+  data protection officer must not land on a 404.
 
-> Add an Express middleware before every other route: for GET and HEAD
-> requests whose path is `/w`, starts with `/w/`, is `/services` or starts with
-> `/services/`, set `Referrer-Policy: no-referrer` and answer a 301 redirect to
-> `https://app.adgrant.ai` followed by the original path and query string,
-> unchanged. Do not change anything else.
+The same thing as a request, for Replit Agent:
 
-**b. A way to the agent.** Link "Ask the AdGrant.AI agent" to
-`https://app.adgrant.ai/`. That page is the Ad Grants agent (cites Google's own
-Ad Grants policies) and the generator, and keeping a conversation opens a room.
-A server that would rather ask than link can use the public connector on
-`https://ai.top-rated.team/api/connector` — `ask_question` with
-`agentId: "ad-grants"`, `create_room` with `doorId: "ad-grants"`; see
-`docs/connector.md`. No key; the spend and rate limits bound it.
+> Add an Express middleware before every other route. For GET and HEAD
+> requests whose path is `/w` or starts with `/w/`, answer a 302 redirect to
+> `https://app.adgrant.ai/rooms.html`. For `/services` or a path starting with
+> `/services/`, answer a 302 redirect to `https://app.adgrant.ai/`. Set
+> `Referrer-Policy: no-referrer` on both. Do not change anything else.
+
+**b. A way to the rooms and the agents.** Link "Ask the AdGrant.AI agent" to
+`https://app.adgrant.ai/rooms.html`. MakeHybrid's Ad Grants agent answers
+there, citing Google's own policies. Once a Google Ads account is linked under
+Top-Rated Team's manager account, it can also read that account and propose
+changes.
 
 **c. The thirteen corrected pages.** The library on the Replit app is the
-batch these pages were imported from, including six statements that are wrong
-against Google's current documentation (`docs/specs/adgrant-and-dev-agents.md`
-section 1). The corrected text is on disk here, one markdown file per page,
-with what was corrected in the `corrections` frontmatter. Put these bodies into
-the Replit app's content admin before its domain goes live:
+batch these pages were imported from. It includes six statements that are
+wrong against Google's current documentation
+(`docs/specs/adgrant-and-dev-agents.md` section 1). The corrected text is on
+disk here, one markdown file per page, `data/adgrant/<page>.md`, with what was
+corrected in the `corrections` frontmatter. Put these bodies into the Replit
+app's content admin before its domain goes live:
 
 | page | corrections |
 |---|---|
@@ -142,64 +158,67 @@ the Replit app's content admin before its domain goes live:
 | `tricks/recover-suspended-google-ad-grant-account` | 2 |
 | `tricks/stretch-full-10000-google-ad-grant-monthly-budget` | 1 |
 
-Each is `data/adgrant/<page>.md`.
-
 **d. What other sites say is there.** MakeHybrid's AdGrant.AI agent tells
-people that "prices and terms are published" on adgrant.ai, and its home page
+people that "prices and terms are published" on adgrant.ai, and makehybrid.com
 quotes management of one Ad Grant account at $99 a month. Either the Replit
 app publishes both, or MakeHybrid's copy changes in the same week.
 
-### 7. The domain
+### 6. The domain adgrant.ai
 
 1. Replit → the deployment → Settings → link a custom domain:
-   **`adgrant.ai`**, then **`www.adgrant.ai`**. Replit shows the records for
-   each (an A record and a TXT record).
-2. At the registrar, replace the apex and www records with Replit's. Leave
+   **`adgrant.ai`**, then **`www.adgrant.ai`**. Replit shows an A record and a
+   TXT record for each.
+2. At the DNS provider, replace the apex and www records with Replit's. Leave
    `app` alone.
 3. When Replit says Verified and `https://adgrant.ai/` is the Replit app,
-   remove adgrant.ai and www.adgrant.ai from Render's Custom Domains.
+   remove adgrant.ai and www.adgrant.ai from the **top-rated-team** service's
+   Custom Domains. Not before: until DNS points at Replit, removing them takes
+   the site down.
 
-### 8. Check
+### 7. Check
 
-- `https://adgrant.ai/` is the Replit app, and a library page opens on it.
-- An old `https://adgrant.ai/w/<token>` opens that room on app.adgrant.ai.
-- `https://top-rated.team/adgrant/glossary` lands on the Replit app;
-  `https://top-rated.team/adgrant/terms` lands on app.adgrant.ai.
-- Sign in with LinkedIn on app.adgrant.ai returns to app.adgrant.ai.
-- Ask the Ad Grants agent on `https://app.adgrant.ai/` a question and get an
-  answer that cites a Google page.
+- `https://adgrant.ai/` is the Replit app, a library page opens on it, and
+  `https://adgrant.ai/logo.png` is the mark.
+- `https://adgrant.ai/w/anything` lands on `https://app.adgrant.ai/rooms.html`.
+- `https://app.adgrant.ai/` is AdGrant.AI's white label, logo included.
+- `https://app.adgrant.ai/terms.html` is titled "Terms — AdGrant.AI".
+- `https://top-rated.team/adgrant/glossary` lands on the Replit app.
+- `https://top-rated.team/adgrant/terms` lands on
+  `https://app.adgrant.ai/terms.html`.
 - On makehybrid.com, "Visit adgrant.ai" lands on the Replit app.
-- `https://app.adgrant.ai/api/adgrant/stats` answers `"live": true` — it reads
-  the Replit app's `/api/templates/stats` again instead of the shipped snapshot.
+- Stripe shows no open subscription for contact@adgrant.ai.
 
 ### Rollback
 
-Put back the apex and www records written down in step 1, and add both names
-back to Render's Custom Domains. This process still answers as adgrant.ai,
-because that name never left `ADGRANT_HOSTS`. app.adgrant.ai keeps working
-throughout; nothing needs reverting in this repository.
+Put back the records written down in step 1. For app.adgrant.ai, also move the
+name back onto the top-rated-team service. This process still answers as both
+names, because neither left `ADGRANT_HOSTS`.
 
 ---
 
 ## What does not change
 
-- **White label, both ways.** `adgrantCatalogue()` and a partner's fork with
-  `base: "adgrant-ai"` are decided in code, not by hostname
-  (`shared/catalogue.ts`). A fork of this house prints app.adgrant.ai's terms,
-  which are the terms of what happens in its rooms. Top-Rated Team's doors
-  still name AdGrant.AI as the tool and link the product at adgrant.ai.
-- **MakeHybrid.** It links to `https://adgrant.ai` and offers AdGrant.AI to
-  white-label brands as a ready-made product (`partner`, `dfy` or `off`). It
-  makes no request to either domain, so it needs no change.
-- **Messages.** WhatsApp, ChatWoot, Slack and ClickUp post to the bridge on a
-  top-rated.team address (ai.top-rated.team), never on an AdGrant host. `PUBLIC_BASE_URL` stays
-  `https://top-rated.team`, and webhooks, magic links and booking emails are
-  built from it.
+- **White label, both ways.**
+  - `adgrantCatalogue()` and a partner's fork of this repository with
+    `base: "adgrant-ai"` are decided in code, not by hostname
+    (`shared/catalogue.ts`). Such a fork prints AdGrant.AI's terms on
+    app.adgrant.ai.
+  - On MakeHybrid, any white-label brand may offer AdGrant.AI as a ready-made
+    product (`partner`, `dfy` or `off`). AdGrant.AI's own brand offers itself
+    as itself.
+  - Top-Rated Team's doors still name AdGrant.AI as the tool and link the
+    product at adgrant.ai.
+- **Messages.** The two-way channels for AdGrant.AI's rooms are MakeHybrid's
+  now, as Top-Rated Team's are. `PUBLIC_BASE_URL` here stays
+  `https://top-rated.team`.
 
 ## What a visitor notices
 
-- A browser remembers its rooms per address. Rooms opened on adgrant.ai are not
-  in the room menu on app.adgrant.ai until the visitor opens one of their old
-  links (which redirects) or signs in, which lists the rooms bound to them.
-- A signed-in session on adgrant.ai does not carry over. Signing in once on
-  app.adgrant.ai does.
+- AdGrant.AI's rooms have MakeHybrid's sign-in. An account made there is a new
+  one: a LinkedIn, WhatsApp or email sign-in from the old rooms does not carry
+  over.
+- An old AdGrant.AI room opens AdGrant.AI's rooms, not that conversation. The
+  conversation stays in this repository's database.
+- The LinkedIn redirect URL added on 23 October for
+  `https://app.adgrant.ai/api/room-login/linkedin/callback` is no longer used.
+  It can stay or go.

@@ -6,13 +6,12 @@
  * A 302 and not a 301: where the rooms live is a setting, and a browser keeps
  * a 301 with no expiry. no-store for the same reason. An old /w/<token> goes
  * to MakeHybrid without its token -- it was a credential here, it is nothing
- * there, and a credential is not something to hand to another host in a URL --
- * unless the room is one of AdGrant.AI's, which still exists, on
- * app.adgrant.ai: then it goes to that room, token and all, on our own host.
+ * there, and a credential is not something to hand to another host in a URL.
+ * One of AdGrant.AI's rooms goes to AdGrant.AI's rooms the same way: they are
+ * its own MakeHybrid white label now, on app.adgrant.ai.
  */
 import type { Express, NextFunction, Request, Response } from "express";
-import { ADGRANT_APP_ORIGIN } from "@shared/adgrant-site";
-import { DEFAULT_HYBRID_ROOMS_URL, ROOMS_PATH, roomsMovedOn } from "@shared/rooms-moved";
+import { ADGRANT_ROOMS_URL, DEFAULT_HYBRID_ROOMS_URL, ROOMS_PATH, roomsMovedOn } from "@shared/rooms-moved";
 import { storage } from "./storage";
 
 /** The door AdGrant.AI's rooms are stamped with. */
@@ -33,9 +32,14 @@ export function hybridRoomsUrl(): string {
   return DEFAULT_HYBRID_ROOMS_URL;
 }
 
-/** Whether a room was opened through AdGrant.AI, whose rooms did not move. */
+/** Whether a room was opened through AdGrant.AI's door. */
 export function isAdGrantRoom(source: Record<string, string> | null | undefined): boolean {
   return source?.door === ADGRANT_DOOR;
+}
+
+/** Where a room with this stamp lives now: AdGrant.AI's white label, or ours. */
+export function movedRoomsUrl(source: Record<string, string> | null | undefined): string {
+  return isAdGrantRoom(source) ? ADGRANT_ROOMS_URL : hybridRoomsUrl();
 }
 
 function noStore(res: Response): void {
@@ -64,11 +68,7 @@ export function registerRoomsMoved(app: Express): void {
     void (async () => {
       const state = await storage.getWorkspaceByToken(req.params.token).catch(() => null);
       noStore(res);
-      if (state && isAdGrantRoom(state.workspace.source)) {
-        res.redirect(302, `${ADGRANT_APP_ORIGIN}/w/${encodeURIComponent(req.params.token)}`);
-        return;
-      }
-      res.redirect(302, hybridRoomsUrl());
+      res.redirect(302, movedRoomsUrl(state?.workspace.source));
     })().catch(next);
   });
 }
