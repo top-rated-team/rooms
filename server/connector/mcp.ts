@@ -13,7 +13,7 @@
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { Router } from "express";
 
-import { ROOMS_PATH } from "@shared/rooms-moved";
+import { ADGRANT_ROOMS_URL, ROOMS_PATH } from "@shared/rooms-moved";
 import { askQuestion, createRoom, listCases, listPrices, listServices, publicBaseUrl } from "./handlers";
 
 const PROTOCOL = "2025-03-26";
@@ -74,23 +74,6 @@ export const MCP_TOOLS: ToolDef[] = [
             },
           },
         },
-      },
-    },
-  },
-  {
-    name: "create_room",
-    description:
-      "Open an AdGrant.AI room (doorId \"ad-grants\") and return its address. Give that address to the invited person and to nobody else. Top-Rated Team's other rooms are not opened here: they have their own address and sign-in, at /rooms on this site.",
-    inputSchema: {
-      type: "object",
-      additionalProperties: false,
-      properties: {
-        visitorName: { type: "string", maxLength: 120 },
-        visitorEmail: { type: "string", maxLength: 200 },
-        visitorCompany: { type: "string", maxLength: 160 },
-        visitorWebsite: { type: "string", maxLength: 300 },
-        name: { type: "string", maxLength: 120 },
-        doorId: { type: "string", maxLength: 64 },
       },
     },
   },
@@ -213,7 +196,7 @@ async function dispatch(
           capabilities: { tools: { listChanged: false } },
           serverInfo: { name: "top-rated-team", version: "1.0.0" },
           instructions:
-            `You can explain Top-Rated Team's services, quote the published prices verbatim, cite the case studies, ask a grounded question, and open an AdGrant.AI room. Give a room address only to the person being invited. Top-Rated Team's other rooms have their own address and sign-in: send people to ${publicBaseUrl(req)}${ROOMS_PATH}.`,
+            `You can explain Top-Rated Team's services, quote the published prices verbatim, cite the case studies, and ask a grounded question. Rooms are not opened here: they have their own address and sign-in. Send people to ${publicBaseUrl(req)}${ROOMS_PATH} for Top-Rated Team's, and to ${ADGRANT_ROOMS_URL} for AdGrant.AI's.`,
         },
       };
     }
@@ -252,6 +235,7 @@ async function callTool(
       const result = await askQuestion(req, args);
       return toolBody(result.payload, result.status >= 400);
     }
+    /* No longer listed: rooms moved. Kept so a client set up before is told where they are. */
     case "create_room": {
       if (!passedLimit(limits.rooms, req, res)) return dummy();
       const result = await createRoom(req, args);

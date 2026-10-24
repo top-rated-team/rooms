@@ -15,19 +15,20 @@ What it can do:
 - list the published case studies (from `shared/cases.ts`)
 - ask a question that goes through the same path as `/api/ask`, including the
   spend ceiling in `server/spend.ts`
-- open a room the same way the site does, and return only the address
+- say where rooms are: they are MakeHybrid's Hybrid Rooms now, with their own
+  address and sign-in — Top-Rated Team's at `/rooms` on this site, AdGrant.AI's
+  at `https://app.adgrant.ai/rooms.html`
 
-What it cannot do: read a room, a lead, a member, or anything under `/w/`
-except by handing the invited person the one address that was just created.
-That address is the credential. Anyone who has it can enter.
+What it cannot do: open a room, or read a room, a lead, a member, or anything
+under `/w/`. `POST /api/connector/rooms` still answers, for a GPT set up before
+rooms moved, with 410 and the address to send the person to; it is no longer
+listed as an action.
 
 Live answers need an `OPENAI_API_KEY` on the deployment. Without one, the ask
 tool says live answers are not configured, and does not guess. That is the
 same behaviour as the panel on the site.
 
 Questions are bounded per address and across the panel, the way `/api/ask` is.
-Opening a room is limited to ten per hour per address, with the same wording
-the site uses when that limit is hit.
 
 Authentication: none. The surface is public on purpose, and the spend and
 rate limits are what bound it.
@@ -49,8 +50,8 @@ rate limits are what bound it.
    The same document is on this process at `/api/connector/openapi.json`. A
    copy of the discovery file lives at `/.well-known/ai-plugin.json` and
    points at that document.
-7. Confirm the editor lists five actions: `list_services`, `list_prices`,
-   `list_cases`, `ask_question`, `create_room`. If it lists none, the URL did
+7. Confirm the editor lists four actions: `list_services`, `list_prices`,
+   `list_cases`, `ask_question`. If it lists none, the URL did
    not fetch; check the host.
 8. **Save** (or **Update**). In **Preview**, ask “What services do you offer?”
    and confirm it calls `list_services` rather than inventing a list.
@@ -59,7 +60,7 @@ Instructions to paste:
 
 ```
 You speak for Top-Rated Team. You explain the company, its services and its
-published prices, and you can invite someone into a room.
+published prices, and you tell people where to open a room.
 
 How you know things:
 - Call list_services before you describe an offer. Quote headline, blurb,
@@ -74,9 +75,9 @@ How you know things:
 - Call ask_question only when the service has a firstAgentId. Pass that id.
   If firstAgentId is null, no agent of ours answers there — say so, and offer
   a room or a call.
-- Call create_room to invite someone. Pass doorId from list_services. Give
-  the returned url to that person and to nobody else. Do not paste it into a
-  public place. There is no way to look a room up later on this connector.
+- Rooms have their own address and sign-in. For Top-Rated Team's, send people
+  to https://top-rated.team/rooms. For AdGrant.AI's, to
+  https://app.adgrant.ai/rooms.html. You cannot open one for them.
 
 If ask_question says live answers are not configured, say that, and do not
 guess. If it says the monthly cap is reached, say that, and offer a room or a
@@ -123,7 +124,7 @@ Edit the Claude Desktop config (`claude_desktop_config.json` on macOS under
 ```
 
 Restart Claude Desktop. The tools `list_services`, `list_prices`,
-`list_cases`, `ask_question` and `create_room` should appear.
+`list_cases` and `ask_question` should appear.
 
 ### Claude Code
 

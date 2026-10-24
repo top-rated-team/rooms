@@ -88,18 +88,21 @@ export function adgrantRobotsTxt(host?: string): string {
 }
 
 /**
- * Where an old top-rated.team/adgrant address goes, given the rest of its path.
+ * Where an old top-rated.team/adgrant address goes, given the rest of its path
+ * and its query.
  *
  * The library and the front door go to the public site, the way they always
- * have — a link published to /adgrant/glossary/… has been a 301 to
+ * have -- a link published to /adgrant/glossary/… has been a 301 to
  * adgrant.ai/glossary/… since the domain first answered, and whatever that
  * site does with the path, it does for every other link on the web too.
- * Everything else under /adgrant — the services, the terms, the privacy page —
- * exists only in this process, so it goes to the app's address, which this
- * process answers on whoever serves the apex.
+ * The rest of what this tree had -- services, terms, privacy -- is AdGrant.AI's
+ * white label on app.adgrant.ai now, which names its pages differently: the
+ * terms and privacy pages by their own names, everything else its front page.
  */
-export function adgrantMovedOrigin(rest: string): string {
+export function adgrantMovedUrl(rest: string, query = ""): string {
   const segment = rest.split("/")[1] ?? "";
-  if (segment === "" || (SECTIONS as readonly string[]).includes(segment)) return ADGRANT_ORIGIN;
-  return ADGRANT_APP_ORIGIN;
+  if (segment === "" || (SECTIONS as readonly string[]).includes(segment)) return `${ADGRANT_ORIGIN}${rest}${query}`;
+  if (rest === "/terms") return `${ADGRANT_APP_ORIGIN}/terms.html`;
+  if (rest === "/privacy") return `${ADGRANT_APP_ORIGIN}/privacy.html`;
+  return `${ADGRANT_APP_ORIGIN}/`;
 }

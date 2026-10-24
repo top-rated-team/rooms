@@ -8,10 +8,13 @@
  *
  *   - /rooms and every room address this site ever gave out go to wherever
  *     HYBRID_ROOMS_URL says, and the old token does not travel with them;
- *   - nothing opens a room here any more, except the record AdGrant.AI's
- *     generator keeps, and a caller asking for a room is told where they are;
+ *   - nothing opens a room here any more, AdGrant.AI's included -- its rooms
+ *     are its own white label's on app.adgrant.ai -- and a caller asking for
+ *     a room is told where that kind of room is;
  *   - an AI agent on the connector is told the same, and has no tool that
  *     pretends to open one;
+ *   - AdGrant.AI's own hosts, if one is ever pointed back here, answer as
+ *     they did: that is the rollback;
  *   - Top-Rated Team's own pages carry no sign-in of their own: RoomMenu is
  *     left only where AdGrant.AI and the operator's pages need it;
  *   - a sign-in started on the operator's page comes back to it, and only
@@ -26,7 +29,7 @@ import { fileURLToPath } from "node:url";
 
 import express from "express";
 
-import { DEFAULT_HYBRID_ROOMS_URL, ROOMS_PATH, roomsMovedOn } from "@shared/rooms-moved";
+import { ADGRANT_ROOMS_URL, DEFAULT_HYBRID_ROOMS_URL, ROOMS_PATH, roomsMovedOn } from "@shared/rooms-moved";
 import { hybridRoomsUrl } from "./rooms-moved";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -94,20 +97,25 @@ describe("where the rooms are", () => {
     }
   });
 
-  it("sends an old address of one of AdGrant.AI's rooms to that room, on its own host", async () => {
+  it("sends an old address of one of AdGrant.AI's rooms to AdGrant.AI's rooms, without its token", async () => {
+    /* Opened the way they were: on AdGrant.AI's own host, which still answers
+       here if it is ever pointed back. */
     const opened = await fetch(`${origin}/api/workspaces`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", ...ADGRANT },
       body: JSON.stringify({ source: { door: "ad-grants" } }),
     });
     assert.equal(opened.status, 201);
     const { workspace } = (await opened.json()) as { workspace: { token: string } };
     const res = await fetch(`${origin}/w/${workspace.token}`, { redirect: "manual" });
     assert.equal(res.status, 302);
-    assert.equal(res.headers.get("location"), `https://app.adgrant.ai/w/${workspace.token}`);
+    assert.equal(res.headers.get("location"), ADGRANT_ROOMS_URL);
+    assert.equal(ADGRANT_ROOMS_URL, "https://app.adgrant.ai/rooms.html");
+    assert.ok(!(res.headers.get("location") ?? "").includes(workspace.token), "the old token went to another host");
+    assert.equal(res.headers.get("cache-control"), "no-store");
   });
 
-  it("leaves AdGrant.AI's hosts alone: their rooms did not move", async () => {
+  it("leaves AdGrant.AI's hosts alone if one is pointed back here: that is the rollback", async () => {
     for (const path of [ROOMS_PATH, "/w", "/w/tok_anything"]) {
       const res = await fetch(`${origin}${path}`, { redirect: "manual", headers: ADGRANT });
       assert.notEqual(res.status, 302, `${path} on app.adgrant.ai was sent away`);
@@ -149,13 +157,18 @@ describe("nothing on Top-Rated Team's hosts opens a room of its own", () => {
     }
   });
 
-  it("still opens AdGrant.AI's rooms, and any room on AdGrant.AI's own hosts", async () => {
-    const ours = await fetch(`${origin}/api/workspaces`, {
+  it("tells a caller asking for one of AdGrant.AI's rooms where they are now", async () => {
+    process.env.HYBRID_ROOMS_URL = "https://rooms.example.org/rooms.html";
+    const asked = await fetch(`${origin}/api/workspaces`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ source: { door: "ad-grants", entered: "direct" } }),
     });
-    assert.equal(ours.status, 201);
+    assert.equal(asked.status, 410);
+    assert.deepEqual(await asked.json(), { error: "Rooms have moved.", url: ADGRANT_ROOMS_URL });
+  });
+
+  it("still opens a room on AdGrant.AI's own hosts, if one is pointed back here", async () => {
     const theirs = await fetch(`${origin}/api/workspaces`, {
       method: "POST",
       headers: { "content-type": "application/json", ...ADGRANT },
@@ -172,6 +185,8 @@ describe("nothing on Top-Rated Team's hosts opens a room of its own", () => {
     });
     const started = (await init.json()) as { result: { instructions: string } };
     assert.ok(started.result.instructions.includes(`${origin}${ROOMS_PATH}`), started.result.instructions);
+    assert.ok(started.result.instructions.includes(ADGRANT_ROOMS_URL), "AdGrant.AI's rooms are not named");
+    assert.ok(!/open an AdGrant\.AI room/i.test(started.result.instructions), "it still offers to open a room");
     const posted = await fetch(`${origin}/api/connector/rooms`, {
       method: "POST",
       headers: { "content-type": "application/json" },

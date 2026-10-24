@@ -81,9 +81,9 @@ describe("the published rows leave this file as they arrived", () => {
 describe("one implementation, two front doors", () => {
   it("names the same operations in OpenAPI and in MCP", () => {
     assert.deepEqual(openApiOperationIds().sort(), mcpToolNames().sort());
+    /* No create_room: rooms are not opened here any more (shared/rooms-moved.ts). */
     assert.deepEqual(openApiOperationIds().sort(), [
       "ask_question",
-      "create_room",
       "list_cases",
       "list_prices",
       "list_services",
@@ -134,10 +134,13 @@ describe("ask goes through the spend guard", () => {
 
 describe("a room response is an address, not a workspace", () => {
   it("returns only url, and that url is the room's address", async () => {
+    /* Only on AdGrant.AI's own hosts now, if one is ever pointed back here:
+       everywhere else rooms are MakeHybrid's (below). */
     const previous = process.env.PUBLIC_BASE_URL;
     process.env.PUBLIC_BASE_URL = "https://ai.top-rated.team";
     try {
-      const result = await createRoom(fakeReq(), { visitorName: "Ada", doorId: "ad-grants" });
+      const onAdGrant = { ...fakeReq(), hostname: "app.adgrant.ai" } as Request;
+      const result = await createRoom(onAdGrant, { visitorName: "Ada", doorId: "ad-grants" });
       assert.equal(result.status, 201);
       assert.deepEqual(Object.keys(result.payload).sort(), ["url"]);
       if ("url" in result.payload) {
@@ -153,10 +156,10 @@ describe("a room response is an address, not a workspace", () => {
     }
   });
 
-  /* Top-Rated Team's rooms are MakeHybrid's now (shared/rooms-moved.ts); on
-     its hosts the connector opens AdGrant.AI's rooms only, and says where the
-     rest are. */
-  it("opens no Top-Rated Team room, and says where they are", async () => {
+  /* Rooms are MakeHybrid's now, AdGrant.AI's included (shared/rooms-moved.ts):
+     on Top-Rated Team's hosts the connector opens none, and says where each
+     kind is. */
+  it("opens no room, and says where each kind is", async () => {
     const previous = process.env.HYBRID_ROOMS_URL;
     process.env.HYBRID_ROOMS_URL = "https://rooms.example.org/rooms.html";
     try {
@@ -165,6 +168,10 @@ describe("a room response is an address, not a workspace", () => {
         assert.equal(result.status, 410, JSON.stringify(body));
         assert.ok("error" in result.payload && result.payload.error.includes("https://rooms.example.org/rooms.html"));
       }
+      const adgrant = await createRoom(fakeReq(), { doorId: "ad-grants" });
+      assert.equal(adgrant.status, 410);
+      assert.ok("error" in adgrant.payload && adgrant.payload.error.includes("https://app.adgrant.ai/rooms.html"));
+      assert.ok("error" in adgrant.payload && adgrant.payload.error.startsWith("AdGrant.AI's rooms"));
     } finally {
       if (previous === undefined) delete process.env.HYBRID_ROOMS_URL;
       else process.env.HYBRID_ROOMS_URL = previous;
@@ -239,10 +246,11 @@ describe("the HTTP mounts and the MCP front door", () => {
       "/api/connector/prices",
       "/api/connector/cases",
       "/api/connector/ask",
-      "/api/connector/rooms",
     ]) {
       assert.ok(spec.paths[path], `OpenAPI is missing ${path}`);
     }
+    /* Rooms are not opened here any more; the route answers old callers, unlisted. */
+    assert.equal(spec.paths["/api/connector/rooms"], undefined, "OpenAPI still offers to open a room");
   });
 
   it("GET /api/connector/prices matches shared/pricing.ts byte for byte on the rows", async () => {
@@ -277,10 +285,20 @@ describe("the HTTP mounts and the MCP front door", () => {
     }
   });
 
-  it("opens a room over HTTP and returns only the address", async () => {
-    const res = await fetch(`${origin}/api/connector/rooms`, {
+  it("tells an old caller over HTTP where AdGrant.AI's rooms are, and opens none", async () => {
+    const moved = await fetch(`${origin}/api/connector/rooms`, {
       method: "POST",
       headers: { "content-type": "application/json" },
+      body: JSON.stringify({ visitorName: "Ada", doorId: "ad-grants" }),
+    });
+    assert.equal(moved.status, 410);
+    assert.match(String(((await moved.json()) as { error?: string }).error), /app\.adgrant\.ai\/rooms\.html/);
+  });
+
+  it("opens a room over HTTP on AdGrant.AI's own host, if one is pointed back here, and returns only the address", async () => {
+    const res = await fetch(`${origin}/api/connector/rooms`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-forwarded-host": "app.adgrant.ai" },
       body: JSON.stringify({ visitorName: "Ada", doorId: "ad-grants" }),
     });
     assert.equal(res.status, 201);
