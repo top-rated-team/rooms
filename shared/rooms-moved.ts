@@ -27,8 +27,14 @@ import { ADGRANT_APP_ORIGIN, isAdGrantHost } from "./adgrant-site";
 
 export const ROOMS_PATH = "/rooms";
 
-/** The white label's own host on MakeHybrid, until HYBRID_ROOMS_URL says otherwise. */
-export const DEFAULT_HYBRID_ROOMS_URL = "https://rooms.top-rated.team/rooms.html";
+/**
+ * The white label's own host on MakeHybrid, until HYBRID_ROOMS_URL says
+ * otherwise. app.top-rated.team, where the whole product is; MakeHybrid
+ * still answers on rooms.top-rated.team, the address it had first, so links
+ * already sent keep working. A member lands in the rooms; anybody else, on
+ * its Hybrid Rooms page.
+ */
+export const DEFAULT_HYBRID_ROOMS_URL = "https://app.top-rated.team/rooms.html";
 
 /** AdGrant.AI's rooms: its own MakeHybrid white label. */
 export const ADGRANT_ROOMS_URL = `${ADGRANT_APP_ORIGIN}/rooms.html`;
