@@ -65,20 +65,35 @@ here. Its route still answers old callers with where rooms are
 
 ### 3. app.adgrant.ai moves to MakeHybrid
 
-A name can be on only one Render service, so it comes off this one first.
-Nothing links to it yet, so the minutes in between cost nothing.
+First, take the name off this service. A name can be on only one Render
+service, and nothing links to it yet, so the minutes in between cost nothing.
+Render → the **top-rated-team** service (`srv-daeq2bv40ujc7389ao4g`) →
+Settings → Custom Domains → delete `app.adgrant.ai`.
 
-1. Render → the **top-rated-team** service (`srv-daeq2bv40ujc7389ao4g`) →
-   Settings → Custom Domains → delete `app.adgrant.ai`.
-2. Render → the **makehybrid** service → Custom Domains → add `app.adgrant.ai`.
-3. At adgrant.ai's DNS provider, change the `app` record to what the makehybrid
-   service shows. If `BRAND_CNAME_TARGET` is set there, the white-label page on
+Then it depends on where makehybrid.com runs. make-hybrid's
+`deploy/hetzner/RUNBOOK.md` moves it from Render to a Hetzner server.
+
+**Still on Render:**
+
+1. Render → the **makehybrid** service → Custom Domains → add `app.adgrant.ai`.
+2. At adgrant.ai's DNS provider, change the `app` record to what that service
+   shows. If `BRAND_CNAME_TARGET` is set, the white-label page on
    makehybrid.com names the neutral hostname to point at instead
-   (make-hybrid's `RENDER.md`, section 4). On Cloudflare, use DNS only (grey
-   cloud) until Render says Verified.
-4. **Verify** on Render, then open `https://app.adgrant.ai/`. It is AdGrant.AI's
-   name, logo and colour on MakeHybrid. The logo is `https://adgrant.ai/logo.png`,
-   so it shows once the Replit app has the domain (step 6).
+   (make-hybrid's `RENDER.md`, section 4).
+3. **Verify** on Render.
+
+**On Hetzner:**
+
+1. Point the `app` record at that server, the same way makehybrid.com points
+   there, or at `BRAND_CNAME_TARGET` if one is set.
+2. Nothing to add by hand. Caddy gets the certificate the first time the name
+   is opened, because MakeHybrid answers yes for a live brand's own domain
+   (`api/src/complete/tls-ask.ts`).
+
+Either way, use DNS only (grey cloud) on Cloudflare until the certificate is
+issued. Then open `https://app.adgrant.ai/`. It shows AdGrant.AI's name, logo
+and colour on MakeHybrid. The logo is `https://adgrant.ai/logo.png`, so it
+appears once the Replit app has the domain (step 6).
 
 ### 4. Merge this repository's pull request
 
