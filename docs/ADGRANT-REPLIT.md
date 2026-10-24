@@ -65,26 +65,33 @@ here. Its route still answers old callers with where rooms are
 
 ### 3. app.adgrant.ai moves to MakeHybrid
 
-First, take the name off this service. A name can be on only one Render
-service, and nothing links to it yet, so the minutes in between cost nothing.
-Render → the **top-rated-team** service (`srv-daeq2bv40ujc7389ao4g`) →
-Settings → Custom Domains → delete `app.adgrant.ai`.
+A name can be on only one Render service, so it has to come off this one
+before it goes on the makehybrid service. **Check first that the other side
+can take it.** A Render Hobby workspace includes two custom domains. On
+Render's current plans each extra one costs $0.25 a month; an older Hobby
+workspace may refuse a third outright. Until the makehybrid side can take it,
+leave `app.adgrant.ai` where it is. It keeps serving AdGrant.AI's rooms from
+this process, and this repository's pull request stays unmerged.
 
-Then it depends on where makehybrid.com runs. make-hybrid's
-`deploy/hetzner/RUNBOOK.md` moves it from Render to a Hetzner server.
+Where it goes depends on where makehybrid.com runs. make-hybrid's
+`deploy/hetzner/RUNBOOK.md` moves it from Render to a Hetzner server, where a
+brand's domain needs no slot on Render at all.
 
-**Still on Render:**
+**Still on Render, with room for one more domain:**
 
-1. Render → the **makehybrid** service → Custom Domains → add `app.adgrant.ai`.
-2. At adgrant.ai's DNS provider, change the `app` record to what that service
+1. Render → the **top-rated-team** service (`srv-daeq2bv40ujc7389ao4g`) →
+   Settings → Custom Domains → delete `app.adgrant.ai`.
+2. Render → the **makehybrid** service → Custom Domains → add `app.adgrant.ai`.
+3. At adgrant.ai's DNS provider, change the `app` record to what that service
    shows. If `BRAND_CNAME_TARGET` is set, the white-label page on
    makehybrid.com names the neutral hostname to point at instead
    (make-hybrid's `RENDER.md`, section 4).
-3. **Verify** on Render.
+4. **Verify** on Render.
 
 **On Hetzner:**
 
-1. Point the `app` record at that server, the same way makehybrid.com points
+1. Delete `app.adgrant.ai` from the top-rated-team service, and point the
+   `app` record at that server, the same way makehybrid.com points
    there, or at `BRAND_CNAME_TARGET` if one is set.
 2. Nothing to add by hand. Caddy gets the certificate the first time the name
    is opened, because MakeHybrid answers yes for a live brand's own domain
