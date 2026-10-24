@@ -112,46 +112,47 @@ above). Render deploys `main`.
 Four changes, before its domain is attached.
 
 **a. Old room addresses.** A room opened on adgrant.ai since September has the
-address `https://adgrant.ai/w/<token>`. AdGrant.AI's rooms are on MakeHybrid
-now, and those old rooms are not carried over (their conversations stay in
-this repository's database), so the address opens AdGrant.AI's rooms instead.
-Add this to the Express server, after `const app = express()` and before any
-route, static handler or SPA fallback:
+address `https://adgrant.ai/w/<token>`. Send it on to app.adgrant.ai, path and
+all. That works whichever app answers there. While app.adgrant.ai is still
+this process, the address opens the room itself. Once it is MakeHybrid, the
+address opens AdGrant.AI's rooms there, because MakeHybrid sends `/w/…` on a
+brand's host to `/rooms.html` and the old conversation stays in this
+repository's database. Add this to the Express server, after
+`const app = express()` and before any route, static handler or SPA fallback:
 
 ```js
-// AdGrant.AI's rooms are its white label on app.adgrant.ai now.
+// AdGrant.AI's rooms are served from app.adgrant.ai.
 const ADGRANT_APP = "https://app.adgrant.ai";
 app.use((req, res, next) => {
   if (req.method !== "GET" && req.method !== "HEAD") return next();
   const p = req.path;
-  res.set("Referrer-Policy", "no-referrer");
-  if (p === "/w" || p.startsWith("/w/")) return res.redirect(302, `${ADGRANT_APP}/rooms.html`);
+  if (p === "/w" || p.startsWith("/w/")) {
+    res.set("Referrer-Policy", "no-referrer"); // a room address is its only key
+    return res.redirect(302, ADGRANT_APP + req.originalUrl);
+  }
   if (p === "/services" || p.startsWith("/services/")) return res.redirect(302, `${ADGRANT_APP}/`);
   next();
 });
 ```
 
-The token is dropped on purpose: it opened a room in this repository and
-means nothing on MakeHybrid. If the version of this snippet from 23 October is
-already in the app, it sends `/w/<token>` to `app.adgrant.ai/w/<token>`, which
-MakeHybrid also sends to the brand's rooms. Replace it anyway, because its
-`/services` line ends on a 404.
-
 - If the app already has a page of its own at `/services`, drop that line.
 - If it has no `/terms` or `/privacy` of its own, redirect those to
-  `${ADGRANT_APP}/terms.html` and `${ADGRANT_APP}/privacy.html`. A nonprofit's
-  data protection officer must not land on a 404.
+  `${ADGRANT_APP}/terms.html` and `${ADGRANT_APP}/privacy.html` once
+  app.adgrant.ai is MakeHybrid. Until then, use `/terms` and `/privacy`. A
+  nonprofit's data protection officer must not land on a 404.
 
 The same thing as a request, for Replit Agent:
 
 > Add an Express middleware before every other route. For GET and HEAD
-> requests whose path is `/w` or starts with `/w/`, answer a 302 redirect to
-> `https://app.adgrant.ai/rooms.html`. For `/services` or a path starting with
-> `/services/`, answer a 302 redirect to `https://app.adgrant.ai/`. Set
-> `Referrer-Policy: no-referrer` on both. Do not change anything else.
+> requests whose path is `/w` or starts with `/w/`, set
+> `Referrer-Policy: no-referrer` and answer a 302 redirect to
+> `https://app.adgrant.ai` followed by the original path and query string,
+> unchanged. For `/services` or a path starting with `/services/`, answer a 302
+> redirect to `https://app.adgrant.ai/`. Do not change anything else.
 
 **b. A way to the rooms and the agents.** Link "Ask the AdGrant.AI agent" to
-`https://app.adgrant.ai/rooms.html`. MakeHybrid's Ad Grants agent answers
+`https://app.adgrant.ai/` until app.adgrant.ai is MakeHybrid, and to
+`https://app.adgrant.ai/rooms.html` after. MakeHybrid's Ad Grants agent answers
 there, citing Google's own policies. Once a Google Ads account is linked under
 Top-Rated Team's manager account, it can also read that account and propose
 changes.
