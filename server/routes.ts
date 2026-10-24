@@ -121,11 +121,11 @@ import { generateAdGrantStructure, getAdGrantGenerationQuota } from "./adgrant/g
 import { templateSetupFiles } from "./adgrant/templates";
 import { adGrantStats } from "./adgrant/stats";
 import { hydrateBookings } from "./booking/hold";
-import { adgrantMovedOrigin, adgrantRobotsTxt, adgrantSitemapXml } from "./adgrant/site";
+import { adgrantMovedUrl, adgrantRobotsTxt, adgrantSitemapXml } from "./adgrant/site";
 import { rewriteHead } from "./adgrant/head";
 import { ADGRANT_ORIGIN } from "@shared/adgrant-site";
 import { resolveDistPath } from "./vite";
-import { hybridRoomsUrl, isAdGrantRoom, registerRoomsMoved } from "./rooms-moved";
+import { movedRoomsUrl, registerRoomsMoved } from "./rooms-moved";
 import { roomsMovedOn } from "@shared/rooms-moved";
 import fs from "node:fs";
 import path from "node:path";
@@ -962,11 +962,11 @@ export function registerRoutes(app: Express): void {
       /* A room cannot be opened seeded on an agent nobody may reach. Same
          reply as for an unknown one, for the same reason. */
       if (input.agentId && !answerableAgent(input.agentId)) return badRequest(res, `Unknown agent: ${input.agentId}`);
-      /* Top-Rated Team's rooms are MakeHybrid's now (shared/rooms-moved.ts):
-         on its hosts the only room still opened here is AdGrant.AI's, whose
-         rooms stayed. Anybody else is told where rooms are. */
-      if (roomsMovedOn(req.hostname) && !isAdGrantRoom(input.source)) {
-        res.status(410).json({ error: "Rooms have moved.", url: hybridRoomsUrl() });
+      /* Rooms are MakeHybrid's now (shared/rooms-moved.ts): on Top-Rated
+         Team's hosts nothing opens one here, AdGrant.AI's included. The caller
+         is told where that kind of room lives. */
+      if (roomsMovedOn(req.hostname)) {
+        res.status(410).json({ error: "Rooms have moved.", url: movedRoomsUrl(input.source) });
         return;
       }
       const agentId = input.agentId ?? DEFAULT_AGENT_ID;
@@ -2788,15 +2788,14 @@ export function registerRoutes(app: Express): void {
      redirect to production would make it impossible to see a change.
 
      Two destinations since adgrant.ai went back to the product's own
-     application: the library goes to the public site, and what only this
-     process has — services, terms, privacy — goes to the app's address. See
-     adgrantMovedOrigin. */
+     application: the library goes to the public site, and the rest to
+     AdGrant.AI's white label on app.adgrant.ai. See adgrantMovedUrl. */
   const MOVED_FROM = new Set(["top-rated.team", "www.top-rated.team"]);
   app.get(/^\/adgrant(\/.*)?$/, (req, res, next) => {
     if (!MOVED_FROM.has(req.hostname)) return next();
     const rest = req.path.slice("/adgrant".length) || "/";
     const query = req.originalUrl.slice(req.path.length);
-    res.redirect(301, `${adgrantMovedOrigin(rest)}${rest}${query}`);
+    res.redirect(301, adgrantMovedUrl(rest, query));
   });
 
   /* resolveDistPath and not a path of our own: the first version of this
@@ -2838,6 +2837,37 @@ export function registerRoutes(app: Express): void {
   /* One process answers two domains, so these two files cannot be static.
      registerRoutes runs before express.static, so an AdGrant host is answered
      here and ours falls through to client/public untouched. */
+  /* AdGrant.AI's mark at the address the product's own application serves it
+     on, /logo.png. MakeHybrid's AdGrant.AI white label draws its logo from
+     https://adgrant.ai/logo.png; while adgrant.ai is still this process, this
+     answers it with the same file, and once the domain is the Replit app's,
+     that app does. The bytes, not a redirect: the white label's logo fetch
+     follows none. AdGrant hosts only -- it is not Top-Rated Team's mark. */
+  const adgrantLogoPath = (): string | null => {
+    for (const root of [
+      (() => {
+        try {
+          return resolveDistPath();
+        } catch {
+          return null;
+        }
+      })(),
+      path.resolve(import.meta.dirname, "..", "client", "public"),
+    ]) {
+      if (!root) continue;
+      const file = path.join(root, "assets", "adgrant-logo.png");
+      if (fs.existsSync(file)) return file;
+    }
+    return null;
+  };
+  app.get("/logo.png", (req, res, next) => {
+    if (!isAdGrantHost(req.hostname)) return next();
+    const file = adgrantLogoPath();
+    if (!file) return next();
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.type("image/png").sendFile(file);
+  });
+
   app.get("/robots.txt", (req, res, next) => {
     if (!isAdGrantHost(req.hostname)) return next();
     res.type("text/plain").send(adgrantRobotsTxt(req.hostname));

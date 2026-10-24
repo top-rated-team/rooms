@@ -35,7 +35,7 @@ import {
   isAdGrantHost,
 } from "@shared/adgrant-site";
 import { isHouseHost } from "@shared/operator";
-import { adgrantMovedOrigin, adgrantRobotsTxt, adgrantSitemapXml, adgrantUrls } from "./site";
+import { adgrantMovedUrl, adgrantRobotsTxt, adgrantSitemapXml, adgrantUrls } from "./site";
 import { ADGRANT_DESCRIPTION, ADGRANT_TITLE, rewriteHead } from "./head";
 
 let origin = "";
@@ -212,12 +212,13 @@ describe("the old addresses", () => {
       ["/adgrant/glossary", `${ADGRANT_ORIGIN}/glossary`],
       ["/adgrant/nonprofits/animal-shelters/houston", `${ADGRANT_ORIGIN}/nonprofits/animal-shelters/houston`],
       ["/adgrant/templates?utm_source=x", `${ADGRANT_ORIGIN}/templates?utm_source=x`],
-      /* What only this process has goes to the app's address, because the
-         public site is the product's own application and does not have it. */
-      ["/adgrant/services", `${ADGRANT_APP_ORIGIN}/services`],
-      ["/adgrant/services/ad-grants?x=1", `${ADGRANT_APP_ORIGIN}/services/ad-grants?x=1`],
-      ["/adgrant/terms", `${ADGRANT_APP_ORIGIN}/terms`],
-      ["/adgrant/privacy", `${ADGRANT_APP_ORIGIN}/privacy`],
+      /* The rest goes to AdGrant.AI's white label on app.adgrant.ai, by the
+         names its pages have there: the public site is the product's own
+         application and does not have them. */
+      ["/adgrant/services", `${ADGRANT_APP_ORIGIN}/`],
+      ["/adgrant/services/ad-grants?x=1", `${ADGRANT_APP_ORIGIN}/`],
+      ["/adgrant/terms", `${ADGRANT_APP_ORIGIN}/terms.html`],
+      ["/adgrant/privacy", `${ADGRANT_APP_ORIGIN}/privacy.html`],
     ] as const) {
       const res = await asHost(from, "top-rated.team");
       assert.equal(res.status, 301, from);
@@ -227,12 +228,15 @@ describe("the old addresses", () => {
 
   it("sends the library and the front door to the site, and nothing else", () => {
     for (const rest of ["/", "/glossary", "/glossary/x", "/case-studies/x", "/tricks/x", "/nonprofits/a/b", "/templates/x"]) {
-      assert.equal(adgrantMovedOrigin(rest), ADGRANT_ORIGIN, rest);
+      assert.equal(adgrantMovedUrl(rest, "?q=1"), `${ADGRANT_ORIGIN}${rest}?q=1`, rest);
     }
-    /* A prefix is not a section: /glossarybad is not the glossary. */
-    for (const rest of ["/services", "/services/ad-grants", "/terms", "/privacy", "/glossarybad"]) {
-      assert.equal(adgrantMovedOrigin(rest), ADGRANT_APP_ORIGIN, rest);
+    /* A prefix is not a section: /glossarybad is not the glossary. And the
+       white label has no page by those names, so no path is carried there. */
+    for (const rest of ["/services", "/services/ad-grants", "/glossarybad", "/termsx"]) {
+      assert.equal(adgrantMovedUrl(rest, "?q=1"), `${ADGRANT_APP_ORIGIN}/`, rest);
     }
+    assert.equal(adgrantMovedUrl("/terms"), `${ADGRANT_APP_ORIGIN}/terms.html`);
+    assert.equal(adgrantMovedUrl("/privacy"), `${ADGRANT_APP_ORIGIN}/privacy.html`);
   });
 
   it("does not redirect on a host where the tree is still served in place", async () => {
@@ -272,6 +276,18 @@ describe("robots.txt and sitemap.xml by host", () => {
     const sitemap = await asHost("/sitemap.xml", ADGRANT_APP_HOST);
     assert.equal(sitemap.status, 404);
     assert.ok(!sitemap.body.includes("<urlset"));
+  });
+
+  it("serves AdGrant.AI's mark at /logo.png, the address its white label draws it from", async () => {
+    for (const host of ADGRANT_HOSTS) {
+      const res = await asHost("/logo.png", host);
+      assert.equal(res.status, 200, host);
+      assert.match(res.type, /image\/png/, host);
+      assert.ok(res.body.startsWith("\uFFFDPNG"), `${host} did not answer a PNG`);
+    }
+    /* Not Top-Rated Team's mark: nothing answers it on our own host. */
+    const ours = await asHost("/logo.png", "top-rated.team");
+    assert.notEqual(ours.status, 200);
   });
 
   it("falls through to the static files on ours", async () => {

@@ -12,18 +12,17 @@
  *
  * Adding a host here is most of the move. The rest is DNS.
  *
- * TWO ADDRESSES, TWO JOBS. adgrant.ai is the product's public site, and it
- * goes back to the application it started as (docs/ADGRANT-REPLIT.md). What
- * that application does not have — the rooms, the agents that answer in them,
- * the three ways in, and the terms and privacy that describe those — stays in
- * this process and answers on app.adgrant.ai. Both stay in ADGRANT_HOSTS, so
- * pointing the apex back here is a DNS change and nothing else.
+ * TWO ADDRESSES, AND NEITHER IS THIS PROCESS'S ANY MORE. adgrant.ai is the
+ * product's public site, the application it started as; app.adgrant.ai is its
+ * white label on MakeHybrid, rooms and agents included (docs/ADGRANT-REPLIT.md).
+ * Both stay in ADGRANT_HOSTS, so pointing either back here is a DNS change and
+ * nothing else: this process answers on them exactly as it did.
  */
 
 /** The product's public site: the library, the generator, the front door. */
 export const ADGRANT_SITE_HOSTS = ["adgrant.ai", "www.adgrant.ai"] as const;
 
-/** Where this process answers as AdGrant.AI once the public site is served elsewhere. */
+/** AdGrant.AI's white label on MakeHybrid; answered here only if pointed back. */
 export const ADGRANT_APP_HOST = "app.adgrant.ai";
 
 export const ADGRANT_HOSTS = [...ADGRANT_SITE_HOSTS, ADGRANT_APP_HOST] as const;
@@ -32,9 +31,9 @@ export const ADGRANT_HOSTS = [...ADGRANT_SITE_HOSTS, ADGRANT_APP_HOST] as const;
 export const ADGRANT_ORIGIN = "https://adgrant.ai";
 
 /**
- * Where the rooms, the agents and the legal pages that describe them live.
- * A contract printed in a room — ours, or a partner's fork of this house —
- * links its terms here, because these are the terms of what happens in it.
+ * AdGrant.AI's white label on MakeHybrid: its rooms, its agents, and its terms
+ * and privacy (/terms.html, /privacy.html). A contract printed by a partner's
+ * fork of this house links its terms here.
  */
 export const ADGRANT_APP_ORIGIN = `https://${ADGRANT_APP_HOST}`;
 

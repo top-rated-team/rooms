@@ -7,23 +7,31 @@
  * two-way WhatsApp, ChatWoot, Slack and ClickUp connections that used to live
  * here.
  *
- * AdGrant.AI is the exception, by the owner's decision: its rooms stay in this
- * application and answer on its own hosts (app.adgrant.ai; see
- * shared/adgrant-site.ts and docs/ADGRANT-REPLIT.md). So the move is by host:
- * on an AdGrant host nothing here changes anything.
+ * AdGrant.AI's rooms followed. It is a MakeHybrid white label of its own on
+ * app.adgrant.ai -- the whole product under its name -- and adgrant.ai is its
+ * own application again (docs/ADGRANT-REPLIT.md). So on Top-Rated Team's hosts
+ * nothing opens a room here, AdGrant.AI's included: a caller is told where its
+ * rooms are, ADGRANT_ROOMS_URL for AdGrant.AI's and HYBRID_ROOMS_URL for ours.
+ *
+ * The move is still by host. AdGrant.AI's hosts no longer reach this process,
+ * but if one were pointed back here it would answer exactly as it did -- that
+ * is the rollback, and it needs no build.
  *
  * On Top-Rated Team's hosts every "Open a room" is a plain link to ROOMS_PATH,
  * and the server sends that on to HYBRID_ROOMS_URL (server/rooms-moved.ts), so
  * moving the rooms again is a setting in Render, not a build. An old room
  * address there, /w/<token>, goes to the same place without its token -- or,
- * when the room is one of AdGrant.AI's, to that room on app.adgrant.ai.
+ * when the room is one of AdGrant.AI's, to AdGrant.AI's rooms, also without it.
  */
-import { isAdGrantHost } from "./adgrant-site";
+import { ADGRANT_APP_ORIGIN, isAdGrantHost } from "./adgrant-site";
 
 export const ROOMS_PATH = "/rooms";
 
 /** The white label's own host on MakeHybrid, until HYBRID_ROOMS_URL says otherwise. */
 export const DEFAULT_HYBRID_ROOMS_URL = "https://rooms.top-rated.team/rooms.html";
+
+/** AdGrant.AI's rooms: its own MakeHybrid white label. */
+export const ADGRANT_ROOMS_URL = `${ADGRANT_APP_ORIGIN}/rooms.html`;
 
 /** What the link says wherever it stands. */
 export const OPEN_A_ROOM = "Open a room";
