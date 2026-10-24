@@ -278,6 +278,18 @@ describe("robots.txt and sitemap.xml by host", () => {
     assert.ok(!sitemap.body.includes("<urlset"));
   });
 
+  it("serves AdGrant.AI's mark at /logo.png, the address its white label draws it from", async () => {
+    for (const host of ADGRANT_HOSTS) {
+      const res = await asHost("/logo.png", host);
+      assert.equal(res.status, 200, host);
+      assert.match(res.type, /image\/png/, host);
+      assert.ok(res.body.startsWith("\uFFFDPNG"), `${host} did not answer a PNG`);
+    }
+    /* Not Top-Rated Team's mark: nothing answers it on our own host. */
+    const ours = await asHost("/logo.png", "top-rated.team");
+    assert.notEqual(ours.status, 200);
+  });
+
   it("falls through to the static files on ours", async () => {
     /* No express.static in this harness, so falling through means reaching
        the end of the router — a 404 here proves the route did NOT answer,

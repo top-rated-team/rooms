@@ -2837,6 +2837,37 @@ export function registerRoutes(app: Express): void {
   /* One process answers two domains, so these two files cannot be static.
      registerRoutes runs before express.static, so an AdGrant host is answered
      here and ours falls through to client/public untouched. */
+  /* AdGrant.AI's mark at the address the product's own application serves it
+     on, /logo.png. MakeHybrid's AdGrant.AI white label draws its logo from
+     https://adgrant.ai/logo.png; while adgrant.ai is still this process, this
+     answers it with the same file, and once the domain is the Replit app's,
+     that app does. The bytes, not a redirect: the white label's logo fetch
+     follows none. AdGrant hosts only -- it is not Top-Rated Team's mark. */
+  const adgrantLogoPath = (): string | null => {
+    for (const root of [
+      (() => {
+        try {
+          return resolveDistPath();
+        } catch {
+          return null;
+        }
+      })(),
+      path.resolve(import.meta.dirname, "..", "client", "public"),
+    ]) {
+      if (!root) continue;
+      const file = path.join(root, "assets", "adgrant-logo.png");
+      if (fs.existsSync(file)) return file;
+    }
+    return null;
+  };
+  app.get("/logo.png", (req, res, next) => {
+    if (!isAdGrantHost(req.hostname)) return next();
+    const file = adgrantLogoPath();
+    if (!file) return next();
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.type("image/png").sendFile(file);
+  });
+
   app.get("/robots.txt", (req, res, next) => {
     if (!isAdGrantHost(req.hostname)) return next();
     res.type("text/plain").send(adgrantRobotsTxt(req.hostname));
